@@ -91,7 +91,6 @@ import { useLauncherStore } from "../../stores/LauncherStore";
 
 // Import tab content components
 import LauncherSettings from "./Settings/Tabs/LauncherSettings.vue";
-import AccountSettings from "./Settings/Tabs/AccountSettings.vue";
 import GeneralSettings from "./Settings/Tabs/GeneralSettings.vue";
 
 // Import icons (SVG components)
@@ -157,12 +156,6 @@ const tabs = [
 		icon: controller,
 		content: LauncherSettings,
 	},
-  {
-    id: "account",
-    name: "Account",
-    icon: controller,
-    content: AccountSettings,
-  },
 ];
 
 // Method to get current tab content component
