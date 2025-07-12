@@ -42,35 +42,7 @@
 			"version": "Minecraft Version",
 			"selectVersion": "Select a version",
 			"loader": "Mod Loader",
-			"memory": "Memory",
-			"minMemory": "Minimum RAM (MB)",
-			"maxMemory": "Maximum RAM (MB)",
-			"cancel": "Cancel",
 			"create": "Create Instance"
-		},
-		"settings": {
-			"title": "Settings",
-			"tabs": {
-				"general": "General",
-				"game": "Game",
-				"launcher": "Launcher",
-				"accounts": "Accounts"
-			}
-		},
-		"views": {
-			"InstanceView": {
-				"title": "Instance Details",
-				"subtitle": "Configuration & System Information",
-				"versionDetail": "Version details",
-				"Loader": "Loader",
-				"LastPlayed": "Last played",
-				"PlayBtn": "Start instance",
-				"details": {
-					"minecraftVersion": "MINECRAFT VERSION",
-					"javaVersion": "JAVA VERSION"
-				},
-				"deleteBtn": "Delete Instance"
-			}
 		}
 	}
 }
