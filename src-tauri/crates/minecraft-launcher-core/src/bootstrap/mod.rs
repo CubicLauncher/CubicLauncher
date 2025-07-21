@@ -11,8 +11,7 @@ use std::{
     collections::HashMap,
     env::consts::ARCH,
     fs::{self, create_dir_all, File},
-    io::{self},
-    path::{Path, PathBuf, MAIN_SEPARATOR_STR},
+    path::{Path, PathBuf},
 };
 
 use argument_substitutor::{ArgumentSubstitutor, ArgumentSubstitutorBuilder};
@@ -23,13 +22,11 @@ use os_info::Type::Windows;
 use process::{GameProcess, GameProcessBuilder};
 use regex::Regex;
 use serde_json::json;
-use zip::ZipArchive;
 
 use crate::json::{
     manifest::{
         argument::ArgumentType,
         assets::{AssetIndex, AssetIndexInfo, AssetObject},
-        library::ExtractRules,
         rule::{OperatingSystem, RuleFeatureType},
         VersionManifest,
     },
@@ -288,57 +285,7 @@ impl GameBootstrap {
         Ok(game_process_builder)
     }
 
-    fn unpack_natives(&self, manifest: &VersionManifest) -> Result<(), UnpackNativesError> {
-        let os = OperatingSystem::get_current_platform();
-        let natives_dir = &self.options.natives_dir;
-        info!("Unpacking natives to {}", natives_dir.display());
-        create_dir_all(natives_dir).map_err(UnpackNativesError::CreateNativesFolder)?;
-
-        let libs = manifest.get_relevant_libraries(&self.env_features);
-
-        fn unpack_native(
-            natives_dir: &Path,
-            mut zip_archive: ZipArchive<File>,
-            extract_rules: Option<&ExtractRules>,
-        ) -> Result<(), UnpackNativesError> {
-            for i in 0..zip_archive.len() {
-                let mut file = zip_archive.by_index(i)?;
-                let file_zip_path = file.enclosed_name().unwrap().to_owned();
-                if let Some(extract_rules) = extract_rules {
-                    if !extract_rules.should_extract(&file_zip_path) {
-                        continue;
-                    }
-                }
-
-                let output_file = natives_dir.join(file_zip_path);
-                if let Some(parent) = output_file.parent() {
-                    create_dir_all(parent).map_err(UnpackNativesError::UnpackNative)?;
-                }
-                if !file.is_dir() {
-                    let mut output_file =
-                        File::create(output_file).map_err(UnpackNativesError::UnpackNative)?;
-                    io::copy(&mut file, &mut output_file)
-                        .map_err(UnpackNativesError::UnpackNative)?;
-                }
-            }
-            Ok(())
-        }
-
-        for lib in libs {
-            if let Some(Some(native_id)) = lib.get_artifact_classifier(&os) {
-                let file = &self.options.game_dir.join("libraries").join(
-                    lib.get_artifact_path(Some(native_id.clone()))
-                        .replace('/', MAIN_SEPARATOR_STR),
-                );
-                let file = File::open(file).map_err(UnpackNativesError::ReadNative)?;
-                let zip_file = ZipArchive::new(file)?;
-                let extract_rules = lib.extract.as_ref();
-                let _ = unpack_native(natives_dir, zip_file, extract_rules); // Ignore errors
-            }
-        }
-
-        Ok(())
-    }
+    
 
     /// Reconstructs the assets based on the provided version manifest.
     ///
