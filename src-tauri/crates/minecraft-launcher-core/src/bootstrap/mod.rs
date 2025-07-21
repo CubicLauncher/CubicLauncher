@@ -39,7 +39,7 @@ pub mod options;
 pub mod process;
 
 mod error;
-pub use error::{Error, UnpackAssetsError, UnpackNativesError};
+pub use error::{Error, UnpackAssetsError};
 
 const DEFAULT_JRE_ARGUMENTS_32BIT: &str =
   "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M";
