@@ -1,63 +1,35 @@
 <template>
-    <div class="flex items-center justify-center h-full select-none">
-        <div class="text-center max-w-2xl">
-            <div class="w-24 h-24 mx-auto mb-6">
-                <img
-                    :src="logo"
-                    alt="Logo"
-                    class="w-full h-full"
-                    draggable="false"
-                />
-            </div>
-            <h1 class="text-3xl text-stone-200 font-bold mb-4 select-none">
-                {{ languageStore.getTranslation("Launcher.welcome.title") }}
-            </h1>
-            <p class="text-lg text-stone-400 mb-8 select-none">
-                {{
-                    languageStore.getTranslation("Launcher.welcome.description")
-                }}
-            </p>
-            <div class="grid grid-cols-2 gap-6">
-                <button
-                    @click="store.toggleAddInstanceModal"
-                    class="flex items-center justify-center p-2 gap-2 bg-stone-800 rounded-xl border border-stone-600 cursor-pointer hover:bg-stone-700 transition-all select-none"
-                >
-                    <PlusSquare />
-                    <span>{{
-                        languageStore.getTranslation(
-                            "Launcher.welcome.createNew",
-                        )
-                    }}</span>
-                </button>
-                <button
-                    class="flex items-center justify-center p-2 gap-2 bg-stone-800 rounded-xl border border-stone-600 cursor-pointer hover:bg-stone-700 transition-all select-none"
-                    @click="selectFirstInstance"
-                >
-                    <controller />
-                    <span>{{
-                        languageStore.getTranslation(
-                            "Launcher.welcome.playRecent",
-                        )
-                    }}</span>
-                </button>
-            </div>
+  <div class="flex-1 flex flex-col">
+    <!-- Header -->
+    <header class="p-6 border-b border-stone-600">
+      <h2 class="text-2xl font-bold text-white">Welcome</h2>
+      <p class="text-stone-400 mt-1">Your Minecraft launcher</p>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8">
+      <div class="max-w-4xl mx-auto">
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+          <div class="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+            <span class="text-white font-bold text-3xl">C</span>
+          </div>
+          <h1 class="text-4xl font-bold text-white mb-4">CubicLauncher</h1>
+          <p class="text-stone-400 text-lg">
+            Modern Minecraft launcher
+          </p>
         </div>
+
+        <!-- Content Area -->
+        <div class="bg-stone-700 rounded-xl p-8 border border-stone-600">
+          <h3 class="text-white font-semibold text-lg mb-4">Content Area</h3>
+          <p class="text-stone-400">Your content will go here...</p>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import controller from "../../assets/icons/UI/controller.vue";
-import PlusSquare from "../../assets/icons/UI/plus-square.vue";
-import logo from "../../assets/logo.svg";
-import { useLanguageStore } from "../../stores/LanguageStore";
-import { useLauncherStore } from "../../stores/LauncherStore";
-
-const store = useLauncherStore();
-const languageStore = useLanguageStore();
-
-const selectFirstInstance = () => {
-    if (store.Instances.length > 0) {
-        store.setCurrentInstance(store.Instances[0]);
-    }
-};
-</script>
+// Component logic can be added here
+</script> 
