@@ -73,7 +73,7 @@ const navigationItems = [
   min-width: 256px;
 }
 
-/* Scrollbar Personalizada viejo */
+/* Scrollbar Personalizada */
 nav::-webkit-scrollbar {
   width: 4px;
 }
@@ -91,14 +91,14 @@ nav::-webkit-scrollbar-thumb:hover {
   background: #71717a;
 }
 
-/* Ensure smooth transitions */
+/* Transiciones suaves */
 * {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 200ms;
 }
 
-/* Collapse sidebar on smaller screens - show only icons */
+/* Collapse sidebar en pantallas pequeñas - mostrar solo iconos */
 @media (max-width: 1023px) {
   .sidebar {
     width: 72px;
@@ -112,7 +112,7 @@ nav::-webkit-scrollbar-thumb:hover {
     margin-left: 0;
   }
   
-  /* Center icons when collapsed */
+  /* Centrar iconos cuando se contrae */
   .sidebar-button {
     justify-content: center;
     padding-left: 0.75rem;
@@ -123,31 +123,31 @@ nav::-webkit-scrollbar-thumb:hover {
     margin: 0;
   }
   
-  /* Adjust padding for collapsed state */
+  /* Ajustar padding para el estado contraído */
   .sidebar > div,
   .sidebar > nav {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
   }
   
-  /* Hide logo text, keep only icon */
+  /* Ocultar texto del logo, mantener solo icono */
   .sidebar > div > div > div:last-child {
     display: none;
   }
   
-  /* Center the logo icon perfectly */
+  /* Centrar el icono del logo perfectamente */
   .sidebar-logo-container {
     justify-content: center;
     width: 100%;
   }
   
-  /* Remove space between logo icon and text when collapsed */
+  /* Eliminar espacio entre el icono del logo y el texto cuando se contrae */
   .sidebar-logo-container > div:first-child {
     margin-right: 0;
   }
 }
 
-/* On very small screens, make it even more compact */
+/* En pantallas muy pequeñas, hacerlo aún más compacto */
 @media (max-width: 640px) {
   .sidebar {
     width: 64px;
