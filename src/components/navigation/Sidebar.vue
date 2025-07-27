@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import SettingsIcon from '../../assets/icons/UI/settings.vue'
 import { navigationItems } from './navigationData'
+import Logo from '../../assets/logo.svg'
 
 const activeView = ref('home')
 </script>
@@ -11,11 +12,11 @@ const activeView = ref('home')
     <!-- Logo Section -->
     <div class="p-4 sm:p-6 border-b border-stone-600 flex-shrink-0">
       <div class="flex items-center space-x-3 sidebar-logo-container">
-        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-          <span class="text-white font-bold text-sm sm:text-lg">C</span>
+        <div class="w-10 h-10 flex items-center justify-center flex-shrink-0">
+          <img :src="Logo" alt="CubicLauncher Logo" class="w-full h-full" />
         </div>
         <div class="min-w-0 flex-1 sidebar-text">
-          <h1 class="text-white font-bold text-sm sm:text-lg truncate">CubicLauncher</h1>
+          <h1 class="text-white font-semibold text-base sm:text-lg truncate">CubicLauncher</h1>
           <p class="text-stone-400 text-xs sm:text-sm truncate">Minecraft</p>
         </div>
       </div>
@@ -131,6 +132,7 @@ nav::-webkit-scrollbar-thumb:hover {
   .sidebar-logo-container > div:first-child {
     margin-right: 0;
   }
+  
 }
 
 /* En pantallas muy pequeñas, hacerlo aún más compacto */
