@@ -1,3 +1,7 @@
+<script setup lang="ts">
+// Component logic can be added here
+</script> 
+
 <template>
   <div class="flex-1 flex flex-col">
     <!-- Header -->
@@ -29,7 +33,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-// Component logic can be added here
-</script> 

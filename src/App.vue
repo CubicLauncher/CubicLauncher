@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import Sidebar from './components/navigation/Sidebar.vue' // No mover de directorio!
+import WelcomeView from './components/views/WelcomeView.vue'
+</script>
+
 <template>
   <div class="min-h-screen bg-stone-800 text-stone-300 flex">
     <!-- Sidebar -->
@@ -9,8 +14,3 @@
     </main>
   </div>
 </template>
-
-<script setup lang="ts">
-import Sidebar from './components/navigation/Sidebar.vue' // No mover de directorio!
-import WelcomeView from './components/views/WelcomeView.vue'
-</script>

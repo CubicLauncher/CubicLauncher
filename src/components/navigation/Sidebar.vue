@@ -1,3 +1,11 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import SettingsIcon from '../../assets/icons/UI/settings.vue'
+import { navigationItems } from './navigationData'
+
+const activeView = ref('home')
+</script>
+
 <template>
   <aside class="sidebar bg-stone-800 border-r border-stone-600 flex flex-col h-screen overflow-hidden transition-all duration-300 ease-in-out">
     <!-- Logo Section -->
@@ -44,28 +52,6 @@
     </div>
   </aside>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import HomeIcon from '../../assets/icons/UI/home.vue'
-import ControllerIcon from '../../assets/icons/UI/controller.vue'
-import SettingsIcon from '../../assets/icons/UI/settings.vue'
-
-const activeView = ref('home')
-
-const navigationItems = [
-  {
-    id: 'home',
-    label: 'Home',
-    icon: HomeIcon
-  },
-  {
-    id: 'play',
-    label: 'Play',
-    icon: ControllerIcon
-  }
-]
-</script>
 
 <style scoped>
 .sidebar {
