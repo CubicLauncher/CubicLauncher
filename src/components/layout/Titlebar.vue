@@ -1,55 +1,91 @@
-<script setup lang="ts">
-// Titlebar component - Visual design only
-</script>
-
 <template>
-  <div class="titlebar bg-stone-900 border-b border-stone-700 flex items-center justify-between px-4 py-2 select-none">
-
-    <!-- Center - Window title -->
-    <div class="flex-1 text-center">
+    <div
+        class="flex items-center justify-between h-9 bg-stone-800 border-b border-stone-600 px-4 titlebar z-1000"
+    >
+        <!-- Left spacer for balance -->
+        <div class="w-24"></div>
+        <div
+            class="flex items-center gap-2.5 px-3 bg-stone-750/30 rounded-md border border-stone-600/30"
+        >
+            <div class="w-6 h-6">
+                <!-- Placeholder for logo/icon -->
+            </div>
+            <span class="text-sm text-stone-200 select-none">
+                CubicLauncher
+            </span>
+        </div>
+        <!-- Window controls -->
+        <div class="flex items-center gap-0.5 titlebar-buttons">
+            <button
+                class="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-200 hover:bg-stone-700 rounded-sm transition-all duration-75 no-drag"
+                aria-label="Minimize"
+            >
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path
+                        d="M3 6h6"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                    />
+                </svg>
+            </button>
+            <button
+                class="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-200 hover:bg-stone-700 rounded-sm transition-all duration-75 no-drag"
+                aria-label="Maximize"
+            >
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <rect
+                        x="3"
+                        y="3"
+                        width="6"
+                        height="6"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        fill="none"
+                        rx="1"
+                    />
+                </svg>
+            </button>
+            <button
+                class="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-200 hover:bg-stone-600 rounded-sm transition-all duration-75 no-drag"
+                aria-label="Close"
+            >
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path
+                        d="M3 3l6 6M9 3l-6 6"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                    />
+                </svg>
+            </button>
+        </div>
     </div>
-
-    <!-- Right side - Window controls -->
-    <div class="flex items-center space-x-1">
-      <!-- Minimize button -->
-      <button
-        class="w-8 h-8 flex items-center justify-center rounded hover:bg-stone-700 transition-colors duration-200 group"
-        title="Minimize"
-      >
-        <svg class="w-4 h-4 text-stone-400 group-hover:text-stone-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
-        </svg>
-      </button>
-
-      <!-- Maximize button -->
-      <button
-        class="w-8 h-8 flex items-center justify-center rounded hover:bg-stone-700 transition-colors duration-200 group"
-        title="Maximize"
-      >
-        <svg class="w-4 h-4 text-stone-400 group-hover:text-stone-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/>
-        </svg>
-      </button>
-
-      <!-- Close button -->
-      <button
-        class="w-8 h-8 flex items-center justify-center rounded hover:bg-red-600 transition-colors duration-200 group"
-        title="Close"
-      >
-        <svg class="w-4 h-4 text-stone-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-  </div>
 </template>
 
 <style scoped>
 .titlebar {
-  -webkit-app-region: drag;
+    -webkit-app-region: drag;
+    user-select: none;
+    cursor: default;
 }
 
-.titlebar button {
-  -webkit-app-region: no-drag;
+.titlebar-buttons,
+.no-drag {
+    -webkit-app-region: no-drag;
 }
-</style> 
+
+/* Mejor feedback visual */
+.titlebar:hover {
+    cursor: move;
+}
+
+.titlebar-buttons:hover {
+    cursor: default;
+}
+
+/* Asegurar que los botones tengan el cursor correcto */
+.titlebar-buttons button {
+    cursor: pointer;
+}
+</style>
