@@ -7,18 +7,29 @@ body {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #27272a;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #57534e;
-  border-radius: 4px;
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #78716c;
+  background: rgba(156, 163, 175, 0.6);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
 }
