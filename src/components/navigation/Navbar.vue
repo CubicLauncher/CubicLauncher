@@ -1,14 +1,32 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import SettingsIcon from '../../assets/icons/UI/settings.vue'
 import { navigationItems } from './navigationData'
 import Logo from '../../assets/logo.svg'
 
 const activeView = ref('home')
+const isScrolled = ref(false)
+
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 10
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
-  <nav class="navbar bg-stone-900/95 backdrop-blur-sm border-b border-stone-700/50 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 h-16 flex-shrink-0 titlebar">
+  <nav 
+    :class="[
+      'navbar bg-stone-900/95 backdrop-blur-sm border-b border-stone-700/50 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 h-16 flex-shrink-0 titlebar sticky top-0 z-50 transition-all duration-300 ease-out',
+      isScrolled ? 'shadow-lg bg-stone-900/98' : 'bg-stone-900/95'
+    ]"
+  >
     <!-- Logo Section -->
     <div class="flex items-center space-x-2 sm:space-x-3">
       <div class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center flex-shrink-0">
