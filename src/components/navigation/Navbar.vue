@@ -92,28 +92,23 @@ onUnmounted(() => {
 
 /* Responsive adjustments */
 @media (min-width: 640px) {
-  .navbar {
+  nav {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
-  }
-  
-  .navbar__nav {
-    gap: 0.5rem;
-  }
-  
-  .navbar__nav-item,
-  .navbar__player {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    gap: 0.75rem;
   }
 }
 
 @media (min-width: 768px) {
-  .navbar__nav-item,
-  .navbar__player {
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+  nav {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  nav {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
   }
 }
 </style> 
