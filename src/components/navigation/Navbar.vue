@@ -1,22 +1,43 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, inject } from 'vue'
-import SettingsIcon from '../../assets/icons/UI/settings.vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import PlayerIcon from '../../assets/icons/UI/player.vue'
 import WindowControls from '../layout/WindowControls.vue'
-import { navigationItems } from './navigationData'
+import { navigationItems, injectNavigation } from './navigationData'
 import Logo from '../../assets/logo.svg'
 
 // Inject shared navigation state
-const activeView = inject('activeView', ref('home'))
-const setActiveView = inject('setActiveView', (_viewId: string) => {})
+const { activeView, setActiveView } = injectNavigation()
 
 const isScrolled = ref(false)
+const isPlayerMenuOpen = ref(false)
 
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 10
 }
 
+const togglePlayerMenu = () => {
+  isPlayerMenuOpen.value = !isPlayerMenuOpen.value
+}
+
+const closePlayerMenu = () => {
+  isPlayerMenuOpen.value = false
+}
+
+const handleMenuAction = (action: string) => {
+  console.log(`Player menu action: ${action}`)
+  // Here you can implement the actual actions
+  closePlayerMenu()
+}
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement
+    if (!target.closest('.player-menu-container')) {
+      closePlayerMenu()
+    }
+  })
 })
 
 onUnmounted(() => {
@@ -25,35 +46,79 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <nav class="navbar" :class="{ 'navbar--scrolled': isScrolled }">
+  <nav 
+    class="flex items-center justify-between h-16 px-4 bg-stone-900/95 backdrop-blur-md border-b border-stone-600/50 sticky top-0 z-50 transition-all duration-300 ease-in-out select-none"
+    :class="{ 'bg-stone-900/98 shadow-lg': isScrolled }"
+    style="-webkit-app-region: drag;"
+  >
     <!-- Logo Section -->
-    <div class="navbar__logo">
-      <img :src="Logo" alt="CubicLauncher Logo" class="navbar__logo-image" />
-      <h1 class="navbar__logo-text">CubicLauncher</h1>
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <img :src="Logo" alt="CubicLauncher Logo" class="w-8 h-8 flex-shrink-0" />
+      <h1 class="text-lg font-medium text-white tracking-tight hidden md:block">CubicLauncher</h1>
     </div>
 
     <!-- Navigation Items -->
-    <div class="navbar__nav">
+    <div class="flex items-center gap-1">
       <button 
         v-for="item in navigationItems" 
         :key="item.id"
         @click="setActiveView(item.id)"
-        class="navbar__nav-item"
-        :class="{ 'navbar__nav-item--active': activeView === item.id }"
+        class="flex items-center gap-2 px-3 py-2 rounded-lg text-stone-400 bg-transparent border border-transparent cursor-pointer transition-all duration-200 ease-in-out hover:bg-white/5 hover:text-white"
+        :class="{ 'bg-white/15 text-white border-white/20': activeView === item.id }"
         :title="item.label"
+        style="-webkit-app-region: no-drag;"
       >
-        <component :is="item.icon" class="navbar__nav-icon" />
-        <span class="navbar__nav-label">{{ item.label }}</span>
+        <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
+        <span class="text-sm font-medium hidden sm:block">{{ item.label }}</span>
       </button>
     </div>
 
     <!-- Right Section -->
-    <div class="navbar__actions">
-      <!-- Settings Button -->
-      <button class="navbar__settings" title="Settings">
-        <SettingsIcon class="navbar__nav-icon" />
-        <span class="navbar__nav-label">Settings</span>
-      </button>
+    <div class="flex items-center gap-2">
+      <!-- Player Profile Button -->
+      <div class="player-menu-container relative">
+        <button 
+          @click="togglePlayerMenu"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-stone-400 bg-transparent border border-transparent cursor-pointer transition-all duration-200 ease-in-out hover:bg-white/5 hover:text-white"
+          title="Player Profile"
+          style="-webkit-app-region: no-drag;"
+        >
+          <PlayerIcon class="w-4 h-4" />
+          <span class="text-sm font-medium hidden sm:block">Profile</span>
+        </button>
+
+        <!-- Player Menu Dropdown -->
+        <div 
+          v-if="isPlayerMenuOpen" 
+          class="absolute top-full right-0 mt-2 min-w-60 bg-stone-900/98 border border-stone-600/50 rounded-xl shadow-2xl backdrop-blur-xl z-100 overflow-hidden animate-in slide-in-from-top-2 duration-200"
+        >
+          <div class="flex items-center gap-3 p-4 bg-white/5">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+              <PlayerIcon class="w-6 h-6 text-white" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold text-white mb-1">PlayerName</div>
+            </div>
+          </div>
+          
+          <div class="h-px bg-stone-600/50 mx-2"></div>
+          
+          <div class="p-2">
+            <button 
+              @click="handleMenuAction('account')"
+              class="w-full flex items-center px-4 py-3 border-none bg-transparent text-stone-400 cursor-pointer rounded-lg transition-all duration-200 ease-in-out hover:bg-white/5 hover:text-white text-sm text-left"
+            >
+              <span>Cuenta</span>
+            </button>
+            <button 
+              @click="handleMenuAction('settings')"
+              class="w-full flex items-center px-4 py-3 border-none bg-transparent text-stone-400 cursor-pointer rounded-lg transition-all duration-200 ease-in-out hover:bg-white/5 hover:text-white text-sm text-left"
+            >
+              <span>Configuración</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Window Controls -->
       <WindowControls />
@@ -62,134 +127,31 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Navbar Base */
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 4rem;
-  padding: 0 1rem;
-  background: rgba(28, 25, 23, 0.95);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(68, 64, 60, 0.5);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  transition: all 0.3s ease;
-  
-  /* Titlebar functionality */
-  -webkit-app-region: drag;
-  user-select: none;
+/* Custom animations that Tailwind doesn't provide */
+@keyframes slide-in-from-top-2 {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.navbar--scrolled {
-  background: rgba(28, 25, 23, 0.98);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+.animate-in {
+  animation-fill-mode: both;
 }
 
-/* Logo Section */
-.navbar__logo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
+.slide-in-from-top-2 {
+  animation-name: slide-in-from-top-2;
 }
 
-.navbar__logo-image {
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
-}
-
-.navbar__logo-text {
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: white;
-  letter-spacing: -0.025em;
-  display: none;
-}
-
-/* Navigation Items */
-.navbar__nav {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.navbar__nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  color: rgb(168, 162, 158);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  
-  /* Disable drag for buttons */
-  -webkit-app-region: no-drag;
-}
-
-.navbar__nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-}
-
-.navbar__nav-item--active {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.navbar__nav-icon {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-}
-
-.navbar__nav-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: none;
-}
-
-/* Actions Section */
-.navbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.navbar__settings {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  color: rgb(168, 162, 158);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  /* Disable drag for buttons */
-  -webkit-app-region: no-drag;
-}
-
-.navbar__settings:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-}
-
-/* Window Controls - Handled by WindowControls component */
-
-/* Responsive Design */
+/* Responsive adjustments */
 @media (min-width: 640px) {
   .navbar {
-    padding: 0 1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
   
   .navbar__nav {
@@ -197,24 +159,18 @@ onUnmounted(() => {
   }
   
   .navbar__nav-item,
-  .navbar__settings {
-    padding: 0.625rem 1rem;
+  .navbar__player {
+    padding-left: 1rem;
+    padding-right: 1rem;
     gap: 0.75rem;
-  }
-  
-  .navbar__nav-label {
-    display: block;
   }
 }
 
 @media (min-width: 768px) {
-  .navbar__logo-text {
-    display: block;
-  }
-  
   .navbar__nav-item,
-  .navbar__settings {
-    padding: 0.625rem 1.25rem;
+  .navbar__player {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
   }
 }
 </style> 

@@ -1,20 +1,14 @@
 <script setup lang="ts">
-import { ref, provide } from 'vue'
 import Navbar from './components/navigation/Navbar.vue' // No mover de directorio!
 import WelcomeView from './components/views/WelcomeView.vue'
 import InstancesView from './components/views/InstancesView.vue'
+import { provideNavigation, useNavigation } from './components/navigation/navigationData'
 
-const activeView = ref('home')
+// Provide navigation state to child components
+provideNavigation()
 
-// Provide activeView to child components
-provide('activeView', activeView)
-
-const setActiveView = (viewId: string) => {
-  activeView.value = viewId
-}
-
-// Provide the setter function
-provide('setActiveView', setActiveView)
+// Get navigation state for this component
+const { activeView } = useNavigation()
 </script>
 
 <template>
