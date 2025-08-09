@@ -1,5 +1,5 @@
 import HomeIcon from '../../assets/icons/UI/home.vue'
-import ControllerIcon from '../../assets/icons/UI/controller.vue'
+import InstancesIcon from '../../assets/icons/UI/instances.vue'
 
 export const navigationItems = [
   {
@@ -8,8 +8,8 @@ export const navigationItems = [
     icon: HomeIcon
   },
   {
-    id: 'play',
-    label: 'Play',
-    icon: ControllerIcon
+    id: 'instances',
+    label: 'Instances',
+    icon: InstancesIcon
   }
 ] 

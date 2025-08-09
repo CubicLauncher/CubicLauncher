@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, inject } from 'vue'
 import SettingsIcon from '../../assets/icons/UI/settings.vue'
 import WindowControls from '../layout/WindowControls.vue'
 import { navigationItems } from './navigationData'
 import Logo from '../../assets/logo.svg'
 
-const activeView = ref('home')
+// Inject shared navigation state
+const activeView = inject('activeView', ref('home'))
+const setActiveView = inject('setActiveView', (_viewId: string) => {})
+
 const isScrolled = ref(false)
 
 const handleScroll = () => {
@@ -34,7 +37,7 @@ onUnmounted(() => {
       <button 
         v-for="item in navigationItems" 
         :key="item.id"
-        @click="activeView = item.id"
+        @click="setActiveView(item.id)"
         class="navbar__nav-item"
         :class="{ 'navbar__nav-item--active': activeView === item.id }"
         :title="item.label"
