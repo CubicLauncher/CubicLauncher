@@ -177,8 +177,15 @@ const resetSettings = () => {
         </div>
       </div>
 
-      <!-- Appearance Settings -->
-      <div class="bg-stone-800/30 border border-stone-700/50 rounded-lg p-6">
+      <!-- Appearance Settings (Disabled) -->
+      <div class="bg-stone-800/30 border border-stone-700/50 rounded-lg p-6 opacity-50 pointer-events-none relative">
+        <!-- Disabled overlay -->
+        <div class="absolute inset-0 bg-stone-900/20 rounded-lg flex items-center justify-center">
+          <div class="bg-stone-800/90 px-4 py-2 rounded-lg border border-stone-600/50">
+            <span class="text-stone-300 text-sm font-medium">Deshabilitado</span>
+          </div>
+        </div>
+        
         <div class="flex items-center gap-3 mb-6">
           <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
             <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +198,7 @@ const resetSettings = () => {
         <div class="space-y-4">
           <div>
             <label class="block text-white font-medium mb-2">Tema</label>
-            <select v-model="settings.appearance.theme" class="w-full bg-stone-800/50 border border-stone-700/50 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500">
+            <select v-model="settings.appearance.theme" class="w-full bg-stone-800/50 border border-stone-700/50 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500" disabled>
               <option v-for="theme in themes" :key="theme.value" :value="theme.value">{{ theme.name }}</option>
             </select>
           </div>
@@ -211,6 +218,7 @@ const resetSettings = () => {
                     : 'border-stone-700/50 hover:border-stone-600/50'
                 ]"
                 :title="color.name"
+                disabled
               >
                 <svg v-if="settings.appearance.accentColor === color.value" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -225,7 +233,7 @@ const resetSettings = () => {
               <div class="text-stone-400 text-sm">Mostrar animaciones y transiciones</div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" v-model="settings.appearance.showAnimations" class="sr-only peer">
+              <input type="checkbox" v-model="settings.appearance.showAnimations" class="sr-only peer" disabled>
               <div class="w-11 h-6 bg-stone-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
             </label>
           </div>
