@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Script para instalar dependencias y lanzar Cypress
-# Soporta deno, npm, bun, y pnpm
+# Soporta deno, npm y bun
+# Solo testeado en deno y bun por ahora.
 
 set -e  # Salir si cualquier comando falla
 
@@ -80,8 +81,17 @@ case $PACKAGE_MANAGER in
     "deno")
         print_info "Instalando dependencias con Deno..."
         if command -v deno >/dev/null 2>&1; then
-            deno install
-            print_success "Dependencias instaladas con Deno"
+            print_warning "Cypress requiere ejecutar scripts de lifecycle para funcionar correctamente."
+            printf "¿Permitir la ejecución de scripts? (y/n): "
+            read -r allow_scripts
+
+            if [[ "$allow_scripts" =~ ^[Yy]$ ]]; then
+                deno install --allow-scripts
+                print_success "Dependencias instaladas con Deno (con scripts permitidos)"
+            else
+                deno install
+                print_warning "Dependencias instaladas con Deno (scripts no permitidos - Cypress puede no funcionar)"
+            fi
         else
             print_error "Deno no está instalado"
             exit 1
@@ -108,7 +118,7 @@ case $PACKAGE_MANAGER in
         fi
         ;;
     "npm")
-        print_info "Instalando dependencias with npm..."
+        print_info "Instalando dependencias con npm..."
         if command -v npm >/dev/null 2>&1; then
             npm install
             print_success "Dependencias instaladas con npm"

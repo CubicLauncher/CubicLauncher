@@ -105,7 +105,7 @@ if "!PACKAGE_MANAGER!"=="deno" (
     call :print_info "Instalando dependencias con Deno..."
     where deno >nul 2>&1
     if !errorlevel! equ 0 (
-        deno install >nul 2>&1
+        deno install
         call :print_success "Dependencias instaladas con Deno"
     ) else (
         call :print_error "Deno no está instalado"
@@ -115,7 +115,7 @@ if "!PACKAGE_MANAGER!"=="deno" (
     call :print_info "Instalando dependencias con Bun..."
     where bun >nul 2>&1
     if !errorlevel! equ 0 (
-        bun install >nul 2>&1
+        bun install
         call :print_success "Dependencias instaladas con Bun"
     ) else (
         call :print_error "Bun no está instalado"
@@ -125,7 +125,7 @@ if "!PACKAGE_MANAGER!"=="deno" (
     call :print_info "Instalando dependencias con pnpm..."
     where pnpm >nul 2>&1
     if !errorlevel! equ 0 (
-        pnpm install >nul 2>&1
+        pnpm install
         call :print_success "Dependencias instaladas con pnpm"
     ) else (
         call :print_error "pnpm no está instalado"
@@ -135,7 +135,7 @@ if "!PACKAGE_MANAGER!"=="deno" (
     call :print_info "Instalando dependencias con npm..."
     where npm >nul 2>&1
     if !errorlevel! equ 0 (
-        npm install >nul 2>&1
+        npm install
         call :print_success "Dependencias instaladas con npm"
     ) else (
         call :print_error "npm no está instalado"
@@ -145,7 +145,7 @@ if "!PACKAGE_MANAGER!"=="deno" (
     call :print_info "Instalando dependencias con Yarn..."
     where yarn >nul 2>&1
     if !errorlevel! equ 0 (
-        yarn install >nul 2>&1
+        yarn install
         call :print_success "Dependencias instaladas con Yarn"
     ) else (
         call :print_error "Yarn no está instalado"
