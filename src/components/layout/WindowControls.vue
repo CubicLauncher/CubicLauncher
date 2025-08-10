@@ -41,10 +41,10 @@ const close = () => {
 .window-controls {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding-left: 0.5rem;
+  gap: 0.125rem;
+  padding-left: 0.375rem;
   border-left: 1px solid rgba(68, 64, 60, 0.5);
-  margin-left: 0.5rem;
+  margin-left: 0.375rem;
   
   /* Disable drag for controls */
   -webkit-app-region: no-drag;
@@ -54,12 +54,12 @@ const close = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   color: rgb(168, 162, 158);
   background: transparent;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -75,13 +75,32 @@ const close = () => {
 }
 
 .window-controls__icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 0.75rem;
+  height: 0.75rem;
   fill: none;
 }
 
 /* Responsive Design */
 @media (min-width: 640px) {
+  .window-controls {
+    gap: 0.25rem;
+    padding-left: 0.5rem;
+    margin-left: 0.5rem;
+  }
+  
+  .window-controls__button {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+  }
+  
+  .window-controls__icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
+
+@media (min-width: 768px) {
   .window-controls {
     gap: 0.5rem;
   }

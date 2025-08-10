@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import Navbar from './components/navigation/Navbar.vue' // No mover de directorio!
+import Navbar from './components/navigation/Navbar.vue'
 import WelcomeView from './components/views/WelcomeView.vue'
 import InstancesView from './components/views/InstancesView.vue'
 import SettingsView from './components/views/SettingsView.vue'
 import { provideNavigation, useNavigation } from './components/navigation/navigationData'
+import { provideAccountModal } from './composables/useAccountModal'
 
 // Provide navigation state to child components
 provideNavigation()
+
+// Provide account modal state to child components
+provideAccountModal()
 
 // Get navigation state for this component
 const { activeView } = useNavigation()

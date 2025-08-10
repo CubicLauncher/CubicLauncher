@@ -1,5 +1,29 @@
 <script setup lang="ts">
-// Component logic can be added here
+import { injectNavigation } from '../navigation/navigationData'
+import { useAccountModal } from '../../composables/useAccountModal'
+import AccountModal from '../modals/AccountModal.vue'
+
+// Get navigation functions
+const { setActiveView } = injectNavigation()
+
+// Get account modal functions
+const { isAccountModalOpen, openAccountModal, closeAccountModal, setCurrentAccount } = useAccountModal()
+
+// Function to handle play now
+const handlePlayNow = () => {
+  setActiveView('instances')
+}
+
+// Function to handle account management
+const handleAccountManagement = () => {
+  openAccountModal()
+}
+
+// Function to handle account selection
+const handleAccountSelected = (account: any) => {
+  setCurrentAccount(account)
+  closeAccountModal()
+}
 </script> 
 
 <template>
@@ -8,7 +32,10 @@
     <div class="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <!-- Quick Actions -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <button class="bg-stone-800/50 hover:bg-stone-700/50 text-white p-4 sm:p-6 rounded-lg transition-all duration-200 border border-stone-700/50 hover:border-stone-600/50">
+        <button 
+          @click="handlePlayNow"
+          class="bg-stone-800/50 hover:bg-stone-700/50 text-white p-4 sm:p-6 rounded-lg transition-all duration-200 border border-stone-700/50 hover:border-stone-600/50"
+        >
           <div class="text-center">
             <svg class="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -28,13 +55,16 @@
           </div>
         </button>
 
-        <button class="bg-stone-800/50 hover:bg-stone-700/50 text-white p-4 sm:p-6 rounded-lg transition-all duration-200 border border-stone-700/50 hover:border-stone-600/50">
+        <button 
+          @click="handleAccountManagement"
+          class="bg-stone-800/50 hover:bg-stone-700/50 text-white p-4 sm:p-6 rounded-lg transition-all duration-200 border border-stone-700/50 hover:border-stone-600/50"
+        >
           <div class="text-center">
             <svg class="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
             </svg>
             <div class="font-medium text-sm sm:text-base">Cuenta</div>
-            <div class="text-xs sm:text-sm text-stone-400">Gestionar perfil</div>
+            <div class="text-xs sm:text-sm text-stone-400">Gestionar Cuenta no premium</div>
           </div>
         </button>
 
@@ -167,5 +197,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Account Modal -->
+    <AccountModal 
+      :is-open="isAccountModalOpen" 
+      @close="closeAccountModal"
+      @account-selected="handleAccountSelected"
+    />
   </div>
 </template>
