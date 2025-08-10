@@ -1,41 +1,45 @@
+<script setup lang="ts">
+import { getCurrentWindow } from "@tauri-apps/api/window";
+const appWindow = getCurrentWindow();
+
+const handleMinimize = async () => {
+    appWindow.minimize();
+};
+
+const handleMaximize = async () => {
+    if (await appWindow.isMaximized()) {
+        appWindow.unmaximize();
+    } else {
+        appWindow.maximize();
+    }
+};
+
+const handleClose = async () => {
+    appWindow.close();
+};
+</script>
+
 <template>
   <div class="window-controls">
-    <button class="window-controls__button" @click="minimize" aria-label="Minimize">
+    <button class="window-controls__button" @click="handleMinimize" aria-label="Minimize">
       <svg viewBox="0 0 14 14" class="window-controls__icon">
         <path d="M3 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
       </svg>
     </button>
     
-    <button class="window-controls__button" @click="maximize" aria-label="Maximize">
+    <button class="window-controls__button" @click="handleMaximize" aria-label="Maximize">
       <svg viewBox="0 0 14 14" class="window-controls__icon">
         <rect x="3" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.5" fill="none" rx="1" />
       </svg>
     </button>
     
-    <button class="window-controls__button window-controls__button--close" @click="close" aria-label="Close">
+    <button class="window-controls__button window-controls__button--close" @click="handleClose" aria-label="Close">
       <svg viewBox="0 0 14 14" class="window-controls__icon">
         <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
       </svg>
     </button>
   </div>
 </template>
-
-<script setup lang="ts">
-const minimize = () => {
-  // TODO: Implement minimize functionality with Tauri
-  console.log('Minimize window')
-}
-
-const maximize = () => {
-  // TODO: Implement maximize functionality with Tauri
-  console.log('Maximize window')
-}
-
-const close = () => {
-  // TODO: Implement close functionality with Tauri
-  console.log('Close window')
-}
-</script>
 
 <style scoped>
 .window-controls {
