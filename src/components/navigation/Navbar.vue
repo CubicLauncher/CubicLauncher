@@ -55,7 +55,9 @@ onUnmounted(() => {
     <div class="flex items-center gap-2">
       <!-- Settings Button -->
       <button 
+        @click="setActiveView('settings')"
         class="flex items-center gap-2 px-3 py-2 rounded-lg text-stone-400 bg-transparent border border-transparent cursor-pointer transition-all duration-200 ease-in-out hover:bg-white/5 hover:text-white"
+        :class="{ 'bg-white/15 text-white border-white/20': activeView === 'settings' }"
         title="Settings"
         style="-webkit-app-region: no-drag;"
       >
