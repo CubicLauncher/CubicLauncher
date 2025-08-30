@@ -1,31 +1,15 @@
 <script setup lang="ts">
-import Navbar from './components/navigation/Navbar.vue'
-import WelcomeView from './components/views/WelcomeView.vue'
-import InstancesView from './components/views/InstancesView.vue'
-import SettingsView from './components/views/SettingsView.vue'
-import { provideNavigation, useNavigation } from './components/navigation/navigationData'
-import { provideAccountModal } from './composables/useAccountModal'
+import { onMounted } from "vue";
+import Main from "./components/layout/Main.vue";
+import { useLauncherStore } from "./stores/LauncherStore";
 
-// Provide navigation state to child components
-provideNavigation()
+const store = useLauncherStore();
 
-// Provide account modal state to child components
-provideAccountModal()
-
-// Get navigation state for this component
-const { activeView } = useNavigation()
+onMounted(async () => {
+	await store.loadInstances();
+});
 </script>
 
 <template>
-  <div class="min-h-screen bg-stone-800 text-stone-300 flex flex-col">
-    <!-- Navbar with integrated titlebar -->
-    <Navbar />
-    
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col">
-      <WelcomeView v-if="activeView === 'home'" />
-      <InstancesView v-else-if="activeView === 'instances'" />
-      <SettingsView v-else-if="activeView === 'settings'" />
-    </main>
-  </div>
+    <Main />
 </template>
