@@ -1,3 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import Main from "./ui/layout/Main.vue"
 
-<template></template>
+
+</script>
+
+<template>
+    <Main />
+</template>
