@@ -1,8 +1,8 @@
-<script setup lang="ts">
+<script setup>
 </script>
 
 <template>
-    <div>
-        <h1>Test</h1>
-    </div>
+  <div id="app">
+    <!-- Your content will go here -->
+  </div>
 </template>

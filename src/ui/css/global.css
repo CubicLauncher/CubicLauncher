@@ -1,0 +1,14 @@
+/* Global Styles */
+:root {
+  --background-dark: #1a1a1a;
+  --text-color: #ffffff;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--background-dark);
+  color: var(--text-color);
+  font-family: Arial, sans-serif;
+}
