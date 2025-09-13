@@ -1,16 +1,18 @@
-/* 📁 sidebar.css */
+/* sidebar.css */
 
 .sidebar {
     width: var(--sidebar-width, 250px);
     height: 100vh;
     color: var(--text-color);
     background-color: var(--background-dark);
+    border-right: 1px solid rgba(148, 163, 184, 0.12);
     display: flex;
     flex-direction: column;
-    transition: width var(--transition-speed, 0.3s) ease;
+    transition: width var(--transition-speed, 0.3s) ease, background-color 0.2s ease, box-shadow 0.2s ease;
     position: relative;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px rgba(2, 6, 23, 0.35);
     z-index: 100;
+    border-radius: 0 12px 12px 0;
   }
   
   .sidebar.collapsed {
@@ -21,8 +23,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
   }
   
   .logo {
@@ -30,71 +32,84 @@
     align-items: center;
     gap: 10px;
     font-size: 1.2rem;
-    font-weight: bold;
+    font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
   }
   
   .logo-icon {
     font-size: 1.5rem;
+    color: #e2e8f0;
   }
   
   .toggle-btn {
     background: none;
     border: none;
-    color: var(--text-color);
-    font-size: 1.2rem;
+    color: #e2e8f0;
+    font-size: 1.1rem;
     cursor: pointer;
-    padding: 5px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, transform 0.12s ease;
   }
   
   .toggle-btn:hover {
-    background-color: var(--bg-hover, rgba(255, 255, 255, 0.05));
+    background-color: rgba(148, 163, 184, 0.12);
+    transform: translateY(-1px);
   }
+  .toggle-btn:active { transform: translateY(0); }
+  .toggle-btn:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
   
   .nav-menu {
     flex: 1;
-    padding: 15px 0;
+    padding: 8px 4px;
     overflow-y: auto;
   }
   
   .nav-item {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
-    margin: 5px 10px;
-    border-radius: 6px;
+    gap: 12px;
+    padding: 10px 12px;
+    margin: 6px 8px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
     white-space: nowrap;
     overflow: hidden;
+    position: relative;
   }
   
   .nav-item:hover {
-    background-color: var(--bg-hover, rgba(255, 255, 255, 0.05));
+    background-color: rgba(148, 163, 184, 0.10);
+  }
+  .nav-item:active {
+    transform: translateY(0.5px) scale(0.995);
   }
   
   .nav-item.active {
     background-color: var(--primary-color);
-    color: white;
+    color: #ffffff;
   }
   
   .nav-icon {
-    font-size: 1.2rem;
-    min-width: 30px;
+    font-size: 1.25rem;
+    min-width: 32px;
     text-align: center;
+    color: #cbd5e1;
   }
   
   .nav-text {
-    margin-left: 10px;
-    transition: opacity 0.2s;
+    margin-left: 2px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #e2e8f0;
+    transition: opacity 0.15s ease, color 0.15s ease;
   }
   
   .user-profile {
-    padding: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -103,7 +118,7 @@
   .avatar {
     width: 40px;
     height: 40px;
-    background-color: #333;
+    background-color: #1f2937;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -115,17 +130,18 @@
   .user-info {
     white-space: nowrap;
     overflow: hidden;
-    transition: opacity 0.2s;
+    transition: opacity 0.15s ease;
   }
   
   .username {
-    font-weight: 500;
+    font-weight: 600;
     font-size: 0.9rem;
+    color: #e2e8f0;
   }
   
   .status {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: #94a3b8;
   }
   
   /* Collapsed state */
@@ -138,6 +154,7 @@
     overflow: hidden;
     margin: 0;
   }
+  .collapsed .nav-item { justify-content: center; padding: 10px; }
   
   /* Responsive design */
   @media (max-width: 768px) {
@@ -147,6 +164,7 @@
       top: 0;
       transform: translateX(-100%);
       z-index: 1000;
+      max-height: 100dvh;
     }
     
     .sidebar.collapsed {
@@ -155,6 +173,6 @@
     
     .sidebar:not(.collapsed) {
       transform: translateX(0);
+      box-shadow: 0 16px 32px rgba(2, 6, 23, 0.55);
     }
   }
-  
