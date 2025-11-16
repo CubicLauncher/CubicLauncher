@@ -2,6 +2,7 @@ package cubic.launcher.com.cubiclauncher.ui;
 
 import cubic.launcher.com.cubiclauncher.ui.components.BottomBar;
 import cubic.launcher.com.cubiclauncher.ui.components.Sidebar;
+import cubic.launcher.com.cubiclauncher.util.loadStyles;
 import cubic.launcher.com.cubiclauncher.ui.components.TitleBar;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -13,8 +14,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-
-import java.net.URL;
 
 public class Main extends Application {
 
@@ -56,17 +55,8 @@ public class Main extends Application {
         Scene scene = new Scene(root, 1200, 720);
         scene.setFill(Color.TRANSPARENT);
 
-        // Cargar el archivo CSS externo
-        try {
-            URL cssUrl = getClass().getResource("/cubic/launcher/com/cubiclauncher/styles/ui.main.css");
-            if (cssUrl != null) {
-                scene.getStylesheets().add(cssUrl.toExternalForm());
-            } else {
-                System.err.println("No se pudo encontrar el archivo CSS en la ruta especificada.");
-            }
-        } catch (Exception e) {
-            System.err.println("Error al cargar el archivo CSS: " + e.getMessage());
-        }
+        // Cargar estilos CSS
+        loadStyles.load(scene, "/cubic/launcher/com/cubiclauncher/styles/ui.main.css");
 
         primaryStage.setScene(scene);
         primaryStage.show();
