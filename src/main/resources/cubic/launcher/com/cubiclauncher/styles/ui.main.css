@@ -25,8 +25,8 @@
 }
 
 .nav-button.active {
-    -fx-background-color: #4a6bff; /* Color de acento para el botón activo */
-    -fx-text-fill: #ffffff; /* Texto blanco */
+    -fx-background-color: #f0f0f0; /* Color de acento para el botón activo */
+    -fx-text-fill: #222222; /* Texto oscuro para contraste */
 }
 
 .play-button {
@@ -90,15 +90,6 @@
     -fx-font-weight: bold;
 }
 
-.news-card {
-    -fx-background-color: #2c2c2c;
-    -fx-background-radius: 20;
-    -fx-border-radius: 20;
-    -fx-padding: 25;
-    -fx-border-color: #444444;
-    -fx-border-width: 1;
-}
-
 .stat-title {
     -fx-text-fill: #999999; /* Se mantiene gris para títulos secundarios */
     -fx-font-size: 12;
@@ -117,35 +108,28 @@
     -fx-font-weight: bold;
 }
 
-.news-title {
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 18;
-    -fx-font-weight: bold;
-    -fx-text-transform: uppercase;
+.title-bar {
+    -fx-background-color: #1e1e1e;
+    -fx-padding: 5;
 }
 
-.placeholder-title {
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 24;
-    -fx-font-weight: bold;
-}
-
-.placeholder-desc {
-    -fx-text-fill: #bbbbbb;
+.title-bar-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-text-fill: #cccccc;
     -fx-font-size: 14;
 }
 
-.learn-more-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: #dddddd;
-    -fx-background-radius: 10;
-    -fx-padding: 8 20;
-    -fx-border-color: #555555;
-    -fx-border-width: 1;
-    -fx-border-radius: 10;
+.title-bar-button:hover {
+    -fx-background-color: #3a3a3a;
 }
 
-.learn-more-button:hover {
-    -fx-background-color: #3a3a3a;
-    -fx-text-fill: #ffffff;
+.close-button:hover {
+    -fx-background-color: #c42b1c;
+}
+
+.window-title {
+    -fx-text-fill: #cccccc;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
 }
