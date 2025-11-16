@@ -1,143 +1,55 @@
 package cubic.launcher.com.cubiclauncher.ui;
 
+import cubic.launcher.com.cubiclauncher.ui.components.BottomBar;
+import cubic.launcher.com.cubiclauncher.ui.components.Sidebar;
+import cubic.launcher.com.cubiclauncher.ui.components.TitleBar;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import java.net.URL;
 import javafx.stage.Stage;
 
-public class Main extends Application {
+import java.net.URL;
 
-    private double xOffset = 0;
-    private double yOffset = 0;
+public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("CubicLauncher");
-
-        // Usar un estilo de ventana sin decoración para crear una barra de título personalizada.
         primaryStage.initStyle(javafx.stage.StageStyle.TRANSPARENT);
 
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
 
-        // --- Barra de Título Personalizada ---
-        HBox titleBar = new HBox();
-        titleBar.setAlignment(Pos.CENTER_RIGHT); // Alinear botones a la derecha
-        titleBar.setPadding(new Insets(8, 8, 8, 15));
-        titleBar.setSpacing(10);
-        titleBar.getStyleClass().add("title-bar");
+        // --- Componentes de la UI ---
+        TitleBar titleBar = new TitleBar(primaryStage);
+        Sidebar sidebar = new Sidebar();
+        BottomBar bottomBar = new BottomBar();
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        // --- Contenido Principal ---
+        StackPane centerContent = new StackPane();
+        centerContent.getStyleClass().add("main-content");
+        centerContent.setPadding(new Insets(30));
 
-        // Botones de la ventana
-        Button minimizeButton = new Button("—");
-        minimizeButton.getStyleClass().add("title-bar-button");
-        minimizeButton.setOnAction(e -> primaryStage.setIconified(true));
+        VBox welcomeBox = new VBox(10);
+        welcomeBox.setAlignment(Pos.CENTER);
+        Label welcomeTitle = new Label("Bienvenido a CubicLauncher");
+        welcomeTitle.getStyleClass().add("welcome-title");
+        Label welcomeSubtitle = new Label("Selecciona una versión y haz clic en 'Jugar'");
+        welcomeSubtitle.getStyleClass().add("welcome-subtitle");
+        welcomeBox.getChildren().addAll(welcomeTitle, welcomeSubtitle);
 
-        Button closeButton = new Button("✕");
-        closeButton.getStyleClass().addAll("title-bar-button", "close-button");
-        closeButton.setOnAction(e -> primaryStage.close());
+        centerContent.getChildren().add(welcomeBox);
 
-        titleBar.getChildren().addAll(spacer, minimizeButton, closeButton);
-
-        // Permitir arrastrar la ventana
-        titleBar.setOnMousePressed(event -> {
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
-        });
-        titleBar.setOnMouseDragged(event -> {
-            primaryStage.setX(event.getScreenX() - xOffset);
-            primaryStage.setY(event.getScreenY() - yOffset);
-        });
-
+        // --- Organizar Layout ---
         root.setTop(titleBar);
-
-
-        // --- Barra lateral moderna ---
-        VBox leftSidebar = new VBox(25);
-        leftSidebar.setPadding(new Insets(30, 20, 30, 20));
-        leftSidebar.getStyleClass().add("sidebar");
-        leftSidebar.setPrefWidth(240);
-        leftSidebar.setMinWidth(240);
-
-        // Logo y título
-        HBox logoSection = new HBox(12);
-        logoSection.setAlignment(Pos.CENTER_LEFT);
-
-        Circle logoCircle = new Circle(20, Color.web("#4a6bff"));
-        Label title = new Label("Cubic");
-        title.getStyleClass().add("title");
-        logoSection.getChildren().addAll(logoCircle, title);
-
-        // Navegación moderna
-        VBox navButtons = new VBox(8);
-
-        Button btnPlay = createNavButton("🎮 Jugar", true);
-        Button btnInstallations = createNavButton("📦 Instalaciones", false);
-        Button btnSkins = createNavButton("👤 Skins", false);
-        Button btnSettings = createNavButton("⚙️ Ajustes", false);
-
-        navButtons.getChildren().addAll(btnPlay, btnInstallations, btnSkins, btnSettings);
-
-        // Sección de estadísticas
-        VBox quickStats = new VBox(15);
-        quickStats.setPadding(new Insets(20, 0, 0, 0));
-
-        Label statsTitle = new Label("ESTADO");
-        statsTitle.getStyleClass().add("stat-title");
-
-        VBox statsItems = new VBox(8);
-        addStatItem(statsItems, "Servidores", "Disponibles");
-        addStatItem(statsItems, "Versiones", "12 instaladas");
-        addStatItem(statsItems, "Última sesión", "Hace 2h");
-
-        quickStats.getChildren().addAll(statsTitle, statsItems);
-
-        leftSidebar.getChildren().addAll(logoSection, navButtons, new Region(), quickStats);
-        VBox.setVgrow(navButtons, Priority.ALWAYS);
-        root.setLeft(leftSidebar);
-
-        // --- Barra Inferior Moderna ---
-        HBox bottomBar = new HBox(20);
-        bottomBar.setPadding(new Insets(20, 30, 20, 30));
-        bottomBar.setAlignment(Pos.CENTER_LEFT);
-        bottomBar.getStyleClass().add("bottom-bar");
-
-        // Perfil de usuario con avatar
-        HBox userProfile = new HBox(12);
-        userProfile.setAlignment(Pos.CENTER_LEFT);
-
-        Circle userAvatar = new Circle(18, Color.web("#4a6bff"));
-        Label userName = new Label("Steve");
-        userName.getStyleClass().add("user-profile");
-
-        userProfile.getChildren().addAll(userAvatar, userName);
-
-        // Espaciador
-        Region bottomSpacer = new Region();
-        HBox.setHgrow(bottomSpacer, Priority.ALWAYS);
-
-        // Selector de versión moderno
-        ComboBox<String> versionSelector = new ComboBox<>();
-        versionSelector.getItems().addAll("1.20.4 - Forge", "1.20.4 - Vanilla", "1.19.2 - OptiFine");
-        versionSelector.getSelectionModel().selectFirst();
-        versionSelector.setPrefWidth(220);
-        versionSelector.getStyleClass().add("combo-box");
-
-        // Botón principal de Jugar moderno
-        Button mainPlayButton = new Button("▶ JUGAR");
-        mainPlayButton.getStyleClass().add("play-button");
-
-        bottomBar.getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
+        root.setLeft(sidebar);
+        root.setCenter(centerContent);
         root.setBottom(bottomBar);
 
         // --- Escena ---
@@ -158,35 +70,6 @@ public class Main extends Application {
 
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-
-    private Button createNavButton(String text, boolean active) {
-        Button button = new Button(text);
-        button.getStyleClass().add("nav-button");
-        if (active) {
-            button.getStyleClass().add("active");
-        }
-        button.setMaxWidth(Double.MAX_VALUE);
-        button.setAlignment(Pos.CENTER_LEFT);
-        return button;
-    }
-
-    private void addStatItem(VBox container, String title, String value) {
-        HBox statItem = new HBox();
-        statItem.setAlignment(Pos.CENTER_LEFT);
-        statItem.setSpacing(10);
-
-        Label statTitle = new Label(title);
-        statTitle.getStyleClass().add("stat-item-title");
-
-        Label statValue = new Label(value);
-        statValue.getStyleClass().add("stat-item-value");
-
-        HBox.setHgrow(statValue, Priority.ALWAYS);
-        statValue.setAlignment(Pos.CENTER_RIGHT);
-
-        statItem.getChildren().addAll(statTitle, statValue);
-        container.getChildren().add(statItem);
     }
 
     public static void main(String[] args) {
