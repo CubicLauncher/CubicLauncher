@@ -64,7 +64,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>cubic.launcher.com.cubiclauncher/cubic.launcher.com.cubiclauncher.ui.Main</mainClass>
+                            <mainClass>cubic.launcher.com.cubiclauncher/com.cubiclauncher.launcher.ui.Main</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

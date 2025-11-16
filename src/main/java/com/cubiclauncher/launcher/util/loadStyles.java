@@ -1,4 +1,4 @@
-package cubic.launcher.com.cubiclauncher.util;
+package com.cubiclauncher.launcher.util;
 
 import javafx.scene.Scene;
 

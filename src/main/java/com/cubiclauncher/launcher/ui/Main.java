@@ -1,9 +1,9 @@
-package cubic.launcher.com.cubiclauncher.ui;
+package com.cubiclauncher.launcher.ui;
 
-import cubic.launcher.com.cubiclauncher.ui.components.BottomBar;
-import cubic.launcher.com.cubiclauncher.ui.components.Sidebar;
-import cubic.launcher.com.cubiclauncher.util.loadStyles;
-import cubic.launcher.com.cubiclauncher.ui.components.TitleBar;
+import com.cubiclauncher.launcher.ui.components.BottomBar;
+import com.cubiclauncher.launcher.ui.components.Sidebar;
+import com.cubiclauncher.launcher.util.loadStyles;
+import com.cubiclauncher.launcher.ui.components.TitleBar;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -56,7 +56,7 @@ public class Main extends Application {
         scene.setFill(Color.TRANSPARENT);
 
         // Cargar estilos CSS
-        loadStyles.load(scene, "/cubic/launcher/com/cubiclauncher/styles/ui.main.css");
+        loadStyles.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
 
         primaryStage.setScene(scene);
         primaryStage.show();

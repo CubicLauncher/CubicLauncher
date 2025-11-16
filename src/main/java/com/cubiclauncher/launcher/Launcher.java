@@ -1,6 +1,6 @@
-package cubic.launcher.com.cubiclauncher;
+package com.cubiclauncher.launcher;
 
-import cubic.launcher.com.cubiclauncher.ui.Main;
+import com.cubiclauncher.launcher.ui.Main;
 import javafx.application.Application;
 
 public class Launcher {

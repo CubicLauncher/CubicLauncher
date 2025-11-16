@@ -1,4 +1,4 @@
-package cubic.launcher.com.cubiclauncher.ui.components;
+package com.cubiclauncher.launcher.ui.components;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
