@@ -95,4 +95,21 @@
     -fx-border-color: #3a3a3a;
     -fx-border-width: 1 0 0 0;
 }
+
+.tab-content-area .text-field {
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: #cccccc;
+    -fx-border-color: #555555;
+    -fx-border-radius: 3;
+    -fx-prompt-text-fill: #888888;
+}
+
+.tab-content-area .text-field:focused {
+    -fx-border-color: #68a0fd;
+}
+
+.jvm-args-label {
+    -fx-font-style: italic;
+    -fx-text-fill: #aaaaaa;
+}
 }
