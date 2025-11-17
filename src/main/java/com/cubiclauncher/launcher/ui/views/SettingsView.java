@@ -89,7 +89,74 @@ public class SettingsView {
         CheckBox discordPresenceCheckbox = new CheckBox("Habilitar integración con Discord (Rich Presence)");
         integrationsBox.getChildren().add(discordPresenceCheckbox);
 
-        // --- Sección de Ajustes Avanzados ---
+        // --- Sección de Rendimiento ---
+        Label performanceLabel = new Label("Rendimiento");
+        performanceLabel.getStyleClass().add("settings-subtitle");
+        VBox performanceBox = new VBox(5);
+        performanceBox.setPadding(new Insets(5, 0, 0, 10));
+        CheckBox useDiscreteGpuCheckbox = new CheckBox("Forzar el uso de la tarjeta gráfica dedicada");
+        performanceBox.getChildren().add(useDiscreteGpuCheckbox);
+
+        minecraftTabContent.getChildren().addAll(
+                versionVisibilityLabel, versionVisibilityBox,
+                new Separator(),
+                integrationsLabel, integrationsBox,
+                new Separator(),
+                performanceLabel, performanceBox
+        );
+        minecraftTab.setContent(minecraftTabContent);
+
+        // Pestaña de Java
+        Tab javaTab = new Tab("Java");
+        VBox javaTabContent = new VBox(15);
+        javaTabContent.setPadding(new Insets(15));
+        javaTabContent.setAlignment(Pos.CENTER_LEFT);
+
+        // --- Sección de Ejecutable de Java ---
+        Label javaExecutableLabel = new Label("Ejecutable de Java");
+        javaExecutableLabel.getStyleClass().add("settings-subtitle");
+        VBox javaExecutableBox = new VBox(5);
+        javaExecutableBox.setPadding(new Insets(5, 0, 0, 10));
+        HBox javaPathBox = new HBox(5);
+        javaPathBox.setAlignment(Pos.CENTER_LEFT);
+        TextField javaPathField = new TextField();
+        javaPathField.setPromptText("Automático");
+        HBox.setHgrow(javaPathField, Priority.ALWAYS);
+        Button browseButton = new Button("Examinar...");
+        javaPathBox.getChildren().addAll(javaPathField, browseButton);
+        javaExecutableBox.getChildren().add(javaPathBox);
+
+        // --- Sección de Asignación de Memoria ---
+        Label memoryAllocationLabel = new Label("Asignación de Memoria");
+        memoryAllocationLabel.getStyleClass().add("settings-subtitle");
+        VBox memoryAllocationBox = new VBox(5);
+        memoryAllocationBox.setPadding(new Insets(5, 0, 0, 10));
+
+        // RAM Mínima
+        HBox minMemoryBox = new HBox(10);
+        minMemoryBox.setAlignment(Pos.CENTER_LEFT);
+        Label minRamLabel = new Label("RAM Mínima:");
+        TextField minRamField = new TextField("1"); // Valor por defecto
+        minRamField.setPrefWidth(80);
+        ComboBox<String> minMemoryUnitComboBox = new ComboBox<>();
+        minMemoryUnitComboBox.getItems().addAll("GB");
+        minMemoryUnitComboBox.setValue("GB");
+        minMemoryBox.getChildren().addAll(minRamLabel, minRamField, minMemoryUnitComboBox);
+
+        // RAM Máxima
+        HBox maxMemoryBox = new HBox(10);
+        maxMemoryBox.setAlignment(Pos.CENTER_LEFT);
+        Label maxRamLabel = new Label("RAM Máxima:");
+        TextField maxRamField = new TextField("4"); // Valor por defecto
+        maxRamField.setPrefWidth(80);
+        ComboBox<String> maxMemoryUnitComboBox = new ComboBox<>();
+        maxMemoryUnitComboBox.getItems().addAll("GB");
+        maxMemoryUnitComboBox.setValue("GB");
+        maxMemoryBox.getChildren().addAll(maxRamLabel, maxRamField, maxMemoryUnitComboBox);
+
+        memoryAllocationBox.getChildren().addAll(minMemoryBox, maxMemoryBox);
+
+        // --- Sección de Ajustes Avanzados (movida desde Minecraft) ---
         Label advancedLabel = new Label("Avanzado");
         advancedLabel.getStyleClass().add("settings-subtitle");
         VBox advancedBox = new VBox(5);
@@ -97,20 +164,19 @@ public class SettingsView {
         Label launchParamsLabel = new Label("Argumentos de JVM:");
         launchParamsLabel.getStyleClass().add("jvm-args-label");
         TextField launchParamsField = new TextField();
-        launchParamsField.setPromptText("-Xmx2G -XX:+UnlockExperimentalVMOptions ...");
+        launchParamsField.setPromptText("-XX:+UnlockExperimentalVMOptions ...");
         advancedBox.getChildren().addAll(launchParamsLabel, launchParamsField);
 
-        minecraftTabContent.getChildren().addAll(
-                versionVisibilityLabel, versionVisibilityBox,
+        javaTabContent.getChildren().addAll(
+                javaExecutableLabel, javaExecutableBox,
                 new Separator(),
-                integrationsLabel, integrationsBox,
+                memoryAllocationLabel, memoryAllocationBox,
                 new Separator(),
                 advancedLabel, advancedBox
         );
-        minecraftTab.setContent(minecraftTabContent);
+        javaTab.setContent(javaTabContent);
 
-
-        tabPane.getTabs().addAll(launcherTab, minecraftTab);
+        tabPane.getTabs().addAll(launcherTab, minecraftTab, javaTab);
 
         settingsBox.getChildren().addAll(settingsTitle, tabPane);
 
