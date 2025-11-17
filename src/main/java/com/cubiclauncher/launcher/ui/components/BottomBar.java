@@ -5,6 +5,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -39,9 +40,20 @@ public class BottomBar extends HBox {
         versionSelector.getSelectionModel().selectFirst();
         versionSelector.setPrefWidth(220);
         versionSelector.getStyleClass().add("combo-box");
+        versionSelector.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item);
+                }
+            }
+        });
 
         // Botón principal de Jugar moderno
-        Button mainPlayButton = new Button("▶ JUGAR");
+        Button mainPlayButton = new Button("JUGAR");
         mainPlayButton.getStyleClass().add("play-button");
 
         getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
