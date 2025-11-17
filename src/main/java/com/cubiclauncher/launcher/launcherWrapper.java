@@ -8,7 +8,7 @@ public class launcherWrapper {
     static {
         try {
             nativeLibraryLoader.loadLibraryFromResources(
-                    "com/cubiclauncher/launcher/nativeLibraries/proton/libcproton.so"
+                    "/com.cubiclauncher.launcher/nativeLibraries/proton/libproton.so"
             );
         } catch (IOException e) {
             throw new RuntimeException("Error cargando la librería nativa", e);

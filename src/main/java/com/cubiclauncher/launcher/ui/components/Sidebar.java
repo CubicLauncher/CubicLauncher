@@ -7,6 +7,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Priority;
 
 public class Sidebar extends VBox {
@@ -24,10 +26,15 @@ public class Sidebar extends VBox {
 
         // Logo y título
         HBox logoSection = new HBox(12);
+        logoSection.setAlignment(Pos.CENTER_LEFT);
 
+        Image logoImage = new Image(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/Cubic Dark.png"));
+        ImageView logoView = new ImageView(logoImage);
+        logoView.setFitWidth(40);
+        logoView.setFitHeight(40);
         Label title = new Label("Cubic");
         title.getStyleClass().add("title");
-        logoSection.getChildren().add(title);
+        logoSection.getChildren().addAll(logoView, title);
 
         // Navegación moderna
         navButtonsContainer = new VBox(8);
