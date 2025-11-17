@@ -5,13 +5,17 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Priority;
 
 public class Sidebar extends VBox {
+
+    private final Button btnPlay;
+    private final Button btnSettings;
+    private final VBox navButtonsContainer;
 
     public Sidebar() {
         super(25);
@@ -24,19 +28,22 @@ public class Sidebar extends VBox {
         HBox logoSection = new HBox(12);
         logoSection.setAlignment(Pos.CENTER_LEFT);
 
-        Circle logoCircle = new Circle(20, Color.web("#4a6bff"));
+        Image logoImage = new Image(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/Cubic Dark.png"));
+        ImageView logoView = new ImageView(logoImage);
+        logoView.setFitWidth(40);
+        logoView.setFitHeight(40);
         Label title = new Label("Cubic");
         title.getStyleClass().add("title");
-        logoSection.getChildren().addAll(logoCircle, title);
+        logoSection.getChildren().addAll(logoView, title);
 
         // Navegación moderna
-        VBox navButtons = new VBox(8);
+        navButtonsContainer = new VBox(8);
 
-        Button btnPlay = createNavButton("🎮 Jugar", true);
-        Button btnInstallations = createNavButton("📦 Instalaciones", false);
-        Button btnSettings = createNavButton("⚙️ Ajustes", false);
+        btnPlay = createNavButton("Jugar");
+        Button btnInstallations = createNavButton("Instalaciones");
+        btnSettings = createNavButton("Ajustes");
 
-        navButtons.getChildren().addAll(btnPlay, btnInstallations, btnSettings);
+        navButtonsContainer.getChildren().addAll(btnPlay, btnInstallations, btnSettings);
 
         // Sección de estadísticas
         VBox quickStats = new VBox(15);
@@ -52,20 +59,34 @@ public class Sidebar extends VBox {
 
         quickStats.getChildren().addAll(statsTitle, statsItems);
 
-        getChildren().addAll(logoSection, navButtons, new Region(), quickStats);
-        VBox.setVgrow(navButtons, Priority.ALWAYS);
+        getChildren().addAll(logoSection, navButtonsContainer, new Region(), quickStats);
+        VBox.setVgrow(navButtonsContainer, Priority.ALWAYS);
+
+        setActive(btnPlay);
     }
 
-    private Button createNavButton(String text, boolean active) {
+    private Button createNavButton(String text) {
         Button button = new Button(text);
         button.getStyleClass().add("nav-button");
-        if (active) {
-            button.getStyleClass().add("active");
-        }
         button.setMaxWidth(Double.MAX_VALUE);
         button.setAlignment(Pos.CENTER_LEFT);
         return button;
     }
+
+    private void setNavigationAction(Button button, Runnable viewAction) {
+        button.setOnAction(event -> {
+            setActive(button);
+            viewAction.run();
+        });
+    }
+
+    private void setActive(Button activeButton) {
+        navButtonsContainer.getChildren().forEach(node -> node.getStyleClass().remove("active"));
+        activeButton.getStyleClass().add("active");
+    }
+
+    public void setPlayAction(Runnable action) { setNavigationAction(btnPlay, action); }
+    public void setSettingsAction(Runnable action) { setNavigationAction(btnSettings, action); }
 
     private void addStatItem(VBox container, String title, String value) {
         HBox statItem = new HBox();

@@ -3,10 +3,12 @@ package com.cubiclauncher.launcher.ui;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
 import com.cubiclauncher.launcher.util.loadStyles;
+import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.ui.components.TitleBar;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -29,21 +31,24 @@ public class Main extends Application {
         TitleBar titleBar = new TitleBar(primaryStage);
         Sidebar sidebar = new Sidebar();
         BottomBar bottomBar = new BottomBar();
-
-        // --- Contenido Principal ---
+        
+        // --- Contenedor Principal ---
         StackPane centerContent = new StackPane();
         centerContent.getStyleClass().add("main-content");
         centerContent.setPadding(new Insets(30));
 
-        VBox welcomeBox = new VBox(10);
-        welcomeBox.setAlignment(Pos.CENTER);
-        Label welcomeTitle = new Label("Bienvenido a CubicLauncher");
-        welcomeTitle.getStyleClass().add("welcome-title");
-        Label welcomeSubtitle = new Label("Selecciona una versión y haz clic en 'Jugar'");
-        welcomeSubtitle.getStyleClass().add("welcome-subtitle");
-        welcomeBox.getChildren().addAll(welcomeTitle, welcomeSubtitle);
+        // --- Vista de Bienvenida ---
+        VBox welcomeBox = createWelcomeView();
 
-        centerContent.getChildren().add(welcomeBox);
+        // --- Vista de Ajustes (Placeholder) ---
+        VBox settingsBox = SettingsView.create();
+
+        // --- Lógica de Navegación ---
+        // Pasamos la lógica de cambio de vista a la Sidebar.
+        sidebar.setPlayAction(() -> showView(centerContent, welcomeBox));
+        sidebar.setSettingsAction(() -> showView(centerContent, settingsBox));
+
+        showView(centerContent, welcomeBox);
 
         // --- Organizar Layout ---
         root.setTop(titleBar);
@@ -60,6 +65,22 @@ public class Main extends Application {
 
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private VBox createWelcomeView() {
+        VBox welcomeBox = new VBox(10);
+        welcomeBox.setAlignment(Pos.CENTER);
+        Label welcomeTitle = new Label("Bienvenido a CubicLauncher");
+        welcomeTitle.getStyleClass().add("welcome-title");
+        Label welcomeSubtitle = new Label("Selecciona una versión y haz clic en 'Jugar'");
+        welcomeSubtitle.getStyleClass().add("welcome-subtitle");
+        welcomeBox.getChildren().addAll(welcomeTitle, welcomeSubtitle);
+        return welcomeBox;
+    }
+
+    private void showView(StackPane container, Node view) {
+        container.getChildren().clear();
+        container.getChildren().add(view);
     }
 
     public static void main(String[] args) {
