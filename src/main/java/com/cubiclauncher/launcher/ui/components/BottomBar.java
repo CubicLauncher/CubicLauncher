@@ -10,7 +10,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-
+import com.cubiclauncher.launcher.launcherWrapper;
 public class BottomBar extends HBox {
 
     public BottomBar() {
@@ -43,7 +43,12 @@ public class BottomBar extends HBox {
         // Botón principal de Jugar moderno
         Button mainPlayButton = new Button("▶ JUGAR");
         mainPlayButton.getStyleClass().add("play-button");
-
+        mainPlayButton.setOnAction(event -> {
+            new Thread(() -> {
+                launcherWrapper launcherWrapper = new launcherWrapper();
+                launcherWrapper.startMinecraftDownload("/tmp/xd", "1.16.5");
+            }).start();
+        });
         getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
     }
 }
