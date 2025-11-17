@@ -28,13 +28,13 @@ public class Sidebar extends VBox {
         HBox logoSection = new HBox(12);
         logoSection.setAlignment(Pos.CENTER_LEFT);
 
-        Image logoImage = new Image(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/Cubic Dark.png"));
-        ImageView logoView = new ImageView(logoImage);
-        logoView.setFitWidth(40);
-        logoView.setFitHeight(40);
+        //Image logoImage = new Image(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/Cubic Dark.png"));
+       // ImageView logoView = new ImageView(logoImage);
+        //logoView.setFitWidth(40);
+        //logoView.setFitHeight(40);
         Label title = new Label("Cubic");
         title.getStyleClass().add("title");
-        logoSection.getChildren().addAll(logoView, title);
+        logoSection.getChildren().addAll(title);
 
         // Navegación moderna
         navButtonsContainer = new VBox(8);

@@ -3,17 +3,15 @@ package com.cubiclauncher.launcher.ui.views;
 import com.cubiclauncher.launcher.util.loadStyles;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class SettingsView {
 
     public static VBox create() {
-        VBox settingsBox = new VBox(20);
+        VBox settingsBox = new VBox(10);
         settingsBox.setAlignment(Pos.CENTER);
         settingsBox.setPadding(new Insets(20));
 
@@ -27,29 +25,54 @@ public class SettingsView {
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         // Pestaña General
-        Tab generalTab = new Tab("General");
-        VBox generalTabContent = new VBox(10);
-        generalTabContent.setAlignment(Pos.CENTER_LEFT);
-        generalTabContent.setPadding(new Insets(10));
+        Tab launcherTab = new Tab("Launcher");
+        VBox launcherTabContent = new VBox(15);
+        launcherTabContent.setAlignment(Pos.CENTER_LEFT);
+        launcherTabContent.setPadding(new Insets(15));
+
         CheckBox autoUpdateCheckbox = new CheckBox("Habilitar actualizaciones automáticas");
-        generalTabContent.getChildren().add(autoUpdateCheckbox);
-        generalTab.setContent(generalTabContent);
+        CheckBox errorConsoleCheckbox = new CheckBox("Habilitar consola de errores");
 
-        // Pestaña Apariencia
-        Tab appearanceTab = new Tab("Apariencia");
-        VBox appearanceTabContent = new VBox(10);
-        appearanceTabContent.setPadding(new Insets(10));
-        appearanceTabContent.getChildren().add(new Label("Aquí van los ajustes de apariencia."));
-        appearanceTab.setContent(appearanceTabContent);
+        HBox languageBox = new HBox(10);
+        languageBox.setAlignment(Pos.CENTER_LEFT);
+        Label languageLabel = new Label("Idioma:");
+        ComboBox<String> languageComboBox = new ComboBox<>();
+        languageComboBox.getItems().addAll("Español", "English");
+        languageComboBox.setValue("Español"); // Valor por defecto
+        languageBox.getChildren().addAll(languageLabel, languageComboBox);
 
-        // Pestaña Acerca de
-        Tab aboutTab = new Tab("Acerca de");
-        VBox aboutTabContent = new VBox(10);
-        aboutTabContent.setPadding(new Insets(10));
-        aboutTabContent.getChildren().add(new Label("Aquí va la información acerca del launcher."));
-        aboutTab.setContent(aboutTabContent);
+        // --- Sección de Información ---
+        Separator separator = new Separator();
+        separator.setPadding(new Insets(10, 0, 5, 0));
 
-        tabPane.getTabs().addAll(generalTab, appearanceTab, aboutTab);
+        Label versionLabel = new Label("Versión: 1.0.0-SNAPSHOT");
+        Label devLabel = new Label("Desarrollado por: CubicLauncher Team");
+
+        HBox sourceCodeBox = new HBox(5);
+        sourceCodeBox.setAlignment(Pos.CENTER_LEFT);
+        Label sourceCodeLabel = new Label("Código Fuente:");
+        Hyperlink sourceCodeLink = new Hyperlink("github.com/CubicLauncher/CubicLauncher");
+        sourceCodeBox.getChildren().addAll(sourceCodeLabel, sourceCodeLink);
+
+        launcherTabContent.getChildren().addAll(
+                languageBox,
+                autoUpdateCheckbox,
+                errorConsoleCheckbox,
+                separator,
+                versionLabel,
+                devLabel,
+                sourceCodeBox
+        );
+        launcherTab.setContent(launcherTabContent);
+
+        Tab minecraftTab = new Tab("Minecraft");
+        VBox minecraftTabContent = new VBox(10);
+        minecraftTabContent.setPadding(new Insets(10));
+        minecraftTabContent.getChildren().add(new Label("Aquí van los ajustes de apariencia."));
+        minecraftTab.setContent(minecraftTabContent);
+
+
+        tabPane.getTabs().addAll(launcherTab, minecraftTab);
 
         settingsBox.getChildren().addAll(settingsTitle, tabPane);
 

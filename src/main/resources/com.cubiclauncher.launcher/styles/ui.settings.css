@@ -36,3 +36,63 @@
 .settings-tab-pane > .tab-content-area {
     -fx-background-color: #1e1e1e;
 }
+
+/* Estilos para los controles dentro de las pestañas */
+.tab-content-area .label {
+    -fx-text-fill: #cccccc;
+    -fx-font-size: 14px;
+}
+
+.tab-content-area .check-box .text {
+    -fx-fill: #cccccc;
+    -fx-font-size: 14px;
+}
+
+.tab-content-area .check-box .box {
+    -fx-background-color: #3a3a3a;
+    -fx-border-color: #555555;
+    -fx-border-radius: 3;
+}
+
+.tab-content-area .check-box:selected .mark {
+    -fx-background-color: #ffffff;
+}
+
+.tab-content-area .button {
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: #cccccc;
+    -fx-border-color: #555555;
+    -fx-border-radius: 3;
+    -fx-padding: 5 15 5 15;
+    -fx-font-weight: bold;
+    -fx-max-width: 250px; /* Limita el ancho del botón */
+}
+
+.tab-content-area .button:hover {
+    -fx-background-color: #4a4a4a;
+}
+
+.tab-content-area .combo-box .list-cell {
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: #cccccc;
+}
+
+.tab-content-area .combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #4a4a4a;
+}
+
+.tab-content-area .combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #ffffff;
+}
+
+.tab-content-area .hyperlink {
+    -fx-text-fill: #68a0fd;
+    -fx-border-color: transparent;
+}
+
+.tab-content-area .separator .line {
+    -fx-border-color: #3a3a3a;
+    -fx-border-width: 1 0 0 0;
+}
+}
