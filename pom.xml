@@ -48,6 +48,13 @@
             <artifactId>gson</artifactId>
             <version>2.13.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.cubiclauncher</groupId>
+            <artifactId>claunch</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/CLaunch.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>

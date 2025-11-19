@@ -4,12 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.*;
 import java.nio.file.*;
-
+import com.cubiclauncher.launcher.util.pathManager;
 public class SettingsManager {
     private static final String APP_NAME = "CubicLauncher";
     private static final String SETTINGS_FILE = "settings.json";
     private static SettingsManager instance;
-
     // Launcher settings
     public String language = "Español";
     public boolean autoUpdate = true;
@@ -42,29 +41,8 @@ public class SettingsManager {
         return instance;
     }
 
-    // Obtener directorio de configuración según el sistema operativo
-    private static File getConfigDirectory() {
-        String os = System.getProperty("os.name").toLowerCase();
-        String configPath;
-
-        if (os.contains("win")) {
-            configPath = System.getenv("APPDATA") + File.separator + APP_NAME;
-        } else if (os.contains("mac")) {
-            configPath = System.getProperty("user.home") + "/Library/Application Support/" + APP_NAME;
-        } else {
-            configPath = System.getProperty("user.home") + "/.config/" + APP_NAME;
-        }
-
-        File dir = new File(configPath);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-
-        return dir;
-    }
-
     private static File getSettingsFile() {
-        return new File(getConfigDirectory(), SETTINGS_FILE);
+        return new File(pathManager.getInstance().getSettingsPath().toFile(), SETTINGS_FILE);
     }
 
     public static SettingsManager load() {

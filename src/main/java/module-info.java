@@ -4,6 +4,7 @@ module cubic.launcher.com.cubiclauncher {
     requires org.kordamp.bootstrapfx.core;
     requires com.google.gson;
     requires java.desktop;
+    requires CLaunch;
 
     opens com.cubiclauncher.launcher.ui to javafx.graphics, javafx.fxml;
     opens com.cubiclauncher.launcher.ui.components to javafx.fxml, javafx.graphics;

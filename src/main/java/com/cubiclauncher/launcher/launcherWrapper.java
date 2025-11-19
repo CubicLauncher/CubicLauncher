@@ -17,10 +17,14 @@
 package com.cubiclauncher.launcher;
 
 import com.cubiclauncher.launcher.util.nativeLibraryLoader;
+
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
+
+import com.cubiclauncher.claunch.Launcher;
 
 public class launcherWrapper {
-
     static {
         try {
             nativeLibraryLoader.loadLibraryFromResources(
@@ -35,4 +39,9 @@ public class launcherWrapper {
      * Método nativo expuesto por la librería Rust.
      */
     public native void startMinecraftDownload(String targetPath, String version);
+
+    public static void startVersion(String versionId) throws IOException, InterruptedException {
+        Launcher.launch("xd",
+                "", Paths.get("xd"),"Santiagolxx", "/usr/lib/jvm/java-21-graalvm/bin/java", "512M", "2G", 900, 600, true);
+    }
 }
