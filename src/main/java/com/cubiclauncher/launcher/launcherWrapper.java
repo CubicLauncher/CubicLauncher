@@ -16,14 +16,17 @@
  */
 package com.cubiclauncher.launcher;
 
+import com.cubiclauncher.launcher.util.SettingsManager;
 import com.cubiclauncher.launcher.util.nativeLibraryLoader;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import com.cubiclauncher.launcher.util.pathManager;
+import com.cubiclauncher.launcher.util.PathManager;
 import com.cubiclauncher.claunch.Launcher;
 
 public class launcherWrapper {
+    static SettingsManager sm = SettingsManager.getInstance();
+    static PathManager pm = PathManager.getInstance();
     static {
         try {
             nativeLibraryLoader.loadLibraryFromResources(
@@ -37,14 +40,16 @@ public class launcherWrapper {
     /**
      * Método nativo expuesto por la librería Rust.
      */
-    public native void startMinecraftDownload(String targetPath, String version);
-
-    public static void startVersion(String versionId) throws IOException, InterruptedException {
+    private native void startMinecraftDownload(String targetPath, String version);
+    public void downloadMinecraftVersion(String vanillaVersionId) {
+        startMinecraftDownload(pm.getGamePath().resolve("shared").toString(), vanillaVersionId);
+    }
+    public void startVersion(String versionId) throws IOException, InterruptedException {
         Launcher.launch(
-                pathManager.getInstance().getGamePath().resolve("versions", versionId).toString(),
-                pathManager.getInstance().getGamePath().toString(),
-                pathManager.getInstance().getInstancePath().resolve("xd"),
-                "Santiagolxx",
+                pm.getGamePath().resolve("shared","versions", versionId, versionId + ".json").toString(),
+                pm.getGamePath().toString(),
+                pm.getInstancePath().resolve("xd"),
+                sm.getUsername(),
                 "/usr/lib/jvm/java-21-graalvm/bin/java",
                 "512M",
                 "2G",

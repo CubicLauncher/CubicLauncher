@@ -4,9 +4,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.*;
 import java.nio.file.*;
+import com.cubiclauncher.launcher.util.PathManager;
+
 public class SettingsManager {
     private static final String SETTINGS_FILE = "settings.json";
     private static SettingsManager instance;
+    private static final PathManager pathManager = PathManager.getInstance();
+
     // Launcher settings
     public String language = "Español";
     public boolean autoUpdate = true;
@@ -40,7 +44,7 @@ public class SettingsManager {
     }
 
     private static File getSettingsFile() {
-        return new File(pathManager.getInstance().getSettingsPath().toFile(), SETTINGS_FILE);
+        return new File(pathManager.getSettingsPath().toFile(), SETTINGS_FILE);
     }
 
     public static SettingsManager load() {
@@ -87,7 +91,7 @@ public class SettingsManager {
     public boolean isShowBetaVersions() { return showBetaVersions; }
     public boolean isDiscordRichPresence() { return discordRichPresence; }
     public boolean isForceDiscreteGpu() { return forceDiscreteGpu; }
-
+    public String getUsername() { return username; }
     public String getJavaPath() { return javaPath; }
     public int getMinMemory() { return minMemory; }
     public int getMaxMemory() { return maxMemory; }

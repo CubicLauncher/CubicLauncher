@@ -28,6 +28,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import com.cubiclauncher.launcher.launcherWrapper;
+
+import java.io.IOException;
+
 public class BottomBar extends HBox {
 
     public BottomBar() {
@@ -52,7 +55,7 @@ public class BottomBar extends HBox {
 
         // Selector de versión moderno
         ComboBox<String> versionSelector = new ComboBox<>();
-        versionSelector.getItems().addAll("1.20.4 - Forge", "1.20.4 - Vanilla", "1.19.2 - OptiFine");
+        versionSelector.getItems().addAll("1.20.4", "1.16.5", "1.12.2", "1.21.10", "1.20.1");
         versionSelector.getSelectionModel().selectFirst();
         versionSelector.setPrefWidth(220);
         versionSelector.getStyleClass().add("combo-box");
@@ -71,13 +74,26 @@ public class BottomBar extends HBox {
         // Botón principal de Jugar moderno
         Button mainPlayButton = new Button("JUGAR");
         mainPlayButton.getStyleClass().add("play-button");
-        // TODO: Esto por ahora es testing
+        Button downloadButton = new Button("DESCARGAR");
+        downloadButton.getStyleClass().add("play-button");
+        downloadButton.setOnAction(event -> {
+            new Thread(() -> {
+               launcherWrapper launcherWrapper = new launcherWrapper();
+               launcherWrapper.downloadMinecraftVersion(versionSelector.getValue());
+            }).start();
+        });
         mainPlayButton.setOnAction(event -> {
             new Thread(() -> {
                 launcherWrapper launcherWrapper = new launcherWrapper();
-                launcherWrapper.startMinecraftDownload("/tmp/xd", "1.16.5");
+                try {
+                    launcherWrapper.startVersion(versionSelector.getValue());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }).start();
         });
-        getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
+        getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton, downloadButton);
     }
 }
