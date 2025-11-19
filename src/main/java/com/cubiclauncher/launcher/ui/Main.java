@@ -103,8 +103,4 @@ public class Main extends Application {
         container.getChildren().clear();
         container.getChildren().add(view);
     }
-
-    public static void main(String[] args) {
-        launch(args);
-    }
 }
