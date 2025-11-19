@@ -18,10 +18,9 @@ package com.cubiclauncher.launcher;
 
 import com.cubiclauncher.launcher.util.nativeLibraryLoader;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-
+import com.cubiclauncher.launcher.util.pathManager;
 import com.cubiclauncher.claunch.Launcher;
 
 public class launcherWrapper {
@@ -41,7 +40,16 @@ public class launcherWrapper {
     public native void startMinecraftDownload(String targetPath, String version);
 
     public static void startVersion(String versionId) throws IOException, InterruptedException {
-        Launcher.launch("xd",
-                "", Paths.get("xd"),"Santiagolxx", "/usr/lib/jvm/java-21-graalvm/bin/java", "512M", "2G", 900, 600, true);
+        Launcher.launch(
+                pathManager.getInstance().getGamePath().resolve("versions", versionId).toString(),
+                pathManager.getInstance().getGamePath().toString(),
+                pathManager.getInstance().getInstancePath().resolve("xd"),
+                "Santiagolxx",
+                "/usr/lib/jvm/java-21-graalvm/bin/java",
+                "512M",
+                "2G",
+                900,
+                600,
+                true);
     }
 }
