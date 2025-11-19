@@ -45,12 +45,7 @@ public class VersionsView {
         );
         versionsList.setItems(versions);
 
-        versionsList.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
-            @Override
-            public ListCell<String> call(ListView<String> listView) {
-                return new VersionCell();
-            }
-        });
+        versionsList.setCellFactory(listView -> new VersionCell());
 
         StylesLoader.load(instancesBox, "/com.cubiclauncher.launcher/styles/ui.main.css");
 
