@@ -16,6 +16,7 @@
  */
 package com.cubiclauncher.launcher.ui.views;
 
+import com.cubiclauncher.launcher.ui.controllers.SettingsController;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,10 +24,21 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class SettingsView {
+    private static SettingsController controller;
 
     public static VBox create() {
+        return create(null);
+    }
+
+    public static VBox create(Stage stage) {
+        controller = new SettingsController();
+        if (stage != null) {
+            controller.setStage(stage);
+        }
+
         VBox settingsBox = new VBox(10);
         settingsBox.setAlignment(Pos.CENTER);
         settingsBox.setPadding(new Insets(20));
@@ -34,170 +46,303 @@ public class SettingsView {
         Label settingsTitle = new Label("Ajustes");
         settingsTitle.getStyleClass().add("welcome-title");
 
+        TabPane tabPane = createTabPane();
+
+        settingsBox.getChildren().addAll(settingsTitle, tabPane);
+        StylesLoader.load(settingsBox, "/com.cubiclauncher.launcher/styles/ui.settings.css");
+
+        return settingsBox;
+    }
+
+    private static TabPane createTabPane() {
         TabPane tabPane = new TabPane();
-        tabPane.getStyleClass().add("settings-tab-pane"); // Mantener la clase de estilo
+        tabPane.getStyleClass().add("settings-tab-pane");
         VBox.setVgrow(tabPane, Priority.ALWAYS);
         tabPane.setMaxWidth(Double.MAX_VALUE);
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
-        // Pestaña General
-        Tab launcherTab = new Tab("Launcher");
-        VBox launcherTabContent = new VBox(15);
-        launcherTabContent.setAlignment(Pos.CENTER_LEFT);
-        launcherTabContent.setPadding(new Insets(15));
+        tabPane.getTabs().addAll(
+                createLauncherTab(),
+                createMinecraftTab(),
+                createJavaTab()
+        );
 
+        return tabPane;
+    }
+
+    // ==================== PESTAÑA LAUNCHER ====================
+    private static Tab createLauncherTab() {
+        Tab tab = new Tab("Launcher");
+        VBox content = new VBox(15);
+        content.setAlignment(Pos.CENTER_LEFT);
+        content.setPadding(new Insets(15));
+
+        // Idioma con evento
+        HBox languageBox = createLanguageSelector();
+
+        // Opciones con eventos conectados
         CheckBox autoUpdateCheckbox = new CheckBox("Habilitar actualizaciones automáticas");
+        autoUpdateCheckbox.setSelected(controller.getSettings().isAutoUpdate());
+        autoUpdateCheckbox.setOnAction(e -> controller.onAutoUpdateChanged(autoUpdateCheckbox.isSelected()));
+
         CheckBox errorConsoleCheckbox = new CheckBox("Habilitar consola de errores");
-        CheckBox closeLauncheropenCheckox = new CheckBox("Cerrar launcher al abrir el juego");
+        errorConsoleCheckbox.setSelected(controller.getSettings().isErrorConsole());
+        errorConsoleCheckbox.setOnAction(e -> controller.onErrorConsoleChanged(errorConsoleCheckbox.isSelected()));
 
-        HBox languageBox = new HBox(10);
-        languageBox.setAlignment(Pos.CENTER_LEFT);
-        Label languageLabel = new Label("Idioma:");
-        ComboBox<String> languageComboBox = new ComboBox<>();
-        languageComboBox.getItems().addAll("Español", "English");
-        languageComboBox.setValue("Español"); // Valor por defecto
-        languageBox.getChildren().addAll(languageLabel, languageComboBox);
+        CheckBox closeLaunchCheckbox = new CheckBox("Cerrar launcher al abrir el juego");
+        closeLaunchCheckbox.setSelected(controller.getSettings().isCloseLauncherOnGameStart());
+        closeLaunchCheckbox.setOnAction(e -> controller.onCloseLauncherChanged(closeLaunchCheckbox.isSelected()));
 
-        // --- Sección de Información ---
-        Separator separator = new Separator();
-        separator.setPadding(new Insets(10, 0, 5, 0));
+        CheckBox nativeStyles = new CheckBox("Utilizar estilos nativos");
+        nativeStyles.setSelected(controller.getSettings().isNative_styles());
+        nativeStyles.setOnAction(e -> controller.onNativeStylesChanged(nativeStyles.isSelected()));
+
+        // Información del launcher
+        VBox infoSection = createLauncherInfo();
+
+        content.getChildren().addAll(
+                languageBox,
+                autoUpdateCheckbox,
+                errorConsoleCheckbox,
+                closeLaunchCheckbox,
+                nativeStyles,
+                new Separator(),
+                infoSection
+        );
+
+        tab.setContent(content);
+        return tab;
+    }
+
+    private static HBox createLanguageSelector() {
+        HBox box = new HBox(10);
+        box.setAlignment(Pos.CENTER_LEFT);
+
+        Label label = new Label("Idioma:");
+        ComboBox<String> comboBox = new ComboBox<>();
+        comboBox.getItems().addAll("Español", "English");
+        comboBox.setValue(controller.getSettings().getLanguage());
+
+        // Conectar evento
+        comboBox.setOnAction(e -> controller.onLanguageChanged(comboBox.getValue()));
+
+        box.getChildren().addAll(label, comboBox);
+        return box;
+    }
+
+    private static VBox createLauncherInfo() {
+        VBox infoBox = new VBox(5);
 
         Label versionLabel = new Label("Versión: 1.0.0-SNAPSHOT");
-        Label devLabel = new Label("Desarrollado por: CubicLauncher Team");
+        Label devLabel = new Label("Desarrollado por: Santiagolxx, Notstaff & CubicLauncher contributors");
 
         HBox sourceCodeBox = new HBox(5);
         sourceCodeBox.setAlignment(Pos.CENTER_LEFT);
         Label sourceCodeLabel = new Label("Código Fuente:");
         Hyperlink sourceCodeLink = new Hyperlink("github.com/CubicLauncher/CubicLauncher");
+        sourceCodeLink.setOnAction(e -> controller.onSourceCodeLinkClicked());
         sourceCodeBox.getChildren().addAll(sourceCodeLabel, sourceCodeLink);
 
-        launcherTabContent.getChildren().addAll(
-                languageBox,
-                autoUpdateCheckbox,
-                errorConsoleCheckbox,
-                closeLauncheropenCheckox,
-                separator,
-                versionLabel,
-                devLabel,
-                sourceCodeBox
-        );
-        launcherTab.setContent(launcherTabContent);
+        infoBox.getChildren().addAll(versionLabel, devLabel, sourceCodeBox);
+        return infoBox;
+    }
 
-        Tab minecraftTab = new Tab("Minecraft");
-        VBox minecraftTabContent = new VBox(15);
-        minecraftTabContent.setPadding(new Insets(15));
-        minecraftTabContent.setAlignment(Pos.CENTER_LEFT);
+    // ==================== PESTAÑA MINECRAFT ====================
+    private static Tab createMinecraftTab() {
+        Tab tab = new Tab("Minecraft");
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(15));
+        content.setAlignment(Pos.CENTER_LEFT);
 
-        // --- Sección de Visibilidad de Versiones ---
-        Label versionVisibilityLabel = new Label("Visibilidad de Versiones");
-        versionVisibilityLabel.getStyleClass().add("settings-subtitle"); // Estilo para subtítulos
-        VBox versionVisibilityBox = new VBox(5);
-        versionVisibilityBox.setPadding(new Insets(5, 0, 0, 10)); // Indentación para las opciones
-        CheckBox showAlphasCheckbox = new CheckBox("Mostrar versiones Alpha (muy inestables)");
-        CheckBox showBetasCheckbox = new CheckBox("Mostrar versiones betas");
-        versionVisibilityBox.getChildren().addAll(showAlphasCheckbox, showBetasCheckbox);
-
-        // --- Sección de Integraciones ---
-        Label integrationsLabel = new Label("Integraciones");
-        integrationsLabel.getStyleClass().add("settings-subtitle");
-        VBox integrationsBox = new VBox(5);
-        integrationsBox.setPadding(new Insets(5, 0, 0, 10));
-        CheckBox discordPresenceCheckbox = new CheckBox("Habilitar integración con Discord (Rich Presence)");
-        integrationsBox.getChildren().add(discordPresenceCheckbox);
-
-        // --- Sección de Rendimiento ---
-        Label performanceLabel = new Label("Rendimiento");
-        performanceLabel.getStyleClass().add("settings-subtitle");
-        VBox performanceBox = new VBox(5);
-        performanceBox.setPadding(new Insets(5, 0, 0, 10));
-        CheckBox useDiscreteGpuCheckbox = new CheckBox("Forzar el uso de la tarjeta gráfica dedicada");
-        performanceBox.getChildren().add(useDiscreteGpuCheckbox);
-
-        minecraftTabContent.getChildren().addAll(
-                versionVisibilityLabel, versionVisibilityBox,
+        content.getChildren().addAll(
+                createVersionVisibilitySection(),
                 new Separator(),
-                integrationsLabel, integrationsBox,
+                createIntegrationsSection(),
                 new Separator(),
-                performanceLabel, performanceBox
+                createPerformanceSection()
         );
-        minecraftTab.setContent(minecraftTabContent);
 
-        // Pestaña de Java
-        Tab javaTab = new Tab("Java");
-        VBox javaTabContent = new VBox(15);
-        javaTabContent.setPadding(new Insets(15));
-        javaTabContent.setAlignment(Pos.CENTER_LEFT);
+        tab.setContent(content);
+        return tab;
+    }
 
-        // --- Sección de Ejecutable de Java ---
-        Label javaExecutableLabel = new Label("Ejecutable de Java");
-        javaExecutableLabel.getStyleClass().add("settings-subtitle");
-        VBox javaExecutableBox = new VBox(5);
-        javaExecutableBox.setPadding(new Insets(5, 0, 0, 10));
-        HBox javaPathBox = new HBox(5);
-        javaPathBox.setAlignment(Pos.CENTER_LEFT);
-        TextField javaPathField = new TextField();
-        javaPathField.setPromptText("Automático");
-        HBox.setHgrow(javaPathField, Priority.ALWAYS);
+    private static VBox createVersionVisibilitySection() {
+        VBox section = new VBox(5);
+
+        Label title = new Label("Visibilidad de Versiones");
+        title.getStyleClass().add("settings-subtitle");
+
+        VBox options = new VBox(5);
+        options.setPadding(new Insets(5, 0, 0, 10));
+
+        CheckBox showAlphas = new CheckBox("Mostrar versiones Alpha (muy inestables)");
+        showAlphas.setSelected(controller.getSettings().isShowAlphaVersions());
+        showAlphas.setOnAction(e -> controller.onShowAlphasChanged(showAlphas.isSelected()));
+
+        CheckBox showBetas = new CheckBox("Mostrar versiones betas");
+        showBetas.setSelected(controller.getSettings().isShowBetaVersions());
+        showBetas.setOnAction(e -> controller.onShowBetasChanged(showBetas.isSelected()));
+
+        options.getChildren().addAll(showAlphas, showBetas);
+
+        section.getChildren().addAll(title, options);
+        return section;
+    }
+
+    private static VBox createIntegrationsSection() {
+        VBox section = new VBox(5);
+
+        Label title = new Label("Integraciones");
+        title.getStyleClass().add("settings-subtitle");
+
+        VBox options = new VBox(5);
+        options.setPadding(new Insets(5, 0, 0, 10));
+
+        CheckBox discordPresence = new CheckBox("Habilitar integración con Discord (Rich Presence)");
+        discordPresence.setSelected(controller.getSettings().isDiscordRichPresence());
+        discordPresence.setOnAction(e -> controller.onDiscordPresenceChanged(discordPresence.isSelected()));
+
+        options.getChildren().add(discordPresence);
+
+        section.getChildren().addAll(title, options);
+        return section;
+    }
+
+    private static VBox createPerformanceSection() {
+        VBox section = new VBox(5);
+
+        Label title = new Label("Rendimiento");
+        title.getStyleClass().add("settings-subtitle");
+
+        VBox options = new VBox(5);
+        options.setPadding(new Insets(5, 0, 0, 10));
+
+        CheckBox useDiscreteGpu = new CheckBox("Forzar el uso de la tarjeta gráfica dedicada");
+        useDiscreteGpu.setSelected(controller.getSettings().isForceDiscreteGpu());
+        useDiscreteGpu.setOnAction(e -> controller.onUseDiscreteGpuChanged(useDiscreteGpu.isSelected()));
+
+        options.getChildren().add(useDiscreteGpu);
+
+        section.getChildren().addAll(title, options);
+        return section;
+    }
+
+    // ==================== PESTAÑA JAVA ====================
+    private static Tab createJavaTab() {
+        Tab tab = new Tab("Java");
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(15));
+        content.setAlignment(Pos.CENTER_LEFT);
+
+        content.getChildren().addAll(
+                createJavaExecutableSection(),
+                new Separator(),
+                createMemoryAllocationSection(),
+                new Separator(),
+                createAdvancedSection()
+        );
+
+        tab.setContent(content);
+        return tab;
+    }
+
+    private static VBox createJavaExecutableSection() {
+        VBox section = new VBox(5);
+
+        Label title = new Label("Ejecutable de Java");
+        title.getStyleClass().add("settings-subtitle");
+
+        VBox options = new VBox(5);
+        options.setPadding(new Insets(5, 0, 0, 10));
+
+        HBox pathBox = new HBox(5);
+        pathBox.setAlignment(Pos.CENTER_LEFT);
+
+        TextField pathField = new TextField();
+        pathField.setPromptText("Automático");
+        if (controller.getSettings().getJavaPath() != null) {
+            pathField.setText(controller.getSettings().getJavaPath());
+        }
+        pathField.textProperty().addListener((obs, oldVal, newVal) -> controller.onJavaPathChanged(newVal));
+
+        HBox.setHgrow(pathField, Priority.ALWAYS);
+
         Button browseButton = new Button("Examinar...");
-        javaPathBox.getChildren().addAll(javaPathField, browseButton);
-        javaExecutableBox.getChildren().add(javaPathBox);
+        browseButton.setOnAction(e -> controller.onBrowseJavaPath(pathField));
 
-        // --- Sección de Asignación de Memoria ---
-        Label memoryAllocationLabel = new Label("Asignación de Memoria");
-        memoryAllocationLabel.getStyleClass().add("settings-subtitle");
-        VBox memoryAllocationBox = new VBox(5);
-        memoryAllocationBox.setPadding(new Insets(5, 0, 0, 10));
+        pathBox.getChildren().addAll(pathField, browseButton);
 
-        // RAM Mínima
-        HBox minMemoryBox = new HBox(10);
-        minMemoryBox.setAlignment(Pos.CENTER_LEFT);
-        Label minRamLabel = new Label("RAM Mínima:");
-        TextField minRamField = new TextField("1"); // Valor por defecto
-        minRamField.setPrefWidth(80);
-        ComboBox<String> minMemoryUnitComboBox = new ComboBox<>();
-        minMemoryUnitComboBox.getItems().addAll("GB");
-        minMemoryUnitComboBox.setValue("GB");
-        minMemoryBox.getChildren().addAll(minRamLabel, minRamField, minMemoryUnitComboBox);
+        options.getChildren().add(pathBox);
+        section.getChildren().addAll(title, options);
+        return section;
+    }
 
-        // RAM Máxima
-        HBox maxMemoryBox = new HBox(10);
-        maxMemoryBox.setAlignment(Pos.CENTER_LEFT);
-        Label maxRamLabel = new Label("RAM Máxima:");
-        TextField maxRamField = new TextField("4"); // Valor por defecto
-        maxRamField.setPrefWidth(80);
-        ComboBox<String> maxMemoryUnitComboBox = new ComboBox<>();
-        maxMemoryUnitComboBox.getItems().addAll("GB");
-        maxMemoryUnitComboBox.setValue("GB");
-        maxMemoryBox.getChildren().addAll(maxRamLabel, maxRamField, maxMemoryUnitComboBox);
+    private static VBox createMemoryAllocationSection() {
+        VBox section = new VBox(5);
 
-        memoryAllocationBox.getChildren().addAll(minMemoryBox, maxMemoryBox);
+        Label title = new Label("Asignación de Memoria");
+        title.getStyleClass().add("settings-subtitle");
 
-        // --- Sección de Ajustes Avanzados (movida desde Minecraft) ---
-        Label advancedLabel = new Label("Avanzado");
-        advancedLabel.getStyleClass().add("settings-subtitle");
-        VBox advancedBox = new VBox(5);
-        advancedBox.setPadding(new Insets(5, 0, 0, 10));
-        Label launchParamsLabel = new Label("Argumentos de JVM:");
-        launchParamsLabel.getStyleClass().add("jvm-args-label");
-        TextField launchParamsField = new TextField();
-        launchParamsField.setPromptText("-XX:+UnlockExperimentalVMOptions ...");
-        advancedBox.getChildren().addAll(launchParamsLabel, launchParamsField);
+        VBox options = new VBox(5);
+        options.setPadding(new Insets(5, 0, 0, 10));
 
-        javaTabContent.getChildren().addAll(
-                javaExecutableLabel, javaExecutableBox,
-                new Separator(),
-                memoryAllocationLabel, memoryAllocationBox,
-                new Separator(),
-                advancedLabel, advancedBox
-        );
-        javaTab.setContent(javaTabContent);
+        HBox minMemoryBox = createMemoryInput("RAM Mínima:",
+                String.valueOf(controller.getSettings().getMinMemory()),
+                controller::onMinMemoryChanged);
 
-        tabPane.getTabs().addAll(launcherTab, minecraftTab, javaTab);
+        HBox maxMemoryBox = createMemoryInput("RAM Máxima:",
+                String.valueOf(controller.getSettings().getMaxMemory()),
+                controller::onMaxMemoryChanged);
 
-        settingsBox.getChildren().addAll(settingsTitle, tabPane);
+        options.getChildren().addAll(minMemoryBox, maxMemoryBox);
+        section.getChildren().addAll(title, options);
+        return section;
+    }
 
-        StylesLoader.load(settingsBox, "/com.cubiclauncher.launcher/styles/ui.settings.css");
-        
-        return settingsBox;
+    private static HBox createMemoryInput(String labelText, String defaultValue,
+                                          java.util.function.Consumer<String> onChange) {
+        HBox box = new HBox(10);
+        box.setAlignment(Pos.CENTER_LEFT);
+
+        Label label = new Label(labelText);
+        TextField field = new TextField(defaultValue);
+        field.setPrefWidth(80);
+        field.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty()) {
+                onChange.accept(newVal);
+            }
+        });
+
+        ComboBox<String> unit = new ComboBox<>();
+        unit.getItems().add("GB");
+        unit.setValue("GB");
+
+        box.getChildren().addAll(label, field, unit);
+        return box;
+    }
+
+    private static VBox createAdvancedSection() {
+        VBox section = new VBox(5);
+
+        Label title = new Label("Avanzado");
+        title.getStyleClass().add("settings-subtitle");
+
+        VBox options = new VBox(5);
+        options.setPadding(new Insets(5, 0, 0, 10));
+
+        Label argsLabel = new Label("Argumentos de JVM:");
+        argsLabel.getStyleClass().add("jvm-args-label");
+
+        TextField argsField = new TextField();
+        argsField.setPromptText("-XX:+UnlockExperimentalVMOptions ...");
+        if (controller.getSettings().getJvmArguments() != null &&
+                !controller.getSettings().getJvmArguments().isEmpty()) {
+            argsField.setText(controller.getSettings().getJvmArguments());
+        }
+        argsField.textProperty().addListener((obs, oldVal, newVal) -> controller.onJvmArgsChanged(newVal));
+
+        options.getChildren().addAll(argsLabel, argsField);
+        section.getChildren().addAll(title, options);
+        return section;
     }
 }

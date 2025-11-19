@@ -19,6 +19,7 @@ package com.cubiclauncher.launcher.ui;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
 import com.cubiclauncher.launcher.ui.views.VersionsView;
+import com.cubiclauncher.launcher.util.SettingsManager;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.ui.components.TitleBar;
@@ -35,7 +36,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-
+    SettingsManager settings = SettingsManager.getInstance();
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("CubicLauncher");
@@ -82,7 +83,10 @@ public class Main extends Application {
         scene.setFill(Color.TRANSPARENT);
 
         // Cargar estilos CSS
-        StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
+        if (settings.isNative_styles()) {
+            System.out.println("Cargando estilos");
+            StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
+        }
 
         primaryStage.setScene(scene);
         primaryStage.show();
