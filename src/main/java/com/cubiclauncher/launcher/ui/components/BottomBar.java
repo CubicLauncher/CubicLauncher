@@ -71,6 +71,7 @@ public class BottomBar extends HBox {
         // Botón principal de Jugar moderno
         Button mainPlayButton = new Button("JUGAR");
         mainPlayButton.getStyleClass().add("play-button");
+        // TODO: Esto por ahora es testing
         mainPlayButton.setOnAction(event -> {
             new Thread(() -> {
                 launcherWrapper launcherWrapper = new launcherWrapper();
