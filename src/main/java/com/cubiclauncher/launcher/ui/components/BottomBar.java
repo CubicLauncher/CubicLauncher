@@ -31,9 +31,12 @@ import javafx.scene.shape.Circle;
 import com.cubiclauncher.launcher.launcherWrapper;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 public class BottomBar extends HBox {
+    private final ComboBox<String> versionSelector;
+    private final launcherWrapper launcher = new launcherWrapper();
 
     public BottomBar() {
         super(20);
@@ -55,17 +58,9 @@ public class BottomBar extends HBox {
         Region bottomSpacer = new Region();
         HBox.setHgrow(bottomSpacer, Priority.ALWAYS);
 
-        launcherWrapper launcher = new launcherWrapper();
-        List<String> installedVersions = launcher.getInstalledVersions();
-
         // Selector de versión moderno
-        ComboBox<String> versionSelector = new ComboBox<>();
-        if (installedVersions.isEmpty()) {
-            versionSelector.setPromptText("No hay versiones instaladas");
-        } else {
-            versionSelector.setItems(FXCollections.observableArrayList(installedVersions));
-            versionSelector.getSelectionModel().selectFirst();
-        }
+        versionSelector = new ComboBox<>();
+        updateInstalledVersions(); // Carga inicial
         versionSelector.setPrefWidth(220);
         versionSelector.getStyleClass().add("combo-box");
         versionSelector.setButtonCell(new ListCell<>() {
@@ -83,7 +78,7 @@ public class BottomBar extends HBox {
         // Botón principal de Jugar moderno
         Button mainPlayButton = new Button("JUGAR");
         mainPlayButton.getStyleClass().add("play-button");
-        mainPlayButton.setOnAction(event -> {
+        mainPlayButton.setOnAction(_ -> {
             String selectedVersion = versionSelector.getValue();
             if (selectedVersion != null && !selectedVersion.isEmpty()) {
                 new Thread(() -> {
@@ -96,5 +91,37 @@ public class BottomBar extends HBox {
             }
         });
         getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
+    }
+
+    public void updateInstalledVersions() {
+        List<String> installedVersions = launcher.getInstalledVersions();
+
+        // Ordenar la lista de versiones de mayor a menor
+        installedVersions.sort(new VersionComparator().reversed());
+
+        if (installedVersions.isEmpty()) {
+            versionSelector.setPromptText("No hay versiones instaladas");
+            versionSelector.setItems(FXCollections.observableArrayList());
+        } else {
+            versionSelector.setItems(FXCollections.observableArrayList(installedVersions));
+            versionSelector.getSelectionModel().selectFirst();
+        }
+    }
+
+    // Comparador para ordenar las versiones de Minecraft
+    private static class VersionComparator implements Comparator<String> {
+        @Override
+        public int compare(String v1, String v2) {
+            String[] parts1 = v1.split("\\.");
+            String[] parts2 = v2.split("\\.");
+            int length = Math.max(parts1.length, parts2.length);
+            for (int i = 0; i < length; i++) {
+                int part1 = i < parts1.length ? Integer.parseInt(parts1[i]) : 0;
+                int part2 = i < parts2.length ? Integer.parseInt(parts2[i]) : 0;
+                if (part1 < part2) return -1;
+                if (part1 > part2) return 1;
+            }
+            return 0;
+        }
     }
 }
