@@ -4,9 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.*;
 import java.nio.file.*;
-import com.cubiclauncher.launcher.util.pathManager;
 public class SettingsManager {
-    private static final String APP_NAME = "CubicLauncher";
     private static final String SETTINGS_FILE = "settings.json";
     private static SettingsManager instance;
     // Launcher settings

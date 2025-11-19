@@ -8,9 +8,9 @@ public class pathManager {
     private static final String APP_NAME = "CubicLauncher";
     private static pathManager instance;
 
-    private Path settingsPath;
-    private Path instancePath;
-    private Path gamePath;
+    private final Path settingsPath;
+    private final Path instancePath;
+    private final Path gamePath;
 
     private pathManager() {
         this.settingsPath = getSettingsDirectory();
