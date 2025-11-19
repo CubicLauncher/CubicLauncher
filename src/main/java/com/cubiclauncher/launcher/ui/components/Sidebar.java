@@ -43,10 +43,6 @@ public class Sidebar extends VBox {
         HBox logoSection = new HBox(12);
         logoSection.setAlignment(Pos.CENTER_LEFT);
 
-        //Image logoImage = new Image(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/Cubic Dark.png"));
-       // ImageView logoView = new ImageView(logoImage);
-        //logoView.setFitWidth(40);
-        //logoView.setFitHeight(40);
         Label title = new Label("Cubic");
         title.getStyleClass().add("title");
         logoSection.getChildren().addAll(title);
@@ -60,21 +56,7 @@ public class Sidebar extends VBox {
 
         navButtonsContainer.getChildren().addAll(btnPlay, btnVersions, btnSettings);
 
-        // Sección de estadísticas
-        VBox quickStats = new VBox(15);
-        quickStats.setPadding(new Insets(20, 0, 0, 0));
-
-        Label statsTitle = new Label("ESTADO");
-        statsTitle.getStyleClass().add("stat-title");
-
-        VBox statsItems = new VBox(8);
-        addStatItem(statsItems, "Servidores", "Disponibles");
-        addStatItem(statsItems, "Versiones", "12 instaladas");
-        addStatItem(statsItems, "Última sesión", "Hace 2h");
-
-        quickStats.getChildren().addAll(statsTitle, statsItems);
-
-        getChildren().addAll(logoSection, navButtonsContainer, new Region(), quickStats);
+        getChildren().addAll(logoSection, navButtonsContainer, new Region());
         VBox.setVgrow(navButtonsContainer, Priority.ALWAYS);
 
         setActive(btnPlay);

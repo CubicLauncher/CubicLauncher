@@ -16,11 +16,13 @@
  */
 package com.cubiclauncher.launcher.ui.views;
 
+import com.cubiclauncher.launcher.launcherWrapper;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
@@ -37,17 +39,34 @@ public class VersionsView {
         Label subtitle = new Label("Aquí se mostrará la lista de Versiones que puedes descargar del juego.");
         subtitle.getStyleClass().add("welcome-subtitle");
 
+        launcherWrapper launcher = new launcherWrapper();
+
         ListView<String> versionsList = new ListView<>();
         ObservableList<String> versions = FXCollections.observableArrayList(
-                "1.21", "1.20.4", "1.20.1", "1.19.4", "1.19.2", "1.18.2", "1.17.1", "1.16.5", "1.12.2", "1.8.9", "1.7.10"
+                launcher.getAvailableVersions()
         );
         versionsList.setItems(versions);
 
         versionsList.setCellFactory(listView -> new VersionCell());
 
+        Button downloadButton = getDownloadButton(versionsList, launcher);
+
         StylesLoader.load(instancesBox, "/com.cubiclauncher.launcher/styles/ui.main.css");
 
-        instancesBox.getChildren().addAll(title, subtitle, versionsList);
+        instancesBox.getChildren().addAll(title, subtitle, versionsList, downloadButton);
         return instancesBox;
+    }
+
+    private static Button getDownloadButton(ListView<String> versionsList, launcherWrapper launcher) {
+        Button downloadButton = new Button("Descargar Versión");
+        downloadButton.setOnAction(event -> {
+            String selectedVersion = versionsList.getSelectionModel().getSelectedItem();
+            if (selectedVersion != null && !selectedVersion.isEmpty()) {
+                new Thread(() -> launcher.downloadMinecraftVersion(selectedVersion)).start();
+            } else {
+                System.out.println("Por favor, selecciona una versión para descargar.");
+            }
+        });
+        return downloadButton;
     }
 }

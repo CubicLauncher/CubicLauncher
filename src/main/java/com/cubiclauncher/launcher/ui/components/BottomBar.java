@@ -16,6 +16,7 @@
  */
 package com.cubiclauncher.launcher.ui.components;
 
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -30,6 +31,7 @@ import javafx.scene.shape.Circle;
 import com.cubiclauncher.launcher.launcherWrapper;
 
 import java.io.IOException;
+import java.util.List;
 
 public class BottomBar extends HBox {
 
@@ -53,10 +55,17 @@ public class BottomBar extends HBox {
         Region bottomSpacer = new Region();
         HBox.setHgrow(bottomSpacer, Priority.ALWAYS);
 
+        launcherWrapper launcher = new launcherWrapper();
+        List<String> installedVersions = launcher.getInstalledVersions();
+
         // Selector de versión moderno
         ComboBox<String> versionSelector = new ComboBox<>();
-        versionSelector.getItems().addAll("1.20.4", "1.16.5", "1.12.2", "1.21.10", "1.20.1");
-        versionSelector.getSelectionModel().selectFirst();
+        if (installedVersions.isEmpty()) {
+            versionSelector.setPromptText("No hay versiones instaladas");
+        } else {
+            versionSelector.setItems(FXCollections.observableArrayList(installedVersions));
+            versionSelector.getSelectionModel().selectFirst();
+        }
         versionSelector.setPrefWidth(220);
         versionSelector.getStyleClass().add("combo-box");
         versionSelector.setButtonCell(new ListCell<>() {
@@ -74,26 +83,18 @@ public class BottomBar extends HBox {
         // Botón principal de Jugar moderno
         Button mainPlayButton = new Button("JUGAR");
         mainPlayButton.getStyleClass().add("play-button");
-        Button downloadButton = new Button("DESCARGAR");
-        downloadButton.getStyleClass().add("play-button");
-        downloadButton.setOnAction(event -> {
-            new Thread(() -> {
-               launcherWrapper launcherWrapper = new launcherWrapper();
-               launcherWrapper.downloadMinecraftVersion(versionSelector.getValue());
-            }).start();
-        });
         mainPlayButton.setOnAction(event -> {
-            new Thread(() -> {
-                launcherWrapper launcherWrapper = new launcherWrapper();
-                try {
-                    launcherWrapper.startVersion(versionSelector.getValue());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }).start();
+            String selectedVersion = versionSelector.getValue();
+            if (selectedVersion != null && !selectedVersion.isEmpty()) {
+                new Thread(() -> {
+                    try {
+                        launcher.startVersion(selectedVersion);
+                    } catch (IOException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+            }
         });
-        getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton, downloadButton);
+        getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
     }
 }

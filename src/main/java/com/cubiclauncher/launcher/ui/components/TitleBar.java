@@ -40,11 +40,11 @@ public class TitleBar extends HBox {
 
         Button minimizeButton = new Button("—");
         minimizeButton.getStyleClass().add("title-bar-button");
-        minimizeButton.setOnAction(e -> primaryStage.setIconified(true));
+        minimizeButton.setOnAction(_ -> primaryStage.setIconified(true));
 
         Button closeButton = new Button("✕");
         closeButton.getStyleClass().addAll("title-bar-button", "close-button");
-        closeButton.setOnAction(e -> primaryStage.close());
+        closeButton.setOnAction(_ -> primaryStage.close());
 
         getChildren().addAll(spacer, minimizeButton, closeButton);
 
