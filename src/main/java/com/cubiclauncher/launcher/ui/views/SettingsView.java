@@ -1,6 +1,6 @@
 package com.cubiclauncher.launcher.ui.views;
 
-import com.cubiclauncher.launcher.util.loadStyles;
+import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -180,7 +180,7 @@ public class SettingsView {
 
         settingsBox.getChildren().addAll(settingsTitle, tabPane);
 
-        loadStyles.load(settingsBox, "/com.cubiclauncher.launcher/styles/ui.settings.css");
+        StylesLoader.load(settingsBox, "/com.cubiclauncher.launcher/styles/ui.settings.css");
         
         return settingsBox;
     }

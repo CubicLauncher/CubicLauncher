@@ -148,3 +148,49 @@
     -fx-font-size: 16px;
     -fx-text-fill: #bbbbbb;
 }
+
+/* --- List View Styles --- */
+.list-view {
+    -fx-background-color: #2c2c2c;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #444444;
+    -fx-border-width: 1;
+}
+
+.list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cccccc;
+    -fx-padding: 10px 20px;
+    -fx-font-size: 14px;
+}
+
+.list-view .list-cell:filled:hover {
+    -fx-background-color: #3a3a3a;
+    -fx-text-fill: #ffffff;
+}
+
+.list-view .list-cell:filled:selected {
+    -fx-background-color: #007bff;
+    -fx-text-fill: #ffffff;
+}
+
+.list-view .virtual-flow .scroll-bar:vertical,
+.list-view .virtual-flow .scroll-bar:vertical .track,
+.list-view .virtual-flow .scroll-bar:vertical .track-background,
+.list-view .virtual-flow .scroll-bar:horizontal,
+.list-view .virtual-flow .scroll-bar:horizontal .track,
+.list-view .virtual-flow .scroll-bar:horizontal .track-background {
+    -fx-background-color: transparent;
+}
+
+.list-view .virtual-flow .scroll-bar .thumb {
+    -fx-background-color: #4a4a4a;
+    -fx-background-radius: 5;
+}
+
+.list-view .virtual-flow .scroll-bar-button:increment,
+.list-view .virtual-flow .scroll-bar-button:decrement {
+    -fx-opacity: 0;
+    -fx-padding: 2;
+}

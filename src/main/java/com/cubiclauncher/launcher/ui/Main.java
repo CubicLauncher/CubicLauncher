@@ -2,7 +2,8 @@ package com.cubiclauncher.launcher.ui;
 
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
-import com.cubiclauncher.launcher.util.loadStyles;
+import com.cubiclauncher.launcher.ui.views.VersionsView;
+import com.cubiclauncher.launcher.util.StylesLoader;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.ui.components.TitleBar;
 import javafx.application.Application;
@@ -31,7 +32,7 @@ public class Main extends Application {
         TitleBar titleBar = new TitleBar(primaryStage);
         Sidebar sidebar = new Sidebar();
         BottomBar bottomBar = new BottomBar();
-        
+
         // --- Contenedor Principal ---
         StackPane centerContent = new StackPane();
         centerContent.getStyleClass().add("main-content");
@@ -40,10 +41,14 @@ public class Main extends Application {
         // --- Vista de Bienvenida ---
         VBox welcomeBox = createWelcomeView();
 
+        // --- Vista de Instancias ---
+        VBox instancesBox = VersionsView.create();
+
         // --- Vista de Ajustes (Placeholder) ---
         VBox settingsBox = SettingsView.create();
 
         // --- Lógica de Navegación ---
+        sidebar.setInstancesAction(() -> showView(centerContent, instancesBox));
         // Pasamos la lógica de cambio de vista a la Sidebar.
         sidebar.setPlayAction(() -> showView(centerContent, welcomeBox));
         sidebar.setSettingsAction(() -> showView(centerContent, settingsBox));
@@ -61,7 +66,7 @@ public class Main extends Application {
         scene.setFill(Color.TRANSPARENT);
 
         // Cargar estilos CSS
-        loadStyles.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
+        StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
 
         primaryStage.setScene(scene);
         primaryStage.show();

@@ -14,6 +14,7 @@ import javafx.scene.layout.Priority;
 public class Sidebar extends VBox {
 
     private final Button btnPlay;
+    private final Button btnVersions;
     private final Button btnSettings;
     private final VBox navButtonsContainer;
 
@@ -40,10 +41,10 @@ public class Sidebar extends VBox {
         navButtonsContainer = new VBox(8);
 
         btnPlay = createNavButton("Jugar");
-        Button btnInstallations = createNavButton("Instalaciones");
+        btnVersions = createNavButton("Versiones");
         btnSettings = createNavButton("Ajustes");
 
-        navButtonsContainer.getChildren().addAll(btnPlay, btnInstallations, btnSettings);
+        navButtonsContainer.getChildren().addAll(btnPlay, btnVersions, btnSettings);
 
         // Sección de estadísticas
         VBox quickStats = new VBox(15);
@@ -86,6 +87,7 @@ public class Sidebar extends VBox {
     }
 
     public void setPlayAction(Runnable action) { setNavigationAction(btnPlay, action); }
+    public void setInstancesAction(Runnable action) { setNavigationAction(btnVersions, action); }
     public void setSettingsAction(Runnable action) { setNavigationAction(btnSettings, action); }
 
     private void addStatItem(VBox container, String title, String value) {
