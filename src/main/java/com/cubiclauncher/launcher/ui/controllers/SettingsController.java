@@ -105,31 +105,30 @@ public class SettingsController {
         }
     }
 
-    public void onMinMemoryChanged(String value) {
-        try {
-            int memory = Integer.parseInt(value);
-            if (memory > 0) {
-                settings.setMinMemory(memory);
-                System.out.println("RAM mínima: " + memory + " GB");
-            } else {
-                showError("La RAM mínima debe ser mayor a 0");
-            }
-        } catch (NumberFormatException e) {
-            showError("Valor de RAM mínima inválido");
+    public void onMinMemoryChanged(int memoryInMB) {
+        if (memoryInMB > 0) {
+            // Determinar la mejor unidad
+            String unit = memoryInMB >= 1024 ? "GB" : "MB";
+            int value = memoryInMB >= 1024 ? memoryInMB / 1024 : memoryInMB;
+
+            settings.setMinMemory(value);
+            settings.setMinMemoryUnit(unit);
+            System.out.println("RAM mínima: " + value + " " + unit);
+        } else {
+            showError("La RAM mínima debe ser mayor a 0");
         }
     }
 
-    public void onMaxMemoryChanged(String value) {
-        try {
-            int memory = Integer.parseInt(value);
-            if (memory > 0) {
-                settings.setMaxMemory(memory);
-                System.out.println("RAM máxima: " + memory + " GB");
-            } else {
-                showError("La RAM máxima debe ser mayor a 0");
-            }
-        } catch (NumberFormatException e) {
-            showError("Valor de RAM máxima inválido");
+    public void onMaxMemoryChanged(int memoryInMB) {
+        if (memoryInMB > 0) {
+            String unit = memoryInMB >= 1024 ? "GB" : "MB";
+            int value = memoryInMB >= 1024 ? memoryInMB / 1024 : memoryInMB;
+
+            settings.setMaxMemory(value);
+            settings.setMaxMemoryUnit(unit);
+            System.out.println("RAM máxima: " + value + " " + unit);
+        } else {
+            showError("La RAM máxima debe ser mayor a 0");
         }
     }
 

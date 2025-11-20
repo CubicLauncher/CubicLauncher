@@ -102,8 +102,8 @@ public class LaucherWrapper {
                 pm.getInstancePath().resolve("xd"),
                 sm.getUsername(),
                 "/usr/lib/jvm/java-21-graalvm/bin/java",
-                "512M",
-                "2G",
+                String.valueOf(sm.getMinMemoryInMB()) + "M",
+                String.valueOf(sm.getMaxMemoryInMB()) + "M",
                 900,
                 600,
                 false);

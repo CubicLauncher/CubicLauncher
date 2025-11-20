@@ -277,6 +277,7 @@ public class SettingsView {
         return section;
     }
 
+    // REEMPLAZAR createMemoryAllocationSection completamente
     private static VBox createMemoryAllocationSection() {
         VBox section = new VBox(5);
 
@@ -286,36 +287,64 @@ public class SettingsView {
         VBox options = new VBox(5);
         options.setPadding(new Insets(5, 0, 0, 10));
 
-        HBox minMemoryBox = createMemoryInput("RAM Mínima:",
-                String.valueOf(controller.getSettings().getMinMemory()),
-                controller::onMinMemoryChanged);
+        // Convertir a MB para trabajar internamente
+        int minMemMB = controller.getSettings().getMinMemoryInMB();
+        int maxMemMB = controller.getSettings().getMaxMemoryInMB();
 
-        HBox maxMemoryBox = createMemoryInput("RAM Máxima:",
-                String.valueOf(controller.getSettings().getMaxMemory()),
-                controller::onMaxMemoryChanged);
+        HBox minMemoryBox = createMemoryInput("RAM Mínima:", minMemMB, controller::onMinMemoryChanged);
+        HBox maxMemoryBox = createMemoryInput("RAM Máxima:", maxMemMB, controller::onMaxMemoryChanged);
 
         options.getChildren().addAll(minMemoryBox, maxMemoryBox);
         section.getChildren().addAll(title, options);
         return section;
     }
 
-    private static HBox createMemoryInput(String labelText, String defaultValue,
-                                          java.util.function.Consumer<String> onChange) {
+    // REEMPLAZAR createMemoryInput completamente
+    private static HBox createMemoryInput(String labelText, int memoryInMB,
+                                          java.util.function.Consumer<Integer> onChange) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
 
         Label label = new Label(labelText);
-        TextField field = new TextField(defaultValue);
+        TextField field = new TextField();
         field.setPrefWidth(80);
-        field.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal.isEmpty()) {
-                onChange.accept(newVal);
-            }
-        });
 
         ComboBox<String> unit = new ComboBox<>();
-        unit.getItems().add("GB");
-        unit.setValue("GB");
+        unit.getItems().addAll("MB", "GB");
+        unit.setValue(memoryInMB >= 1024 ? "GB" : "MB");
+
+        // Mostrar valor en la unidad apropiada
+        if ("GB".equals(unit.getValue())) {
+            field.setText(String.valueOf(memoryInMB / 1024));
+        } else {
+            field.setText(String.valueOf(memoryInMB));
+        }
+
+        // Cuando cambia la unidad, convertir el valor
+        unit.setOnAction(e -> {
+            try {
+                int currentValue = Integer.parseInt(field.getText());
+
+                if ("GB".equals(unit.getValue())) {
+                    // MB -> GB
+                    field.setText(String.valueOf(currentValue / 1024));
+                } else {
+                    // GB -> MB
+                    field.setText(String.valueOf(currentValue * 1024));
+                }
+            } catch (NumberFormatException ignored) {}
+        });
+
+        // Guardar cuando cambia el valor
+        field.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.isEmpty() && !newVal.equals(oldVal)) {
+                try {
+                    int value = Integer.parseInt(newVal);
+                    int memoryMB = "GB".equals(unit.getValue()) ? value * 1024 : value;
+                    onChange.accept(memoryMB);
+                } catch (NumberFormatException ignored) {}
+            }
+        });
 
         box.getChildren().addAll(label, field, unit);
         return box;

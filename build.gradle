@@ -36,7 +36,7 @@ dependencies {
 }
 
 application {
-    mainClass = "com.cubiclauncher.launcher.ui.Main"
+    mainClass = "com.cubiclauncher.launcher.Launcher"
 }
 
 javafx {
@@ -49,4 +49,22 @@ tasks.run {
             "--enable-native-access=ALL-UNNAMED",
             "--enable-native-access=javafx.graphics"
     ]
+}
+
+task fatJar(type: Jar) {
+    archiveBaseName.set("CubicLauncher")
+    archiveClassifier.set("all")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE  // ⬅️ Cambiado a EXCLUDE
+
+    manifest {
+        attributes(
+                'Main-Class': 'com.cubiclauncher.launcher.Launcher'
+        )
+    }
+
+    from sourceSets.main.output
+
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
 }

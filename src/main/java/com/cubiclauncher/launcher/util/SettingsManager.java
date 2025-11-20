@@ -25,9 +25,11 @@ public class SettingsManager {
 
     // Java settings
     public String javaPath = null; // null = automático
-    public int minMemory = 1; // GB
-    public int maxMemory = 4; // GB
+    public Integer minMemory = 512;
+    public Integer maxMemory = 2;
     public String jvmArguments = "";
+    public String minMemoryUnit = "GB"; // o "MB"
+    public String maxMemoryUnit = "GB";
 
     // Usuario
     public String username = "";
@@ -92,12 +94,21 @@ public class SettingsManager {
     public boolean isForceDiscreteGpu() { return forceDiscreteGpu; }
     public String getUsername() { return username; }
     public String getJavaPath() { return javaPath; }
-    public int getMinMemory() { return minMemory; }
-    public int getMaxMemory() { return maxMemory; }
+    public Integer getMinMemory() { return minMemory; }
+    public Integer getMaxMemory() { return maxMemory; }
     public String getJvmArguments() { return jvmArguments; }
-
+    public String getMinMemoryUnit() { return minMemoryUnit; }
+    public String getMaxMemoryUnit() { return maxMemoryUnit; }
     // ==================== SETTERS CON AUTO-SAVE ====================
+    public void setMinMemoryUnit(String unit) {
+        this.minMemoryUnit = unit;
+        save();
+    }
 
+    public void setMaxMemoryUnit(String unit) {
+        this.maxMemoryUnit = unit;
+        save();
+    }
     public void setLanguage(String language) {
         this.language = language;
         save();
@@ -142,13 +153,19 @@ public class SettingsManager {
         this.javaPath = javaPath;
         save();
     }
+    public int getMinMemoryInMB() {
+        return "GB".equals(minMemoryUnit) ? minMemory * 1024 : minMemory;
+    }
 
-    public void setMinMemory(int minMemory) {
+    public int getMaxMemoryInMB() {
+        return "GB".equals(maxMemoryUnit) ? maxMemory * 1024 : maxMemory;
+    }
+    public void setMinMemory(Integer minMemory) {
         this.minMemory = minMemory;
         save();
     }
 
-    public void setMaxMemory(int maxMemory) {
+    public void setMaxMemory(Integer maxMemory) {
         this.maxMemory = maxMemory;
         save();
     }
