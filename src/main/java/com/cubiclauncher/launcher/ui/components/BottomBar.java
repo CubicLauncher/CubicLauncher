@@ -28,7 +28,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import com.cubiclauncher.launcher.launcherWrapper;
+import com.cubiclauncher.launcher.LaucherWrapper;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -36,7 +36,7 @@ import java.util.List;
 
 public class BottomBar extends HBox {
     private final ComboBox<String> versionSelector;
-    private final launcherWrapper launcher = new launcherWrapper();
+    private final LaucherWrapper launcher = new LaucherWrapper();
 
     public BottomBar() {
         super(20);

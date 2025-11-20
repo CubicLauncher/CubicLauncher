@@ -16,6 +16,8 @@
  */
 package com.cubiclauncher.launcher;
 
+import com.cubiclauncher.claunch.Launcher;
+import com.cubiclauncher.launcher.util.PathManager;
 import com.cubiclauncher.launcher.util.SettingsManager;
 import com.cubiclauncher.launcher.util.nativeLibraryLoader;
 import com.google.gson.Gson;
@@ -31,12 +33,11 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import com.cubiclauncher.launcher.util.PathManager;
-import com.cubiclauncher.claunch.Launcher;
 
-public class launcherWrapper {
+public class LaucherWrapper {
     static SettingsManager sm = SettingsManager.getInstance();
     static PathManager pm = PathManager.getInstance();
+
     static {
         try {
             nativeLibraryLoader.loadLibraryFromResources(
@@ -51,6 +52,7 @@ public class launcherWrapper {
      * Método nativo expuesto por la librería Rust.
      */
     private native void startMinecraftDownload(String targetPath, String version);
+
     public void downloadMinecraftVersion(String vanillaVersionId) {
         startMinecraftDownload(pm.getGamePath().resolve("shared").toString(), vanillaVersionId);
     }
@@ -95,7 +97,7 @@ public class launcherWrapper {
 
     public void startVersion(String versionId) throws IOException, InterruptedException {
         Launcher.launch(
-                pm.getGamePath().resolve("shared","versions", versionId, versionId + ".json").toString(),
+                pm.getGamePath().resolve("shared", "versions", versionId, versionId + ".json").toString(),
                 pm.getGamePath().toString(),
                 pm.getInstancePath().resolve("xd"),
                 sm.getUsername(),
@@ -104,6 +106,6 @@ public class launcherWrapper {
                 "2G",
                 900,
                 600,
-                true);
+                false);
     }
 }

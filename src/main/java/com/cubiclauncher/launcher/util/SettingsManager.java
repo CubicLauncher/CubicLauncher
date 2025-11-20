@@ -58,7 +58,6 @@ public class SettingsManager {
         try (Reader reader = new FileReader(file)) {
             Gson gson = new Gson();
             SettingsManager settings = gson.fromJson(reader, SettingsManager.class);
-            System.out.println("Configuración cargada desde: " + file.getAbsolutePath());
             return settings != null ? settings : new SettingsManager();
         } catch (IOException e) {
             System.err.println("Error al cargar configuración: " + e.getMessage());

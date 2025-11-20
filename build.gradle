@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+group = "com.cubiclauncher"
+version = "1.0-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    implementation "org.openjfx:javafx-controls:26-ea+16"
+    implementation "org.openjfx:javafx-fxml:26-ea+16"
+
+    implementation "org.kordamp.bootstrapfx:bootstrapfx-core:0.4.0"
+    implementation "com.google.code.gson:gson:2.13.2"
+
+    implementation "com.cubiclauncher:claunch:1.0.0"
+
+    implementation "net.java.dev.jna:jna:5.18.1"
+    implementation "net.java.dev.jna:jna-platform:5.18.1"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.12.1"
+}
+
+application {
+    mainClass = "com.cubiclauncher.launcher.ui.Main"
+}
+
+javafx {
+    version = "23.0.1"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+tasks.run {
+    jvmArgs = [
+            "--enable-native-access=ALL-UNNAMED",
+            "--enable-native-access=javafx.graphics"
+    ]
+}

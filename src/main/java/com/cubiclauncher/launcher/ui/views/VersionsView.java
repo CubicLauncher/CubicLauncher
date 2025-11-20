@@ -16,7 +16,7 @@
  */
 package com.cubiclauncher.launcher.ui.views;
 
-import com.cubiclauncher.launcher.launcherWrapper;
+import com.cubiclauncher.launcher.LaucherWrapper;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.collections.FXCollections;
@@ -39,7 +39,7 @@ public class VersionsView {
         Label subtitle = new Label("Aquí se mostrará la lista de Versiones que puedes descargar del juego.");
         subtitle.getStyleClass().add("welcome-subtitle");
 
-        launcherWrapper launcher = new launcherWrapper();
+        LaucherWrapper launcher = new LaucherWrapper();
 
         ListView<String> versionsList = new ListView<>();
         ObservableList<String> versions = FXCollections.observableArrayList(
@@ -57,7 +57,7 @@ public class VersionsView {
         return instancesBox;
     }
 
-    private static Button getDownloadButton(ListView<String> versionsList, launcherWrapper launcher) {
+    private static Button getDownloadButton(ListView<String> versionsList, LaucherWrapper launcher) {
         Button downloadButton = new Button("Descargar Versión");
         downloadButton.setOnAction(event -> {
             String selectedVersion = versionsList.getSelectionModel().getSelectedItem();
