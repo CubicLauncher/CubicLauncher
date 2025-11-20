@@ -83,7 +83,7 @@ public class Main extends Application {
         scene.setFill(Color.TRANSPARENT);
 
         // Cargar estilos CSS
-        if (settings.isNative_styles()) {
+        if (!settings.isNative_styles()) {
             System.out.println("Cargando estilos");
             StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
         }
