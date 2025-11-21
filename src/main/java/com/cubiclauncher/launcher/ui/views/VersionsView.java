@@ -28,6 +28,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 
 public class VersionsView {
+    private static LauncherWrapper launcher = new LauncherWrapper();
+    private static Button downloadButton;
 
     public static VBox create() {
         VBox instancesBox = new VBox(10);
@@ -39,8 +41,6 @@ public class VersionsView {
         Label subtitle = new Label("Aquí se mostrará la lista de Versiones que puedes descargar del juego.");
         subtitle.getStyleClass().add("welcome-subtitle");
 
-        LauncherWrapper launcher = new LauncherWrapper();
-
         ListView<String> versionsList = new ListView<>();
         ObservableList<String> versions = FXCollections.observableArrayList(
                 launcher.getAvailableVersions()
@@ -49,23 +49,49 @@ public class VersionsView {
 
         versionsList.setCellFactory(listView -> new VersionCell());
 
-        Button downloadButton = getDownloadButton(versionsList, launcher);
+        downloadButton = getDownloadButton(versionsList, launcher);
 
+        // Inicialmente desactivar el botón si no hay selección
+        downloadButton.setDisable(true);
+
+        // Listener para la selección de versión
+        versionsList.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !newVal.isEmpty()) {
+                boolean isInstalled = launcher.getInstalledVersions().contains(newVal);
+                downloadButton.setDisable(isInstalled);
+            } else {
+                downloadButton.setDisable(true);
+            }
+        });
 
         instancesBox.getChildren().addAll(title, subtitle, versionsList, downloadButton);
         return instancesBox;
     }
 
     private static Button getDownloadButton(ListView<String> versionsList, LauncherWrapper launcher) {
-        Button downloadButton = new Button("Descargar Versión");
-        downloadButton.setOnAction(event -> {
+        Button button = new Button("Descargar Versión");
+        button.setOnAction(event -> {
             String selectedVersion = versionsList.getSelectionModel().getSelectedItem();
             if (selectedVersion != null && !selectedVersion.isEmpty()) {
-                new Thread(() -> launcher.downloadMinecraftVersion(selectedVersion)).start();
+                new Thread(() -> {
+                    // Desactivar el botón durante la descarga
+                    button.setDisable(true);
+                    launcher.downloadMinecraftVersion(selectedVersion);
+                    // Actualizar la lista para reflejar que ahora está instalada
+                    versionsList.refresh();
+                }).start();
             } else {
                 System.out.println("Por favor, selecciona una versión para descargar.");
             }
         });
-        return downloadButton;
+        return button;
+    }
+
+    // Método para actualizar el estado del botón cuando cambien las versiones instaladas
+    public static void refreshVersionsList() {
+        // Este método puede ser llamado desde otros lugares cuando se instale/desinstale una versión
+        if (downloadButton != null) {
+            // La lógica de actualización se maneja en el listener de selección
+        }
     }
 }

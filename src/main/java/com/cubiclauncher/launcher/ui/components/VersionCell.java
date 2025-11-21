@@ -16,10 +16,15 @@
  */
 package com.cubiclauncher.launcher.ui.components;
 
+import com.cubiclauncher.launcher.LauncherWrapper;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.geometry.Pos;
 
 public class VersionCell extends ListCell<String> {
-    // TODO: Agregar progressbar
+    private final LauncherWrapper launcher = new LauncherWrapper();
+
     @Override
     protected void updateItem(String item, boolean empty) {
         super.updateItem(item, empty);
@@ -27,7 +32,26 @@ public class VersionCell extends ListCell<String> {
             setText(null);
             setGraphic(null);
         } else {
-            setText(item);
+            // Verificar si la versión está instalada
+            boolean isInstalled = launcher.getInstalledVersions().contains(item);
+
+            HBox container = new HBox(10);
+            container.setAlignment(Pos.CENTER_LEFT);
+
+            Label versionLabel = new Label(item);
+
+            if (isInstalled) {
+                // Si está instalada, mostrar con (I)
+                Label installedLabel = new Label(item + " (I)");
+                installedLabel.setStyle("-fx-text-fill: #4CAF50; -fx-font-weight: bold;");
+                container.getChildren().add(installedLabel);
+            } else {
+                // Si no está instalada, mostrar normal
+                container.getChildren().add(versionLabel);
+            }
+
+            setGraphic(container);
+            setText(null);
         }
     }
 }
