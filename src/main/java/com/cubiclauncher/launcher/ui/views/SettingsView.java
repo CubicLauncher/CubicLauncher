@@ -49,8 +49,6 @@ public class SettingsView {
         TabPane tabPane = createTabPane();
 
         settingsBox.getChildren().addAll(settingsTitle, tabPane);
-        StylesLoader.load(settingsBox, "/com.cubiclauncher.launcher/styles/ui.settings.css");
-
         return settingsBox;
     }
 

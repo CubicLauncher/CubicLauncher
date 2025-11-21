@@ -32,7 +32,7 @@ public class SettingsManager {
     public String maxMemoryUnit = "GB";
 
     // Usuario
-    public String username = "";
+    public String username = "steve";
     public String[] jre_paths = new String[0];
     public boolean native_styles = true;
 

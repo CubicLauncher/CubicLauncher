@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class LaucherWrapper {
+public class LauncherWrapper {
     static SettingsManager sm = SettingsManager.getInstance();
     static PathManager pm = PathManager.getInstance();
 
@@ -101,9 +101,10 @@ public class LaucherWrapper {
                 pm.getGamePath().toString(),
                 pm.getInstancePath().resolve("xd"),
                 sm.getUsername(),
-                "/usr/lib/jvm/java-21-graalvm/bin/java",
-                String.valueOf(sm.getMinMemoryInMB()) + "M",
-                String.valueOf(sm.getMaxMemoryInMB()) + "M",
+                // TODO: Agregar selectores de paths de java.
+                "/usr/lib/jvm/java-21-openjdk/bin/java",
+                sm.getMinMemoryInMB() + "M",
+                sm.getMaxMemoryInMB() + "M",
                 900,
                 600,
                 false);

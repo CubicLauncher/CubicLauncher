@@ -48,7 +48,7 @@ public class SettingsController {
         System.out.println("Estilos nativos: " + (enabled ? "activado" : "desactivado"));
     }
     public void onSourceCodeLinkClicked() {
-        openUrl("https://github.com/CubicLauncher/CubicLauncher");
+        openUrl();
     }
 
     // ==================== MINECRAFT SETTINGS ====================
@@ -178,11 +178,11 @@ public class SettingsController {
         }
     }
 
-    private void openUrl(String url) {
+    private void openUrl() {
         try {
-            java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://github.com/CubicLauncher/CubicLauncher"));
         } catch (Exception e) {
-            showError("No se pudo abrir el enlace: " + url);
+            showError("No se pudo abrir el enlace: " + "https://github.com/CubicLauncher/CubicLauncher");
         }
     }
 

@@ -19,7 +19,7 @@ package com.cubiclauncher.launcher.ui.components;
 import javafx.scene.control.ListCell;
 
 public class VersionCell extends ListCell<String> {
-
+    // TODO: Agregar progressbar
     @Override
     protected void updateItem(String item, boolean empty) {
         super.updateItem(item, empty);

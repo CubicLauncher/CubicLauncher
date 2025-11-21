@@ -16,19 +16,17 @@
  */
 package com.cubiclauncher.launcher.ui.components;
 
+import com.cubiclauncher.launcher.util.SettingsManager;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import com.cubiclauncher.launcher.LaucherWrapper;
+import com.cubiclauncher.launcher.LauncherWrapper;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -36,8 +34,8 @@ import java.util.List;
 
 public class BottomBar extends HBox {
     private final ComboBox<String> versionSelector;
-    private final LaucherWrapper launcher = new LaucherWrapper();
-
+    private final LauncherWrapper launcher = new LauncherWrapper();
+    private static SettingsManager sm = SettingsManager.getInstance();
     public BottomBar() {
         super(20);
         setPadding(new Insets(20, 30, 20, 30));
@@ -49,10 +47,23 @@ public class BottomBar extends HBox {
         userProfile.setAlignment(Pos.CENTER_LEFT);
 
         Circle userAvatar = new Circle(18, Color.web("#4a6bff"));
-        Label userName = new Label("Steve");
+        Label userName = new Label(sm.getUsername());
         userName.getStyleClass().add("user-profile");
 
         userProfile.getChildren().addAll(userAvatar, userName);
+        userProfile.setOnMouseClicked(event -> {
+            TextInputDialog dialog = new TextInputDialog(sm.getUsername());
+            dialog.setTitle("Cambiar nombre de usuario");
+            dialog.setHeaderText(null);
+            dialog.setContentText("Nuevo nombre:");
+
+            dialog.showAndWait().ifPresent(newName -> {
+                if (!newName.trim().isEmpty()) {
+                    sm.setUsername(newName.trim());
+                    userName.setText(newName);
+                }
+            });
+        });
 
         // Espaciador
         Region bottomSpacer = new Region();
@@ -95,9 +106,9 @@ public class BottomBar extends HBox {
 
     public void updateInstalledVersions() {
         List<String> installedVersions = launcher.getInstalledVersions();
-
-        // Ordenar la lista de versiones de mayor a menor
-        installedVersions.sort(new VersionComparator().reversed());
+    // TODO: Cerote de ordenador staff, revisalo
+//        // Ordenar la lista de versiones de mayor a menor
+//        installedVersions.sort(new VersionComparator().reversed());
 
         if (installedVersions.isEmpty()) {
             versionSelector.setPromptText("No hay versiones instaladas");
