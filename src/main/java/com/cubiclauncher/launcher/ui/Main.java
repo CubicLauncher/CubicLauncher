@@ -26,7 +26,6 @@ import com.cubiclauncher.launcher.ui.views.VersionsView;
 import com.cubiclauncher.launcher.util.SettingsManager;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
-import com.cubiclauncher.launcher.ui.components.TitleBar;
 import com.cubiclauncher.launcher.util.TaskManager;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -41,6 +40,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 import java.io.InputStream;
@@ -56,13 +56,13 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("CubicLauncher");
-        primaryStage.initStyle(javafx.stage.StageStyle.TRANSPARENT);
-
+        primaryStage.initStyle(StageStyle.DECORATED);
+        primaryStage.setMinWidth(800);
+        primaryStage.setMinHeight(600);
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
 
         // --- Componentes de la UI ---
-        TitleBar titleBar = new TitleBar(primaryStage);
         Sidebar sidebar = new Sidebar();
         bottomBar = new BottomBar();
 
@@ -87,14 +87,13 @@ public class Main extends Application {
         showView(centerContent, welcomeBox);
 
         // --- Organizar Layout ---
-        root.setTop(titleBar);
         root.setLeft(sidebar);
         root.setCenter(centerContent);
         root.setBottom(bottomBar);
 
         // --- Escena ---
         Scene scene = new Scene(root, 1280, 760);
-        scene.setFill(Color.TRANSPARENT);
+        scene.setFill(Color.web("a1a1a1"));
 
         // Cargar estilos CSS unificados
         if (!settings.isNative_styles()) {
