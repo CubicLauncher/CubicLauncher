@@ -100,12 +100,4 @@ public class VersionsView {
         });
         return button;
     }
-
-    // Método para actualizar el estado del botón cuando cambien las versiones instaladas
-    public static void refreshVersionsList() {
-        // Este método puede ser llamado desde otros lugares cuando se instale/desinstale una versión
-        if (downloadButton != null) {
-            // La lógica de actualización se maneja en el listener de selección
-        }
-    }
 }
