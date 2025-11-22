@@ -35,12 +35,15 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.InputStream;
 
 public class Main extends Application {
     final SettingsManager settings = SettingsManager.getInstance();
@@ -97,8 +100,11 @@ public class Main extends Application {
         if (!settings.isNative_styles()) {
             StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
         }
-
-        primaryStage.setScene(scene);
+        InputStream iconStream = com.cubiclauncher.launcher.Launcher.class.getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png");        if (iconStream != null) {
+            primaryStage.getIcons().add(new Image(iconStream));
+        } else {
+            System.err.println("No se encontró el ícono en /assets/logos/cdark.png");
+        }        primaryStage.setScene(scene);
         primaryStage.show();
     }
 
