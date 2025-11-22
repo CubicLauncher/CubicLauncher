@@ -29,7 +29,7 @@ public class nativeLibraryLoader {
         String osName = System.getProperty("os.name").toLowerCase();
         String extension = osName.contains("win") ? ".dll" : ".so";
 
-        try (InputStream in = nativeLibraryLoader.class.getResourceAsStream(resourcePath)) {
+        try (InputStream in = nativeLibraryLoader.class.getResourceAsStream(resourcePath + extension)) {
             if (in == null) throw new FileNotFoundException("Recurso no encontrado: " + resourcePath);
 
             File tempFile = Files.createTempFile("libtemp", extension).toFile();

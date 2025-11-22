@@ -49,11 +49,11 @@ public class PathManager {
         String configPath;
 
         if (os.contains("win")) {
-            configPath = System.getenv("APPDATA") + File.separator + APP_NAME + File.separator + "config";
+            configPath = System.getenv("APPDATA") + File.separator + APP_NAME;
         } else if (os.contains("mac")) {
-            configPath = System.getProperty("user.home") + "/Library/Application Support/" + APP_NAME + "/config";
+            configPath = System.getProperty("user.home") + "/Library/Application Support/" + APP_NAME;
         } else {
-            configPath = System.getProperty("user.home") + "/.config/" + APP_NAME + "/config";
+            configPath = System.getProperty("user.home") + "/.cubic";
         }
 
         File dir = new File(configPath);
@@ -73,7 +73,7 @@ public class PathManager {
         } else if (os.contains("mac")) {
             configPath = System.getProperty("user.home") + "/Library/Application Support/" + APP_NAME ;
         } else {
-            configPath = System.getProperty("user.home") + "/.config/" + APP_NAME;
+            configPath = System.getProperty("user.home") + "/.cubic";
         }
 
         File dir = new File(configPath);
@@ -93,7 +93,7 @@ public class PathManager {
         } else if (os.contains("mac")) {
             configPath = System.getProperty("user.home") + "/Library/Application Support/" + APP_NAME + "/instances";
         } else {
-            configPath = System.getProperty("user.home") + "/.config/" + APP_NAME + "/instances";
+            configPath = System.getProperty("user.home") + "/.cubic" + "/instances";
         }
 
         File dir = new File(configPath);

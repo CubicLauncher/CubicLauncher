@@ -17,6 +17,7 @@
 package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.util.SettingsManager;
+import com.cubiclauncher.launcher.util.TaskManager;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -92,13 +93,17 @@ public class BottomBar extends HBox {
         mainPlayButton.setOnAction(_ -> {
             String selectedVersion = versionSelector.getValue();
             if (selectedVersion != null && !selectedVersion.isEmpty()) {
-                new Thread(() -> {
-                    try {
-                        launcher.startVersion(selectedVersion);
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }).start();
+                TaskManager.getInstance().runAsync(
+                        () -> {
+                            try {
+                                launcher.startVersion(selectedVersion);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                );
             }
         });
         getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);

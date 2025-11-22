@@ -19,9 +19,11 @@ package com.cubiclauncher.launcher.ui.views;
 import com.cubiclauncher.launcher.LauncherWrapper;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import com.cubiclauncher.launcher.util.StylesLoader;
+import com.cubiclauncher.launcher.util.TaskManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -51,7 +53,7 @@ public class VersionsView {
 
         downloadButton = getDownloadButton(versionsList, launcher);
 
-        // Inicialmente desactivar el botón si no hay selección
+        // Inicialmente, desactivar el botón si no hay selección
         downloadButton.setDisable(true);
 
         // Listener para la selección de versión
@@ -73,13 +75,22 @@ public class VersionsView {
         button.setOnAction(event -> {
             String selectedVersion = versionsList.getSelectionModel().getSelectedItem();
             if (selectedVersion != null && !selectedVersion.isEmpty()) {
-                new Thread(() -> {
-                    // Desactivar el botón durante la descarga
-                    button.setDisable(true);
-                    launcher.downloadMinecraftVersion(selectedVersion);
-                    // Actualizar la lista para reflejar que ahora está instalada
-                    versionsList.refresh();
-                }).start();
+                button.setDisable(true);
+                TaskManager.getInstance().runAsync(
+                        () -> launcher.downloadMinecraftVersion(selectedVersion),
+                        () -> {
+                            // Callback en el hilo de UI
+                            versionsList.refresh();
+                            button.setDisable(false);
+                        },
+                        error -> {
+                            button.setDisable(false);
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Error en descarga");
+                            alert.setContentText("No se pudo descargar la versión: " + error.getMessage());
+                            alert.showAndWait();
+                        }
+                );
             } else {
                 System.out.println("Por favor, selecciona una versión para descargar.");
             }

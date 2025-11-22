@@ -25,7 +25,7 @@ public class SettingsManager {
 
     // Java settings
     public String javaPath = null; // null = automático
-    public Integer minMemory = 512;
+    public Integer minMemory = 1;
     public Integer maxMemory = 2;
     public String jvmArguments = "";
     public String minMemoryUnit = "GB"; // o "MB"

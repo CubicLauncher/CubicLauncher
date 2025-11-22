@@ -7,6 +7,7 @@ import com.cubiclauncher.launcher.util.SettingsManager;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.ui.components.TitleBar;
+import com.cubiclauncher.launcher.util.TaskManager;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -24,7 +25,11 @@ import javafx.util.Duration;
 public class Main extends Application {
     SettingsManager settings = SettingsManager.getInstance();
     private BottomBar bottomBar;
-
+    @Override
+    public void stop() {
+        TaskManager.getInstance().shutdown();
+        System.out.println("Cerrando CubicLauncher...");
+    }
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("CubicLauncher");
