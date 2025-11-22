@@ -17,13 +17,9 @@
  *
  *
  */
+
 package com.cubiclauncher.launcher;
 
-import com.cubiclauncher.launcher.ui.Main;
-import javafx.application.Application;
+public class InstanceManager {
 
-public class Launcher {
-    public static void main(String[] args) {
-        Application.launch(Main.class, args);
-    }
 }
