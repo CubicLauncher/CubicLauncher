@@ -20,8 +20,9 @@
 package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
-import com.cubiclauncher.launcher.util.SettingsManager;
-import com.cubiclauncher.launcher.util.TaskManager;
+import com.cubiclauncher.launcher.core.EventBus;
+import com.cubiclauncher.launcher.core.SettingsManager;
+import com.cubiclauncher.launcher.core.TaskManager;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -40,7 +41,7 @@ public class BottomBar extends HBox {
     private static final SettingsManager sm = SettingsManager.getInstance();
     private final ComboBox<String> versionSelector;
     private final LauncherWrapper launcher = new LauncherWrapper();
-
+    private final EventBus eventBus = EventBus.get();
     public BottomBar() {
         super(20);
         setPadding(new Insets(20, 30, 20, 30));
@@ -109,12 +110,15 @@ public class BottomBar extends HBox {
             }
         });
         getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
+        EventBus.get().onVersionsChanged(this::updateInstalledVersions);
+        EventBus.get().onVersionDownloaded(version -> {
+            updateInstalledVersions();
+            versionSelector.setValue(version);
+        });
     }
 
     public void updateInstalledVersions() {
         List<String> installedVersions = launcher.getInstalledVersions();
-        // TODO: Cerote de ordenador staff, revisalo
-
         if (installedVersions.isEmpty()) {
             versionSelector.setPromptText("No hay versiones instaladas");
             versionSelector.setItems(FXCollections.observableArrayList());

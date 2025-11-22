@@ -20,7 +20,7 @@
 
 package com.cubiclauncher.launcher.ui.controllers;
 
-import com.cubiclauncher.launcher.util.SettingsManager;
+import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
