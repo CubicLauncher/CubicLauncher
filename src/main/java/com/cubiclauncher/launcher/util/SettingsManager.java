@@ -23,7 +23,7 @@ package com.cubiclauncher.launcher.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.*;
-import java.nio.file.*;
+
 import com.cubiclauncher.launcher.util.PathManager;
 
 public class SettingsManager {

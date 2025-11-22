@@ -21,7 +21,6 @@ package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
-import com.cubiclauncher.launcher.util.StylesLoader;
 import com.cubiclauncher.launcher.util.TaskManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,7 +32,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 
 public class VersionsView {
-    private static LauncherWrapper launcher = new LauncherWrapper();
+    private static final LauncherWrapper launcher = new LauncherWrapper();
     private static Button downloadButton;
 
     public static VBox create() {

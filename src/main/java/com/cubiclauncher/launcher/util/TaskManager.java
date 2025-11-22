@@ -56,9 +56,7 @@ public class TaskManager {
             } catch (Exception e) {
                 e.printStackTrace();
                 // Mostrar error en la UI si es necesario
-                Platform.runLater(() -> {
-                    System.err.println("Error en tarea asíncrona: " + e.getMessage());
-                });
+                Platform.runLater(() -> System.err.println("Error en tarea asíncrona: " + e.getMessage()));
             }
         });
     }
@@ -77,9 +75,7 @@ public class TaskManager {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                Platform.runLater(() -> {
-                    System.err.println("Error en tarea asíncrona: " + e.getMessage());
-                });
+                Platform.runLater(() -> System.err.println("Error en tarea asíncrona: " + e.getMessage()));
             }
         });
     }
@@ -138,6 +134,6 @@ public class TaskManager {
      */
     @FunctionalInterface
     public interface ThrowingRunnable {
-        void run() throws Exception;
+        void run();
     }
 }

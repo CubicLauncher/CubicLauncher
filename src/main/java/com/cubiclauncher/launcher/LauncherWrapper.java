@@ -38,8 +38,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class LauncherWrapper {
-    static SettingsManager sm = SettingsManager.getInstance();
-    static PathManager pm = PathManager.getInstance();
+    static final SettingsManager sm = SettingsManager.getInstance();
+    static final PathManager pm = PathManager.getInstance();
 
     static {
         try {

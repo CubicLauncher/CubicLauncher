@@ -43,7 +43,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class Main extends Application {
-    SettingsManager settings = SettingsManager.getInstance();
+    final SettingsManager settings = SettingsManager.getInstance();
     private BottomBar bottomBar;
     @Override
     public void stop() {
@@ -137,9 +137,10 @@ public class Main extends Application {
         );
 
         Label instructionLabel = new Label(
-                "• Descarga versiones desde la pestaña 'Versiones'\n" +
-                        "• Configura Java y memoria desde 'Ajustes'\n" +
-                        "• Selecciona una versión y haz clic en 'JUGAR'"
+                """
+                        • Descarga versiones desde la pestaña 'Versiones'
+                        • Configura Java y memoria desde 'Ajustes'
+                        • Selecciona una versión y haz clic en 'JUGAR'"""
         );
         instructionLabel.setStyle(
                 "-fx-font-size: 14px;" +
@@ -163,7 +164,7 @@ public class Main extends Application {
             return;
         }
 
-        Node currentView = container.getChildren().get(0);
+        Node currentView = container.getChildren().getFirst();
 
         // Fade out
         FadeTransition fadeOut = new FadeTransition(Duration.millis(150), currentView);

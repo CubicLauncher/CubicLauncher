@@ -39,7 +39,7 @@ import java.util.List;
 public class BottomBar extends HBox {
     private final ComboBox<String> versionSelector;
     private final LauncherWrapper launcher = new LauncherWrapper();
-    private static SettingsManager sm = SettingsManager.getInstance();
+    private static final SettingsManager sm = SettingsManager.getInstance();
     public BottomBar() {
         super(20);
         setPadding(new Insets(20, 30, 20, 30));
@@ -100,9 +100,7 @@ public class BottomBar extends HBox {
                         () -> {
                             try {
                                 launcher.startVersion(selectedVersion);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            } catch (InterruptedException e) {
+                            } catch (IOException | InterruptedException e) {
                                 throw new RuntimeException(e);
                             }
                         }
@@ -115,8 +113,6 @@ public class BottomBar extends HBox {
     public void updateInstalledVersions() {
         List<String> installedVersions = launcher.getInstalledVersions();
     // TODO: Cerote de ordenador staff, revisalo
-//        // Ordenar la lista de versiones de mayor a menor
-//        installedVersions.sort(new VersionComparator().reversed());
 
         if (installedVersions.isEmpty()) {
             versionSelector.setPromptText("No hay versiones instaladas");

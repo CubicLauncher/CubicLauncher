@@ -28,6 +28,7 @@ public class nativeLibraryLoader {
      * @param resourcePath Ruta completa de la librería dentro del classpath (sin "/" inicial).
      * @throws IOException Si no se encuentra el recurso o falla la copia.
      */
+    @SuppressWarnings("GrazieInspection")
     public static void loadLibraryFromResources(String resourcePath) throws IOException {
         String osName = System.getProperty("os.name").toLowerCase();
         String extension = osName.contains("win") ? ".dll" : ".so";

@@ -20,7 +20,6 @@
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.ui.controllers.SettingsController;
-import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
