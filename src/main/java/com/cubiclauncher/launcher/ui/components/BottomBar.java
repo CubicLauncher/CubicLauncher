@@ -20,7 +20,7 @@
 package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
-import com.cubiclauncher.launcher.core.EventBus;
+import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import javafx.collections.FXCollections;
@@ -41,7 +41,7 @@ public class BottomBar extends HBox {
     private static final SettingsManager sm = SettingsManager.getInstance();
     private final ComboBox<String> versionSelector;
     private final LauncherWrapper launcher = new LauncherWrapper();
-    private final EventBus eventBus = EventBus.get();
+    // --Commented out by Inspection (22.11.25, 19:32):private final EventBus eventBus = EventBus.get();
     public BottomBar() {
         super(20);
         setPadding(new Insets(20, 30, 20, 30));
@@ -110,11 +110,6 @@ public class BottomBar extends HBox {
             }
         });
         getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
-        EventBus.get().onVersionsChanged(this::updateInstalledVersions);
-        EventBus.get().onVersionDownloaded(version -> {
-            updateInstalledVersions();
-            versionSelector.setValue(version);
-        });
     }
 
     public void updateInstalledVersions() {

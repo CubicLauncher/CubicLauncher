@@ -6,13 +6,16 @@ package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
 import com.cubiclauncher.launcher.LauncherWrapper.DownloadCallback;
-import com.cubiclauncher.launcher.ui.components.VersionCell;
 import com.cubiclauncher.launcher.core.TaskManager;
+import com.cubiclauncher.launcher.ui.components.VersionCell;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -91,7 +94,7 @@ public class VersionsView {
                         versionsList.refresh();
                         downloadButton.setText("Descargar Versión");
                         downloadButton.setDisable(launcher.getInstalledVersions().contains(version));
-                        hideProgressAfter(2000);
+                        hideProgressAfter();
                     });
                 }
 
@@ -102,6 +105,12 @@ public class VersionsView {
                         downloadButton.setText("Reintentar");
                         downloadButton.setDisable(false);
                     });
+                }
+
+                @Override
+                public void onStart(String version) {
+                downloadButton.setDisable(true);
+                downloadButton.setText("Descargando " + version);
                 }
             });
         });
@@ -120,9 +129,9 @@ public class VersionsView {
         };
     }
 
-    private static void hideProgressAfter(long ms) {
+    private static void hideProgressAfter() {
         new Thread(() -> {
-            try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
+            try { Thread.sleep((long) 2000); } catch (InterruptedException ignored) {}
             Platform.runLater(() -> {
                 progressBar.setVisible(false);
                 statusLabel.setVisible(false);

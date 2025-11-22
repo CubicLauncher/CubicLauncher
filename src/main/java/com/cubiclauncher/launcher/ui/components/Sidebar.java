@@ -97,21 +97,4 @@ public class Sidebar extends VBox {
         setNavigationAction(btnSettings, action);
     }
 
-    private void addStatItem(VBox container, String title, String value) {
-        HBox statItem = new HBox();
-        statItem.setAlignment(Pos.CENTER_LEFT);
-        statItem.setSpacing(10);
-
-        Label statTitle = new Label(title);
-        statTitle.getStyleClass().add("stat-item-title");
-
-        Label statValue = new Label(value);
-        statValue.getStyleClass().add("stat-item-value");
-
-        HBox.setHgrow(statValue, Priority.ALWAYS);
-        statValue.setAlignment(Pos.CENTER_RIGHT);
-
-        statItem.getChildren().addAll(statTitle, statValue);
-        container.getChildren().add(statItem);
-    }
 }

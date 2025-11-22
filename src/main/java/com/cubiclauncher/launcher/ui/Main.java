@@ -20,13 +20,13 @@
 
 package com.cubiclauncher.launcher.ui;
 
+import com.cubiclauncher.launcher.core.SettingsManager;
+import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.ui.views.VersionsView;
-import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.util.StylesLoader;
-import com.cubiclauncher.launcher.core.TaskManager;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;

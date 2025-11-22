@@ -5,16 +5,11 @@
 package com.cubiclauncher.launcher;
 
 import com.cubiclauncher.claunch.Launcher;
-import com.cubiclauncher.launcher.core.EventBus;
 import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
-import com.cubiclauncher.launcher.util.nativeLibraryLoader;
+import com.cubiclauncher.launcher.util.NativeLibraryLoader;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import jdk.jfr.Event;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -28,11 +23,10 @@ import java.util.List;
 public class LauncherWrapper {
     static final SettingsManager sm = SettingsManager.getInstance();
     static final PathManager pm = PathManager.getInstance();
-    private static final EventBus EVENT_BUS = EventBus.get();
-    private static final Logger log = LoggerFactory.getLogger(LauncherWrapper.class);
+
     static {
         try {
-            nativeLibraryLoader.loadLibraryFromResources(
+            NativeLibraryLoader.loadLibraryFromResources(
                     "/com.cubiclauncher.launcher/nativeLibraries/proton/libproton"
             );
         } catch (IOException e) {
@@ -41,56 +35,14 @@ public class LauncherWrapper {
     }
 
     /**
-     * Callback para progreso de descargas.
-     * Se define acá mismo, sin clase extra.
-     */
-    public interface DownloadCallback {
-        int TYPE_CLIENT = 0;
-        int TYPE_LIBRARY = 1;
-        int TYPE_ASSET = 2;
-        int TYPE_NATIVE = 3;
-
-        void onProgress(int type, int current, int total, String fileName);
-        void onComplete();
-        void onError(String error);
-
-        static String getTypeName(int type) {
-            return switch (type) {
-                case TYPE_CLIENT -> "Cliente";
-                case TYPE_LIBRARY -> "Librería";
-                case TYPE_ASSET -> "Asset";
-                case TYPE_NATIVE -> "Nativo";
-                default -> "Desconocido";
-            };
-        }
-    }
-
-    /**
      * Método nativo con callback.
      */
     private native void startMinecraftDownload(String targetPath, String version, DownloadCallback callback);
 
-    /**
-     * Descarga con callback.
-     */
-    public void downloadMinecraftVersion(String versionId, DownloadCallback callback) {
-        startMinecraftDownload(pm.getGamePath().resolve("shared").toString(), versionId, callback);
-    }
-
-    /**
-     * Descarga sin callback (log a consola).
-     */
-    public void downloadMinecraftVersion(String versionId) {
-        downloadMinecraftVersion(versionId, new DownloadCallback() {
-            @Override
-            public void onProgress(int type, int current, int total, String fileName) {
-                log.info("{}: {}/{}", DownloadCallback.getTypeName(type), current, total);
-            }
-            @Override
-            public void onComplete() { System.out.println("Descarga completada"); EVENT_BUS.emitVersionDownloaded(versionId); }
-            @Override
-            public void onError(String error) { System.err.println("Error: " + error); }
-        });
+    public void downloadMinecraftVersion(String versionId, DownloadCallback downloadCallback) {
+        startMinecraftDownload(pm.getGamePath().resolve("shared").toString(),
+                versionId,
+                downloadCallback);
     }
 
     public List<String> getInstalledVersions() {
@@ -107,7 +59,8 @@ public class LauncherWrapper {
         try {
             var client = HttpClient.newHttpClient();
             var request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"))
+                    .uri(URI.create("""
+                            https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"""))
                     .build();
             var response = client.send(request, HttpResponse.BodyHandlers.ofString());
             var json = new Gson().fromJson(response.body(), JsonObject.class);
@@ -133,5 +86,34 @@ public class LauncherWrapper {
                 sm.getMinMemoryInMB() + "M",
                 sm.getMaxMemoryInMB() + "M",
                 900, 600, false);
+    }
+
+    /**
+     * Callback para progreso de descargas.
+     * Se define acá mismo, sin clase extra.
+     */
+    public interface DownloadCallback {
+        int TYPE_CLIENT = 0;
+        int TYPE_LIBRARY = 1;
+        int TYPE_ASSET = 2;
+        int TYPE_NATIVE = 3;
+
+        static String getTypeName(int type) {
+            return switch (type) {
+                case TYPE_CLIENT -> "Cliente";
+                case TYPE_LIBRARY -> "Librería";
+                case TYPE_ASSET -> "Asset";
+                case TYPE_NATIVE -> "Nativo";
+                default -> "Desconocido";
+            };
+        }
+
+        void onProgress(int type, int current, int total, String fileName);
+
+        void onComplete();
+
+        void onError(String error);
+
+        void onStart(String version);
     }
 }

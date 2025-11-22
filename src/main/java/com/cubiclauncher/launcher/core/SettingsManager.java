@@ -222,18 +222,10 @@ public class SettingsManager {
         save();
     }
 
-    public String getMinMemoryUnit() {
-        return minMemoryUnit;
-    }
-
     // ==================== SETTERS CON AUTO-SAVE ====================
     public void setMinMemoryUnit(String unit) {
         this.minMemoryUnit = unit;
         save();
-    }
-
-    public String getMaxMemoryUnit() {
-        return maxMemoryUnit;
     }
 
     public void setMaxMemoryUnit(String unit) {
@@ -261,10 +253,12 @@ public class SettingsManager {
         save();
     }
 
-    public void addJrePath(String path) {
-        String[] newPaths = new String[jre_paths.length + 1];
-        System.arraycopy(jre_paths, 0, newPaths, 0, jre_paths.length);
-        newPaths[jre_paths.length] = path;
-        setJrePaths(newPaths);
-    }
+// --Commented out by Inspection START (22.11.25, 19:33):
+//    public void addJrePath(String path) {
+//        String[] newPaths = new String[jre_paths.length + 1];
+//        System.arraycopy(jre_paths, 0, newPaths, 0, jre_paths.length);
+//        newPaths[jre_paths.length] = path;
+//        setJrePaths(newPaths);
+//    }
+// --Commented out by Inspection STOP (22.11.25, 19:33)
 }

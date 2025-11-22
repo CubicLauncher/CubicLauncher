@@ -22,7 +22,7 @@ package com.cubiclauncher.launcher.util;
 import java.io.*;
 import java.nio.file.Files;
 
-public class nativeLibraryLoader {
+public class NativeLibraryLoader {
     /**
      * Carga una librería nativa desde resources y la copia a un archivo temporal para cargarla con System.load
      *
@@ -34,7 +34,7 @@ public class nativeLibraryLoader {
         String osName = System.getProperty("os.name").toLowerCase();
         String extension = osName.contains("win") ? ".dll" : ".so";
 
-        try (InputStream in = nativeLibraryLoader.class.getResourceAsStream(resourcePath + extension)) {
+        try (InputStream in = NativeLibraryLoader.class.getResourceAsStream(resourcePath + extension)) {
             if (in == null) throw new FileNotFoundException("Recurso no encontrado: " + resourcePath);
 
             File tempFile = Files.createTempFile("libtemp", extension).toFile();
