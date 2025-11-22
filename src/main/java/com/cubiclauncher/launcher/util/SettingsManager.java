@@ -22,15 +22,13 @@ package com.cubiclauncher.launcher.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.io.*;
 
-import com.cubiclauncher.launcher.util.PathManager;
+import java.io.*;
 
 public class SettingsManager {
     private static final String SETTINGS_FILE = "settings.json";
-    private static SettingsManager instance;
     private static final PathManager pathManager = PathManager.getInstance();
-
+    private static SettingsManager instance;
     // Launcher settings
     public String language = "Español";
     public boolean autoUpdate = true;
@@ -45,10 +43,10 @@ public class SettingsManager {
 
     // Java settings
     public String javaPath = null; // null = automático
-    public Integer minMemory = 1;
+    public Integer minMemory = 512;
     public Integer maxMemory = 2;
     public String jvmArguments = "";
-    public String minMemoryUnit = "GB"; // o "MB"
+    public String minMemoryUnit = "MB"; // o "MB"
     public String maxMemoryUnit = "GB";
 
     // Usuario
@@ -56,7 +54,8 @@ public class SettingsManager {
     public String[] jre_paths = new String[0];
     public boolean native_styles = true;
 
-    private SettingsManager() {}
+    private SettingsManager() {
+    }
 
     public static SettingsManager getInstance() {
         if (instance == null) {
@@ -87,6 +86,10 @@ public class SettingsManager {
         }
     }
 
+    public static String getConfigPath() {
+        return getSettingsFile().getAbsolutePath();
+    }
+
     public void save() {
         File file = getSettingsFile();
         try (Writer writer = new FileWriter(file)) {
@@ -97,41 +100,19 @@ public class SettingsManager {
         }
     }
 
-    public static String getConfigPath() {
-        return getSettingsFile().getAbsolutePath();
-    }
-
     // ==================== GETTERS ====================
 
-    public String getLanguage() { return language; }
-    public boolean isAutoUpdate() { return autoUpdate; }
-    public boolean isErrorConsole() { return errorConsole; }
-    public boolean isCloseLauncherOnGameStart() { return closeLauncherOnGameStart; }
-    public boolean isNative_styles() { return native_styles; }
-    public boolean isShowAlphaVersions() { return showAlphaVersions; }
-    public boolean isShowBetaVersions() { return showBetaVersions; }
-    public boolean isDiscordRichPresence() { return discordRichPresence; }
-    public boolean isForceDiscreteGpu() { return forceDiscreteGpu; }
-    public String getUsername() { return username; }
-    public String getJavaPath() { return javaPath; }
-    public Integer getMinMemory() { return minMemory; }
-    public Integer getMaxMemory() { return maxMemory; }
-    public String getJvmArguments() { return jvmArguments; }
-    public String getMinMemoryUnit() { return minMemoryUnit; }
-    public String getMaxMemoryUnit() { return maxMemoryUnit; }
-    // ==================== SETTERS CON AUTO-SAVE ====================
-    public void setMinMemoryUnit(String unit) {
-        this.minMemoryUnit = unit;
-        save();
+    public String getLanguage() {
+        return language;
     }
 
-    public void setMaxMemoryUnit(String unit) {
-        this.maxMemoryUnit = unit;
-        save();
-    }
     public void setLanguage(String language) {
         this.language = language;
         save();
+    }
+
+    public boolean isAutoUpdate() {
+        return autoUpdate;
     }
 
     public void setAutoUpdate(boolean autoUpdate) {
@@ -139,9 +120,17 @@ public class SettingsManager {
         save();
     }
 
+    public boolean isErrorConsole() {
+        return errorConsole;
+    }
+
     public void setErrorConsole(boolean errorConsole) {
         this.errorConsole = errorConsole;
         save();
+    }
+
+    public boolean isCloseLauncherOnGameStart() {
+        return closeLauncherOnGameStart;
     }
 
     public void setCloseLauncherOnGameStart(boolean closeLauncherOnGameStart) {
@@ -149,9 +138,21 @@ public class SettingsManager {
         save();
     }
 
+    public boolean isNative_styles() {
+        return native_styles;
+    }
+
+    public boolean isShowAlphaVersions() {
+        return showAlphaVersions;
+    }
+
     public void setShowAlphaVersions(boolean showAlphaVersions) {
         this.showAlphaVersions = showAlphaVersions;
         save();
+    }
+
+    public boolean isShowBetaVersions() {
+        return showBetaVersions;
     }
 
     public void setShowBetaVersions(boolean showBetaVersions) {
@@ -159,9 +160,17 @@ public class SettingsManager {
         save();
     }
 
+    public boolean isDiscordRichPresence() {
+        return discordRichPresence;
+    }
+
     public void setDiscordRichPresence(boolean discordRichPresence) {
         this.discordRichPresence = discordRichPresence;
         save();
+    }
+
+    public boolean isForceDiscreteGpu() {
+        return forceDiscreteGpu;
     }
 
     public void setForceDiscreteGpu(boolean forceDiscreteGpu) {
@@ -169,20 +178,35 @@ public class SettingsManager {
         save();
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+        save();
+    }
+
+    public String getJavaPath() {
+        return javaPath;
+    }
+
     public void setJavaPath(String javaPath) {
         this.javaPath = javaPath;
         save();
     }
-    public int getMinMemoryInMB() {
-        return "GB".equals(minMemoryUnit) ? minMemory * 1024 : minMemory;
+
+    public Integer getMinMemory() {
+        return minMemory;
     }
 
-    public int getMaxMemoryInMB() {
-        return "GB".equals(maxMemoryUnit) ? maxMemory * 1024 : maxMemory;
-    }
     public void setMinMemory(Integer minMemory) {
         this.minMemory = minMemory;
         save();
+    }
+
+    public Integer getMaxMemory() {
+        return maxMemory;
     }
 
     public void setMaxMemory(Integer maxMemory) {
@@ -190,16 +214,42 @@ public class SettingsManager {
         save();
     }
 
+    public String getJvmArguments() {
+        return jvmArguments;
+    }
+
     public void setJvmArguments(String jvmArguments) {
         this.jvmArguments = jvmArguments;
         save();
     }
 
+    public String getMinMemoryUnit() {
+        return minMemoryUnit;
+    }
+
+    // ==================== SETTERS CON AUTO-SAVE ====================
+    public void setMinMemoryUnit(String unit) {
+        this.minMemoryUnit = unit;
+        save();
+    }
+
+    public String getMaxMemoryUnit() {
+        return maxMemoryUnit;
+    }
+
+    public void setMaxMemoryUnit(String unit) {
+        this.maxMemoryUnit = unit;
+        save();
+    }
+
+    public int getMinMemoryInMB() {
+        return "GB".equals(minMemoryUnit) ? minMemory * 1024 : minMemory;
+    }
+
     // ==================== MÉTODOS LEGACY ====================
 
-    public void setUsername(String username) {
-        this.username = username;
-        save();
+    public int getMaxMemoryInMB() {
+        return "GB".equals(maxMemoryUnit) ? maxMemory * 1024 : maxMemory;
     }
 
     public void setJrePaths(String[] paths) {

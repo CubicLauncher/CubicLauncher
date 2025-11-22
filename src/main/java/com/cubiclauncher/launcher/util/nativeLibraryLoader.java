@@ -25,6 +25,7 @@ import java.nio.file.Files;
 public class nativeLibraryLoader {
     /**
      * Carga una librería nativa desde resources y la copia a un archivo temporal para cargarla con System.load
+     *
      * @param resourcePath Ruta completa de la librería dentro del classpath (sin "/" inicial).
      * @throws IOException Si no se encuentra el recurso o falla la copia.
      */

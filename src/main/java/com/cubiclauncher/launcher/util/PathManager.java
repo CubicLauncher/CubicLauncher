@@ -50,20 +50,6 @@ public class PathManager {
 
     // ==================== GETTERS ====================
 
-    public Path getSettingsPath() {
-        return settingsPath;
-    }
-
-    public Path getInstancePath() {
-        return instancePath;
-    }
-
-    public Path getGamePath() {
-        return gamePath;
-    }
-
-    // ==================== MÉTODOS PRIVADOS ====================
-
     private static Path getSettingsDirectory() {
         String os = System.getProperty("os.name").toLowerCase();
         String configPath;
@@ -91,7 +77,7 @@ public class PathManager {
         if (os.contains("win")) {
             configPath = System.getenv("APPDATA") + File.separator + APP_NAME;
         } else if (os.contains("mac")) {
-            configPath = System.getProperty("user.home") + "/Library/Application Support/" + APP_NAME ;
+            configPath = System.getProperty("user.home") + "/Library/Application Support/" + APP_NAME;
         } else {
             configPath = System.getProperty("user.home") + "/.cubic";
         }
@@ -122,5 +108,19 @@ public class PathManager {
         }
 
         return Paths.get(configPath);
+    }
+
+    // ==================== MÉTODOS PRIVADOS ====================
+
+    public Path getSettingsPath() {
+        return settingsPath;
+    }
+
+    public Path getInstancePath() {
+        return instancePath;
+    }
+
+    public Path getGamePath() {
+        return gamePath;
     }
 }

@@ -21,6 +21,7 @@
 package com.cubiclauncher.launcher.util;
 
 import javafx.application.Platform;
+
 import java.util.concurrent.*;
 
 /**
@@ -47,6 +48,7 @@ public class TaskManager {
 
     /**
      * Ejecuta una tarea en segundo plano
+     *
      * @param task La tarea a ejecutar
      */
     public void runAsync(Runnable task) {
@@ -63,7 +65,8 @@ public class TaskManager {
 
     /**
      * Ejecuta una tarea en segundo plano y ejecuta un callback en el hilo de JavaFX
-     * @param task La tarea a ejecutar
+     *
+     * @param task      La tarea a ejecutar
      * @param onSuccess Callback a ejecutar al completarse (en el hilo de UI)
      */
     public void runAsync(Runnable task, Runnable onSuccess) {

@@ -332,7 +332,8 @@ public class SettingsView {
                     // GB -> MB
                     field.setText(String.valueOf(currentValue * 1024));
                 }
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         });
 
         // Guardar cuando cambia el valor
@@ -342,7 +343,8 @@ public class SettingsView {
                     int value = Integer.parseInt(newVal);
                     int memoryMB = "GB".equals(unit.getValue()) ? value * 1024 : value;
                     onChange.accept(memoryMB);
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         });
 

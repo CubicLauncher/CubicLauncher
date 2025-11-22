@@ -21,15 +21,23 @@
 package com.cubiclauncher.launcher.ui.controllers;
 
 import com.cubiclauncher.launcher.util.SettingsManager;
-import javafx.scene.control.*;
+import com.cubiclauncher.launcher.util.StylesLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 
 /**
  * Controlador para manejar todas las acciones de la vista de configuración
  */
 public class SettingsController {
+    private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
     private final SettingsManager settings;
     private Stage stage;
 
@@ -45,28 +53,52 @@ public class SettingsController {
 
     public void onLanguageChanged(String language) {
         settings.setLanguage(language);
-        System.out.println("Idioma cambiado a: " + language);
+        log.info("Idioma cambiado a: {}", language);
         // TODO: Implementar cambio de idioma en la UI
     }
 
     public void onAutoUpdateChanged(boolean enabled) {
         settings.setAutoUpdate(enabled);
-        System.out.println("Auto-actualización: " + (enabled ? "activada" : "desactivada"));
+        log.info("Auto-actualización: {}", enabled ? "activada" : "desactivada");
     }
 
     public void onErrorConsoleChanged(boolean enabled) {
         settings.setErrorConsole(enabled);
-        System.out.println("Consola de errores: " + (enabled ? "activada" : "desactivada"));
+        log.info("Consola de errores: {}", enabled ? "activada" : "desactivada");
     }
 
     public void onCloseLauncherChanged(boolean enabled) {
         settings.setCloseLauncherOnGameStart(enabled);
-        System.out.println("Cerrar launcher: " + (enabled ? "activado" : "desactivado"));
+        log.info("Cerrar launcher: {}", enabled ? "activado" : "desactivado");
     }
+
     public void onNativeStylesChanged(boolean enabled) {
         settings.setNativeStyles(enabled);
-        System.out.println("Estilos nativos: " + (enabled ? "activado" : "desactivado"));
+        log.info("Estilos nativos: {}", enabled ? "activado" : "desactivado");
+
+        // Buscar cualquier ventana abierta
+        javafx.stage.Window window = javafx.stage.Window.getWindows().stream()
+                .filter(javafx.stage.Window::isShowing)
+                .findFirst()
+                .orElse(null);
+
+        if (window == null) {
+            log.debug("No hay ventana disponible");
+            return;
+        }
+
+        Scene scene = window.getScene();
+        if (scene == null) {
+            return;
+        }
+
+        scene.getStylesheets().clear();
+
+        if (!enabled) {
+            StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
+        }
     }
+
     public void onSourceCodeLinkClicked() {
         openUrl();
     }
@@ -75,17 +107,17 @@ public class SettingsController {
 
     public void onShowAlphasChanged(boolean enabled) {
         settings.setShowAlphaVersions(enabled);
-        System.out.println("Mostrar alphas: " + (enabled ? "activado" : "desactivado"));
+        log.info("Mostrar alphas: {}", enabled ? "activado" : "desactivado");
     }
 
     public void onShowBetasChanged(boolean enabled) {
         settings.setShowBetaVersions(enabled);
-        System.out.println("Mostrar betas: " + (enabled ? "activado" : "desactivado"));
+        log.info("Mostrar betas: {}", enabled ? "activado" : "desactivado");
     }
 
     public void onDiscordPresenceChanged(boolean enabled) {
         settings.setDiscordRichPresence(enabled);
-        System.out.println("Discord Rich Presence: " + (enabled ? "activado" : "desactivado"));
+        log.info("Discord Rich Presence: {}", enabled ? "activado" : "desactivado");
 
         if (enabled) {
             // TODO: Inicializar Discord Rich Presence
@@ -96,7 +128,7 @@ public class SettingsController {
 
     public void onUseDiscreteGpuChanged(boolean enabled) {
         settings.setForceDiscreteGpu(enabled);
-        System.out.println("GPU dedicada: " + (enabled ? "forzada" : "automática"));
+        log.info("GPU dedicada: {}", enabled ? "forzada" : "automática");
     }
 
     // ==================== JAVA SETTINGS ====================
@@ -111,17 +143,17 @@ public class SettingsController {
             String path = selectedDirectory.getAbsolutePath();
             javaPathField.setText(path);
             settings.setJavaPath(path);
-            System.out.println("Ruta de Java establecida: " + path);
+            log.info("Ruta de Java establecida: {}", path);
         }
     }
 
     public void onJavaPathChanged(String path) {
         if (path == null || path.trim().isEmpty()) {
             settings.setJavaPath(null); // Usar automático
-            System.out.println("Usando Java automático del sistema");
+            log.info("Usando Java automático del sistema");
         } else {
             settings.setJavaPath(path);
-            System.out.println("Ruta de Java: " + path);
+            log.info("Ruta de Java: {}", path);
         }
     }
 
@@ -133,8 +165,9 @@ public class SettingsController {
 
             settings.setMinMemory(value);
             settings.setMinMemoryUnit(unit);
-            System.out.println("RAM mínima: " + value + " " + unit);
+            log.info("RAM mínima: {} {}", value, unit);
         } else {
+            log.warn("Intento de establecer RAM mínima inválida: {}", memoryInMB);
             showError("La RAM mínima debe ser mayor a 0");
         }
     }
@@ -146,15 +179,16 @@ public class SettingsController {
 
             settings.setMaxMemory(value);
             settings.setMaxMemoryUnit(unit);
-            System.out.println("RAM máxima: " + value + " " + unit);
+            log.info("RAM máxima: {} {}", value, unit);
         } else {
+            log.warn("Intento de establecer RAM máxima inválida: {}", memoryInMB);
             showError("La RAM máxima debe ser mayor a 0");
         }
     }
 
     public void onJvmArgsChanged(String args) {
         settings.setJvmArguments(args);
-        System.out.println("Argumentos JVM actualizados: " + args);
+        log.info("Argumentos JVM actualizados: {}", args);
     }
 
     // ==================== UTILITY METHODS ====================
@@ -196,13 +230,18 @@ public class SettingsController {
         if (settings.getJvmArguments() != null) {
             jvmArgs.setText(settings.getJvmArguments());
         }
+
+        log.debug("Configuración cargada en la UI");
     }
 
     private void openUrl() {
+        String url = "https://github.com/CubicLauncher/CubicLauncher";
         try {
-            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://github.com/CubicLauncher/CubicLauncher"));
+            java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+            log.debug("Abriendo URL: {}", url);
         } catch (Exception e) {
-            showError("No se pudo abrir el enlace: " + "https://github.com/CubicLauncher/CubicLauncher");
+            log.error("No se pudo abrir el enlace: {}", url, e);
+            showError("No se pudo abrir el enlace: " + url);
         }
     }
 

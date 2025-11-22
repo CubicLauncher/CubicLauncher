@@ -24,9 +24,9 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.Priority;
 
 public class Sidebar extends VBox {
 
@@ -85,9 +85,17 @@ public class Sidebar extends VBox {
         activeButton.getStyleClass().add("active");
     }
 
-    public void setPlayAction(Runnable action) { setNavigationAction(btnPlay, action); }
-    public void setInstancesAction(Runnable action) { setNavigationAction(btnVersions, action); }
-    public void setSettingsAction(Runnable action) { setNavigationAction(btnSettings, action); }
+    public void setPlayAction(Runnable action) {
+        setNavigationAction(btnPlay, action);
+    }
+
+    public void setInstancesAction(Runnable action) {
+        setNavigationAction(btnVersions, action);
+    }
+
+    public void setSettingsAction(Runnable action) {
+        setNavigationAction(btnSettings, action);
+    }
 
     private void addStatItem(VBox container, String title, String value) {
         HBox statItem = new HBox();

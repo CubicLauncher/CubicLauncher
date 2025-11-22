@@ -22,10 +22,10 @@ package com.cubiclauncher.launcher.ui;
 
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
+import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.ui.views.VersionsView;
 import com.cubiclauncher.launcher.util.SettingsManager;
 import com.cubiclauncher.launcher.util.StylesLoader;
-import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.util.TaskManager;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -42,19 +42,25 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 
 public class Main extends Application {
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
     final SettingsManager settings = SettingsManager.getInstance();
     private BottomBar bottomBar;
+
     @Override
     public void stop() {
         TaskManager.getInstance().shutdown();
-        System.out.println("Cerrando CubicLauncher...");
+        log.info("Closing CubicLauncher. Goodbye :)");
     }
+
     @Override
     public void start(Stage primaryStage) {
+        log.info("Starting CubicLauncher");
         primaryStage.setTitle("CubicLauncher");
         primaryStage.initStyle(StageStyle.DECORATED);
         primaryStage.setMinWidth(800);
@@ -99,12 +105,15 @@ public class Main extends Application {
         if (!settings.isNative_styles()) {
             StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
         }
-        InputStream iconStream = com.cubiclauncher.launcher.Launcher.class.getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png");        if (iconStream != null) {
+        InputStream iconStream = com.cubiclauncher.launcher.Launcher.class.getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png");
+        if (iconStream != null) {
             primaryStage.getIcons().add(new Image(iconStream));
         } else {
             System.err.println("No se encontró el ícono en /assets/logos/cdark.png");
-        }        primaryStage.setScene(scene);
+        }
+        primaryStage.setScene(scene);
         primaryStage.show();
+        log.info("Hi again :)");
     }
 
     private VBox createWelcomeView() {

@@ -19,6 +19,7 @@
  */
 package com.cubiclauncher.launcher.ui.components;
 
+import com.cubiclauncher.launcher.LauncherWrapper;
 import com.cubiclauncher.launcher.util.SettingsManager;
 import com.cubiclauncher.launcher.util.TaskManager;
 import javafx.collections.FXCollections;
@@ -30,16 +31,16 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import com.cubiclauncher.launcher.LauncherWrapper;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 
 public class BottomBar extends HBox {
+    private static final SettingsManager sm = SettingsManager.getInstance();
     private final ComboBox<String> versionSelector;
     private final LauncherWrapper launcher = new LauncherWrapper();
-    private static final SettingsManager sm = SettingsManager.getInstance();
+
     public BottomBar() {
         super(20);
         setPadding(new Insets(20, 30, 20, 30));
@@ -112,7 +113,7 @@ public class BottomBar extends HBox {
 
     public void updateInstalledVersions() {
         List<String> installedVersions = launcher.getInstalledVersions();
-    // TODO: Cerote de ordenador staff, revisalo
+        // TODO: Cerote de ordenador staff, revisalo
 
         if (installedVersions.isEmpty()) {
             versionSelector.setPromptText("No hay versiones instaladas");

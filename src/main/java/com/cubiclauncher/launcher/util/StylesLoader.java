@@ -27,7 +27,8 @@ import java.net.URL;
 public class StylesLoader {
     /**
      * Carga una hoja de estilos CSS desde la ruta de recursos especificada y la aplica a la escena.
-     * @param scene La escena a la que se aplicará la hoja de estilos.
+     *
+     * @param scene        La escena a la que se aplicará la hoja de estilos.
      * @param resourcePath La ruta al archivo CSS dentro de los recursos (p. ej., "/path/to/style.css").
      */
     public static void load(Scene scene, String resourcePath) {
@@ -41,7 +42,8 @@ public class StylesLoader {
 
     /**
      * Carga una hoja de estilos CSS desde la ruta de recursos especificada y la aplica a un nodo Parent.
-     * @param parent El nodo Parent (p. ej., VBox, BorderPane) al que se aplicará la hoja de estilos.
+     *
+     * @param parent       El nodo Parent (p. ej., VBox, BorderPane) al que se aplicará la hoja de estilos.
      * @param resourcePath La ruta al archivo CSS dentro de los recursos (p. ej., "/path/to/style.css").
      */
     public static void load(Parent parent, String resourcePath) {

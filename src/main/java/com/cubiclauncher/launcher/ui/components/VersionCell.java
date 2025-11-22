@@ -20,10 +20,10 @@
 package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.layout.HBox;
 
 public class VersionCell extends ListCell<String> {
     private final LauncherWrapper launcher = new LauncherWrapper();
