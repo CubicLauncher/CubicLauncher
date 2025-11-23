@@ -17,6 +17,7 @@
 package com.cubiclauncher.launcher;
 
 import com.cubiclauncher.claunch.Launcher;
+import com.cubiclauncher.claunch.models.VersionInfo;
 import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -25,7 +26,8 @@ import com.cubiclauncher.launcher.core.events.EventType;
 import com.cubiclauncher.launcher.util.NativeLibraryLoader;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -40,7 +42,7 @@ public class LauncherWrapper {
     static final SettingsManager sm = SettingsManager.getInstance();
     static final PathManager pm = PathManager.getInstance();
     private static final EventBus EVENT_BUS = EventBus.get();
-
+    private static final Logger log = LoggerFactory.getLogger(LauncherWrapper.class);
     static {
         try {
             NativeLibraryLoader.loadLibraryFromResources(
@@ -119,13 +121,38 @@ public class LauncherWrapper {
         return versions;
     }
 
+    public String getJavaPath(String jreVersion) {
+        // Si jreVersion es null, usaremos el default
+        if (jreVersion == null) {
+            log.warn("La versión de JRE es nula. Se usará el default Java 17.");
+            return sm.getJava17Path();
+        }
+
+        // Usamos switch para mayor claridad
+        switch (jreVersion) {
+            case "8":
+                return sm.getJava8Path();
+            case "17":
+                return sm.getJava17Path();
+            case "21":
+                return sm.getJava21path();
+            default:
+                log.warn("No se pudo obtener la versión mínima del JRE. Se obtuvo '{}' pero esta no concuerda con ninguna descargada.", jreVersion);
+                log.warn("Se usará el default Java 17.");
+                return sm.getJava17Path();
+        }
+    }
+
     public void startVersion(String versionId) throws IOException, InterruptedException {
+        String versionManifestPath = pm.getGamePath().resolve("shared", "versions", versionId, versionId + ".json").toString();
+        String minimumJREVersion = new VersionInfo(versionManifestPath, pm.getGamePath().toString()).getMinimumJREVersion();
+
         Launcher.launch(
-                pm.getGamePath().resolve("shared", "versions", versionId, versionId + ".json").toString(),
+                versionManifestPath,
                 pm.getGamePath().toString(),
                 pm.getInstancePath().resolve("xd"),
                 sm.getUsername(),
-                "/usr/lib/jvm/java-21-openjdk/bin/java",
+                getJavaPath(minimumJREVersion),
                 sm.getMinMemoryInMB() + "M",
                 sm.getMaxMemoryInMB() + "M",
                 900, 600, false);

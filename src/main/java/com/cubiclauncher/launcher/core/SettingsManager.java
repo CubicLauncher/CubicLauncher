@@ -38,16 +38,17 @@ public class SettingsManager {
     public boolean forceDiscreteGpu = false;
 
     // Java settings
-    public String javaPath = null; // null = automático
     public Integer minMemory = 512;
     public Integer maxMemory = 2;
+    public String jre8_path = "";
+    public String jre17_path = "";
+    public String jre21_path = "";
     public String jvmArguments = "";
     public String minMemoryUnit = "MB"; // o "MB"
     public String maxMemoryUnit = "GB";
 
     // Usuario
     public String username = "steve";
-    public String[] jre_paths = new String[0];
     public boolean native_styles = true;
 
     private SettingsManager() {
@@ -183,13 +184,14 @@ public class SettingsManager {
         save();
     }
 
-    public String getJavaPath() {
-        return javaPath;
+    public String getJava8Path() {
+        return jre8_path;
     }
-
-    public void setJavaPath(String javaPath) {
-        this.javaPath = javaPath;
-        save();
+    public String getJava17Path() {
+        return jre17_path;
+    }
+    public String getJava21path() {
+        return jre21_path;
     }
 
     public Integer getMinMemory() {
@@ -240,22 +242,22 @@ public class SettingsManager {
         return "GB".equals(maxMemoryUnit) ? maxMemory * 1024 : maxMemory;
     }
 
-    public void setJrePaths(String[] paths) {
-        this.jre_paths = paths;
+    public void setJre8_path(String path) {
+        this.jre8_path = path;
         save();
     }
 
+    public void setJre17_path(String path) {
+        this.jre17_path = path;
+        save();
+    }
+
+    public void setJre21_path(String path) {
+        this.jre21_path = path;
+        save();
+    }
     public void setNativeStyles(boolean enabled) {
         this.native_styles = enabled;
         save();
     }
-
-// --Commented out by Inspection START (22.11.25, 19:33):
-//    public void addJrePath(String path) {
-//        String[] newPaths = new String[jre_paths.length + 1];
-//        System.arraycopy(jre_paths, 0, newPaths, 0, jre_paths.length);
-//        newPaths[jre_paths.length] = path;
-//        setJrePaths(newPaths);
-//    }
-// --Commented out by Inspection STOP (22.11.25, 19:33)
 }

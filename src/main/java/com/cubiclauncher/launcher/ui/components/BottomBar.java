@@ -19,6 +19,9 @@ package com.cubiclauncher.launcher.ui.components;
 import com.cubiclauncher.launcher.LauncherWrapper;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
+import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.core.events.EventType;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -104,6 +107,9 @@ public class BottomBar extends HBox {
                 );
             }
         });
+        EventBus.get().subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
+            Platform.runLater(() -> updateInstalledVersions());
+        }));
         getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
     }
 

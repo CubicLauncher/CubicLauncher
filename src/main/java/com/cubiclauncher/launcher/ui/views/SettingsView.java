@@ -27,6 +27,7 @@ import javafx.stage.Stage;
 
 public class SettingsView {
     private static SettingsController controller;
+    private static TextField javaPathField;
 
     public static VBox create() {
         return create(null);
@@ -253,29 +254,93 @@ public class SettingsView {
         VBox options = new VBox(5);
         options.setPadding(new Insets(5, 0, 0, 10));
 
+        // Grupo de radio buttons para seleccionar versión de Java
+        HBox radioContainer = createJavaVersionRadioButtons();
+
+        // Campo de ruta de Java
         HBox pathBox = new HBox(5);
         pathBox.setAlignment(Pos.CENTER_LEFT);
 
-        TextField pathField = new TextField();
-        pathField.setPromptText("Automático");
-        if (controller.getSettings().getJavaPath() != null) {
-            pathField.setText(controller.getSettings().getJavaPath());
-        }
-        pathField.textProperty().addListener((obs, oldVal, newVal) -> controller.onJavaPathChanged(newVal));
+        javaPathField = new TextField();
+        javaPathField.setPromptText("Ruta automática (dejar vacío)");
 
-        HBox.setHgrow(pathField, Priority.ALWAYS);
+        // Cargar la ruta inicial (Java 8 por defecto)
+        String initialPath = controller.getSettings().getJava8Path();
+        if (initialPath != null && !initialPath.isEmpty()) {
+            javaPathField.setText(initialPath);
+        }
+
+        javaPathField.textProperty().addListener((obs, oldVal, newVal) ->
+                controller.onJavaPathChanged(newVal));
+
+        HBox.setHgrow(javaPathField, Priority.ALWAYS);
 
         Button browseButton = new Button("Examinar...");
-        browseButton.setOnAction(e -> controller.onBrowseJavaPath(pathField));
+        browseButton.setOnAction(e -> controller.onBrowseJavaPath(javaPathField));
 
-        pathBox.getChildren().addAll(pathField, browseButton);
+        pathBox.getChildren().addAll(
+                new Label("Ruta:"),
+                javaPathField,
+                browseButton
+        );
 
-        options.getChildren().add(pathBox);
+        options.getChildren().addAll(radioContainer, pathBox);
         section.getChildren().addAll(title, options);
         return section;
     }
 
-    // REEMPLAZAR createMemoryAllocationSection completamente
+    private static HBox createJavaVersionRadioButtons() {
+        HBox radioContainer = new HBox(15);
+        radioContainer.setAlignment(Pos.CENTER_LEFT);
+
+        // Crear grupo de toggle para los radio buttons
+        ToggleGroup javaVersionGroup = new ToggleGroup();
+
+        RadioButton java8Radio = new RadioButton("Java 8");
+        java8Radio.setToggleGroup(javaVersionGroup);
+        java8Radio.setSelected(true); // Por defecto seleccionado
+        java8Radio.setOnAction(e -> {
+            controller.onJava8Selected();
+            updateJavaPathField();
+        });
+
+        RadioButton java17Radio = new RadioButton("Java 17");
+        java17Radio.setToggleGroup(javaVersionGroup);
+        java17Radio.setOnAction(e -> {
+            controller.onJava17Selected();
+            updateJavaPathField();
+        });
+
+        RadioButton java21Radio = new RadioButton("Java 21");
+        java21Radio.setToggleGroup(javaVersionGroup);
+        java21Radio.setOnAction(e -> {
+            controller.onJava21Selected();
+            updateJavaPathField();
+        });
+
+        radioContainer.getChildren().addAll(
+                new Label("Editar ruta de:"),
+                java8Radio, java17Radio, java21Radio
+        );
+
+        return radioContainer;
+    }
+
+    private static void updateJavaPathField() {
+        if (javaPathField != null) {
+            String currentVersion = controller.getSelectedJavaVersion();
+            String path = "";
+
+            switch (currentVersion) {
+                case "8" -> path = controller.getSettings().getJava8Path();
+                case "17" -> path = controller.getSettings().getJava17Path();
+                case "21" -> path = controller.getSettings().getJava21path();
+            }
+
+            javaPathField.setText(path != null ? path : "");
+        }
+    }
+
     private static VBox createMemoryAllocationSection() {
         VBox section = new VBox(5);
 
@@ -297,7 +362,6 @@ public class SettingsView {
         return section;
     }
 
-    // REEMPLAZAR createMemoryInput completamente
     private static HBox createMemoryInput(String labelText, int memoryInMB,
                                           java.util.function.Consumer<Integer> onChange) {
         HBox box = new HBox(10);

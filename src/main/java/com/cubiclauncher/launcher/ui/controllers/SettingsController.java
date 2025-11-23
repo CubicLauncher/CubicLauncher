@@ -24,7 +24,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +39,7 @@ public class SettingsController {
     private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
     private final SettingsManager settings;
     private Stage stage;
+    private String selectedJavaVersion = "8"; // Por defecto Java 8
 
     public SettingsController() {
         this.settings = SettingsManager.getInstance();
@@ -114,17 +115,6 @@ public class SettingsController {
         log.info("Mostrar betas: {}", enabled ? "activado" : "desactivado");
     }
 
-//    public void onDiscordPresenceChanged(boolean enabled) {
-//        settings.setDiscordRichPresence(enabled);
-//        log.info("Discord Rich Presence: {}", enabled ? "activado" : "desactivado");
-//
-//        if (enabled) {
-//            // TODO: Inicializar Discord Rich Presence
-//        } else {
-//            // TODO: Desconectar Discord Rich Presence
-//        }
-//    }
-
     public void onUseDiscreteGpuChanged(boolean enabled) {
         settings.setForceDiscreteGpu(enabled);
         log.info("GPU dedicada: {}", enabled ? "forzada" : "automática");
@@ -132,27 +122,63 @@ public class SettingsController {
 
     // ==================== JAVA SETTINGS ====================
 
+    public void onJava8Selected() {
+        selectedJavaVersion = "8";
+        log.info("Seleccionada versión Java 8 para editar");
+    }
+
+    public void onJava17Selected() {
+        selectedJavaVersion = "17";
+        log.info("Seleccionada versión Java 17 para editar");
+    }
+
+    public void onJava21Selected() {
+        selectedJavaVersion = "21";
+        log.info("Seleccionada versión Java 21 para editar");
+    }
+
     public void onBrowseJavaPath(TextField javaPathField) {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Seleccionar ejecutable de Java");
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Seleccionar ejecutable de Java " + selectedJavaVersion);
 
-        File selectedDirectory = directoryChooser.showDialog(stage);
+        // Configurar filtros para archivos ejecutables de Java
+        FileChooser.ExtensionFilter exeFilter = new FileChooser.ExtensionFilter(
+                "Ejecutables Java", getJavaExecutablePatterns());
+        FileChooser.ExtensionFilter allFilter = new FileChooser.ExtensionFilter(
+                "Todos los archivos", "*.*");
 
-        if (selectedDirectory != null) {
-            String path = selectedDirectory.getAbsolutePath();
+        fileChooser.getExtensionFilters().addAll(exeFilter, allFilter);
+        fileChooser.setSelectedExtensionFilter(exeFilter);
+
+        File selectedFile = fileChooser.showOpenDialog(stage);
+
+        if (selectedFile != null) {
+            String path = selectedFile.getAbsolutePath();
             javaPathField.setText(path);
-            settings.setJavaPath(path);
-            log.info("Ruta de Java establecida: {}", path);
+            setJavaPathForSelectedVersion(path);
+            log.info("Ruta de Java {} establecida: {}", selectedJavaVersion, path);
+        }
+    }
+
+    private String[] getJavaExecutablePatterns() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return new String[]{"*.exe", "*.bat"};
+        } else if (os.contains("mac")) {
+            return new String[]{"*"};
+        } else {
+            // Linux/Unix
+            return new String[]{"*"};
         }
     }
 
     public void onJavaPathChanged(String path) {
         if (path == null || path.trim().isEmpty()) {
-            settings.setJavaPath(null); // Usar automático
-            log.info("Usando Java automático del sistema");
+            setJavaPathForSelectedVersion(""); // Usar automático
+            log.info("Usando Java {} automático del sistema", selectedJavaVersion);
         } else {
-            settings.setJavaPath(path);
-            log.info("Ruta de Java: {}", path);
+            setJavaPathForSelectedVersion(path);
+            log.info("Ruta de Java {}: {}", selectedJavaVersion, path);
         }
     }
 
@@ -192,45 +218,23 @@ public class SettingsController {
 
     // ==================== UTILITY METHODS ====================
 
+    private void setJavaPathForSelectedVersion(String path) {
+        switch (selectedJavaVersion) {
+            case "8" -> settings.setJre8_path(path);
+            case "17" -> settings.setJre17_path(path);
+            case "21" -> settings.setJre21_path(path);
+        }
+    }
+
     /**
-     * Carga los valores guardados en los controles de la UI
+     * Obtener el SettingsManager
      */
-    public void loadSettings(
-            ComboBox<String> languageCombo,
-            CheckBox autoUpdate,
-            CheckBox errorConsole,
-            CheckBox closeLauncher,
-            CheckBox showAlphas,
-            CheckBox showBetas,
-            CheckBox discordPresence,
-            CheckBox useDiscreteGpu,
-            TextField javaPath,
-            TextField minMemory,
-            TextField maxMemory,
-            TextField jvmArgs
-    ) {
-        // Cargar valores del SettingsManager
-        languageCombo.setValue(settings.getLanguage());
-        autoUpdate.setSelected(settings.isAutoUpdate());
-        errorConsole.setSelected(settings.isErrorConsole());
-        closeLauncher.setSelected(settings.isCloseLauncherOnGameStart());
+    public SettingsManager getSettings() {
+        return settings;
+    }
 
-        showAlphas.setSelected(settings.isShowAlphaVersions());
-        showBetas.setSelected(settings.isShowBetaVersions());
-        discordPresence.setSelected(settings.isDiscordRichPresence());
-        useDiscreteGpu.setSelected(settings.isForceDiscreteGpu());
-
-        if (settings.getJavaPath() != null) {
-            javaPath.setText(settings.getJavaPath());
-        }
-        minMemory.setText(String.valueOf(settings.getMinMemory()));
-        maxMemory.setText(String.valueOf(settings.getMaxMemory()));
-
-        if (settings.getJvmArguments() != null) {
-            jvmArgs.setText(settings.getJvmArguments());
-        }
-
-        log.debug("Configuración cargada en la UI");
+    public String getSelectedJavaVersion() {
+        return selectedJavaVersion;
     }
 
     private void openUrl() {
@@ -250,12 +254,5 @@ public class SettingsController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    /**
-     * Obtener el SettingsManager
-     */
-    public SettingsManager getSettings() {
-        return settings;
     }
 }
