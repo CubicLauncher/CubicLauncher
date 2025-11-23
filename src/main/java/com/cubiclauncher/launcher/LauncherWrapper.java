@@ -18,6 +18,7 @@ package com.cubiclauncher.launcher;
 
 import com.cubiclauncher.claunch.Launcher;
 import com.cubiclauncher.claunch.models.VersionInfo;
+import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -45,7 +46,8 @@ public class LauncherWrapper {
     static final PathManager pm = PathManager.getInstance();
     private static final EventBus EVENT_BUS = EventBus.get();
     private static final Logger log = LoggerFactory.getLogger(LauncherWrapper.class);
-    public static final InstanceManager instanceManager = new InstanceManager(pm.getInstancePath());
+    public static final InstanceManager instanceManager = InstanceManager.getInstance();
+
     static {
         try {
             NativeLibraryLoader.loadLibraryFromResources(
@@ -157,6 +159,7 @@ public class LauncherWrapper {
                     downloadMinecraftVersion(instance.getVersion());
                 }
                 startVersion(instance.getVersion(), instance.getInstanceDir(pm.getInstancePath()));
+                instance.setLastPlayed(System.currentTimeMillis());
             } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
             }
