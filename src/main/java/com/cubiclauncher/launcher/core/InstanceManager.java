@@ -1,6 +1,22 @@
-package com.cubiclauncher.launcher;
+/*
+ * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/.
+ */
 
-import com.cubiclauncher.launcher.core.PathManager;
+package com.cubiclauncher.launcher.core;
+
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
@@ -21,12 +37,21 @@ public class InstanceManager {
     private final Path instancesDir;
     private final List<Instance> instances;
     private static final Logger log = LoggerFactory.getLogger(InstanceManager.class);
+    private static InstanceManager instance;
 
-    // Cambio: Recibe el instanceDir directamente en lugar de launcherDir
-    public InstanceManager(Path instancesDir) {
+    // Constructor privado
+    private InstanceManager() {
         this.instancesDir = PathManager.getInstance().getInstancePath();
         this.instances = new ArrayList<>();
         loadInstances();
+    }
+
+    // Singleton getter
+    public static InstanceManager getInstance() {
+        if (instance == null) {
+            instance = new InstanceManager();
+        }
+        return instance;
     }
 
     public static class Instance {
