@@ -59,7 +59,7 @@ public class LauncherWrapper {
     }
 
     /**
-     * Método nativo con callback.
+     * funcion nativa con callback.
      */
     private native void startMinecraftDownload(String targetPath, String version, DownloadCallback callback);
 
@@ -158,6 +158,7 @@ public class LauncherWrapper {
                     EVENT_BUS.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.empty());
                     downloadMinecraftVersion(instance.getVersion());
                 }
+                log.info(instance.getInstanceDir(pm.getInstancePath()).toString());
                 startVersion(instance.getVersion(), instance.getInstanceDir(pm.getInstancePath()));
                 instance.setLastPlayed(System.currentTimeMillis());
             } catch (InterruptedException | IOException e) {
