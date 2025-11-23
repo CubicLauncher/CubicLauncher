@@ -1,21 +1,18 @@
 /*
+ * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
  *
- *  * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- *  *
- *  * This program is free software: you can redistribute it and/or modify
- *  * it under the terms of the GNU Affero General Public License as published by
- *  * the Free Software Foundation, either version 3 of the License, or
- *  * (at your option) any later version.
- *  *
- *  * This program is distributed in the hope that it will be useful,
- *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  * GNU Affero General Public License for more details.
- *  *
- *  * You should have received a copy of the GNU Affero General Public License
- *  * along with this program.  If not, see https://www.gnu.org/licenses/.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
  *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
 package com.cubiclauncher.launcher.core.events;
@@ -38,15 +35,12 @@ public class EventBus {
 
     private EventBus() {}
 
+    public static class Holder {
+        static final EventBus INSTANCE = new EventBus();
+    }
+
     public static EventBus get() {
-        if (instance == null) {
-            synchronized (EventBus.class) {
-                if (instance == null) {
-                    instance = new EventBus();
-                }
-            }
-        }
-        return instance;
+        return Holder.INSTANCE;
     }
 
     /**
@@ -65,7 +59,6 @@ public class EventBus {
         List<Consumer<EventData>> eventListeners = listeners.get(type);
 
         if (eventListeners != null && !eventListeners.isEmpty()) {
-            log.debug("Emitiendo evento: {}", type);
             for (Consumer<EventData> listener : eventListeners) {
                 try {
                     listener.accept(data);
@@ -120,13 +113,5 @@ public class EventBus {
 
     public void emitGameStopped(String versionId, int exitCode) {
         emit(EventType.GAME_STOPPED, EventData.gameEvent(versionId, exitCode));
-    }
-
-    public void emitError(String message, Throwable error) {
-        emit(EventType.ERROR, EventData.error(message, error));
-    }
-
-    public void emitSettingChanged(String key, Object oldValue, Object newValue) {
-        emit(EventType.SETTING_CHANGED, EventData.settingChange(key, oldValue, newValue));
     }
 }

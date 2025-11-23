@@ -1,15 +1,31 @@
 /*
  * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- * AGPL-3.0 License
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 package com.cubiclauncher.launcher;
 
 import com.cubiclauncher.claunch.Launcher;
 import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
+import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.core.events.EventData;
+import com.cubiclauncher.launcher.core.events.EventType;
 import com.cubiclauncher.launcher.util.NativeLibraryLoader;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -23,6 +39,7 @@ import java.util.List;
 public class LauncherWrapper {
     static final SettingsManager sm = SettingsManager.getInstance();
     static final PathManager pm = PathManager.getInstance();
+    private static final EventBus EVENT_BUS = EventBus.get();
 
     static {
         try {
@@ -39,10 +56,30 @@ public class LauncherWrapper {
      */
     private native void startMinecraftDownload(String targetPath, String version, DownloadCallback callback);
 
-    public void downloadMinecraftVersion(String versionId, DownloadCallback downloadCallback) {
+    public void downloadMinecraftVersion(String versionId) {
         startMinecraftDownload(pm.getGamePath().resolve("shared").toString(),
                 versionId,
-                downloadCallback);
+                new DownloadCallback() {
+                    @Override
+                    public void onProgress(int type, int current, int total, String fileName) {
+                        EVENT_BUS.emit(EventType.DOWNLOAD_PROGRESS, EventData.downloadProgress(type, current, total, fileName));
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED, EventData.empty());
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        EVENT_BUS.emit(EventType.DOWNLOAD_FAILED, EventData.empty());
+                    }
+
+                    @Override
+                    public void onStart(String version) {
+                        EVENT_BUS.emit(EventType.DOWNLOAD_STARTED, EventData.downloadStarted(versionId));
+                    }
+                });
     }
 
     public List<String> getInstalledVersions() {
@@ -66,6 +103,12 @@ public class LauncherWrapper {
             var json = new Gson().fromJson(response.body(), JsonObject.class);
             json.getAsJsonArray("versions").forEach(el -> {
                 var obj = el.getAsJsonObject();
+                if ("old_alpha".equals(obj.get("type").getAsString()) && sm.isShowAlphaVersions()) {
+                    versions.add(obj.get("id").getAsString());
+                }
+                if ("snapshot".equals(obj.get("type").getAsString()) && sm.isShowBetaVersions()) {
+                    versions.add(obj.get("id").getAsString());
+                }
                 if ("release".equals(obj.get("type").getAsString())) {
                     versions.add(obj.get("id").getAsString());
                 }

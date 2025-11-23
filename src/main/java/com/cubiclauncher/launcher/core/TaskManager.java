@@ -1,27 +1,25 @@
 /*
+ * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
  *
- *  * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- *  *
- *  * This program is free software: you can redistribute it and/or modify
- *  * it under the terms of the GNU Affero General Public License as published by
- *  * the Free Software Foundation, either version 3 of the License, or
- *  * (at your option) any later version.
- *  *
- *  * This program is distributed in the hope that it will be useful,
- *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  * GNU Affero General Public License for more details.
- *  *
- *  * You should have received a copy of the GNU Affero General Public License
- *  * along with this program.  If not, see https://www.gnu.org/licenses/.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
  *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
 package com.cubiclauncher.launcher.core;
 
 import javafx.application.Platform;
-
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.util.concurrent.*;
 
 /**
@@ -30,7 +28,7 @@ import java.util.concurrent.*;
 public class TaskManager {
     private static TaskManager instance;
     private final ExecutorService executorService;
-
+    private final Logger log = LoggerFactory.getLogger(TaskManager.class);
     private TaskManager() {
         ThreadFactory factory = Thread.ofVirtual()
                 .name("CubicLauncher-VT-", 0)
@@ -56,8 +54,7 @@ public class TaskManager {
             try {
                 task.run();
             } catch (Exception e) {
-                e.printStackTrace();
-                // Mostrar error en la UI si es necesario
+                log.error("Error en tarea asíncrona: {}", e);
                 Platform.runLater(() -> System.err.println("Error en tarea asíncrona: " + e.getMessage()));
             }
         });
@@ -77,7 +74,7 @@ public class TaskManager {
                     Platform.runLater(onSuccess);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error en tarea asíncrona: {}", e);
                 Platform.runLater(() -> System.err.println("Error en tarea asíncrona: " + e.getMessage()));
             }
         });
@@ -94,7 +91,7 @@ public class TaskManager {
                     Platform.runLater(onSuccess);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error en tarea asíncrona: {}", e);
                 if (onError != null) {
                     Platform.runLater(() -> onError.accept(e));
                 }

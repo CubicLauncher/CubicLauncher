@@ -1,12 +1,26 @@
 /*
  * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- * AGPL-3.0 License
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
 import com.cubiclauncher.launcher.LauncherWrapper.DownloadCallback;
 import com.cubiclauncher.launcher.core.TaskManager;
+import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.core.events.EventType;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -24,6 +38,7 @@ public class VersionsView {
     private static ProgressBar progressBar;
     private static Label statusLabel;
     private static Button downloadButton;
+    private static final EventBus eventBus = EventBus.get();
 
     public static VBox create() {
         VBox box = new VBox(15);
@@ -72,48 +87,21 @@ public class VersionsView {
         progressBar.setVisible(true);
         statusLabel.setVisible(true);
         downloadButton.setDisable(true);
-        downloadButton.setText("Descargando...");
+        eventBus.subscribe(EventType.DOWNLOAD_STARTED, (eventData -> {
+            downloadButton.setText("Downloading " + eventData.getString("version"));
+            downloadButton.setDisable(true);
+        }));
+        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> progressBar.setProgress(
+                calcProgress(eventData.getInt("type"),
+                        eventData.getInt("current"),
+                        eventData.get("total")))));
+        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
+            hideProgressAfter();
+            statusLabel.setVisible(false);
+            downloadButton.setDisable(false);
+        }));
 
-        TaskManager.getInstance().runAsync(() -> {
-            launcher.downloadMinecraftVersion(version, new DownloadCallback() {
-                @Override
-                public void onProgress(int type, int current, int total, String fileName) {
-                    Platform.runLater(() -> {
-                        double progress = calcProgress(type, current, total);
-                        progressBar.setProgress(progress);
-                        statusLabel.setText(String.format("%s: %d/%d",
-                                DownloadCallback.getTypeName(type), current, total));
-                    });
-                }
-
-                @Override
-                public void onComplete() {
-                    Platform.runLater(() -> {
-                        progressBar.setProgress(1.0);
-                        statusLabel.setText("¡Completado!");
-                        versionsList.refresh();
-                        downloadButton.setText("Descargar Versión");
-                        downloadButton.setDisable(launcher.getInstalledVersions().contains(version));
-                        hideProgressAfter();
-                    });
-                }
-
-                @Override
-                public void onError(String error) {
-                    Platform.runLater(() -> {
-                        statusLabel.setText("Error: " + error);
-                        downloadButton.setText("Reintentar");
-                        downloadButton.setDisable(false);
-                    });
-                }
-
-                @Override
-                public void onStart(String version) {
-                downloadButton.setDisable(true);
-                downloadButton.setText("Descargando " + version);
-                }
-            });
-        });
+        TaskManager.getInstance().runAsync(() -> launcher.downloadMinecraftVersion(version));
     }
 
     // Calcula progreso global ponderado
@@ -131,7 +119,10 @@ public class VersionsView {
 
     private static void hideProgressAfter() {
         new Thread(() -> {
-            try { Thread.sleep((long) 2000); } catch (InterruptedException ignored) {}
+            try {
+                Thread.sleep((long) 2000);
+            } catch (InterruptedException ignored) {
+            }
             Platform.runLater(() -> {
                 progressBar.setVisible(false);
                 statusLabel.setVisible(false);

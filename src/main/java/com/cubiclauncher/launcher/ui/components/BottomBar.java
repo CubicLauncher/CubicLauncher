@@ -1,26 +1,22 @@
 /*
+ * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
  *
- *  * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- *  *
- *  * This program is free software: you can redistribute it and/or modify
- *  * it under the terms of the GNU Affero General Public License as published by
- *  * the Free Software Foundation, either version 3 of the License, or
- *  * (at your option) any later version.
- *  *
- *  * This program is distributed in the hope that it will be useful,
- *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  * GNU Affero General Public License for more details.
- *  *
- *  * You should have received a copy of the GNU Affero General Public License
- *  * along with this program.  If not, see https://www.gnu.org/licenses/.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
  *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
-import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import javafx.collections.FXCollections;
@@ -34,7 +30,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.List;
 
 public class BottomBar extends HBox {
@@ -123,20 +118,4 @@ public class BottomBar extends HBox {
         }
     }
 
-    // Comparador para ordenar las versiones de Minecraft
-    private static class VersionComparator implements Comparator<String> {
-        @Override
-        public int compare(String v1, String v2) {
-            String[] parts1 = v1.split("\\.");
-            String[] parts2 = v2.split("\\.");
-            int length = Math.max(parts1.length, parts2.length);
-            for (int i = 0; i < length; i++) {
-                int part1 = i < parts1.length ? Integer.parseInt(parts1[i]) : 0;
-                int part2 = i < parts2.length ? Integer.parseInt(parts2[i]) : 0;
-                if (part1 < part2) return -1;
-                if (part1 > part2) return 1;
-            }
-            return 0;
-        }
-    }
 }

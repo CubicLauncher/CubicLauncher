@@ -1,21 +1,18 @@
 /*
+ * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
  *
- *  * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- *  *
- *  * This program is free software: you can redistribute it and/or modify
- *  * it under the terms of the GNU Affero General Public License as published by
- *  * the Free Software Foundation, either version 3 of the License, or
- *  * (at your option) any later version.
- *  *
- *  * This program is distributed in the hope that it will be useful,
- *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  * GNU Affero General Public License for more details.
- *  *
- *  * You should have received a copy of the GNU Affero General Public License
- *  * along with this program.  If not, see https://www.gnu.org/licenses/.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
  *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 package com.cubiclauncher.launcher.ui.views;
 
@@ -133,7 +130,7 @@ public class SettingsView {
     private static VBox createLauncherInfo() {
         VBox infoBox = new VBox(5);
 
-        Label versionLabel = new Label("Versión: 1.0.0-SNAPSHOT");
+        Label versionLabel = new Label("Versión: 1alpha");
         Label devLabel = new Label("Desarrollado por: Santiagolxx, Notstaff & CubicLauncher contributors");
 
         HBox sourceCodeBox = new HBox(5);
@@ -189,6 +186,7 @@ public class SettingsView {
         return section;
     }
 
+    @SuppressWarnings("CommentedOutCode")
     private static VBox createIntegrationsSection() {
         VBox section = new VBox(5);
 
@@ -198,11 +196,11 @@ public class SettingsView {
         VBox options = new VBox(5);
         options.setPadding(new Insets(5, 0, 0, 10));
 
-        CheckBox discordPresence = new CheckBox("Habilitar integración con Discord (Rich Presence)");
-        discordPresence.setSelected(controller.getSettings().isDiscordRichPresence());
-        discordPresence.setOnAction(e -> controller.onDiscordPresenceChanged(discordPresence.isSelected()));
+//        CheckBox discordPresence = new CheckBox("Habilitar integración con Discord (Rich Presence)");
+//        discordPresence.setSelected(controller.getSettings().isDiscordRichPresence());
+//        discordPresence.setOnAction(e -> controller.onDiscordPresenceChanged(discordPresence.isSelected()));
 
-        options.getChildren().add(discordPresence);
+//        options.getChildren().add(discordPresence);
 
         section.getChildren().addAll(title, options);
         return section;

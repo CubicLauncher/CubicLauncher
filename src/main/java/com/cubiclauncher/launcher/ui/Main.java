@@ -1,27 +1,25 @@
 /*
+ * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
  *
- *  * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- *  *
- *  * This program is free software: you can redistribute it and/or modify
- *  * it under the terms of the GNU Affero General Public License as published by
- *  * the Free Software Foundation, either version 3 of the License, or
- *  * (at your option) any later version.
- *  *
- *  * This program is distributed in the hope that it will be useful,
- *  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  * GNU Affero General Public License for more details.
- *  *
- *  * You should have received a copy of the GNU Affero General Public License
- *  * along with this program.  If not, see https://www.gnu.org/licenses/.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
  *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
 package com.cubiclauncher.launcher.ui;
 
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
+import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
@@ -51,10 +49,13 @@ public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
     final SettingsManager settings = SettingsManager.getInstance();
     private BottomBar bottomBar;
-
+    private static final EventBus eventBus = EventBus.get();
     @Override
     public void stop() {
+        log.info("Apagando threads");
         TaskManager.getInstance().shutdown();
+        log.info("Eliminando listeners de eventos");
+        eventBus.clearAll();
         log.info("Closing CubicLauncher. Goodbye :)");
     }
 
