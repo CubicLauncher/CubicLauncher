@@ -94,7 +94,7 @@ public class BottomBar extends HBox {
         progressBar = new ProgressBar(0);
         progressBar.setVisible(false);
         progressBar.setPrefWidth(600);
-        progressBar.setPrefHeight(8);
+        progressBar.setPrefHeight(16);
 
         progressLabel = new Label("");
         progressLabel.setVisible(false);
@@ -137,12 +137,19 @@ public class BottomBar extends HBox {
                 );
             }
         });
-        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> progressBar.setProgress(
-                calcProgress(eventData.getInt("type"),
-                        eventData.getInt("current"),
-                        eventData.get("total")))));
+        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> {
+            progressBar.setVisible(true);
+            progressLabel.setVisible(true);
+            Platform.runLater(() -> progressLabel.setText(eventData.get("current") + "/" + eventData.get("total")));
+            progressBar.setProgress(
+                    calcProgress(eventData.getInt("type"),
+                            eventData.getInt("current"),
+                            eventData.get("total")));
+
+        }));
         eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
             progressBar.setVisible(false);
+            progressLabel.setVisible(false);
         }));
         eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> {
             Platform.runLater(() -> updateInstalledVersions());
