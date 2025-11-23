@@ -33,7 +33,7 @@ public class SettingsManager {
 
     // Minecraft settings
     public boolean showAlphaVersions = false;
-    public boolean showBetaVersions = true;
+    public boolean showBetaVersions = false;
     public boolean discordRichPresence = false;
     public boolean forceDiscreteGpu = false;
 
