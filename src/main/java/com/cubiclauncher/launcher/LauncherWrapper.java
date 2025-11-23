@@ -18,6 +18,7 @@ package com.cubiclauncher.launcher;
 
 import com.cubiclauncher.claunch.Launcher;
 import com.cubiclauncher.claunch.models.VersionInfo;
+import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -34,15 +35,19 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class LauncherWrapper {
     static final SettingsManager sm = SettingsManager.getInstance();
     static final PathManager pm = PathManager.getInstance();
     private static final EventBus EVENT_BUS = EventBus.get();
     private static final Logger log = LoggerFactory.getLogger(LauncherWrapper.class);
+    public static final InstanceManager instanceManager = InstanceManager.getInstance();
+
     static {
         try {
             NativeLibraryLoader.loadLibraryFromResources(
@@ -143,14 +148,34 @@ public class LauncherWrapper {
         }
     }
 
-    public void startVersion(String versionId) throws IOException, InterruptedException {
+    public void startInstance(String instanceName) {
+        Optional<InstanceManager.Instance> optionalInstance = instanceManager.getInstance(instanceName);
+
+        if (optionalInstance.isPresent()) {
+            InstanceManager.Instance instance = optionalInstance.get();
+            try {
+                if (!getInstalledVersions().contains(instance.getVersion())) {
+                    EVENT_BUS.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.empty());
+                    downloadMinecraftVersion(instance.getVersion());
+                }
+                startVersion(instance.getVersion(), instance.getInstanceDir(pm.getInstancePath()));
+                instance.setLastPlayed(System.currentTimeMillis());
+            } catch (InterruptedException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            log.warn("No se encontró la instancia {}", instanceName);
+        }
+    }
+
+    public void startVersion(String versionId, Path instanceDir) throws IOException, InterruptedException {
         String versionManifestPath = pm.getGamePath().resolve("shared", "versions", versionId, versionId + ".json").toString();
         String minimumJREVersion = new VersionInfo(versionManifestPath, pm.getGamePath().toString()).getMinimumJREVersion();
 
         Launcher.launch(
                 versionManifestPath,
                 pm.getGamePath().toString(),
-                pm.getInstancePath().resolve("xd"),
+                instanceDir,
                 sm.getUsername(),
                 getJavaPath(minimumJREVersion),
                 sm.getMinMemoryInMB() + "M",

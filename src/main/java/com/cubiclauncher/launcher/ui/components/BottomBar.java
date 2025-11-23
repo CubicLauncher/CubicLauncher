@@ -17,6 +17,7 @@
 package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
+import com.cubiclauncher.launcher.LauncherWrapper.DownloadCallback;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -29,17 +30,25 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.cubiclauncher.launcher.LauncherWrapper.instanceManager;
+import static com.cubiclauncher.launcher.core.events.EventBus.get;
 
 public class BottomBar extends HBox {
     private static final SettingsManager sm = SettingsManager.getInstance();
     private final ComboBox<String> versionSelector;
+    private final ProgressBar progressBar;
+    private final Label progressLabel;
+    private final StackPane centerContainer;
     private final LauncherWrapper launcher = new LauncherWrapper();
-    // --Commented out by Inspection (22.11.25, 19:32):private final EventBus eventBus = EventBus.get();
+    private static final EventBus eventBus = EventBus.get();
+
     public BottomBar() {
         super(20);
         setPadding(new Insets(20, 30, 20, 30));
@@ -69,9 +78,34 @@ public class BottomBar extends HBox {
             });
         });
 
-        // Espaciador
-        Region bottomSpacer = new Region();
-        HBox.setHgrow(bottomSpacer, Priority.ALWAYS);
+        // Espaciador izquierdo
+        Region leftSpacer = new Region();
+        HBox.setHgrow(leftSpacer, Priority.ALWAYS);
+
+        // Contenedor centrado para ProgressBar
+        centerContainer = new StackPane();
+        centerContainer.setAlignment(Pos.CENTER);
+        HBox.setHgrow(centerContainer, Priority.ALWAYS);
+
+        // ProgressBar y label centrados
+        HBox progressContainer = new HBox(10);
+        progressContainer.setAlignment(Pos.CENTER);
+
+        progressBar = new ProgressBar(0);
+        progressBar.setVisible(false);
+        progressBar.setPrefWidth(600);
+        progressBar.setPrefHeight(16);
+
+        progressLabel = new Label("");
+        progressLabel.setVisible(false);
+        progressLabel.getStyleClass().add("progress-label");
+
+        progressContainer.getChildren().addAll(progressBar, progressLabel);
+        centerContainer.getChildren().add(progressContainer);
+
+        // Espaciador derecho
+        Region rightSpacer = new Region();
+        HBox.setHgrow(rightSpacer, Priority.ALWAYS);
 
         // Selector de versión moderno
         versionSelector = new ComboBox<>();
@@ -98,30 +132,61 @@ public class BottomBar extends HBox {
             if (selectedVersion != null && !selectedVersion.isEmpty()) {
                 TaskManager.getInstance().runAsync(
                         () -> {
-                            try {
-                                launcher.startVersion(selectedVersion);
-                            } catch (IOException | InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
+                            launcher.startInstance(selectedVersion);
                         }
                 );
             }
         });
-        EventBus.get().subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
-            Platform.runLater(() -> updateInstalledVersions());
+        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> {
+            progressBar.setVisible(true);
+            progressLabel.setVisible(true);
+            Platform.runLater(() -> progressLabel.setText(eventData.get("current") + "/" + eventData.get("total")));
+            progressBar.setProgress(
+                    calcProgress(eventData.getInt("type"),
+                            eventData.getInt("current"),
+                            eventData.get("total")));
+
         }));
-        getChildren().addAll(userProfile, bottomSpacer, versionSelector, mainPlayButton);
+        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
+            progressBar.setVisible(false);
+            progressLabel.setVisible(false);
+        }));
+        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> {
+            Platform.runLater(() -> updateInstalledVersions());
+        });
+        getChildren().addAll(userProfile, leftSpacer, centerContainer, rightSpacer, versionSelector, mainPlayButton);
     }
 
     public void updateInstalledVersions() {
-        List<String> installedVersions = launcher.getInstalledVersions();
+        List<String> installedVersions = instanceManager.getAllInstances().stream()
+                .map(instance -> instance.getName())
+                .collect(Collectors.toList());
+
+        String currentlySelected = versionSelector.getValue();
+
         if (installedVersions.isEmpty()) {
-            versionSelector.setPromptText("No hay versiones instaladas");
+            versionSelector.setPromptText("No hay instancias disponibles");
             versionSelector.setItems(FXCollections.observableArrayList());
         } else {
             versionSelector.setItems(FXCollections.observableArrayList(installedVersions));
-            versionSelector.getSelectionModel().selectFirst();
+
+            if (currentlySelected != null && installedVersions.contains(currentlySelected)) {
+                versionSelector.getSelectionModel().select(currentlySelected);
+            } else {
+                versionSelector.getSelectionModel().selectFirst();
+            }
         }
     }
 
+    private static double calcProgress(int type, int current, int total) {
+        if (total == 0) return 0;
+        double p = (double) current / total;
+        return switch (type) {
+            case DownloadCallback.TYPE_CLIENT -> p * 0.05;
+            case DownloadCallback.TYPE_LIBRARY -> 0.05 + p * 0.15;
+            case DownloadCallback.TYPE_ASSET -> 0.20 + p * 0.75;
+            case DownloadCallback.TYPE_NATIVE -> 0.95 + p * 0.05;
+            default -> p;
+        };
+    }
 }
