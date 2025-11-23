@@ -37,4 +37,7 @@ public enum EventType {
     GAME_STOPPED,
     GAME_CRASHED,
     GAME_OUTPUT,
+    // Instances
+    INSTANCE_CREATED,
+    INSTANCE_VERSION_NOT_INSTALLED
 }

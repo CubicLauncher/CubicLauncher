@@ -1,7 +1,13 @@
 package com.cubiclauncher.launcher;
 
+import com.cubiclauncher.launcher.core.PathManager;
+import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.core.events.EventData;
+import com.cubiclauncher.launcher.core.events.EventType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -14,9 +20,11 @@ public class InstanceManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private final Path instancesDir;
     private final List<Instance> instances;
+    private static final Logger log = LoggerFactory.getLogger(InstanceManager.class);
 
-    public InstanceManager(Path launcherDir) {
-        this.instancesDir = launcherDir.resolve("instances");
+    // Cambio: Recibe el instanceDir directamente en lugar de launcherDir
+    public InstanceManager(Path instancesDir) {
+        this.instancesDir = PathManager.getInstance().getInstancePath();
         this.instances = new ArrayList<>();
         loadInstances();
     }
@@ -52,8 +60,13 @@ public class InstanceManager {
             this.lastPlayed = System.currentTimeMillis();
         }
 
-        public Path getInstanceJsonPath(Path instancesDir) {
-            return instancesDir.resolve(this.name + ".json");
+        // Cambio: Ahora crea un directorio con el nombre y usa instance.cub
+        public Path getInstanceDir(Path instancesDir) {
+            return instancesDir.resolve(this.name);
+        }
+
+        public Path getInstanceConfigPath(Path instancesDir) {
+            return getInstanceDir(instancesDir).resolve("instance.cub");
         }
 
         @Override
@@ -83,29 +96,37 @@ public class InstanceManager {
 
         try {
             Files.list(instancesDir)
-                    .filter(path -> path.toString().endsWith(".json"))
-                    .forEach(this::loadInstanceFromFile);
+                    .filter(Files::isDirectory) // Cambio: Solo directorios
+                    .forEach(this::loadInstanceFromDir);
         } catch (IOException e) {
             System.err.println("Error leyendo directorio de instancias: " + e.getMessage());
         }
     }
 
-    private void loadInstanceFromFile(Path jsonFile) {
-        try (Reader reader = new FileReader(jsonFile.toFile())) {
-            Instance instance = GSON.fromJson(reader, Instance.class);
-            instances.add(instance);
-        } catch (IOException e) {
-            System.err.println("Error cargando instancia desde " + jsonFile + ": " + e.getMessage());
+    private void loadInstanceFromDir(Path instanceDir) {
+        Path configFile = instanceDir.resolve("instance.cub");
+        if (Files.exists(configFile)) {
+            try (Reader reader = new FileReader(configFile.toFile())) {
+                Instance instance = GSON.fromJson(reader, Instance.class);
+                instances.add(instance);
+            } catch (IOException e) {
+                System.err.println("Error cargando instancia desde " + configFile + ": " + e.getMessage());
+            }
         }
     }
 
     /**
-     * Guarda una instancia en un archivo JSON
+     * Guarda una instancia en su directorio
      */
     public boolean saveInstance(Instance instance) {
         try {
-            Path jsonFile = instance.getInstanceJsonPath(instancesDir);
-            try (Writer writer = new FileWriter(jsonFile.toFile())) {
+            // Crear directorio de la instancia si no existe
+            Path instanceDir = instance.getInstanceDir(instancesDir);
+            Files.createDirectories(instanceDir);
+
+            // Guardar archivo de configuración
+            Path configFile = instance.getInstanceConfigPath(instancesDir);
+            try (Writer writer = new FileWriter(configFile.toFile())) {
                 GSON.toJson(instance, writer);
             }
 
@@ -116,7 +137,7 @@ public class InstanceManager {
 
             return true;
         } catch (IOException e) {
-            System.err.println("Error guardando instancia: " + e.getMessage());
+            log.error("Error guardando instancia: {}", e.getMessage());
             return false;
         }
     }
@@ -125,7 +146,6 @@ public class InstanceManager {
      * Crea una nueva instancia
      */
     public Instance createInstance(String name, String version) {
-        // Validar nombre único
         if (getInstance(name).isPresent()) {
             throw new IllegalArgumentException("Ya existe una instancia con el nombre: " + name);
         }
@@ -133,6 +153,7 @@ public class InstanceManager {
         Instance instance = new Instance(name, version);
 
         if (saveInstance(instance)) {
+            EventBus.get().emit(EventType.INSTANCE_CREATED, EventData.empty());
             return instance;
         } else {
             throw new RuntimeException("No se pudo guardar la instancia: " + name);
@@ -140,17 +161,17 @@ public class InstanceManager {
     }
 
     /**
-     * Elimina una instancia
+     * Elimina una instancia (incluyendo su directorio)
      */
     public boolean deleteInstance(String name) {
         Optional<Instance> instanceOpt = getInstance(name);
         if (instanceOpt.isPresent()) {
             Instance instance = instanceOpt.get();
 
-            // Eliminar archivo JSON
-            Path jsonFile = instance.getInstanceJsonPath(instancesDir);
+            // Eliminar directorio completo de la instancia
+            Path instanceDir = instance.getInstanceDir(instancesDir);
             try {
-                Files.deleteIfExists(jsonFile);
+                deleteDirectory(instanceDir);
                 instances.remove(instance);
                 return true;
             } catch (IOException e) {
@@ -159,6 +180,23 @@ public class InstanceManager {
             }
         }
         return false;
+    }
+
+    /**
+     * Método auxiliar para eliminar directorios recursivamente
+     */
+    private void deleteDirectory(Path path) throws IOException {
+        if (Files.exists(path)) {
+            Files.walk(path)
+                    .sorted((a, b) -> -a.compareTo(b)) // reverse para eliminar archivos primero
+                    .forEach(p -> {
+                        try {
+                            Files.delete(p);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        }
     }
 
     /**

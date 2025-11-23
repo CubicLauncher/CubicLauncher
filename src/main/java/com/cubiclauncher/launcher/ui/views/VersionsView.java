@@ -17,10 +17,7 @@
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
-import com.cubiclauncher.launcher.LauncherWrapper.DownloadCallback;
-import com.cubiclauncher.launcher.core.TaskManager;
-import com.cubiclauncher.launcher.core.events.EventBus;
-import com.cubiclauncher.launcher.core.events.EventType;
+import com.cubiclauncher.launcher.InstanceManager;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -29,23 +26,26 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.nio.file.Paths;
+
 public class VersionsView {
     private static final LauncherWrapper launcher = new LauncherWrapper();
-    private static ProgressBar progressBar;
-    private static Label statusLabel;
-    private static Button downloadButton;
-    private static final EventBus eventBus = EventBus.get();
+    private static InstanceManager instanceManager;
+
+    static {
+        instanceManager = new InstanceManager(Paths.get("instances"));
+    }
 
     public static VBox create() {
         VBox box = new VBox(15);
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(10));
 
-        Label title = new Label("Versiones");
+        Label title = new Label("Versiones Disponibles");
         title.getStyleClass().add("welcome-title");
 
         ListView<String> versionsList = new ListView<>();
@@ -53,80 +53,94 @@ public class VersionsView {
         versionsList.setCellFactory(lv -> new VersionCell());
         VBox.setVgrow(versionsList, Priority.ALWAYS);
 
-        // Progreso
-        progressBar = new ProgressBar(0);
-        progressBar.setMaxWidth(Double.MAX_VALUE);
-        progressBar.setVisible(false);
+        // Campo para el nombre de la instancia
+        Label nameLabel = new Label("Nombre de la instancia:");
+        TextField nameField = new TextField();
+        nameField.setPromptText("Ingresa un nombre único para la instancia");
 
-        statusLabel = new Label("");
+        // Botón para crear instancia
+        Button createInstanceButton = new Button("Crear Instancia");
+        createInstanceButton.setDisable(true);
+
+        // Etiqueta de estado
+        Label statusLabel = new Label("");
         statusLabel.setVisible(false);
 
-        // Botón
-        downloadButton = new Button("Descargar Versión");
-        downloadButton.setDisable(true);
-        downloadButton.setOnAction(e -> startDownload(versionsList));
-
+        // Habilitar el botón solo cuando haya una versión seleccionada y el nombre no esté vacío
         versionsList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
-            if (selected != null) {
-                boolean installed = launcher.getInstalledVersions().contains(selected);
-                downloadButton.setDisable(installed);
-                downloadButton.setText(installed ? "Ya instalada" : "Descargar Versión");
-            }
+            updateCreateButton(createInstanceButton, selected, nameField.getText());
         });
 
-        box.getChildren().addAll(title, versionsList, progressBar, statusLabel, downloadButton);
+        nameField.textProperty().addListener((obs, old, newValue) -> {
+            updateCreateButton(createInstanceButton, versionsList.getSelectionModel().getSelectedItem(), newValue);
+        });
+
+        createInstanceButton.setOnAction(e -> {
+            String version = versionsList.getSelectionModel().getSelectedItem();
+            String instanceName = nameField.getText().trim();
+            createInstance(version, instanceName, statusLabel);
+        });
+
+        // Botón de actualizar lista
+        Button refreshButton = new Button("Actualizar Lista");
+        refreshButton.setOnAction(e -> {
+            versionsList.setItems(FXCollections.observableArrayList(launcher.getAvailableVersions()));
+        });
+
+        box.getChildren().addAll(title, versionsList, nameLabel, nameField, createInstanceButton, statusLabel, refreshButton);
         return box;
     }
 
-    private static void startDownload(ListView<String> versionsList) {
-        String version = versionsList.getSelectionModel().getSelectedItem();
-        if (version == null) return;
-
-        // UI
-        progressBar.setProgress(0);
-        progressBar.setVisible(true);
-        statusLabel.setVisible(true);
-        downloadButton.setDisable(true);
-        eventBus.subscribe(EventType.DOWNLOAD_STARTED, (eventData -> {
-            downloadButton.setText("Downloading " + eventData.getString("version"));
-            downloadButton.setDisable(true);
-        }));
-        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> progressBar.setProgress(
-                calcProgress(eventData.getInt("type"),
-                        eventData.getInt("current"),
-                        eventData.get("total")))));
-        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
-            hideProgressAfter();
-            statusLabel.setVisible(false);
-            downloadButton.setDisable(false);
-        }));
-
-        TaskManager.getInstance().runAsync(() -> launcher.downloadMinecraftVersion(version));
+    private static void updateCreateButton(Button button, String selectedVersion, String instanceName) {
+        boolean disabled = selectedVersion == null || instanceName.trim().isEmpty();
+        button.setDisable(disabled);
     }
 
-    // Calcula progreso global ponderado
-    private static double calcProgress(int type, int current, int total) {
-        if (total == 0) return 0;
-        double p = (double) current / total;
-        return switch (type) {
-            case DownloadCallback.TYPE_CLIENT -> p * 0.05;
-            case DownloadCallback.TYPE_LIBRARY -> 0.05 + p * 0.15;
-            case DownloadCallback.TYPE_ASSET -> 0.20 + p * 0.75;
-            case DownloadCallback.TYPE_NATIVE -> 0.95 + p * 0.05;
-            default -> p;
-        };
-    }
+    private static void createInstance(String version, String instanceName, Label statusLabel) {
+        if (instanceName == null || instanceName.trim().isEmpty()) {
+            showStatus(statusLabel, "Error: El nombre de la instancia no puede estar vacío", false);
+            return;
+        }
 
-    private static void hideProgressAfter() {
+        if (instanceManager.instanceExists(instanceName)) {
+            showStatus(statusLabel, "Error: Ya existe una instancia con el nombre '" + instanceName + "'", false);
+            return;
+        }
+
+        // Ejecutar en segundo plano
         new Thread(() -> {
             try {
-                Thread.sleep((long) 2000);
-            } catch (InterruptedException ignored) {
+                // Crear la instancia
+                instanceManager.createInstance(instanceName, version);
+                Platform.runLater(() -> {
+                    showStatus(statusLabel, "Instancia creada exitosamente: " + instanceName, true);
+                });
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    showStatus(statusLabel, "Error creando instancia: " + e.getMessage(), false);
+                });
             }
-            Platform.runLater(() -> {
-                progressBar.setVisible(false);
-                statusLabel.setVisible(false);
-            });
         }).start();
+    }
+
+    private static void showStatus(Label statusLabel, String message, boolean isSuccess) {
+        statusLabel.setText(message);
+        statusLabel.setStyle(isSuccess ?
+                "-fx-text-fill: #4CAF50;" :
+                "-fx-text-fill: #F44336;");
+        statusLabel.setVisible(true);
+
+        // Ocultar después de 3 segundos si es éxito
+        if (isSuccess) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException ignored) {
+                }
+                Platform.runLater(() -> {
+                    statusLabel.setVisible(false);
+                });
+            }).start();
+        }
     }
 }
