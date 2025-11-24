@@ -20,7 +20,7 @@ import com.cubiclauncher.launcher.ui.Main;
 import javafx.application.Application;
 
 public class Launcher {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         Application.launch(Main.class, args);
     }
 }

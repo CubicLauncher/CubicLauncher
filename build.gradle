@@ -8,7 +8,7 @@ version = "1.0-SNAPSHOT"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21) // JavaFX estable
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -21,16 +21,20 @@ repositories {
 
 def fxVersion = "21.0.4"
 
-dependencies {
-    implementation "org.openjfx:javafx-base:${fxVersion}:linux"
-    implementation "org.openjfx:javafx-controls:${fxVersion}:linux"
-    implementation "org.openjfx:javafx-graphics:${fxVersion}:linux"
-    implementation "org.openjfx:javafx-fxml:${fxVersion}:linux"
+def os = org.gradle.internal.os.OperatingSystem.current()
+def platform = os.isWindows() ? "win" :
+        os.isLinux()   ? "linux" :
+                os.isMacOsX()  ? "mac" : null
 
-    implementation "org.openjfx:javafx-base:${fxVersion}:win"
-    implementation "org.openjfx:javafx-controls:${fxVersion}:win"
-    implementation "org.openjfx:javafx-graphics:${fxVersion}:win"
-    implementation "org.openjfx:javafx-fxml:${fxVersion}:win"
+if (platform == null) {
+    throw new GradleException("Unsupported platform for JavaFX")
+}
+
+dependencies {
+    implementation "org.openjfx:javafx-base:${fxVersion}:${platform}"
+    implementation "org.openjfx:javafx-controls:${fxVersion}:${platform}"
+    implementation "org.openjfx:javafx-graphics:${fxVersion}:${platform}"
+    implementation "org.openjfx:javafx-fxml:${fxVersion}:${platform}"
 
     implementation "org.kordamp.bootstrapfx:bootstrapfx-core:0.4.0"
     implementation "com.google.code.gson:gson:2.13.2"
@@ -45,6 +49,18 @@ dependencies {
 
 application {
     mainClass = "com.cubiclauncher.launcher.Launcher"
+}
+
+tasks.run {
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+
+    jvmArgs = [
+            "--module-path", configurations.runtimeClasspath.asPath,
+            "--add-modules", "javafx.controls,javafx.fxml,javafx.graphics",
+            "--enable-native-access=ALL-UNNAMED"
+    ]
 }
 
 tasks.register('fatJar', Jar) {

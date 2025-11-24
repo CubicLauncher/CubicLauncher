@@ -5,7 +5,6 @@ import com.cubiclauncher.claunch.models.VersionInfo;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
-import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.util.NativeLibraryLoader;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
