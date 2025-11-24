@@ -27,8 +27,6 @@ public class LauncherWrapper {
     static final PathManager pm = PathManager.getInstance();
     private static final EventBus EVENT_BUS = EventBus.get();
     private static final Logger log = LoggerFactory.getLogger(LauncherWrapper.class);
-    public static final InstanceManager instanceManager = InstanceManager.getInstance();
-
     private static LauncherWrapper instance;
 
     static {

@@ -33,7 +33,7 @@ import javafx.scene.layout.VBox;
 
 public class VersionsView {
     private static final LauncherWrapper launcher = LauncherWrapper.getInstance();
-    private static final InstanceManager instanceManager = LauncherWrapper.instanceManager;
+    private static final InstanceManager instanceManager = InstanceManager.getInstance();
 
     public static VBox create() {
         VBox box = new VBox(15);

@@ -38,7 +38,7 @@ import javafx.scene.shape.Circle;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.cubiclauncher.launcher.core.LauncherWrapper.instanceManager;
+import static com.cubiclauncher.launcher.core.InstanceManager.getInstance;
 
 public class BottomBar extends HBox {
     private static final SettingsManager sm = SettingsManager.getInstance();
@@ -130,7 +130,7 @@ public class BottomBar extends HBox {
             String selectedVersion = versionSelector.getValue();
             if (selectedVersion != null && !selectedVersion.isEmpty()) {
                 TaskManager.getInstance().runAsync(
-                        () -> instanceManager.startInstance(selectedVersion)
+                        () -> InstanceManager.getInstance().startInstance(selectedVersion)
                 );
             }
         });
@@ -161,7 +161,7 @@ public class BottomBar extends HBox {
     }
 
     public void updateInstalledVersions() {
-        List<String> installedVersions = instanceManager.getAllInstances().stream()
+        List<String> installedVersions = InstanceManager.getInstance().getAllInstances().stream()
                 .map(InstanceManager.Instance::getName)
                 .collect(Collectors.toList());
 

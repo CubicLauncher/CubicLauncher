@@ -51,9 +51,10 @@ public class InstanceManager {
         loadInstances();
         eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> {
             taskManager.runAsync(() -> {
-                launcherWrapper.downloadMinecraftVersion("1.12.2");
+                launcherWrapper.downloadMinecraftVersion(eventData.getString("version"));
             });
         }));
+
     }
 
     // Singleton getter
