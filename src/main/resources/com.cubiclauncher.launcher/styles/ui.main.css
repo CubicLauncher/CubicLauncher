@@ -786,3 +786,329 @@
 .radio-button:selected .dot {
   -fx-background-color: #e0e0e0;
 }
+
+/* ==================== VERSIONS VIEW STYLES - CDARK THEME ==================== */
+.versions-view {
+  -fx-background-color: #0f0f0f;
+}
+
+.versions-main-title {
+  -fx-text-fill: #e0e0e0;
+  -fx-font-size: 28px;
+  -fx-font-weight: bold;
+}
+
+.versions-subtitle {
+  -fx-text-fill: #888888;
+  -fx-font-size: 14px;
+}
+
+/* ==================== TOGGLE BUTTON GROUP (GTK Style - Dark) ==================== */
+.toggle-button-group {
+  -fx-background-color: transparent;
+}
+
+.toggle-button-group .toggle-button {
+  -fx-background-color: #1a1a1a;
+  -fx-text-fill: #888888;
+  -fx-border-color: #2a2a2a;
+  -fx-border-width: 1;
+  -fx-background-insets: 0;
+  -fx-padding: 10 24;
+  -fx-font-size: 13px;
+  -fx-font-weight: 500;
+  -fx-cursor: hand;
+}
+
+.toggle-button-group .toggle-button:hover {
+  -fx-background-color: #1f1f1f;
+  -fx-text-fill: #b0b0b0;
+}
+
+.toggle-button-group .toggle-button:selected {
+  -fx-background-color: #2a2a2a;
+  -fx-text-fill: #e0e0e0;
+  -fx-border-color: #3a3a3a;
+}
+
+.toggle-button-group .toggle-button:selected:hover {
+  -fx-background-color: #2f2f2f;
+}
+
+/* Toggle button izquierdo - bordes redondeados a la izquierda */
+.toggle-button-left {
+  -fx-background-radius: 8 0 0 8;
+  -fx-border-radius: 8 0 0 8;
+  -fx-border-width: 1 0 1 1;
+}
+
+/* Toggle button derecho - bordes redondeados a la derecha */
+.toggle-button-right {
+  -fx-background-radius: 0 8 8 0;
+  -fx-border-radius: 0 8 8 0;
+  -fx-border-width: 1 1 1 1;
+}
+
+/* Botón de actualizar */
+.refresh-button {
+  -fx-background-color: #1a1a1a;
+  -fx-text-fill: #b0b0b0;
+  -fx-border-color: #2a2a2a;
+  -fx-border-width: 1;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
+  -fx-padding: 10 16;
+  -fx-font-size: 16px;
+  -fx-cursor: hand;
+  -fx-min-width: 40;
+}
+
+.refresh-button:hover {
+  -fx-background-color: #1f1f1f;
+  -fx-text-fill: #e0e0e0;
+  -fx-border-color: #333333;
+}
+
+.refresh-button:disabled {
+  -fx-background-color: #151515;
+  -fx-text-fill: #555555;
+  -fx-border-color: #252525;
+}
+
+/* ==================== VERSION SECTIONS ==================== */
+.version-section {
+  -fx-background-color: #151515;
+  -fx-border-color: #252525;
+  -fx-border-width: 1;
+  -fx-border-radius: 8;
+  -fx-background-radius: 8;
+  -fx-padding: 20;
+}
+
+.section-title {
+  -fx-text-fill: #e0e0e0;
+  -fx-font-size: 18px;
+  -fx-font-weight: 600;
+}
+
+.version-list {
+  -fx-background-color: #1a1a1a;
+  -fx-border-color: #2a2a2a;
+  -fx-border-width: 1;
+  -fx-border-radius: 6;
+  -fx-background-radius: 6;
+}
+
+.version-list .list-cell {
+  -fx-background-color: transparent;
+  -fx-padding: 0;
+}
+
+.version-list .list-cell:hover {
+  -fx-background-color: #1f1f1f;
+}
+
+.version-cell {
+  -fx-background-color: transparent;
+  -fx-border-color: transparent transparent #252525 transparent;
+  -fx-border-width: 0 0 1 0;
+}
+
+.version-cell:hover {
+  -fx-background-color: #1f1f1f;
+}
+
+.version-name {
+  -fx-text-fill: #e0e0e0;
+  -fx-font-size: 14px;
+  -fx-font-weight: 500;
+}
+
+.version-status,
+.version-type {
+  -fx-text-fill: #888888;
+  -fx-font-size: 12px;
+}
+
+/* ==================== CREATE INSTANCE SECTION - Dark Accent ==================== */
+.create-instance-section {
+  -fx-background-color: #151515;
+  -fx-border-color: #3a3a3a;
+  -fx-border-width: 2;
+}
+
+.instance-form {
+  -fx-background-color: transparent;
+}
+
+.form-label {
+  -fx-text-fill: #b0b0b0;
+  -fx-font-size: 14px;
+  -fx-font-weight: 500;
+}
+
+.form-field,
+.form-combo {
+  -fx-background-color: #1a1a1a;
+  -fx-text-fill: #e0e0e0;
+  -fx-border-color: #2a2a2a;
+  -fx-border-width: 1;
+  -fx-border-radius: 6;
+  -fx-background-radius: 6;
+  -fx-padding: 10 15;
+  -fx-font-size: 14px;
+}
+
+.form-field:focused,
+.form-combo:focused {
+  -fx-border-color: #404040;
+  -fx-background-color: #151515;
+}
+
+.form-combo .list-cell {
+  -fx-background-color: #1a1a1a;
+  -fx-text-fill: #b0b0b0;
+}
+
+/* ==================== BUTTONS - Dark Theme ==================== */
+.primary-button {
+  -fx-background-color: #2a2a2a;
+  -fx-text-fill: #e0e0e0;
+  -fx-border-color: #3a3a3a;
+  -fx-border-width: 1;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
+  -fx-padding: 12 24;
+  -fx-font-size: 14px;
+  -fx-font-weight: 600;
+  -fx-cursor: hand;
+}
+
+.primary-button:hover {
+  -fx-background-color: #333333;
+  -fx-border-color: #444444;
+}
+
+.primary-button:disabled {
+  -fx-background-color: #1a1a1a;
+  -fx-text-fill: #666666;
+  -fx-border-color: #252525;
+}
+
+.primary-button-small {
+  -fx-background-color: #2a2a2a;
+  -fx-text-fill: #e0e0e0;
+  -fx-border-color: #3a3a3a;
+  -fx-border-width: 1;
+  -fx-background-radius: 6;
+  -fx-border-radius: 6;
+  -fx-padding: 6 16;
+  -fx-font-size: 12px;
+  -fx-font-weight: 600;
+  -fx-cursor: hand;
+}
+
+.primary-button-small:hover {
+  -fx-background-color: #333333;
+  -fx-border-color: #444444;
+}
+
+.secondary-button {
+  -fx-background-color: #1a1a1a;
+  -fx-text-fill: #b0b0b0;
+  -fx-border-color: #2a2a2a;
+  -fx-border-width: 1;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
+  -fx-padding: 8 16;
+  -fx-font-size: 13px;
+  -fx-font-weight: 500;
+  -fx-cursor: hand;
+}
+
+.secondary-button:hover {
+  -fx-background-color: #1f1f1f;
+  -fx-text-fill: #e0e0e0;
+  -fx-border-color: #333333;
+}
+
+.danger-button-small {
+  -fx-background-color: #2a1a1a;
+  -fx-text-fill: #d08080;
+  -fx-border-color: #3a2525;
+  -fx-border-width: 1;
+  -fx-background-radius: 6;
+  -fx-border-radius: 6;
+  -fx-padding: 6 16;
+  -fx-font-size: 12px;
+  -fx-font-weight: 500;
+  -fx-cursor: hand;
+}
+
+.danger-button-small:hover {
+  -fx-background-color: #331f1f;
+  -fx-text-fill: #e09090;
+  -fx-border-color: #442a2a;
+}
+
+.installed-button-small {
+  -fx-background-color: #1a2a1a;
+  -fx-text-fill: #90c090;
+  -fx-border-color: #253a25;
+  -fx-border-width: 1;
+  -fx-background-radius: 6;
+  -fx-border-radius: 6;
+  -fx-padding: 6 16;
+  -fx-font-size: 12px;
+  -fx-font-weight: 500;
+}
+
+/* ==================== SIDEBAR EXTRAS ==================== */
+.instances-count {
+  -fx-text-fill: #555555;
+  -fx-font-size: 11px;
+  -fx-font-weight: 600;
+}
+
+.empty-state-title {
+  -fx-text-fill: #888888;
+  -fx-font-size: 13px;
+  -fx-font-weight: 600;
+}
+
+.empty-state-hint {
+  -fx-text-fill: #666666;
+  -fx-font-size: 11px;
+  -fx-wrap-text: true;
+  -fx-text-alignment: center;
+}
+
+/* ==================== PLACEHOLDERS ==================== */
+.placeholder-title {
+  -fx-text-fill: #888888;
+  -fx-font-size: 24px;
+  -fx-font-weight: 600;
+}
+
+.placeholder-subtitle {
+  -fx-text-fill: #666666;
+  -fx-font-size: 14px;
+}
+
+/* ==================== STATUS INDICATORS - Dark Theme ==================== */
+.version-status-installed {
+  -fx-text-fill: #90c090;
+}
+
+.version-status-available {
+  -fx-text-fill: #888888;
+}
+
+/* Círculos indicadores */
+.indicator-installed {
+  -fx-fill: #90c090;
+}
+
+.indicator-available {
+  -fx-fill: #555555;
+}

@@ -131,25 +131,20 @@ public class Sidebar extends VBox {
                 setText(null);
                 setGraphic(null);
             } else {
-                HBox container = new HBox(10);
+                HBox container = new HBox(8);
                 container.setAlignment(Pos.CENTER_LEFT);
-                container.setPadding(new Insets(8));
+                container.setPadding(new Insets(2));
                 container.getStyleClass().add("instance-cell");
 
                 // Icono de Minecraft
-                Label icon = new Label("⛏️");
+                Label icon = new Label("⛏");
                 icon.getStyleClass().add("instance-icon");
 
                 VBox info = new VBox(2);
-                Label nameLabel = new Label(item.getName());
+                Label nameLabel = new Label(String.format("%s-%s", item.getName(), item.getVersion()));
                 nameLabel.getStyleClass().add("instance-name");
 
-                // Mostrar solo la versión base de Minecraft (sin loaders)
-                String version = cleanVersion(item.getVersion());
-                Label versionLabel = new Label(version);
-                versionLabel.getStyleClass().add("instance-version");
-
-                info.getChildren().addAll(nameLabel, versionLabel);
+                info.getChildren().addAll(nameLabel);
                 container.getChildren().addAll(icon, info);
 
                 setGraphic(container);

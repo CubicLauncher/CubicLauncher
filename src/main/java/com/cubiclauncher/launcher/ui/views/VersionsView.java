@@ -19,140 +19,424 @@ package com.cubiclauncher.launcher.ui.views;
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.LauncherWrapper;
 import com.cubiclauncher.launcher.core.TaskManager;
-import com.cubiclauncher.launcher.ui.components.VersionCell;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+
+import java.util.List;
 
 public class VersionsView {
     private static final LauncherWrapper launcher = LauncherWrapper.getInstance();
     private static final InstanceManager instanceManager = InstanceManager.getInstance();
+    private static final TaskManager taskManager = TaskManager.getInstance();
 
-    public static VBox create() {
-        VBox box = new VBox(15);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(10));
+    public static BorderPane create() {
+        BorderPane root = new BorderPane();
+        root.getStyleClass().add("versions-view");
+        root.setPadding(new Insets(20));
 
-        Label title = new Label("Versiones Disponibles");
-        title.getStyleClass().add("welcome-title");
+        // Header con toggle buttons
+        VBox header = createHeader();
+        root.setTop(header);
 
+        // Content principal
+        VBox content = createContent();
+        root.setCenter(content);
+
+        return root;
+    }
+
+    private static VBox createHeader() {
+        VBox header = new VBox(15);
+        header.setPadding(new Insets(0, 0, 20, 0));
+
+        Label title = new Label("Gestor de Versiones");
+        title.getStyleClass().add("versions-main-title");
+
+        Label subtitle = new Label("Administra las versiones de Minecraft y crea nuevas instancias");
+        subtitle.getStyleClass().add("versions-subtitle");
+
+        header.getChildren().addAll(title, subtitle);
+        return header;
+    }
+
+    private static VBox createContent() {
+        VBox content = new VBox(20);
+
+        // Toggle buttons para cambiar entre vistas (estilo GTK)
+        HBox toggleBox = createToggleButtons();
+
+        // Lista de versiones (compartida)
         ListView<String> versionsList = new ListView<>();
-        versionsList.setItems(FXCollections.observableArrayList(launcher.getAvailableVersions()));
-        versionsList.setCellFactory(lv -> new VersionCell());
+        versionsList.getStyleClass().add("version-list");
+        versionsList.setPrefHeight(350);
         VBox.setVgrow(versionsList, Priority.ALWAYS);
 
-        Label nameLabel = new Label("Nombre de la instancia:");
+        // Sección de crear instancia
+        VBox createInstanceSection = createInstanceCreationSection();
+
+        content.getChildren().addAll(toggleBox, versionsList, new Separator(), createInstanceSection);
+
+        // Configurar el comportamiento de los toggle buttons
+        setupToggleButtons(toggleBox, versionsList);
+
+        return content;
+    }
+
+    private static HBox createToggleButtons() {
+        HBox toggleBox = new HBox(0);
+        toggleBox.setAlignment(Pos.CENTER_LEFT);
+        toggleBox.getStyleClass().add("toggle-button-group");
+
+        ToggleGroup toggleGroup = new ToggleGroup();
+
+        ToggleButton installedBtn = new ToggleButton("Instaladas");
+        installedBtn.setUserData("installed");
+        installedBtn.getStyleClass().add("toggle-button-left");
+        installedBtn.setToggleGroup(toggleGroup);
+        installedBtn.setSelected(true);
+
+        ToggleButton availableBtn = new ToggleButton("Disponibles");
+        availableBtn.setUserData("available");
+        availableBtn.getStyleClass().add("toggle-button-right");
+        availableBtn.setToggleGroup(toggleGroup);
+
+        // Botón de actualizar
+        Button refreshBtn = new Button("↻");
+        refreshBtn.getStyleClass().add("refresh-button");
+        refreshBtn.setTooltip(new Tooltip("Actualizar lista"));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        toggleBox.getChildren().addAll(installedBtn, availableBtn, spacer, refreshBtn);
+
+        return toggleBox;
+    }
+
+    private static void setupToggleButtons(HBox toggleBox, ListView<String> versionsList) {
+        ToggleButton installedBtn = (ToggleButton) toggleBox.getChildren().get(0);
+        ToggleButton availableBtn = (ToggleButton) toggleBox.getChildren().get(1);
+        Button refreshBtn = (Button) toggleBox.getChildren().get(3);
+
+        // Cargar instaladas por defecto
+        loadInstalledVersions(versionsList);
+
+        // Cambiar al hacer clic en los toggles
+        installedBtn.setOnAction(e -> {
+            if (installedBtn.isSelected()) {
+                loadInstalledVersions(versionsList);
+                versionsList.setCellFactory(lv -> new InstalledVersionCell(versionsList));
+            }
+        });
+
+        availableBtn.setOnAction(e -> {
+            if (availableBtn.isSelected()) {
+                loadAvailableVersions(versionsList);
+                versionsList.setCellFactory(lv -> new AvailableVersionCell(versionsList));
+            }
+        });
+
+        // Botón refresh
+        refreshBtn.setOnAction(e -> {
+            if (installedBtn.isSelected()) {
+                loadInstalledVersions(versionsList);
+            } else {
+                refreshBtn.setDisable(true);
+                refreshBtn.setText("⟳");
+                taskManager.runAsync(launcher::getAvailableVersions)
+                        .thenAccept(versions -> Platform.runLater(() -> {
+                            versionsList.setItems(FXCollections.observableArrayList(versions));
+                            refreshBtn.setDisable(false);
+                            refreshBtn.setText("↻");
+                        }))
+                        .exceptionally(error -> {
+                            Platform.runLater(() -> {
+                                refreshBtn.setDisable(false);
+                                refreshBtn.setText("↻");
+                            });
+                            return null;
+                        });
+            }
+        });
+    }
+
+    private static VBox createInstanceCreationSection() {
+        VBox section = new VBox(15);
+        section.getStyleClass().add("version-section");
+        section.getStyleClass().add("create-instance-section");
+
+        Label sectionTitle = new Label("Crear Nueva Instancia");
+        sectionTitle.getStyleClass().add("section-title");
+
+        // Grid para los campos
+        GridPane grid = new GridPane();
+        grid.setHgap(15);
+        grid.setVgap(12);
+        grid.getStyleClass().add("instance-form");
+
+        // Nombre de instancia
+        Label nameLabel = new Label("Nombre:");
+        nameLabel.getStyleClass().add("form-label");
 
         TextField nameField = new TextField();
-        nameField.setPromptText("Ingresa un nombre único para la instancia (16 caracteres max)");
+        nameField.setPromptText("Mi Mundo Survival");
+        nameField.getStyleClass().add("form-field");
 
-        TextFormatter<String> textFormatter = new TextFormatter<>(change -> {
-            if (change.getControlNewText().length() <= 16) {
-                return change;
-            }
-            return null; // Rechaza el cambio si excede el límite
-        });
+        TextFormatter<String> textFormatter = new TextFormatter<>(change ->
+                change.getControlNewText().length() <= 16 ? change : null
+        );
         nameField.setTextFormatter(textFormatter);
 
-        Button createInstanceButton = new Button("Crear Instancia");
-        createInstanceButton.setDisable(true);
+        // Versión
+        Label versionLabel = new Label("Versión:");
+        versionLabel.getStyleClass().add("form-label");
 
-        // Etiqueta de estado
-        Label statusLabel = new Label("");
+        ComboBox<String> versionCombo = new ComboBox<>();
+        versionCombo.setPromptText("Selecciona una versión");
+        versionCombo.getStyleClass().add("form-combo");
+        versionCombo.setMaxWidth(Double.MAX_VALUE);
+
+        // Cargar versiones en el combo
+        taskManager.runAsync(launcher::getInstalledVersions)
+                .thenAccept(versions -> Platform.runLater(() ->
+                        versionCombo.setItems(FXCollections.observableArrayList(versions))
+                ));
+
+        // Agregar al grid
+        grid.add(nameLabel, 0, 0);
+        grid.add(nameField, 1, 0);
+        grid.add(versionLabel, 0, 1);
+        grid.add(versionCombo, 1, 1);
+
+        // Configurar columnas
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setMinWidth(100);
+        col1.setPrefWidth(100);
+
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setHgrow(Priority.ALWAYS);
+
+        grid.getColumnConstraints().addAll(col1, col2);
+
+        // Botones de acción
+        HBox actionBox = new HBox(10);
+        actionBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Button createButton = new Button("Crear Instancia");
+        createButton.getStyleClass().add("primary-button");
+        createButton.setDisable(true);
+
+        Label statusLabel = new Label();
+        statusLabel.getStyleClass().add("status-label");
         statusLabel.setVisible(false);
 
-        // Habilitar el botón solo cuando haya una versión seleccionada y el nombre no esté vacío
-        versionsList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> updateCreateButton(createInstanceButton, selected, nameField.getText()));
-
-        nameField.textProperty().addListener((obs, old, newValue) -> updateCreateButton(createInstanceButton, versionsList.getSelectionModel().getSelectedItem(), newValue));
-
-        createInstanceButton.setOnAction(e -> {
-            String version = versionsList.getSelectionModel().getSelectedItem();
-            String instanceName = nameField.getText().trim();
-            createInstance(version, instanceName, statusLabel);
-        });
-
-        Button refreshButton = getButton(statusLabel, versionsList);
-
-        box.getChildren().addAll(title, versionsList, nameLabel, nameField, createInstanceButton, statusLabel, refreshButton);
-        return box;
-    }
-
-    private static Button getButton(Label statusLabel, ListView<String> versionsList) {
-        Button refreshButton = new Button("Actualizar Lista");
-        refreshButton.setOnAction(e -> {
-            refreshButton.setDisable(true);
-            refreshButton.setText("Cargando...");
-            statusLabel.setText("Cargando versiones disponibles...");
-            statusLabel.setStyle("-fx-text-fill: #2196F3;");
-            statusLabel.setVisible(true);
-
-            TaskManager.getInstance().runAsync(launcher::getAvailableVersions)
-                    .thenAccept(result -> Platform.runLater(() -> {
-                        versionsList.setItems(FXCollections.observableArrayList(result));
-                        statusLabel.setVisible(false);
-                        refreshButton.setDisable(false);
-                        refreshButton.setText("Actualizar Lista");
-                    }))
-                    .exceptionally(error -> {
-                        Platform.runLater(() -> {
-                            showStatus(statusLabel, "Error al cargar versiones: " + error.getMessage(), false);
-                            refreshButton.setDisable(false);
-                            refreshButton.setText("Actualizar Lista");
-                        });
-                        return null;
-                    });
-        });
-        return refreshButton;
-    }
-
-    private static void updateCreateButton(Button button, String selectedVersion, String instanceName) {
-        boolean disabled = selectedVersion == null || instanceName.trim().isEmpty();
-        button.setDisable(disabled);
-    }
-
-    private static void createInstance(String version, String instanceName, Label statusLabel) {
-        if (instanceName == null || instanceName.trim().isEmpty()) {
-            showStatus(statusLabel, "Error: El nombre de la instancia no puede estar vacío", false);
-            return;
-        }
-
-        if (instanceManager.instanceExists(instanceName)) {
-            showStatus(statusLabel, "Error: Ya existe una instancia con el nombre '" + instanceName + "'", false);
-            return;
-        }
-
-        TaskManager.getInstance().runAsync(
-                () -> instanceManager.createInstance(instanceName, version),
-                () -> showStatus(statusLabel, "Instancia creada exitosamente: " + instanceName, true),
-                () -> showStatus(statusLabel, "Error creando instancia", false)
+        // Habilitar botón cuando todo esté listo
+        nameField.textProperty().addListener((obs, old, newVal) ->
+                createButton.setDisable(newVal.trim().isEmpty() || versionCombo.getValue() == null)
         );
+
+        versionCombo.valueProperty().addListener((obs, old, newVal) ->
+                createButton.setDisable(newVal == null || nameField.getText().trim().isEmpty())
+        );
+
+        createButton.setOnAction(e -> {
+            String name = nameField.getText().trim();
+            String version = versionCombo.getValue();
+
+            if (instanceManager.instanceExists(name)) {
+                showStatus(statusLabel, "❌ Ya existe una instancia con ese nombre", false);
+                return;
+            }
+
+            createButton.setDisable(true);
+            taskManager.runAsync(
+                    () -> instanceManager.createInstance(name, version),
+                    () -> {
+                        showStatus(statusLabel, "✓ Instancia creada exitosamente", true);
+                        nameField.clear();
+                        versionCombo.setValue(null);
+                        createButton.setDisable(false);
+                    },
+                    () -> {
+                        showStatus(statusLabel, "❌ Error al crear la instancia", false);
+                        createButton.setDisable(false);
+                    }
+            );
+        });
+
+        actionBox.getChildren().addAll(statusLabel, createButton);
+
+        section.getChildren().addAll(sectionTitle, grid, actionBox);
+        return section;
+    }
+
+    // ==================== HELPER METHODS ====================
+    private static void loadInstalledVersions(ListView<String> listView) {
+        List<String> installed = launcher.getInstalledVersions();
+        Platform.runLater(() -> {
+            listView.setItems(FXCollections.observableArrayList(installed));
+            listView.setCellFactory(lv -> new InstalledVersionCell(listView));
+        });
+    }
+
+    private static void loadAvailableVersions(ListView<String> listView) {
+        taskManager.runAsync(launcher::getAvailableVersions)
+                .thenAccept(versions -> Platform.runLater(() -> {
+                    listView.setItems(FXCollections.observableArrayList(versions));
+                    listView.setCellFactory(lv -> new AvailableVersionCell(listView));
+                }));
     }
 
     private static void showStatus(Label statusLabel, String message, boolean isSuccess) {
         statusLabel.setText(message);
         statusLabel.setStyle(isSuccess ?
                 "-fx-text-fill: #4CAF50;" :
-                "-fx-text-fill: #F44336;");
+                "-fx-text-fill: #F44336;"
+        );
         statusLabel.setVisible(true);
 
-        // En VersionsView, método showStatus
         if (isSuccess) {
-            TaskManager.getInstance().runAsync(
+            taskManager.runAsync(
                     () -> {
                         try {
                             Thread.sleep(3000);
-                        } catch (InterruptedException ignored) {
-                        }
+                        } catch (InterruptedException ignored) {}
                     },
                     () -> statusLabel.setVisible(false),
-                    e -> {
-                    } // No hacer nada si falla
+                    e -> {}
             );
+        }
+    }
+
+    // ==================== CUSTOM CELLS ====================
+    private static class InstalledVersionCell extends ListCell<String> {
+        private final ListView<String> parentList;
+
+        public InstalledVersionCell(ListView<String> parentList) {
+            this.parentList = parentList;
+        }
+
+        @Override
+        protected void updateItem(String version, boolean empty) {
+            super.updateItem(version, empty);
+
+            if (empty || version == null) {
+                setGraphic(null);
+                setText(null);
+                return;
+            }
+
+            HBox container = new HBox(15);
+            container.setAlignment(Pos.CENTER_LEFT);
+            container.setPadding(new Insets(10));
+            container.getStyleClass().add("version-cell");
+
+            // Indicador de instalado
+            Circle indicator = new Circle(6, Color.web("#4CAF50"));
+
+            VBox infoBox = new VBox(3);
+            HBox.setHgrow(infoBox, Priority.ALWAYS);
+
+            Label versionLabel = new Label(version);
+            versionLabel.getStyleClass().add("version-name");
+
+            Label statusLabel = new Label("Instalada");
+            statusLabel.getStyleClass().add("version-status");
+            statusLabel.setStyle("-fx-text-fill: #4CAF50;");
+
+            infoBox.getChildren().addAll(versionLabel, statusLabel);
+
+            // Botón de desinstalar
+            Button uninstallBtn = new Button("Desinstalar");
+            uninstallBtn.getStyleClass().add("danger-button-small");
+            uninstallBtn.setOnAction(e -> {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirmar Desinstalación");
+                alert.setHeaderText("¿Desinstalar %s?".formatted(version));
+                alert.setContentText("Esta acción no se puede deshacer.");
+
+                alert.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        System.out.println("Desinstalar: " + version);
+                        taskManager.runAsync(() -> loadInstalledVersions(parentList));
+                    }
+                });
+            });
+
+            container.getChildren().addAll(indicator, infoBox, uninstallBtn);
+            setGraphic(container);
+        }
+    }
+
+    private static class AvailableVersionCell extends ListCell<String> {
+        private final ListView<String> parentList;
+
+        public AvailableVersionCell(ListView<String> parentList) {
+            this.parentList = parentList;
+        }
+
+        @Override
+        protected void updateItem(String version, boolean empty) {
+            super.updateItem(version, empty);
+
+            if (empty || version == null) {
+                setGraphic(null);
+                setText(null);
+                return;
+            }
+
+            HBox container = new HBox(15);
+            container.setAlignment(Pos.CENTER_LEFT);
+            container.setPadding(new Insets(10));
+            container.getStyleClass().add("version-cell");
+
+            boolean isInstalled = launcher.getInstalledVersions().contains(version);
+
+            // Indicador
+            Circle indicator = new Circle(6, isInstalled ?
+                    Color.web("#4CAF50") : Color.web("#666666"));
+
+            VBox infoBox = new VBox(3);
+            HBox.setHgrow(infoBox, Priority.ALWAYS);
+
+            Label versionLabel = new Label(version);
+            versionLabel.getStyleClass().add("version-name");
+
+            Label typeLabel = new Label(getVersionType(version));
+            typeLabel.getStyleClass().add("version-type");
+
+            infoBox.getChildren().addAll(versionLabel, typeLabel);
+
+            // Botón de acción
+            Button actionBtn = new Button(isInstalled ? "Instalada ✓" : "Instalar");
+            actionBtn.getStyleClass().add(isInstalled ? "installed-button-small" : "primary-button-small");
+            actionBtn.setDisable(isInstalled);
+
+            if (!isInstalled) {
+                actionBtn.setOnAction(e -> {
+                    actionBtn.setDisable(true);
+                    actionBtn.setText("Instalando...");
+                    taskManager.runAsync(() -> launcher.downloadMinecraftVersion(version));
+                });
+            }
+
+            container.getChildren().addAll(indicator, infoBox, actionBtn);
+            setGraphic(container);
+        }
+
+        private String getVersionType(String version) {
+            if (version.contains("w") || version.contains("-pre") || version.contains("-rc")) {
+                return "Snapshot";
+            } else if (version.contains("a") || version.contains("b")) {
+                return "Alpha/Beta";
+            }
+            return "Release";
         }
     }
 }

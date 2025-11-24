@@ -38,7 +38,6 @@ public class LauncherController {
                 instanceManager.startInstance(instance);
             } catch (Exception e) {
                 log.error("Error al lanzar la instancia: {}", instance);
-                // Aquí podrías mostrar un diálogo de error en el hilo de UI
             }
         });
     }
