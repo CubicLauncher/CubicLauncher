@@ -45,8 +45,6 @@ public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
     private static final EventBus eventBus = EventBus.get();
     final SettingsManager settings = SettingsManager.getInstance();
-    private BottomBar bottomBar;
-    private Sidebar sidebar;
     private InstanceViewer instanceViewer;
     private BorderPane root;
 
@@ -70,8 +68,8 @@ public class Main extends Application {
         root.getStyleClass().add("root");
 
         // --- Componentes principales estilo Steam ---
-        sidebar = new Sidebar();
-        bottomBar = new BottomBar();
+        Sidebar sidebar = new Sidebar();
+        BottomBar bottomBar = new BottomBar();
         instanceViewer = InstanceViewer.getInstance();
 
         // --- Configurar la navegación ---

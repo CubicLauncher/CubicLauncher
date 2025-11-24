@@ -26,12 +26,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-import java.util.function.Consumer;
-
 public class InstanceViewer extends BorderPane {
     private static InstanceViewer instance;
     private InstanceManager.Instance currentInstance;
-    private Consumer<InstanceManager.Instance> onPlayAction;
     private Label instanceName;
     private Label instanceVersion;
     private Button playButton;
@@ -99,9 +96,7 @@ public class InstanceViewer extends BorderPane {
 
         playButton = new Button("JUGAR");
         playButton.getStyleClass().add("play-button-large");
-        playButton.setOnAction(e -> {
-            LauncherController.launchInstance(getInstance().currentInstance.getName());
-        });
+        playButton.setOnAction(e -> LauncherController.launchInstance(getInstance().currentInstance.getName()));
 
         Button optionsButton = new Button("Gestionar");
         optionsButton.getStyleClass().add("options-button");
@@ -255,10 +250,6 @@ public class InstanceViewer extends BorderPane {
         if (cleaned.endsWith("-")) cleaned = cleaned.substring(0, cleaned.length() - 1);
 
         return cleaned.isEmpty() ? "Minecraft" : "Minecraft " + cleaned;
-    }
-
-    public void setOnPlayAction(Consumer<InstanceManager.Instance> handler) {
-        this.onPlayAction = handler;
     }
 
     // Property para bindings

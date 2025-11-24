@@ -110,55 +110,49 @@ public class BottomBar extends HBox {
     }
 
     private void setupEventListeners() {
-        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> {
-            Platform.runLater(() -> {
-                progressBar.setVisible(true);
-                progressLabel.setVisible(true);
-                progressText.setVisible(true);
+        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> Platform.runLater(() -> {
+            progressBar.setVisible(true);
+            progressLabel.setVisible(true);
+            progressText.setVisible(true);
 
-                int current = eventData.getInt("current");
-                int total = eventData.getInt("total");
-                int type = eventData.getInt("type");
+            int current = eventData.getInt("current");
+            int total = eventData.getInt("total");
+            int type = eventData.getInt("type");
 
-                double progress = calcProgress(type, current, total);
-                int percent = (int) (progress * 100);
+            double progress = calcProgress(type, current, total);
+            int percent = (int) (progress * 100);
 
-                progressLabel.setText(percent + "%");
-                progressBar.setProgress(progress);
+            progressLabel.setText(percent + "%");
+            progressBar.setProgress(progress);
 
-                // Texto descriptivo según el tipo de descarga
-                String typeText = getDownloadTypeText(type);
-                progressText.setText(typeText + " (" + current + "/" + total + ")");
+            // Texto descriptivo según el tipo de descarga
+            String typeText = getDownloadTypeText(type);
+            progressText.setText(typeText + " (" + current + "/" + total + ")");
+        })));
+
+        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> Platform.runLater(() -> {
+            progressBar.setVisible(false);
+            progressLabel.setVisible(false);
+            progressText.setText("Descarga completada: " + eventData.getString("version"));
+
+            // Ocultar después de 3 segundos
+            TaskManager.getInstance().runAsync(() -> {
+                try {
+                    Thread.sleep(3000);
+                    Platform.runLater(() -> progressText.setVisible(false));
+                } catch (InterruptedException ignored) {
+                }
             });
-        }));
+        })));
 
-        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
-            Platform.runLater(() -> {
-                progressBar.setVisible(false);
-                progressLabel.setVisible(false);
-                progressText.setText("Descarga completada: " + eventData.getString("version"));
-
-                // Ocultar después de 3 segundos
-                TaskManager.getInstance().runAsync(() -> {
-                    try {
-                        Thread.sleep(3000);
-                        Platform.runLater(() -> progressText.setVisible(false));
-                    } catch (InterruptedException ignored) {
-                    }
-                });
-            });
-        }));
-
-        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> {
-            Platform.runLater(() -> {
-                progressBar.setVisible(true);
-                progressLabel.setVisible(true);
-                progressText.setVisible(true);
-                progressText.setText("Descargando versión requerida...");
-                progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
-                progressLabel.setText("");
-            });
-        }));
+        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> Platform.runLater(() -> {
+            progressBar.setVisible(true);
+            progressLabel.setVisible(true);
+            progressText.setVisible(true);
+            progressText.setText("Descargando versión requerida...");
+            progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+            progressLabel.setText("");
+        })));
     }
 
     private String getDownloadTypeText(int type) {

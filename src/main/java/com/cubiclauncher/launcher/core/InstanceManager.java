@@ -49,11 +49,7 @@ public class InstanceManager {
         this.instances = new ArrayList<>();
 
         loadInstances();
-        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> {
-            taskManager.runAsync(() -> {
-                launcherWrapper.downloadMinecraftVersion(eventData.getString("version"));
-            });
-        }));
+        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> taskManager.runAsync(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
 
     }
 

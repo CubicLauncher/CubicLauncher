@@ -38,8 +38,8 @@ public class Sidebar extends VBox {
     private Consumer<Instance> onInstanceSelected;
     private Runnable onSettingsAction;
     private Runnable onVersionsAction;
-    private static EventBus eventBus = EventBus.get();
-    private static TaskManager taskManager = TaskManager.getInstance();
+    private static final EventBus eventBus = EventBus.get();
+    private static final TaskManager taskManager = TaskManager.getInstance();
 
     public Sidebar() {
         super(10);
