@@ -43,7 +43,11 @@ public class NativeLibraryLoader {
                 while ((bytesRead = in.read(buffer)) != -1) out.write(buffer, 0, bytesRead);
             }
 
-            System.load(tempFile.getAbsolutePath());
+            try {
+                System.load(tempFile.getAbsolutePath());
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

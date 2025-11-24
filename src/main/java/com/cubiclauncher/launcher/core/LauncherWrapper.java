@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
+
 package com.cubiclauncher.launcher.core;
 
 import com.cubiclauncher.claunch.Launcher;
@@ -61,10 +62,36 @@ public class LauncherWrapper {
     private native void startMinecraftDownload(String targetPath, String version, DownloadCallback callback);
 
     public void downloadMinecraftVersion(String versionId) {
+        log.info("Iniciando descarga de versión: {}", versionId);
+
         startMinecraftDownload(pm.getGamePath().resolve("shared").toString(),
                 versionId,
                 new DownloadCallback() {
+                    @Override
+                    public void onProgress(int type, int current, int total, String fileName) {
+                        log.debug("Progreso de descarga - Tipo: {}, Actual: {}/{}, Archivo: {}",
+                                type, current, total, fileName);
+                        EVENT_BUS.emit(EventType.DOWNLOAD_PROGRESS,
+                                EventData.builder()
+                                        .put("type", type)
+                                        .put("current", current)
+                                        .put("total", total)
+                                        .put("fileName", fileName)
+                                        .build());
+                    }
 
+                    @Override
+                    public void onComplete() {
+                        log.info("Descarga completada para versión: {}", versionId);
+                        EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED, EventData.empty());
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        log.error("Error durante la descarga: {}", error);
+                        EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED,
+                                EventData.error("Error en descarga: " + error, null));
+                    }
                 });
     }
 
@@ -152,5 +179,24 @@ public class LauncherWrapper {
         int TYPE_ASSET = 2;
         int TYPE_NATIVE = 3;
 
+        /**
+         * Llamado cuando hay progreso en la descarga
+         * @param type Tipo de descarga (CLIENT, LIBRARY, ASSET, NATIVE)
+         * @param current Número actual de elementos descargados
+         * @param total Total de elementos a descargar
+         * @param fileName Nombre del archivo siendo descargado
+         */
+        void onProgress(int type, int current, int total, String fileName);
+
+        /**
+         * Llamado cuando la descarga se completa exitosamente
+         */
+        void onComplete();
+
+        /**
+         * Llamado cuando ocurre un error
+         * @param error Mensaje de error
+         */
+        void onError(String error);
     }
 }

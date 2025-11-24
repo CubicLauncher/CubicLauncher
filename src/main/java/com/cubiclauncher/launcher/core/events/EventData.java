@@ -75,7 +75,14 @@ public class EventData {
                 .put("stackTrace", error != null ? error.getStackTrace() : null)
                 .build();
     }
-
+    public static EventData downloadProgress(int type, int current, int total, String filename) {
+        return builder()
+                .put("type", type)
+                .put("current", current)
+                .put("total", total)
+                .put("filename", filename)
+                .build();
+    }
     public static EventData empty() {
         return builder().build();
     }
