@@ -16,8 +16,8 @@
  */
 package com.cubiclauncher.launcher.ui.views;
 
-import com.cubiclauncher.launcher.LauncherWrapper;
-import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.LauncherWrapper;
+import com.cubiclauncher.launcher.core.instances.InstanceManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import javafx.application.Platform;

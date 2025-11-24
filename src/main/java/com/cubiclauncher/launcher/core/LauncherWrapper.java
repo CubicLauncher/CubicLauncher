@@ -14,17 +14,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
-package com.cubiclauncher.launcher;
+package com.cubiclauncher.launcher.core;
 
 import com.cubiclauncher.claunch.Launcher;
 import com.cubiclauncher.claunch.models.VersionInfo;
-import com.cubiclauncher.launcher.core.InstanceManager;
-import com.cubiclauncher.launcher.core.PathManager;
-import com.cubiclauncher.launcher.core.SettingsManager;
-import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
+import com.cubiclauncher.launcher.core.instances.InstanceManager;
 import com.cubiclauncher.launcher.util.NativeLibraryLoader;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -129,25 +126,6 @@ public class LauncherWrapper {
                 log.warn("Se usará el default Java 17.");
                 return sm.getJava17Path();
         }
-    }
-
-    // ✅ MEJORADO
-    public void startInstance(String instanceName) {
-        Optional<InstanceManager.Instance> optionalInstance = instanceManager.getInstance(instanceName);
-
-        optionalInstance.ifPresent(instance -> TaskManager.getInstance().runAsync(
-                () -> {
-                    if (!getInstalledVersions().contains(instance.getVersion())) {
-                        EVENT_BUS.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.empty());
-                        downloadMinecraftVersion(instance.getVersion());
-                    }
-                    log.info(instance.getInstanceDir(pm.getInstancePath()).toString());
-                    startVersion(instance.getVersion(), instance.getInstanceDir(pm.getInstancePath()));
-                    instance.setLastPlayed(System.currentTimeMillis());
-                },
-                () -> log.info("Instancia iniciada exitosamente: {}", instanceName),
-                () -> EVENT_BUS.emit(EventType.GAME_CRASHED, EventData.error("Error iniciando instancia", null))
-        ));
     }
 
     public void startVersion(String versionId, Path instanceDir) throws IOException, InterruptedException {

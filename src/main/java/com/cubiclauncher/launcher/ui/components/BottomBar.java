@@ -16,9 +16,9 @@
  */
 package com.cubiclauncher.launcher.ui.components;
 
-import com.cubiclauncher.launcher.LauncherWrapper;
-import com.cubiclauncher.launcher.LauncherWrapper.DownloadCallback;
-import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.LauncherWrapper;
+import com.cubiclauncher.launcher.core.LauncherWrapper.DownloadCallback;
+import com.cubiclauncher.launcher.core.instances.InstanceManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -38,7 +38,7 @@ import javafx.scene.shape.Circle;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.cubiclauncher.launcher.LauncherWrapper.instanceManager;
+import static com.cubiclauncher.launcher.core.LauncherWrapper.instanceManager;
 
 public class BottomBar extends HBox {
     private static final SettingsManager sm = SettingsManager.getInstance();
@@ -130,7 +130,7 @@ public class BottomBar extends HBox {
             String selectedVersion = versionSelector.getValue();
             if (selectedVersion != null && !selectedVersion.isEmpty()) {
                 TaskManager.getInstance().runAsync(
-                        () -> launcher.startInstance(selectedVersion)
+                        () -> instanceManager.startInstance(selectedVersion)
                 );
             }
         });

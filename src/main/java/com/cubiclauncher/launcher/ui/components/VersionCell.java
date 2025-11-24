@@ -16,7 +16,7 @@
  */
 package com.cubiclauncher.launcher.ui.components;
 
-import com.cubiclauncher.launcher.LauncherWrapper;
+import com.cubiclauncher.launcher.core.LauncherWrapper;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
