@@ -151,6 +151,13 @@ public class Main extends Application {
                         "-fx-text-fill: #ffffff;"
         );
 
+        Label instructionLabel = getLabel();
+
+        statsBox.getChildren().addAll(statsTitle, instructionLabel);
+        return statsBox;
+    }
+
+    private static Label getLabel() {
         Label instructionLabel = new Label(
                 """
                         • Descarga versiones desde la pestaña 'Versiones'
@@ -163,9 +170,7 @@ public class Main extends Application {
                         "-fx-line-spacing: 6px;"
         );
         instructionLabel.setWrapText(true);
-
-        statsBox.getChildren().addAll(statsTitle, instructionLabel);
-        return statsBox;
+        return instructionLabel;
     }
 
     private void showView(StackPane container, Node view) {

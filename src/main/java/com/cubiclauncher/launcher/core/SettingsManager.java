@@ -34,7 +34,6 @@ public class SettingsManager {
     // Minecraft settings
     public boolean showAlphaVersions = false;
     public boolean showBetaVersions = false;
-    public boolean discordRichPresence = false;
     public boolean forceDiscreteGpu = false;
 
     // Java settings
@@ -81,10 +80,6 @@ public class SettingsManager {
             System.err.println("Error al cargar configuración: " + e.getMessage());
             return new SettingsManager();
         }
-    }
-
-    public static String getConfigPath() {
-        return getSettingsFile().getAbsolutePath();
     }
 
     public void save() {
@@ -157,15 +152,6 @@ public class SettingsManager {
         save();
     }
 
-    public boolean isDiscordRichPresence() {
-        return discordRichPresence;
-    }
-
-    public void setDiscordRichPresence(boolean discordRichPresence) {
-        this.discordRichPresence = discordRichPresence;
-        save();
-    }
-
     public boolean isForceDiscreteGpu() {
         return forceDiscreteGpu;
     }
@@ -194,17 +180,9 @@ public class SettingsManager {
         return jre21_path;
     }
 
-    public Integer getMinMemory() {
-        return minMemory;
-    }
-
     public void setMinMemory(Integer minMemory) {
         this.minMemory = minMemory;
         save();
-    }
-
-    public Integer getMaxMemory() {
-        return maxMemory;
     }
 
     public void setMaxMemory(Integer maxMemory) {

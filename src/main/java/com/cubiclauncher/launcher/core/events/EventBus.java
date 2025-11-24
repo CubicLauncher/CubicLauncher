@@ -28,7 +28,6 @@ import java.util.function.Consumer;
 
 public class EventBus {
     private static final Logger log = LoggerFactory.getLogger(EventBus.class);
-    private static EventBus instance;
 
     // Mapa de tipo de evento -> lista de listeners
     private final Map<EventType, List<Consumer<EventData>>> listeners = new ConcurrentHashMap<>();
@@ -70,23 +69,6 @@ public class EventBus {
     }
 
     /**
-     * Desuscribir un listener
-     */
-    public void unsubscribe(EventType type, Consumer<EventData> listener) {
-        List<Consumer<EventData>> eventListeners = listeners.get(type);
-        if (eventListeners != null) {
-            eventListeners.remove(listener);
-        }
-    }
-
-    /**
-     * Limpiar todos los listeners de un tipo
-     */
-    public void clearListeners(EventType type) {
-        listeners.remove(type);
-    }
-
-    /**
      * Limpiar todos los listeners
      */
     public void clearAll() {
@@ -95,23 +77,4 @@ public class EventBus {
 
     // === Métodos helper para eventos comunes ===
 
-    public void emitVersionDownloaded(String versionId) {
-        emit(EventType.VERSION_DOWNLOADED, EventData.versionEvent(versionId));
-    }
-
-    public void emitVersionLaunched(String versionId) {
-        emit(EventType.VERSION_LAUNCHED, EventData.versionEvent(versionId));
-    }
-
-    public void emitDownloadProgress(int type, int current, int total, String fileName) {
-        emit(EventType.DOWNLOAD_PROGRESS, EventData.downloadProgress(type, current, total, fileName));
-    }
-
-    public void emitGameStarted(String versionId, int pid) {
-        emit(EventType.GAME_STARTED, EventData.gameEvent(versionId, pid));
-    }
-
-    public void emitGameStopped(String versionId, int exitCode) {
-        emit(EventType.GAME_STOPPED, EventData.gameEvent(versionId, exitCode));
-    }
 }

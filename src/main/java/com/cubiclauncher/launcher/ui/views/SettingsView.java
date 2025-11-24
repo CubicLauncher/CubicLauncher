@@ -293,7 +293,7 @@ public class SettingsView {
         HBox radioContainer = new HBox(15);
         radioContainer.setAlignment(Pos.CENTER_LEFT);
 
-        // Crear grupo de toggle para los radio buttons
+        // Crear grupo de toggle para los botones de radio
         ToggleGroup javaVersionGroup = new ToggleGroup();
 
         RadioButton java8Radio = new RadioButton("Java 8");

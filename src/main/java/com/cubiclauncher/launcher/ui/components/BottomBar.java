@@ -18,6 +18,7 @@ package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
 import com.cubiclauncher.launcher.LauncherWrapper.DownloadCallback;
+import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -38,14 +39,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.cubiclauncher.launcher.LauncherWrapper.instanceManager;
-import static com.cubiclauncher.launcher.core.events.EventBus.get;
 
 public class BottomBar extends HBox {
     private static final SettingsManager sm = SettingsManager.getInstance();
     private final ComboBox<String> versionSelector;
     private final ProgressBar progressBar;
     private final Label progressLabel;
-    private final StackPane centerContainer;
     private final LauncherWrapper launcher = new LauncherWrapper();
     private static final EventBus eventBus = EventBus.get();
 
@@ -83,7 +82,7 @@ public class BottomBar extends HBox {
         HBox.setHgrow(leftSpacer, Priority.ALWAYS);
 
         // Contenedor centrado para ProgressBar
-        centerContainer = new StackPane();
+        StackPane centerContainer = new StackPane();
         centerContainer.setAlignment(Pos.CENTER);
         HBox.setHgrow(centerContainer, Priority.ALWAYS);
 
@@ -131,9 +130,7 @@ public class BottomBar extends HBox {
             String selectedVersion = versionSelector.getValue();
             if (selectedVersion != null && !selectedVersion.isEmpty()) {
                 TaskManager.getInstance().runAsync(
-                        () -> {
-                            launcher.startInstance(selectedVersion);
-                        }
+                        () -> launcher.startInstance(selectedVersion)
                 );
             }
         });
@@ -151,15 +148,13 @@ public class BottomBar extends HBox {
             progressBar.setVisible(false);
             progressLabel.setVisible(false);
         }));
-        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> {
-            Platform.runLater(() -> updateInstalledVersions());
-        });
+        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> Platform.runLater(this::updateInstalledVersions));
         getChildren().addAll(userProfile, leftSpacer, centerContainer, rightSpacer, versionSelector, mainPlayButton);
     }
 
     public void updateInstalledVersions() {
         List<String> installedVersions = instanceManager.getAllInstances().stream()
-                .map(instance -> instance.getName())
+                .map(InstanceManager.Instance::getName)
                 .collect(Collectors.toList());
 
         String currentlySelected = versionSelector.getValue();

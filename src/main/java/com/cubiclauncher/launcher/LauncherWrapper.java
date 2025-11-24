@@ -21,6 +21,7 @@ import com.cubiclauncher.claunch.models.VersionInfo;
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
+import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
@@ -67,25 +68,7 @@ public class LauncherWrapper {
         startMinecraftDownload(pm.getGamePath().resolve("shared").toString(),
                 versionId,
                 new DownloadCallback() {
-                    @Override
-                    public void onProgress(int type, int current, int total, String fileName) {
-                        EVENT_BUS.emit(EventType.DOWNLOAD_PROGRESS, EventData.downloadProgress(type, current, total, fileName));
-                    }
 
-                    @Override
-                    public void onComplete() {
-                        EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED, EventData.empty());
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        EVENT_BUS.emit(EventType.DOWNLOAD_FAILED, EventData.empty());
-                    }
-
-                    @Override
-                    public void onStart(String version) {
-                        EVENT_BUS.emit(EventType.DOWNLOAD_STARTED, EventData.downloadStarted(versionId));
-                    }
                 });
     }
 
@@ -148,25 +131,23 @@ public class LauncherWrapper {
         }
     }
 
+    // ✅ MEJORADO
     public void startInstance(String instanceName) {
         Optional<InstanceManager.Instance> optionalInstance = instanceManager.getInstance(instanceName);
 
-        if (optionalInstance.isPresent()) {
-            InstanceManager.Instance instance = optionalInstance.get();
-            try {
-                if (!getInstalledVersions().contains(instance.getVersion())) {
-                    EVENT_BUS.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.empty());
-                    downloadMinecraftVersion(instance.getVersion());
-                }
-                log.info(instance.getInstanceDir(pm.getInstancePath()).toString());
-                startVersion(instance.getVersion(), instance.getInstanceDir(pm.getInstancePath()));
-                instance.setLastPlayed(System.currentTimeMillis());
-            } catch (InterruptedException | IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            log.warn("No se encontró la instancia {}", instanceName);
-        }
+        optionalInstance.ifPresent(instance -> TaskManager.getInstance().runAsync(
+                () -> {
+                    if (!getInstalledVersions().contains(instance.getVersion())) {
+                        EVENT_BUS.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.empty());
+                        downloadMinecraftVersion(instance.getVersion());
+                    }
+                    log.info(instance.getInstanceDir(pm.getInstancePath()).toString());
+                    startVersion(instance.getVersion(), instance.getInstanceDir(pm.getInstancePath()));
+                    instance.setLastPlayed(System.currentTimeMillis());
+                },
+                () -> log.info("Instancia iniciada exitosamente: {}", instanceName),
+                () -> EVENT_BUS.emit(EventType.GAME_CRASHED, EventData.error("Error iniciando instancia", null))
+        ));
     }
 
     public void startVersion(String versionId, Path instanceDir) throws IOException, InterruptedException {
@@ -194,22 +175,5 @@ public class LauncherWrapper {
         int TYPE_ASSET = 2;
         int TYPE_NATIVE = 3;
 
-        static String getTypeName(int type) {
-            return switch (type) {
-                case TYPE_CLIENT -> "Cliente";
-                case TYPE_LIBRARY -> "Librería";
-                case TYPE_ASSET -> "Asset";
-                case TYPE_NATIVE -> "Nativo";
-                default -> "Desconocido";
-            };
-        }
-
-        void onProgress(int type, int current, int total, String fileName);
-
-        void onComplete();
-
-        void onError(String error);
-
-        void onStart(String version);
     }
 }

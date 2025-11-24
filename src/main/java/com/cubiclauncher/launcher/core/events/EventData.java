@@ -21,20 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EventData {
-    private final long timestamp;
     private final Map<String, Object> data;
 
     private EventData() {
-        this.timestamp = System.currentTimeMillis();
         this.data = new HashMap<>();
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public <T> T get(String key) {
-        return (T) data.get(key);
     }
 
     public String getString(String key) {
@@ -53,8 +43,9 @@ public class EventData {
         return (Boolean) data.get(key);
     }
 
-    public Map<String, Object> getAll() {
-        return new HashMap<>(data);
+    // Agregar este para objetos complejos
+    public Object getObject(String key) {
+        return data.get(key);
     }
 
     // Builder pattern
@@ -77,29 +68,6 @@ public class EventData {
 
     // === Factory methods para eventos comunes ===
 
-    public static EventData versionEvent(String versionId) {
-        return builder()
-                .put("versionId", versionId)
-                .build();
-    }
-
-    public static EventData downloadProgress(int type, int current, int total, String fileName) {
-        return builder()
-                .put("type", type)
-                .put("current", current)
-                .put("total", total)
-                .put("fileName", fileName)
-                .put("percentage", total > 0 ? (current * 100.0 / total) : 0.0)
-                .build();
-    }
-
-    public static EventData gameEvent(String versionId, int value) {
-        return builder()
-                .put("versionId", versionId)
-                .put("value", value)
-                .build();
-    }
-
     public static EventData error(String message, Throwable error) {
         return builder()
                 .put("message", message)
@@ -107,11 +75,7 @@ public class EventData {
                 .put("stackTrace", error != null ? error.getStackTrace() : null)
                 .build();
     }
-    public static EventData downloadStarted(String version) {
-        return builder()
-                .put("version", version)
-                .build();
-    }
+
     public static EventData empty() {
         return builder().build();
     }

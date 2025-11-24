@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class InstanceManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -55,35 +56,23 @@ public class InstanceManager {
     }
 
     public static class Instance {
-        private String name;
-        private String version;
-        private String javaArgs;
+        private final String name;
+        private final String version;
         private long lastPlayed;
 
         // Constructor para nueva instancia
         public Instance(String name, String version) {
             this.name = name;
             this.version = version;
-            this.javaArgs = "-Xmx2G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M";
             this.lastPlayed = System.currentTimeMillis();
         }
 
         // Getters y Setters
         public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
 
         public String getVersion() { return version; }
-        public void setVersion(String version) { this.version = version; }
 
-        public String getJavaArgs() { return javaArgs; }
-        public void setJavaArgs(String javaArgs) { this.javaArgs = javaArgs; }
-
-        public long getLastPlayed() { return lastPlayed; }
         public void setLastPlayed(long lastPlayed) { this.lastPlayed = lastPlayed; }
-
-        public void updateLastPlayed() {
-            this.lastPlayed = System.currentTimeMillis();
-        }
 
         // Cambio: Ahora crea un directorio con el nombre y usa instance.cub
         public Path getInstanceDir(Path instancesDir) {
@@ -119,9 +108,8 @@ public class InstanceManager {
             }
         }
 
-        try {
-            Files.list(instancesDir)
-                    .filter(Files::isDirectory) // Cambio: Solo directorios
+        try (Stream<Path> paths = Files.list(instancesDir)) {
+            paths.filter(Files::isDirectory)
                     .forEach(this::loadInstanceFromDir);
         } catch (IOException e) {
             System.err.println("Error leyendo directorio de instancias: " + e.getMessage());
@@ -170,7 +158,7 @@ public class InstanceManager {
     /**
      * Crea una nueva instancia
      */
-    public Instance createInstance(String name, String version) {
+    public void createInstance(String name, String version) {
         if (getInstance(name).isPresent()) {
             throw new IllegalArgumentException("Ya existe una instancia con el nombre: " + name);
         }
@@ -179,48 +167,8 @@ public class InstanceManager {
 
         if (saveInstance(instance)) {
             EventBus.get().emit(EventType.INSTANCE_CREATED, EventData.empty());
-            return instance;
         } else {
             throw new RuntimeException("No se pudo guardar la instancia: " + name);
-        }
-    }
-
-    /**
-     * Elimina una instancia (incluyendo su directorio)
-     */
-    public boolean deleteInstance(String name) {
-        Optional<Instance> instanceOpt = getInstance(name);
-        if (instanceOpt.isPresent()) {
-            Instance instance = instanceOpt.get();
-
-            // Eliminar directorio completo de la instancia
-            Path instanceDir = instance.getInstanceDir(instancesDir);
-            try {
-                deleteDirectory(instanceDir);
-                instances.remove(instance);
-                return true;
-            } catch (IOException e) {
-                System.err.println("Error eliminando instancia: " + e.getMessage());
-                return false;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Método auxiliar para eliminar directorios recursivamente
-     */
-    private void deleteDirectory(Path path) throws IOException {
-        if (Files.exists(path)) {
-            Files.walk(path)
-                    .sorted((a, b) -> -a.compareTo(b)) // reverse para eliminar archivos primero
-                    .forEach(p -> {
-                        try {
-                            Files.delete(p);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
         }
     }
 
@@ -241,42 +189,10 @@ public class InstanceManager {
     }
 
     /**
-     * Obtiene instancias ordenadas por última vez jugadas (más recientes primero)
-     */
-    public List<Instance> getInstancesByLastPlayed() {
-        List<Instance> sorted = new ArrayList<>(instances);
-        sorted.sort((a, b) -> Long.compare(b.getLastPlayed(), a.getLastPlayed()));
-        return sorted;
-    }
-
-    /**
-     * Actualiza la última vez jugada de una instancia
-     */
-    public void updateLastPlayed(String name) {
-        getInstance(name).ifPresent(instance -> {
-            instance.updateLastPlayed();
-            saveInstance(instance);
-        });
-    }
-
-    /**
      * Verifica si existe una instancia con el nombre dado
      */
     public boolean instanceExists(String name) {
         return getInstance(name).isPresent();
     }
 
-    /**
-     * Obtiene el directorio de instancias
-     */
-    public Path getInstancesDir() {
-        return instancesDir;
-    }
-
-    /**
-     * Obtiene el número total de instancias
-     */
-    public int getInstanceCount() {
-        return instances.size();
-    }
 }

@@ -18,6 +18,7 @@ package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.LauncherWrapper;
 import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -61,13 +62,9 @@ public class VersionsView {
         statusLabel.setVisible(false);
 
         // Habilitar el botón solo cuando haya una versión seleccionada y el nombre no esté vacío
-        versionsList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
-            updateCreateButton(createInstanceButton, selected, nameField.getText());
-        });
+        versionsList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> updateCreateButton(createInstanceButton, selected, nameField.getText()));
 
-        nameField.textProperty().addListener((obs, old, newValue) -> {
-            updateCreateButton(createInstanceButton, versionsList.getSelectionModel().getSelectedItem(), newValue);
-        });
+        nameField.textProperty().addListener((obs, old, newValue) -> updateCreateButton(createInstanceButton, versionsList.getSelectionModel().getSelectedItem(), newValue));
 
         createInstanceButton.setOnAction(e -> {
             String version = versionsList.getSelectionModel().getSelectedItem();
@@ -75,14 +72,38 @@ public class VersionsView {
             createInstance(version, instanceName, statusLabel);
         });
 
-        // Botón de actualizar lista
-        Button refreshButton = new Button("Actualizar Lista");
-        refreshButton.setOnAction(e -> {
-            versionsList.setItems(FXCollections.observableArrayList(launcher.getAvailableVersions()));
-        });
+        Button refreshButton = getButton(statusLabel, versionsList);
 
         box.getChildren().addAll(title, versionsList, nameLabel, nameField, createInstanceButton, statusLabel, refreshButton);
         return box;
+    }
+
+    private static Button getButton(Label statusLabel, ListView<String> versionsList) {
+        Button refreshButton = new Button("Actualizar Lista");
+        refreshButton.setOnAction(e -> {
+            refreshButton.setDisable(true);
+            refreshButton.setText("Cargando...");
+            statusLabel.setText("Cargando versiones disponibles...");
+            statusLabel.setStyle("-fx-text-fill: #2196F3;");
+            statusLabel.setVisible(true);
+
+            TaskManager.getInstance().runAsync(launcher::getAvailableVersions)
+                    .thenAccept(result -> Platform.runLater(() -> {
+                        versionsList.setItems(FXCollections.observableArrayList(result));
+                        statusLabel.setVisible(false);
+                        refreshButton.setDisable(false);
+                        refreshButton.setText("Actualizar Lista");
+                    }))
+                    .exceptionally(error -> {
+                        Platform.runLater(() -> {
+                            showStatus(statusLabel, "Error al cargar versiones: " + error.getMessage(), false);
+                            refreshButton.setDisable(false);
+                            refreshButton.setText("Actualizar Lista");
+                        });
+                        return null;
+                    });
+        });
+        return refreshButton;
     }
 
     private static void updateCreateButton(Button button, String selectedVersion, String instanceName) {
@@ -101,20 +122,11 @@ public class VersionsView {
             return;
         }
 
-        // Ejecutar en segundo plano
-        new Thread(() -> {
-            try {
-                // Crear la instancia
-                instanceManager.createInstance(instanceName, version);
-                Platform.runLater(() -> {
-                    showStatus(statusLabel, "Instancia creada exitosamente: " + instanceName, true);
-                });
-            } catch (Exception e) {
-                Platform.runLater(() -> {
-                    showStatus(statusLabel, "Error creando instancia: " + e.getMessage(), false);
-                });
-            }
-        }).start();
+        TaskManager.getInstance().runAsync(
+                () -> instanceManager.createInstance(instanceName, version),
+                () -> showStatus(statusLabel, "Instancia creada exitosamente: " + instanceName, true),
+                () -> showStatus(statusLabel, "Error creando instancia", false)
+        );
     }
 
     private static void showStatus(Label statusLabel, String message, boolean isSuccess) {
@@ -124,17 +136,17 @@ public class VersionsView {
                 "-fx-text-fill: #F44336;");
         statusLabel.setVisible(true);
 
-        // Ocultar después de 3 segundos si es éxito
+        // En VersionsView, método showStatus
         if (isSuccess) {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException ignored) {
-                }
-                Platform.runLater(() -> {
-                    statusLabel.setVisible(false);
-                });
-            }).start();
+            TaskManager.getInstance().runAsync(
+                    () -> {
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException ignored) {}
+                    },
+                    () -> statusLabel.setVisible(false),
+                    e -> {} // No hacer nada si falla
+            );
         }
     }
 }

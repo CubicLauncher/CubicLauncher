@@ -18,25 +18,10 @@
 package com.cubiclauncher.launcher.core.events;
 
 public enum EventType {
-    // Eventos de descarga
-    DOWNLOAD_STARTED,
     DOWNLOAD_PROGRESS,
     DOWNLOAD_COMPLETED,
-    DOWNLOAD_FAILED,
 
-    // Eventos de versiones
-    VERSION_DOWNLOADED,
-    VERSION_INSTALLED,
-    VERSION_DELETED,
-    VERSION_LAUNCHED,
-    // JAVA
-    JAVA_DOWNLOAD_STARTED,
-    JAVA_DOWNLOAD_COMPLETED,
-    // Eventos del juego
-    GAME_STARTED,
-    GAME_STOPPED,
     GAME_CRASHED,
-    GAME_OUTPUT,
     // Instances
     INSTANCE_CREATED,
     INSTANCE_VERSION_NOT_INSTALLED

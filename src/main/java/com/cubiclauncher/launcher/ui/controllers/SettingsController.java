@@ -21,8 +21,6 @@ import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -34,7 +32,6 @@ import java.io.File;
 /**
  * Controlador para manejar todas las acciones de la vista de configuración
  */
-@SuppressWarnings("CommentedOutCode")
 public class SettingsController {
     private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
     private final SettingsManager settings;
@@ -156,7 +153,6 @@ public class SettingsController {
             String path = selectedFile.getAbsolutePath();
             javaPathField.setText(path);
             setJavaPathForSelectedVersion(path);
-            log.info("Ruta de Java {} establecida: {}", selectedJavaVersion, path);
         }
     }
 
