@@ -150,7 +150,12 @@ public class LauncherWrapper {
     }
 
     public void startVersion(String versionId, Path instanceDir) throws IOException, InterruptedException {
-        String versionManifestPath = pm.getGamePath().resolve("shared", "versions", versionId, versionId + ".json").toString();
+        String versionManifestPath = pm.getGamePath()
+                .resolve("shared")
+                .resolve("versions")
+                .resolve(versionId)
+                .resolve(versionId + ".json")
+                .toString();
         String minimumJREVersion = new VersionInfo(versionManifestPath, pm.getGamePath().toString()).getMinimumJREVersion();
 
         Launcher.launch(

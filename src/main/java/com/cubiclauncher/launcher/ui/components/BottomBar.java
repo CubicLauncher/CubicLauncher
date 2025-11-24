@@ -126,14 +126,15 @@ public class BottomBar extends HBox {
         // Botón principal de Jugar moderno
         Button mainPlayButton = new Button("JUGAR");
         mainPlayButton.getStyleClass().add("play-button");
-        mainPlayButton.setOnAction(_ -> {
-            String selectedVersion = versionSelector.getValue();
-            if (selectedVersion != null && !selectedVersion.isEmpty()) {
+        mainPlayButton.setOnAction(event -> {
+            var selectedVersion = versionSelector.getValue();
+            if (selectedVersion instanceof String ver && !ver.isEmpty()) {
                 TaskManager.getInstance().runAsync(
-                        () -> InstanceManager.getInstance().startInstance(selectedVersion)
+                        () -> InstanceManager.getInstance().startInstance(ver)
                 );
             }
         });
+
         // En BottomBar.java, alrededor de la línea 120
         eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> {
             Platform.runLater(() -> {
