@@ -137,11 +137,11 @@ public class BottomBar extends HBox {
         eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> {
             progressBar.setVisible(true);
             progressLabel.setVisible(true);
-            Platform.runLater(() -> progressLabel.setText(eventData.get("current") + "/" + eventData.get("total")));
+            Platform.runLater(() -> progressLabel.setText(eventData.getInt("current") + "/" + eventData.getInt("total")));
             progressBar.setProgress(
                     calcProgress(eventData.getInt("type"),
                             eventData.getInt("current"),
-                            eventData.get("total")));
+                            eventData.getInt("total")));
 
         }));
         eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
