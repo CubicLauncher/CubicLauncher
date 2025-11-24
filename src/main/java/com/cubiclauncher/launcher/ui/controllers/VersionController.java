@@ -18,7 +18,7 @@
 package com.cubiclauncher.launcher.ui.controllers;
 
 import com.cubiclauncher.launcher.core.LauncherWrapper;
-import com.cubiclauncher.launcher.core.instances.InstanceManager;
+import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import javafx.application.Platform;
 import org.slf4j.Logger;
@@ -32,12 +32,11 @@ import java.util.function.Consumer;
  */
 public class VersionController {
     private static final Logger log = LoggerFactory.getLogger(VersionController.class);
-    private final LauncherWrapper launcher;
+    private final LauncherWrapper launcher = LauncherWrapper.getInstance();
     private final InstanceManager instanceManager;
     private final TaskManager taskManager;
 
     public VersionController() {
-        this.launcher = new LauncherWrapper();
         this.instanceManager = InstanceManager.getInstance();
         this.taskManager = TaskManager.getInstance();
     }

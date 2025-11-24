@@ -17,7 +17,7 @@
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.core.LauncherWrapper;
-import com.cubiclauncher.launcher.core.instances.InstanceManager;
+import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import javafx.application.Platform;
@@ -32,7 +32,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class VersionsView {
-    private static final LauncherWrapper launcher = new LauncherWrapper();
+    private static final LauncherWrapper launcher = LauncherWrapper.getInstance();
     private static final InstanceManager instanceManager = LauncherWrapper.instanceManager;
 
     public static VBox create() {

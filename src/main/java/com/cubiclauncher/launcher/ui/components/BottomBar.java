@@ -18,7 +18,7 @@ package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.core.LauncherWrapper;
 import com.cubiclauncher.launcher.core.LauncherWrapper.DownloadCallback;
-import com.cubiclauncher.launcher.core.instances.InstanceManager;
+import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -45,7 +45,7 @@ public class BottomBar extends HBox {
     private final ComboBox<String> versionSelector;
     private final ProgressBar progressBar;
     private final Label progressLabel;
-    private final LauncherWrapper launcher = new LauncherWrapper();
+    private final LauncherWrapper launcher = LauncherWrapper.getInstance();
     private static final EventBus eventBus = EventBus.get();
 
     public BottomBar() {

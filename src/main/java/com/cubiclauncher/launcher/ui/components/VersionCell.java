@@ -23,7 +23,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.layout.HBox;
 
 public class VersionCell extends ListCell<String> {
-    private final LauncherWrapper launcher = new LauncherWrapper();
+    private final LauncherWrapper launcher = LauncherWrapper.getInstance();
 
     @Override
     protected void updateItem(String item, boolean empty) {

@@ -15,11 +15,9 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-package com.cubiclauncher.launcher.core.instances;
+package com.cubiclauncher.launcher.core;
 
-import com.cubiclauncher.launcher.core.LauncherWrapper;
-import com.cubiclauncher.launcher.core.PathManager;
-import com.cubiclauncher.launcher.core.TaskManager;
+import com.cubiclauncher.launcher.Launcher;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
@@ -40,24 +38,20 @@ public class InstanceManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Logger log = LoggerFactory.getLogger(InstanceManager.class);
     private static final EventBus eventBus = EventBus.get();
-    private final Path instancesDir;
-    private final PathManager pathManager;
-    private final LauncherWrapper launcherWrapper;
+    private final PathManager pathManager = PathManager.getInstance();
+    private final LauncherWrapper launcherWrapper = LauncherWrapper.getInstance();
     private final TaskManager taskManager;
     private final List<Instance> instances;
-
     private static InstanceManager instance;
-
+    private final Path instancesDir = pathManager.getInstancePath();
     private InstanceManager() {
-        this.pathManager = PathManager.getInstance();
-        this.instancesDir = pathManager.getInstancePath();
-        this.launcherWrapper = new LauncherWrapper();
         this.taskManager = TaskManager.getInstance();
         this.instances = new ArrayList<>();
+
         loadInstances();
         eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> {
             taskManager.runAsync(() -> {
-                launcherWrapper.downloadMinecraftVersion(eventData.getString("version"));
+                launcherWrapper.downloadMinecraftVersion("1.12.2");
             });
         }));
     }
@@ -243,7 +237,7 @@ public class InstanceManager {
                     if (!launcherWrapper.getInstalledVersions().contains(instanceToStart.getVersion())) {
                         log.info("Versión {} no instalada, iniciando descarga", instanceToStart.getVersion());
                         eventBus.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.builder().put("version", instanceToStart.version).build());
-                        launcherWrapper.downloadMinecraftVersion(instanceToStart.getVersion());
+                        return;
                     }
 
                     log.info("Iniciando instancia '{}' con versión {}", instanceName, instanceToStart.getVersion());
@@ -260,7 +254,6 @@ public class InstanceManager {
                     log.info("Instancia '{}' iniciada exitosamente", instanceName);
                 },
                 () -> {
-                    log.info("Callback de éxito: Instancia '{}' procesada", instanceName);
                 },
                 error -> {
                     log.error("Error iniciando instancia '{}': {}", instanceName, error.getMessage(), error);
