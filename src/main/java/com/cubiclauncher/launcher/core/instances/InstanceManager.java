@@ -39,8 +39,7 @@ import java.util.stream.Stream;
 public class InstanceManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Logger log = LoggerFactory.getLogger(InstanceManager.class);
-    private static final EventBus EVENT_BUS = EventBus.get();
-
+    private static final EventBus eventBus = EventBus.get();
     private final Path instancesDir;
     private final PathManager pathManager;
     private final LauncherWrapper launcherWrapper;
@@ -49,7 +48,6 @@ public class InstanceManager {
 
     private static InstanceManager instance;
 
-    // Constructor privado
     private InstanceManager() {
         this.pathManager = PathManager.getInstance();
         this.instancesDir = pathManager.getInstancePath();
@@ -57,6 +55,11 @@ public class InstanceManager {
         this.taskManager = TaskManager.getInstance();
         this.instances = new ArrayList<>();
         loadInstances();
+        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> {
+            taskManager.runAsync(() -> {
+                launcherWrapper.downloadMinecraftVersion(eventData.getString("version"));
+            });
+        }));
     }
 
     // Singleton getter
@@ -150,7 +153,7 @@ public class InstanceManager {
             paths.filter(Files::isDirectory)
                     .forEach(this::loadInstanceFromDir);
 
-            log.info("Cargadas {} instancias", instances.size());
+            log.info("Instancias cargadas: <{}>", getInstanceCount());
         } catch (IOException e) {
             log.error("Error leyendo directorio de instancias: {}", e.getMessage(), e);
         }
@@ -166,7 +169,6 @@ public class InstanceManager {
                 Instance instance = GSON.fromJson(reader, Instance.class);
                 if (instance != null) {
                     instances.add(instance);
-                    log.debug("Instancia cargada: {}", instance.getName());
                 }
             } catch (IOException e) {
                 log.error("Error cargando instancia desde {}: {}", configFile, e.getMessage(), e);
@@ -216,12 +218,11 @@ public class InstanceManager {
 
         if (saveInstance(newInstance)) {
             log.info("Instancia '{}' creada con versión {}", name, version);
-            EVENT_BUS.emit(EventType.INSTANCE_CREATED, EventData.empty());
+            eventBus.emit(EventType.INSTANCE_CREATED, EventData.empty());
         } else {
             throw new RuntimeException("No se pudo guardar la instancia: " + name);
         }
     }
-
     /**
      * Inicia una instancia por nombre
      */
@@ -230,7 +231,7 @@ public class InstanceManager {
 
         if (optionalInstance.isEmpty()) {
             log.warn("No se encontró la instancia: {}", instanceName);
-            EVENT_BUS.emit(EventType.GAME_CRASHED,
+            eventBus.emit(EventType.GAME_CRASHED,
                     EventData.error("Instancia no encontrada: " + instanceName, null));
             return;
         }
@@ -239,19 +240,14 @@ public class InstanceManager {
 
         taskManager.runAsync(
                 () -> {
-                    // Verificar si la versión está instalada
                     if (!launcherWrapper.getInstalledVersions().contains(instanceToStart.getVersion())) {
                         log.info("Versión {} no instalada, iniciando descarga", instanceToStart.getVersion());
-                        EVENT_BUS.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.empty());
+                        eventBus.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.builder().put("version", instanceToStart.version).build());
                         launcherWrapper.downloadMinecraftVersion(instanceToStart.getVersion());
-
-                        // TODO: Implementar espera basada en eventos en lugar de continuar inmediatamente
-                        // Por ahora, la descarga se inicia y el juego intentará iniciar de todos modos
                     }
 
                     log.info("Iniciando instancia '{}' con versión {}", instanceName, instanceToStart.getVersion());
 
-                    // Iniciar la versión
                     launcherWrapper.startVersion(
                             instanceToStart.getVersion(),
                             instanceToStart.getInstanceDir(instancesDir)
@@ -268,7 +264,7 @@ public class InstanceManager {
                 },
                 error -> {
                     log.error("Error iniciando instancia '{}': {}", instanceName, error.getMessage(), error);
-                    EVENT_BUS.emit(EventType.GAME_CRASHED,
+                    eventBus.emit(EventType.GAME_CRASHED,
                             EventData.error("Error iniciando instancia: " + instanceName, error));
                 }
         );

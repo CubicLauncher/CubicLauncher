@@ -30,15 +30,15 @@ import java.util.function.Consumer;
 /**
  * Controlador para manejar la lógica de versiones e instancias
  */
-public class VersionsController {
-    private static final Logger log = LoggerFactory.getLogger(VersionsController.class);
+public class VersionController {
+    private static final Logger log = LoggerFactory.getLogger(VersionController.class);
     private final LauncherWrapper launcher;
     private final InstanceManager instanceManager;
     private final TaskManager taskManager;
 
-    public VersionsController() {
+    public VersionController() {
         this.launcher = new LauncherWrapper();
-        this.instanceManager = LauncherWrapper.instanceManager;
+        this.instanceManager = InstanceManager.getInstance();
         this.taskManager = TaskManager.getInstance();
     }
 
@@ -47,11 +47,15 @@ public class VersionsController {
      */
     public void loadAvailableVersions(Consumer<List<String>> onSuccess, Consumer<Exception> onError) {
         taskManager.runAsync(
-                () -> launcher.getAvailableVersions(),
-                onSuccess,
+                () -> {
+                    List<String> versions = launcher.getAvailableVersions();
+                    Platform.runLater(() -> onSuccess.accept(versions));
+                },
+                () -> {},
                 onError
         );
     }
+
 
     /**
      * Obtiene las versiones instaladas

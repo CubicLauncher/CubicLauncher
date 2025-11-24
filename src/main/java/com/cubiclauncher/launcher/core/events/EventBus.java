@@ -48,7 +48,6 @@ public class EventBus {
     public void subscribe(EventType type, Consumer<EventData> listener) {
         listeners.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>())
                 .add(listener);
-        log.debug("Listener registrado para evento: {}", type);
     }
 
     /**

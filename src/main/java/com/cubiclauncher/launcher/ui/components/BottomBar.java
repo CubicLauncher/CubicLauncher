@@ -148,6 +148,14 @@ public class BottomBar extends HBox {
             progressBar.setVisible(false);
             progressLabel.setVisible(false);
         }));
+        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> {
+            Platform.runLater(() -> {
+                progressBar.setVisible(true);
+                progressLabel.setVisible(true);
+                progressLabel.setText("Descargando versión requerida...");
+                progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+            });
+        }));
         eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> Platform.runLater(this::updateInstalledVersions));
         getChildren().addAll(userProfile, leftSpacer, centerContainer, rightSpacer, versionSelector, mainPlayButton);
     }
