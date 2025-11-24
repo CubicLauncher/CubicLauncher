@@ -1,6 +1,7 @@
 package com.cubiclauncher.launcher.core;
 
 import com.cubiclauncher.claunch.Launcher;
+import com.cubiclauncher.claunch.models.LaunchOptions;
 import com.cubiclauncher.claunch.models.VersionInfo;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
@@ -8,8 +9,9 @@ import com.cubiclauncher.launcher.core.events.EventType;
 import com.cubiclauncher.launcher.util.NativeLibraryLoader;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -17,9 +19,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class LauncherWrapper {
     static final SettingsManager sm = SettingsManager.getInstance();
@@ -157,6 +157,11 @@ public class LauncherWrapper {
                 .toString();
         String minimumJREVersion = new VersionInfo(versionManifestPath, pm.getGamePath().toString()).getMinimumJREVersion();
 
+        Map<String, String> customArgs = new HashMap<>();
+        if (sm.isForceDiscreteGpu() && System.getProperty("os.name").toLowerCase().contains("linux")) {
+            customArgs.put("DRI_PRIME", "1");
+        }
+
         Launcher.launch(
                 versionManifestPath,
                 pm.getGamePath().toString(),
@@ -165,7 +170,7 @@ public class LauncherWrapper {
                 getJavaPath(minimumJREVersion),
                 sm.getMinMemoryInMB() + "M",
                 sm.getMaxMemoryInMB() + "M",
-                900, 600, false);
+                900, 600, false, LaunchOptions.defaults(), customArgs);
     }
 
     /**
@@ -180,9 +185,10 @@ public class LauncherWrapper {
 
         /**
          * Llamado cuando hay progreso en la descarga
-         * @param type Tipo de descarga (CLIENT, LIBRARY, ASSET, NATIVE)
-         * @param current Número actual de elementos descargados
-         * @param total Total de elementos a descargar
+         *
+         * @param type     Tipo de descarga (CLIENT, LIBRARY, ASSET, NATIVE)
+         * @param current  Número actual de elementos descargados
+         * @param total    Total de elementos a descargar
          * @param fileName Nombre del archivo siendo descargado
          */
         void onProgress(int type, int current, int total, String fileName);
@@ -194,6 +200,7 @@ public class LauncherWrapper {
 
         /**
          * Llamado cuando ocurre un error
+         *
          * @param error Mensaje de error
          */
         void onError(String error);

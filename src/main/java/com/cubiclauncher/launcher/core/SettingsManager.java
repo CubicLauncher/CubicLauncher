@@ -19,6 +19,7 @@ package com.cubiclauncher.launcher.core;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import java.io.*;
 
 public class SettingsManager {
@@ -173,9 +174,11 @@ public class SettingsManager {
     public String getJava8Path() {
         return jre8_path;
     }
+
     public String getJava17Path() {
         return jre17_path;
     }
+
     public String getJava21path() {
         return jre21_path;
     }
@@ -234,6 +237,7 @@ public class SettingsManager {
         this.jre21_path = path;
         save();
     }
+
     public void setNativeStyles(boolean enabled) {
         this.native_styles = enabled;
         save();

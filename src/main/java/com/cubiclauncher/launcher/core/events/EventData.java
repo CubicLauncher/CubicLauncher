@@ -27,6 +27,32 @@ public class EventData {
         this.data = new HashMap<>();
     }
 
+    // Builder pattern
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static EventData error(String message, Throwable error) {
+        return builder()
+                .put("message", message)
+                .put("error", error)
+                .put("stackTrace", error != null ? error.getStackTrace() : null)
+                .build();
+    }
+
+    public static EventData downloadProgress(int type, int current, int total, String filename) {
+        return builder()
+                .put("type", type)
+                .put("current", current)
+                .put("total", total)
+                .put("filename", filename)
+                .build();
+    }
+
+    public static EventData empty() {
+        return builder().build();
+    }
+
     public String getString(String key) {
         return (String) data.get(key);
     }
@@ -39,6 +65,8 @@ public class EventData {
         return (Double) data.get(key);
     }
 
+    // === Factory methods para eventos comunes ===
+
     public Boolean getBoolean(String key) {
         return (Boolean) data.get(key);
     }
@@ -46,11 +74,6 @@ public class EventData {
     // Agregar este para objetos complejos
     public Object getObject(String key) {
         return data.get(key);
-    }
-
-    // Builder pattern
-    public static Builder builder() {
-        return new Builder();
     }
 
     public static class Builder {
@@ -64,26 +87,5 @@ public class EventData {
         public EventData build() {
             return eventData;
         }
-    }
-
-    // === Factory methods para eventos comunes ===
-
-    public static EventData error(String message, Throwable error) {
-        return builder()
-                .put("message", message)
-                .put("error", error)
-                .put("stackTrace", error != null ? error.getStackTrace() : null)
-                .build();
-    }
-    public static EventData downloadProgress(int type, int current, int total, String filename) {
-        return builder()
-                .put("type", type)
-                .put("current", current)
-                .put("total", total)
-                .put("filename", filename)
-                .build();
-    }
-    public static EventData empty() {
-        return builder().build();
     }
 }

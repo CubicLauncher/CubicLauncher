@@ -34,15 +34,9 @@ public class PathManager {
         this.instancePath = ensure(instanceDirectory());
     }
 
-    private static class Holder {
-        static final PathManager INSTANCE = new PathManager();
-    }
-
     public static PathManager getInstance() {
         return Holder.INSTANCE;
     }
-
-    // ==================== GETTERS ====================
 
     private static Path settingsDirectory() {
         String os = System.getProperty("os.name").toLowerCase();
@@ -55,6 +49,8 @@ public class PathManager {
             return Paths.get(System.getProperty("user.home"), ".cubic");
         }
     }
+
+    // ==================== GETTERS ====================
 
     private static Path gameDirectory() {
         return settingsDirectory(); // mismo directorio base
@@ -72,8 +68,6 @@ public class PathManager {
         }
     }
 
-    // ==================== MÉTODOS SEGURIDAD ====================
-
     private static Path ensure(Path dir) {
         File f = dir.toFile();
         if (!f.exists() && !f.mkdirs()) {
@@ -81,6 +75,8 @@ public class PathManager {
         }
         return dir;
     }
+
+    // ==================== MÉTODOS SEGURIDAD ====================
 
     public Path getSettingsPath() {
         return settingsPath;
@@ -92,5 +88,9 @@ public class PathManager {
 
     public Path getGamePath() {
         return gamePath;
+    }
+
+    private static class Holder {
+        static final PathManager INSTANCE = new PathManager();
     }
 }

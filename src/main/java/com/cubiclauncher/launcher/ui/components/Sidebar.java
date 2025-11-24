@@ -16,82 +16,163 @@
  */
 package com.cubiclauncher.launcher.ui.components;
 
+import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.InstanceManager.Instance;
+import com.cubiclauncher.launcher.core.TaskManager;
+import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.core.events.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-public class Sidebar extends VBox {
+import java.util.function.Consumer;
 
-    private final Button btnPlay;
-    private final Button btnVersions;
-    private final Button btnSettings;
-    private final VBox navButtonsContainer;
+public class Sidebar extends VBox {
+    private final ListView<Instance> instancesList;
+    private Consumer<Instance> onInstanceSelected;
+    private Runnable onSettingsAction;
+    private Runnable onVersionsAction;
+    private static EventBus eventBus = EventBus.get();
+    private static TaskManager taskManager = TaskManager.getInstance();
 
     public Sidebar() {
-        super(25);
-        setPadding(new Insets(30, 20, 30, 20));
+        super(10);
+        setPadding(new Insets(15));
         getStyleClass().add("sidebar");
-        setPrefWidth(240);
-        setMinWidth(240);
+        setPrefWidth(280);
+        setMinWidth(280);
 
-        // Logo y título
-        HBox logoSection = new HBox(12);
-        logoSection.setAlignment(Pos.CENTER_LEFT);
+        // Header con logo y perfil
+        HBox header = new HBox(12);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setPadding(new Insets(0, 0, 20, 0));
 
-        Label title = new Label("Cubic");
-        title.getStyleClass().add("title");
-        logoSection.getChildren().addAll(title);
+        Label title = new Label("CUBICLAUNCHER");
+        title.getStyleClass().add("sidebar-title");
 
-        // Navegación moderna
-        navButtonsContainer = new VBox(8);
+        HBox.setHgrow(header, Priority.ALWAYS);
+        header.getChildren().add(title);
 
-        btnPlay = createNavButton("Jugar");
-        btnVersions = createNavButton("Versiones");
-        btnSettings = createNavButton("Ajustes");
+        // Lista de instancias
+        Label instancesLabel = new Label("TUS INSTANCIAS");
+        instancesLabel.getStyleClass().add("instances-label");
 
-        navButtonsContainer.getChildren().addAll(btnPlay, btnVersions, btnSettings);
+        instancesList = new ListView<>();
+        instancesList.getStyleClass().add("instance-list");
+        VBox.setVgrow(instancesList, Priority.ALWAYS);
+        instancesList.setCellFactory(lv -> new InstanceCell());
 
-        getChildren().addAll(logoSection, navButtonsContainer, new Region());
-        VBox.setVgrow(navButtonsContainer, Priority.ALWAYS);
+        // Cargar instancias
+        refreshInstances();
 
-        setActive(btnPlay);
+        // Botones de acción en la parte inferior
+        VBox actionButtons = new VBox(8);
+        actionButtons.setPadding(new Insets(10, 0, 0, 0));
+
+        Button versionsButton = createActionButton("Descargar Versiones");
+        Button settingsButton = createActionButton("Ajustes");
+
+        versionsButton.setOnAction(e -> {
+            if (onVersionsAction != null) onVersionsAction.run();
+        });
+
+        settingsButton.setOnAction(e -> {
+            if (onSettingsAction != null) onSettingsAction.run();
+        });
+
+        actionButtons.getChildren().addAll(versionsButton, settingsButton);
+
+        getChildren().addAll(header, instancesLabel, instancesList, actionButtons);
+
+        // Configurar selección
+        instancesList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
+            if (selected != null && onInstanceSelected != null) {
+                onInstanceSelected.accept(selected);
+            }
+        });
+        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
     }
 
-    private Button createNavButton(String text) {
+    private Button createActionButton(String text) {
         Button button = new Button(text);
-        button.getStyleClass().add("nav-button");
+        button.getStyleClass().add("sidebar-action-button");
         button.setMaxWidth(Double.MAX_VALUE);
         button.setAlignment(Pos.CENTER_LEFT);
         return button;
     }
 
-    private void setNavigationAction(Button button, Runnable viewAction) {
-        button.setOnAction(event -> {
-            setActive(button);
-            viewAction.run();
-        });
+    public void refreshInstances() {
+        instancesList.getItems().setAll(InstanceManager.getInstance().getAllInstances());
     }
 
-    private void setActive(Button activeButton) {
-        navButtonsContainer.getChildren().forEach(node -> node.getStyleClass().remove("active"));
-        activeButton.getStyleClass().add("active");
+    public void setOnInstanceSelected(Consumer<Instance> handler) {
+        this.onInstanceSelected = handler;
     }
 
-    public void setPlayAction(Runnable action) {
-        setNavigationAction(btnPlay, action);
+    public void setOnSettingsAction(Runnable action) {
+        this.onSettingsAction = action;
     }
 
-    public void setInstancesAction(Runnable action) {
-        setNavigationAction(btnVersions, action);
+    public void setOnVersionsAction(Runnable action) {
+        this.onVersionsAction = action;
     }
 
-    public void setSettingsAction(Runnable action) {
-        setNavigationAction(btnSettings, action);
-    }
+    private static class InstanceCell extends ListCell<Instance> {
+        @Override
+        protected void updateItem(Instance item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+                setText(null);
+                setGraphic(null);
+            } else {
+                HBox container = new HBox(10);
+                container.setAlignment(Pos.CENTER_LEFT);
+                container.setPadding(new Insets(8));
+                container.getStyleClass().add("instance-cell");
 
+                // Icono de Minecraft
+                Label icon = new Label("⛏️");
+                icon.getStyleClass().add("instance-icon");
+
+                VBox info = new VBox(2);
+                Label nameLabel = new Label(item.getName());
+                nameLabel.getStyleClass().add("instance-name");
+
+                // Mostrar solo la versión base de Minecraft (sin loaders)
+                String version = cleanVersion(item.getVersion());
+                Label versionLabel = new Label(version);
+                versionLabel.getStyleClass().add("instance-version");
+
+                info.getChildren().addAll(nameLabel, versionLabel);
+                container.getChildren().addAll(icon, info);
+
+                setGraphic(container);
+            }
+        }
+
+        private String cleanVersion(String version) {
+            if (version == null) return "Minecraft";
+
+            // Remover quilt, fabric, forge, etc.
+            String cleaned = version
+                    .replace("quilt", "")
+                    .replace("fabric", "")
+                    .replace("forge", "")
+                    .replace("--", "-")
+                    .replace("-loader", "")
+                    .trim();
+
+            // Limpiar guiones extras
+            if (cleaned.startsWith("-")) cleaned = cleaned.substring(1);
+            if (cleaned.endsWith("-")) cleaned = cleaned.substring(0, cleaned.length() - 1);
+
+            return cleaned.isEmpty() ? "Minecraft" : cleaned;
+        }
+    }
 }

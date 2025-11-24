@@ -17,7 +17,6 @@
 
 package com.cubiclauncher.launcher.core;
 
-import com.cubiclauncher.launcher.Launcher;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
@@ -38,12 +37,13 @@ public class InstanceManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Logger log = LoggerFactory.getLogger(InstanceManager.class);
     private static final EventBus eventBus = EventBus.get();
+    private static InstanceManager instance;
     private final PathManager pathManager = PathManager.getInstance();
     private final LauncherWrapper launcherWrapper = LauncherWrapper.getInstance();
     private final TaskManager taskManager;
     private final List<Instance> instances;
-    private static InstanceManager instance;
     private final Path instancesDir = pathManager.getInstancePath();
+
     private InstanceManager() {
         this.taskManager = TaskManager.getInstance();
         this.instances = new ArrayList<>();
@@ -63,68 +63,6 @@ public class InstanceManager {
             instance = new InstanceManager();
         }
         return instance;
-    }
-
-    public static class Instance {
-        private final String name;
-        private final String version;
-        private long lastPlayed;
-
-        // Constructor para nueva instancia
-        public Instance(String name, String version) {
-            this.name = name;
-            this.version = version;
-            this.lastPlayed = System.currentTimeMillis();
-        }
-
-        // Getters
-        public String getName() {
-            return name;
-        }
-
-        public String getVersion() {
-            return version;
-        }
-
-        public long getLastPlayed() {
-            return lastPlayed;
-        }
-
-        public void setLastPlayed(long lastPlayed) {
-            this.lastPlayed = lastPlayed;
-        }
-
-        public void updateLastPlayed() {
-            this.lastPlayed = System.currentTimeMillis();
-        }
-
-        // Cambio: Ahora crea un directorio con el nombre y usa instance.cub
-        public Path getInstanceDir(Path instancesDir) {
-            return instancesDir.resolve(this.name);
-        }
-
-        public Path getInstanceConfigPath(Path instancesDir) {
-            return getInstanceDir(instancesDir).resolve("instance.cub");
-        }
-
-        @Override
-        public String toString() {
-            return String.format("Instance{name='%s', version='%s', lastPlayed=%d}",
-                    name, version, lastPlayed);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Instance instance = (Instance) o;
-            return name.equals(instance.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return name.hashCode();
-        }
     }
 
     /**
@@ -218,6 +156,7 @@ public class InstanceManager {
             throw new RuntimeException("No se pudo guardar la instancia: " + name);
         }
     }
+
     /**
      * Inicia una instancia por nombre
      */
@@ -354,5 +293,67 @@ public class InstanceManager {
      */
     public int getInstanceCount() {
         return instances.size();
+    }
+
+    public static class Instance {
+        private final String name;
+        private final String version;
+        private long lastPlayed;
+
+        // Constructor para nueva instancia
+        public Instance(String name, String version) {
+            this.name = name;
+            this.version = version;
+            this.lastPlayed = System.currentTimeMillis();
+        }
+
+        // Getters
+        public String getName() {
+            return name;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public long getLastPlayed() {
+            return lastPlayed;
+        }
+
+        public void setLastPlayed(long lastPlayed) {
+            this.lastPlayed = lastPlayed;
+        }
+
+        public void updateLastPlayed() {
+            this.lastPlayed = System.currentTimeMillis();
+        }
+
+        // Cambio: Ahora crea un directorio con el nombre y usa instance.cub
+        public Path getInstanceDir(Path instancesDir) {
+            return instancesDir.resolve(this.name);
+        }
+
+        public Path getInstanceConfigPath(Path instancesDir) {
+            return getInstanceDir(instancesDir).resolve("instance.cub");
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Instance{name='%s', version='%s', lastPlayed=%d}",
+                    name, version, lastPlayed);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Instance instance = (Instance) o;
+            return name.equals(instance.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return name.hashCode();
+        }
     }
 }
