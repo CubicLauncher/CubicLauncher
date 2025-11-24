@@ -18,8 +18,9 @@
 package com.cubiclauncher.launcher.core;
 
 import javafx.application.Platform;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -83,7 +84,23 @@ public class TaskManager {
             }
         });
     }
-
+    /**
+     * Ejecuta una tarea en segundo plano en el thread de la UI
+     *
+     * @param task La tarea a ejecutar en el thread de JavaFX
+     */
+    public void runAsyncAtJFXThread(Runnable task) {
+        activeTasks.incrementAndGet();
+        executorService.submit(() -> {
+            try {
+                Platform.runLater(task);
+            } catch (Exception e) {
+                log.error("Error en tarea asíncrona: {}", e.getMessage(), e);
+            } finally {
+                activeTasks.decrementAndGet();
+            }
+        });
+    }
     /**
      * Ejecuta una tarea que puede lanzar excepciones, con callbacks de éxito y error
      *
@@ -114,9 +131,9 @@ public class TaskManager {
      * Ejecuta una tarea que puede lanzar excepciones, con callbacks simples
      * (cuando no necesitas acceso a la excepción en el callback de error)
      *
-     * @param task          La tarea a ejecutar (puede lanzar excepciones)
-     * @param onSuccess     Callback al completarse exitosamente
-     * @param onFailSimple  Callback al fallar (sin parámetro de excepción)
+     * @param task         La tarea a ejecutar (puede lanzar excepciones)
+     * @param onSuccess    Callback al completarse exitosamente
+     * @param onFailSimple Callback al fallar (sin parámetro de excepción)
      */
     public void runAsync(ThrowingRunnable task, Runnable onSuccess, Runnable onFailSimple) {
         runAsync(task, onSuccess, e -> {

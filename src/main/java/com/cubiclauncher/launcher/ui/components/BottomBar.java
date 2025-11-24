@@ -17,187 +17,151 @@
 package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.core.LauncherWrapper;
-import com.cubiclauncher.launcher.core.LauncherWrapper.DownloadCallback;
-import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static com.cubiclauncher.launcher.core.InstanceManager.getInstance;
-
 public class BottomBar extends HBox {
     private static final SettingsManager sm = SettingsManager.getInstance();
-    private final ComboBox<String> versionSelector;
+    private static final EventBus eventBus = EventBus.get();
     private final ProgressBar progressBar;
     private final Label progressLabel;
+    private final Label progressText;
     private final LauncherWrapper launcher = LauncherWrapper.getInstance();
-    private static final EventBus eventBus = EventBus.get();
 
     public BottomBar() {
         super(20);
-        setPadding(new Insets(20, 30, 20, 30));
+        setPadding(new Insets(12, 30, 12, 30));
         setAlignment(Pos.CENTER_LEFT);
         getStyleClass().add("bottom-bar");
 
-        // Perfil de usuario con avatar
-        HBox userProfile = new HBox(12);
+        HBox userProfile = new HBox(10);
         userProfile.setAlignment(Pos.CENTER_LEFT);
 
-        Circle userAvatar = new Circle(18, Color.web("#4a6bff"));
+        Circle userAvatar = new Circle(14, Color.web("#4a6bff"));
         Label userName = new Label(sm.getUsername());
         userName.getStyleClass().add("user-profile");
 
         userProfile.getChildren().addAll(userAvatar, userName);
-        userProfile.setOnMouseClicked(event -> {
-            TextInputDialog dialog = new TextInputDialog(sm.getUsername());
-            dialog.setTitle("Cambiar nombre de usuario");
-            dialog.setHeaderText(null);
-            dialog.setContentText("Nuevo nombre:");
-
-            dialog.showAndWait().ifPresent(newName -> {
-                if (!newName.trim().isEmpty()) {
-                    sm.setUsername(newName.trim());
-                    userName.setText(newName);
-                }
-            });
-        });
 
         // Espaciador izquierdo
         Region leftSpacer = new Region();
         HBox.setHgrow(leftSpacer, Priority.ALWAYS);
 
-        // Contenedor centrado para ProgressBar
-        StackPane centerContainer = new StackPane();
-        centerContainer.setAlignment(Pos.CENTER);
-        HBox.setHgrow(centerContainer, Priority.ALWAYS);
+        VBox progressCenter = new VBox(5);
+        progressCenter.setAlignment(Pos.CENTER);
+        HBox.setHgrow(progressCenter, Priority.ALWAYS);
 
-        // ProgressBar y label centrados
+        progressText = new Label("");
+        progressText.getStyleClass().add("progress-text");
+        progressText.setVisible(false);
+
         HBox progressContainer = new HBox(10);
         progressContainer.setAlignment(Pos.CENTER);
 
         progressBar = new ProgressBar(0);
         progressBar.setVisible(false);
-        progressBar.setPrefWidth(600);
+        progressBar.setPrefWidth(300);
         progressBar.setPrefHeight(16);
+        progressBar.getStyleClass().add("cdark-progress-bar");
 
         progressLabel = new Label("");
         progressLabel.setVisible(false);
-        progressLabel.getStyleClass().add("progress-label");
+        progressLabel.getStyleClass().add("progress-percent");
 
         progressContainer.getChildren().addAll(progressBar, progressLabel);
-        centerContainer.getChildren().add(progressContainer);
+        progressCenter.getChildren().addAll(progressText, progressContainer);
 
         // Espaciador derecho
         Region rightSpacer = new Region();
         HBox.setHgrow(rightSpacer, Priority.ALWAYS);
 
-        // Selector de versión moderno
-        versionSelector = new ComboBox<>();
-        updateInstalledVersions(); // Carga inicial
-        versionSelector.setPrefWidth(220);
-        versionSelector.getStyleClass().add("combo-box");
-        versionSelector.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item);
-                }
-            }
-        });
+        // Estado del launcher
+        Label statusLabel = new Label("Listo");
+        statusLabel.getStyleClass().add("status-label");
 
-        // Botón principal de Jugar moderno
-        Button mainPlayButton = new Button("JUGAR");
-        mainPlayButton.getStyleClass().add("play-button");
-        mainPlayButton.setOnAction(event -> {
-            var selectedVersion = versionSelector.getValue();
-            if (selectedVersion instanceof String ver && !ver.isEmpty()) {
-                TaskManager.getInstance().runAsync(
-                        () -> InstanceManager.getInstance().startInstance(ver)
-                );
-            }
-        });
+        getChildren().addAll(userProfile, leftSpacer, progressCenter, rightSpacer, statusLabel);
 
-        // En BottomBar.java, alrededor de la línea 120
-        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> {
-            Platform.runLater(() -> {
-                progressBar.setVisible(true);
-
-                int current = eventData.getInt("current");
-                int total = eventData.getInt("total");
-                int type = eventData.getInt("type");
-
-                progressLabel.setText(current + "/" + total);
-                progressBar.setProgress(calcProgress(type, current, total));
-            });
-        }));
-
-        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
-            Platform.runLater(() -> {
-                progressBar.setVisible(false);
-                progressLabel.setText("Version " + eventData.getString("version") + " ha sido descargada");
-                progressBar.setProgress(0);
-            });
-        }));
-        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> {
-            Platform.runLater(() -> {
-                progressBar.setVisible(true);
-                progressLabel.setVisible(true);
-                progressLabel.setText("Descargando versión requerida...");
-                progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
-            });
-        }));
-        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> Platform.runLater(this::updateInstalledVersions));
-        getChildren().addAll(userProfile, leftSpacer, centerContainer, rightSpacer, versionSelector, mainPlayButton);
-    }
-
-    public void updateInstalledVersions() {
-        List<String> installedVersions = InstanceManager.getInstance().getAllInstances().stream()
-                .map(InstanceManager.Instance::getName)
-                .collect(Collectors.toList());
-
-        String currentlySelected = versionSelector.getValue();
-
-        if (installedVersions.isEmpty()) {
-            versionSelector.setPromptText("No hay instancias disponibles");
-            versionSelector.setItems(FXCollections.observableArrayList());
-        } else {
-            versionSelector.setItems(FXCollections.observableArrayList(installedVersions));
-
-            if (currentlySelected != null && installedVersions.contains(currentlySelected)) {
-                versionSelector.getSelectionModel().select(currentlySelected);
-            } else {
-                versionSelector.getSelectionModel().selectFirst();
-            }
-        }
+        setupEventListeners();
     }
 
     private static double calcProgress(int type, int current, int total) {
         if (total == 0) return 0;
         double p = (double) current / total;
         return switch (type) {
-            case DownloadCallback.TYPE_CLIENT -> p * 0.05;
-            case DownloadCallback.TYPE_LIBRARY -> 0.05 + p * 0.15;
-            case DownloadCallback.TYPE_ASSET -> 0.20 + p * 0.75;
-            case DownloadCallback.TYPE_NATIVE -> 0.95 + p * 0.05;
+            case LauncherWrapper.DownloadCallback.TYPE_CLIENT -> p * 0.05;
+            case LauncherWrapper.DownloadCallback.TYPE_LIBRARY -> 0.05 + p * 0.15;
+            case LauncherWrapper.DownloadCallback.TYPE_ASSET -> 0.20 + p * 0.75;
+            case LauncherWrapper.DownloadCallback.TYPE_NATIVE -> 0.95 + p * 0.05;
             default -> p;
+        };
+    }
+
+    private void setupEventListeners() {
+        eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> Platform.runLater(() -> {
+            progressBar.setVisible(true);
+            progressLabel.setVisible(true);
+            progressText.setVisible(true);
+
+            int current = eventData.getInt("current");
+            int total = eventData.getInt("total");
+            int type = eventData.getInt("type");
+
+            double progress = calcProgress(type, current, total);
+            int percent = (int) (progress * 100);
+
+            progressLabel.setText(percent + "%");
+            progressBar.setProgress(progress);
+
+            // Texto descriptivo según el tipo de descarga
+            String typeText = getDownloadTypeText(type);
+            progressText.setText(typeText + " (" + current + "/" + total + ")");
+        })));
+
+        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> Platform.runLater(() -> {
+            progressBar.setVisible(false);
+            progressLabel.setVisible(false);
+            progressText.setText("Descarga completada: " + eventData.getString("version"));
+
+            // Ocultar después de 3 segundos
+            TaskManager.getInstance().runAsync(() -> {
+                try {
+                    Thread.sleep(3000);
+                    Platform.runLater(() -> progressText.setVisible(false));
+                } catch (InterruptedException ignored) {
+                }
+            });
+        })));
+
+        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> Platform.runLater(() -> {
+            progressBar.setVisible(true);
+            progressLabel.setVisible(true);
+            progressText.setVisible(true);
+            progressText.setText("Descargando versión requerida...");
+            progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+            progressLabel.setText("");
+        })));
+    }
+
+    private String getDownloadTypeText(int type) {
+        return switch (type) {
+            case LauncherWrapper.DownloadCallback.TYPE_CLIENT -> "Descargando cliente...";
+            case LauncherWrapper.DownloadCallback.TYPE_LIBRARY -> "Descargando librerías...";
+            case LauncherWrapper.DownloadCallback.TYPE_ASSET -> "Descargando recursos...";
+            case LauncherWrapper.DownloadCallback.TYPE_NATIVE -> "Descargando nativos...";
+            default -> "Descargando...";
         };
     }
 }

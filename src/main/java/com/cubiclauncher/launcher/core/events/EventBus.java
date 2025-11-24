@@ -20,8 +20,8 @@ package com.cubiclauncher.launcher.core.events;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
@@ -32,10 +32,7 @@ public class EventBus {
     // Mapa de tipo de evento -> lista de listeners
     private final Map<EventType, List<Consumer<EventData>>> listeners = new ConcurrentHashMap<>();
 
-    private EventBus() {}
-
-    public static class Holder {
-        static final EventBus INSTANCE = new EventBus();
+    private EventBus() {
     }
 
     public static EventBus get() {
@@ -74,6 +71,8 @@ public class EventBus {
         listeners.clear();
     }
 
-    // === Métodos helper para eventos comunes ===
+    public static class Holder {
+        static final EventBus INSTANCE = new EventBus();
+    }
 
 }

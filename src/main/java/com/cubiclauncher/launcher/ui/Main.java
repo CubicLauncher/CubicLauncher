@@ -22,20 +22,16 @@ import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
+import com.cubiclauncher.launcher.ui.views.InstanceViewer;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.ui.views.VersionsView;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -47,9 +43,11 @@ import java.io.InputStream;
 
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    final SettingsManager settings = SettingsManager.getInstance();
-    private BottomBar bottomBar;
     private static final EventBus eventBus = EventBus.get();
+    final SettingsManager settings = SettingsManager.getInstance();
+    private InstanceViewer instanceViewer;
+    private BorderPane root;
+
     @Override
     public void stop() {
         log.info("Apagando threads");
@@ -64,48 +62,39 @@ public class Main extends Application {
         log.info("Starting CubicLauncher");
         primaryStage.setTitle("CubicLauncher");
         primaryStage.initStyle(StageStyle.DECORATED);
-        primaryStage.setMinWidth(800);
-        primaryStage.setMinHeight(600);
-        BorderPane root = new BorderPane();
+        primaryStage.setMinWidth(1000);
+        primaryStage.setMinHeight(700);
+        root = new BorderPane();
         root.getStyleClass().add("root");
 
-        // --- Componentes de la UI ---
+        // --- Componentes principales estilo Steam ---
         Sidebar sidebar = new Sidebar();
-        bottomBar = new BottomBar();
+        BottomBar bottomBar = new BottomBar();
+        instanceViewer = InstanceViewer.getInstance();
 
-        // --- Contenedor Principal con animación ---
-        StackPane centerContent = new StackPane();
-        centerContent.getStyleClass().add("main-content");
-        centerContent.setPadding(new Insets(40, 40, 30, 40));
-
-        // --- Vistas ---
-        VBox welcomeBox = createWelcomeView();
-        VBox instancesBox = VersionsView.create();
-        VBox settingsBox = SettingsView.create();
-
-        // --- Lógica de Navegación con animaciones ---
-        sidebar.setPlayAction(() -> showViewWithAnimation(centerContent, welcomeBox));
-        sidebar.setInstancesAction(() -> {
-            showViewWithAnimation(centerContent, instancesBox);
-            bottomBar.updateInstalledVersions();
+        // --- Configurar la navegación ---
+        sidebar.setOnInstanceSelected(instance -> {
+            showViewWithAnimation(instanceViewer);
+            instanceViewer.showInstance(instance);
         });
-        sidebar.setSettingsAction(() -> showViewWithAnimation(centerContent, settingsBox));
 
-        showView(centerContent, welcomeBox);
+        sidebar.setOnSettingsAction(() -> showViewWithAnimation(SettingsView.create(primaryStage)));
+        sidebar.setOnVersionsAction(() -> showViewWithAnimation(VersionsView.create()));
 
-        // --- Organizar Layout ---
+        // --- Vista inicial ---
         root.setLeft(sidebar);
-        root.setCenter(centerContent);
+        root.setCenter(instanceViewer);
         root.setBottom(bottomBar);
 
         // --- Escena ---
-        Scene scene = new Scene(root, 1280, 760);
+        Scene scene = new Scene(root, 1400, 900);
         scene.setFill(Color.web("a1a1a1"));
 
         // Cargar estilos CSS unificados
         if (!settings.isNative_styles()) {
             StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
         }
+
         InputStream iconStream = com.cubiclauncher.launcher.Launcher.class.getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png");
         if (iconStream != null) {
             primaryStage.getIcons().add(new Image(iconStream));
@@ -117,74 +106,17 @@ public class Main extends Application {
         log.info("Hi again :)");
     }
 
-    private VBox createWelcomeView() {
-        VBox welcomeBox = new VBox(20);
-        welcomeBox.setAlignment(Pos.CENTER);
+    private void showViewWithAnimation(Node newView) {
+        Node currentView = root.getCenter();
 
-        Label welcomeTitle = new Label("Bienvenido a CubicLauncher");
-        welcomeTitle.getStyleClass().add("welcome-title");
-
-        Label welcomeSubtitle = new Label("Gestiona tus versiones de Minecraft con estilo");
-        welcomeSubtitle.getStyleClass().add("welcome-subtitle");
-
-        VBox stats = createStatsBox();
-
-        welcomeBox.getChildren().addAll(welcomeTitle, welcomeSubtitle, stats);
-        return welcomeBox;
-    }
-
-    private VBox createStatsBox() {
-        VBox statsBox = new VBox(15);
-        statsBox.setAlignment(Pos.CENTER);
-        statsBox.setMaxWidth(600);
-        statsBox.setStyle(
-                "-fx-background-color: rgba(42, 42, 42, 0.6);" +
-                        "-fx-background-radius: 16;" +
-                        "-fx-padding: 30;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 12, 0, 0, 4);"
-        );
-
-        Label statsTitle = new Label("Panel de Control");
-        statsTitle.setStyle(
-                "-fx-font-size: 20px;" +
-                        "-fx-font-weight: 700;" +
-                        "-fx-text-fill: #ffffff;"
-        );
-
-        Label instructionLabel = getLabel();
-
-        statsBox.getChildren().addAll(statsTitle, instructionLabel);
-        return statsBox;
-    }
-
-    private static Label getLabel() {
-        Label instructionLabel = new Label(
-                """
-                        • Descarga versiones desde la pestaña 'Versiones'
-                        • Configura Java y memoria desde 'Ajustes'
-                        • Selecciona una versión y haz clic en 'JUGAR'"""
-        );
-        instructionLabel.setStyle(
-                "-fx-font-size: 14px;" +
-                        "-fx-text-fill: #c0c0c0;" +
-                        "-fx-line-spacing: 6px;"
-        );
-        instructionLabel.setWrapText(true);
-        return instructionLabel;
-    }
-
-    private void showView(StackPane container, Node view) {
-        container.getChildren().clear();
-        container.getChildren().add(view);
-    }
-
-    private void showViewWithAnimation(StackPane container, Node newView) {
-        if (container.getChildren().isEmpty()) {
-            container.getChildren().add(newView);
-            return;
+        if (currentView == newView) {
+            return; // Ya está mostrando esta vista
         }
 
-        Node currentView = container.getChildren().getFirst();
+        if (currentView == null) {
+            root.setCenter(newView);
+            return;
+        }
 
         // Fade out
         FadeTransition fadeOut = new FadeTransition(Duration.millis(150), currentView);
@@ -192,8 +124,7 @@ public class Main extends Application {
         fadeOut.setToValue(0.0);
 
         fadeOut.setOnFinished(e -> {
-            container.getChildren().clear();
-            container.getChildren().add(newView);
+            root.setCenter(newView);
 
             // Fade in
             newView.setOpacity(0.0);

@@ -17,6 +17,7 @@
 package com.cubiclauncher.launcher.util;
 
 import javafx.scene.Scene;
+
 import java.net.URL;
 
 public class StylesLoader {

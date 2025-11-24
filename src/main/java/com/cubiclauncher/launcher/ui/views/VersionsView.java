@@ -16,18 +16,15 @@
  */
 package com.cubiclauncher.launcher.ui.views;
 
-import com.cubiclauncher.launcher.core.LauncherWrapper;
 import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.LauncherWrapper;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.ui.components.VersionCell;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -48,12 +45,19 @@ public class VersionsView {
         versionsList.setCellFactory(lv -> new VersionCell());
         VBox.setVgrow(versionsList, Priority.ALWAYS);
 
-        // Campo para el nombre de la instancia
         Label nameLabel = new Label("Nombre de la instancia:");
-        TextField nameField = new TextField();
-        nameField.setPromptText("Ingresa un nombre único para la instancia");
 
-        // Botón para crear instancia
+        TextField nameField = new TextField();
+        nameField.setPromptText("Ingresa un nombre único para la instancia (16 caracteres max)");
+
+        TextFormatter<String> textFormatter = new TextFormatter<>(change -> {
+            if (change.getControlNewText().length() <= 16) {
+                return change;
+            }
+            return null; // Rechaza el cambio si excede el límite
+        });
+        nameField.setTextFormatter(textFormatter);
+
         Button createInstanceButton = new Button("Crear Instancia");
         createInstanceButton.setDisable(true);
 
@@ -142,10 +146,12 @@ public class VersionsView {
                     () -> {
                         try {
                             Thread.sleep(3000);
-                        } catch (InterruptedException ignored) {}
+                        } catch (InterruptedException ignored) {
+                        }
                     },
                     () -> statusLabel.setVisible(false),
-                    e -> {} // No hacer nada si falla
+                    e -> {
+                    } // No hacer nada si falla
             );
         }
     }
