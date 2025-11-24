@@ -35,16 +35,17 @@ public class VersionsView {
     private static final InstanceManager instanceManager = InstanceManager.getInstance();
     private static final TaskManager taskManager = TaskManager.getInstance();
 
+    // Estado del lazy loading
+    private static boolean availableVersionsLoaded = false;
+
     public static BorderPane create() {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("versions-view");
         root.setPadding(new Insets(20));
 
-        // Header con toggle buttons
         VBox header = createHeader();
         root.setTop(header);
 
-        // Content principal
         VBox content = createContent();
         root.setCenter(content);
 
@@ -68,21 +69,17 @@ public class VersionsView {
     private static VBox createContent() {
         VBox content = new VBox(20);
 
-        // Toggle buttons para cambiar entre vistas (estilo GTK)
         HBox toggleBox = createToggleButtons();
 
-        // Lista de versiones (compartida)
         ListView<String> versionsList = new ListView<>();
         versionsList.getStyleClass().add("version-list");
         versionsList.setPrefHeight(350);
         VBox.setVgrow(versionsList, Priority.ALWAYS);
 
-        // Sección de crear instancia
         VBox createInstanceSection = createInstanceCreationSection();
 
         content.getChildren().addAll(toggleBox, versionsList, new Separator(), createInstanceSection);
 
-        // Configurar el comportamiento de los toggle buttons
         setupToggleButtons(toggleBox, versionsList);
 
         return content;
@@ -106,7 +103,6 @@ public class VersionsView {
         availableBtn.getStyleClass().add("toggle-button-right");
         availableBtn.setToggleGroup(toggleGroup);
 
-        // Botón de actualizar
         Button refreshBtn = new Button("↻");
         refreshBtn.getStyleClass().add("refresh-button");
         refreshBtn.setTooltip(new Tooltip("Actualizar lista"));
@@ -124,21 +120,23 @@ public class VersionsView {
         ToggleButton availableBtn = (ToggleButton) toggleBox.getChildren().get(1);
         Button refreshBtn = (Button) toggleBox.getChildren().get(3);
 
-        // Cargar instaladas por defecto
-        loadInstalledVersions(versionsList);
+        taskManager.runAsync(() -> loadInstalledVersions(versionsList));
 
-        // Cambiar al hacer clic en los toggles
+        availableBtn.setOnAction(e -> {
+            if (availableBtn.isSelected()) {
+                if (!availableVersionsLoaded) {
+                    showLoadingPlaceholder(versionsList);
+                    loadAvailableVersionsLazy(versionsList);
+                } else {
+                    loadAvailableVersions(versionsList);
+                }
+            }
+        });
+
         installedBtn.setOnAction(e -> {
             if (installedBtn.isSelected()) {
                 loadInstalledVersions(versionsList);
                 versionsList.setCellFactory(lv -> new InstalledVersionCell(versionsList));
-            }
-        });
-
-        availableBtn.setOnAction(e -> {
-            if (availableBtn.isSelected()) {
-                loadAvailableVersions(versionsList);
-                versionsList.setCellFactory(lv -> new AvailableVersionCell(versionsList));
             }
         });
 
@@ -149,14 +147,20 @@ public class VersionsView {
             } else {
                 refreshBtn.setDisable(true);
                 refreshBtn.setText("⟳");
+                availableVersionsLoaded = false;
+                showLoadingPlaceholder(versionsList);
+
                 taskManager.runAsync(launcher::getAvailableVersions)
                         .thenAccept(versions -> Platform.runLater(() -> {
                             versionsList.setItems(FXCollections.observableArrayList(versions));
+                            versionsList.setCellFactory(lv -> new AvailableVersionCell(versionsList));
+                            availableVersionsLoaded = true;
                             refreshBtn.setDisable(false);
                             refreshBtn.setText("↻");
                         }))
                         .exceptionally(error -> {
                             Platform.runLater(() -> {
+                                showErrorPlaceholder(versionsList, error.getMessage());
                                 refreshBtn.setDisable(false);
                                 refreshBtn.setText("↻");
                             });
@@ -174,13 +178,11 @@ public class VersionsView {
         Label sectionTitle = new Label("Crear Nueva Instancia");
         sectionTitle.getStyleClass().add("section-title");
 
-        // Grid para los campos
         GridPane grid = new GridPane();
         grid.setHgap(15);
         grid.setVgap(12);
         grid.getStyleClass().add("instance-form");
 
-        // Nombre de instancia
         Label nameLabel = new Label("Nombre:");
         nameLabel.getStyleClass().add("form-label");
 
@@ -193,7 +195,6 @@ public class VersionsView {
         );
         nameField.setTextFormatter(textFormatter);
 
-        // Versión
         Label versionLabel = new Label("Versión:");
         versionLabel.getStyleClass().add("form-label");
 
@@ -202,19 +203,16 @@ public class VersionsView {
         versionCombo.getStyleClass().add("form-combo");
         versionCombo.setMaxWidth(Double.MAX_VALUE);
 
-        // Cargar versiones en el combo
         taskManager.runAsync(launcher::getInstalledVersions)
                 .thenAccept(versions -> Platform.runLater(() ->
                         versionCombo.setItems(FXCollections.observableArrayList(versions))
                 ));
 
-        // Agregar al grid
         grid.add(nameLabel, 0, 0);
         grid.add(nameField, 1, 0);
         grid.add(versionLabel, 0, 1);
         grid.add(versionCombo, 1, 1);
 
-        // Configurar columnas
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setMinWidth(100);
         col1.setPrefWidth(100);
@@ -224,7 +222,6 @@ public class VersionsView {
 
         grid.getColumnConstraints().addAll(col1, col2);
 
-        // Botones de acción
         HBox actionBox = new HBox(10);
         actionBox.setAlignment(Pos.CENTER_RIGHT);
 
@@ -236,7 +233,6 @@ public class VersionsView {
         statusLabel.getStyleClass().add("status-label");
         statusLabel.setVisible(false);
 
-        // Habilitar botón cuando todo esté listo
         nameField.textProperty().addListener((obs, old, newVal) ->
                 createButton.setDisable(newVal.trim().isEmpty() || versionCombo.getValue() == null)
         );
@@ -276,7 +272,57 @@ public class VersionsView {
         return section;
     }
 
+    private static void loadAvailableVersionsLazy(ListView<String> listView) {
+        taskManager.runAsync(launcher::getAvailableVersions)
+                .thenAccept(versions -> Platform.runLater(() -> {
+                    listView.setItems(FXCollections.observableArrayList(versions));
+                    listView.setCellFactory(lv -> new AvailableVersionCell(listView));
+                    availableVersionsLoaded = true;
+                }))
+                .exceptionally(error -> {
+                    Platform.runLater(() -> showErrorPlaceholder(listView, error.getMessage()));
+                    return null;
+                });
+    }
+
+    private static void showLoadingPlaceholder(ListView<String> listView) {
+        VBox placeholder = new VBox(15);
+        placeholder.setAlignment(Pos.CENTER);
+        placeholder.setPadding(new Insets(40));
+
+        ProgressIndicator progress = new ProgressIndicator();
+        progress.setMaxSize(50, 50);
+
+        Label loadingText = new Label("Cargando versiones disponibles...");
+        loadingText.getStyleClass().add("empty-state-hint");
+
+        placeholder.getChildren().addAll(progress, loadingText);
+        listView.setPlaceholder(placeholder);
+        listView.setItems(FXCollections.observableArrayList());
+    }
+
+    private static void showErrorPlaceholder(ListView<String> listView, String errorMsg) {
+        VBox placeholder = new VBox(15);
+        placeholder.setAlignment(Pos.CENTER);
+        placeholder.setPadding(new Insets(40));
+
+        Label icon = new Label("⚠️");
+        icon.setStyle("-fx-font-size: 32px;");
+
+        Label errorText = new Label("Error al cargar versiones");
+        errorText.getStyleClass().add("empty-state-title");
+
+        Label errorDetail = new Label(errorMsg);
+        errorDetail.getStyleClass().add("empty-state-hint");
+        errorDetail.setWrapText(true);
+
+        placeholder.getChildren().addAll(icon, errorText, errorDetail);
+        listView.setPlaceholder(placeholder);
+        listView.setItems(FXCollections.observableArrayList());
+    }
+
     // ==================== HELPER METHODS ====================
+
     private static void loadInstalledVersions(ListView<String> listView) {
         List<String> installed = launcher.getInstalledVersions();
         Platform.runLater(() -> {
@@ -296,8 +342,8 @@ public class VersionsView {
     private static void showStatus(Label statusLabel, String message, boolean isSuccess) {
         statusLabel.setText(message);
         statusLabel.setStyle(isSuccess ?
-                "-fx-text-fill: #4CAF50;" :
-                "-fx-text-fill: #F44336;"
+                "-fx-text-fill: #90c090;" :
+                "-fx-text-fill: #d08080;"
         );
         statusLabel.setVisible(true);
 
@@ -315,6 +361,7 @@ public class VersionsView {
     }
 
     // ==================== CUSTOM CELLS ====================
+
     private static class InstalledVersionCell extends ListCell<String> {
         private final ListView<String> parentList;
 
@@ -337,8 +384,7 @@ public class VersionsView {
             container.setPadding(new Insets(10));
             container.getStyleClass().add("version-cell");
 
-            // Indicador de instalado
-            Circle indicator = new Circle(6, Color.web("#4CAF50"));
+            Circle indicator = new Circle(6, Color.web("#90c090"));
 
             VBox infoBox = new VBox(3);
             HBox.setHgrow(infoBox, Priority.ALWAYS);
@@ -348,11 +394,10 @@ public class VersionsView {
 
             Label statusLabel = new Label("Instalada");
             statusLabel.getStyleClass().add("version-status");
-            statusLabel.setStyle("-fx-text-fill: #4CAF50;");
+            statusLabel.setStyle("-fx-text-fill: #90c090;");
 
             infoBox.getChildren().addAll(versionLabel, statusLabel);
 
-            // Botón de desinstalar
             Button uninstallBtn = new Button("Desinstalar");
             uninstallBtn.getStyleClass().add("danger-button-small");
             uninstallBtn.setOnAction(e -> {
@@ -398,9 +443,8 @@ public class VersionsView {
 
             boolean isInstalled = launcher.getInstalledVersions().contains(version);
 
-            // Indicador
-            Circle indicator = new Circle(6, isInstalled ?
-                    Color.web("#4CAF50") : Color.web("#666666"));
+            Circle indicator = new Circle(4, isInstalled ?
+                    Color.web("#90c090") : Color.web("#555555"));
 
             VBox infoBox = new VBox(3);
             HBox.setHgrow(infoBox, Priority.ALWAYS);
@@ -413,7 +457,6 @@ public class VersionsView {
 
             infoBox.getChildren().addAll(versionLabel, typeLabel);
 
-            // Botón de acción
             Button actionBtn = new Button(isInstalled ? "Instalada ✓" : "Instalar");
             actionBtn.getStyleClass().add(isInstalled ? "installed-button-small" : "primary-button-small");
             actionBtn.setDisable(isInstalled);
