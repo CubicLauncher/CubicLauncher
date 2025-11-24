@@ -134,19 +134,26 @@ public class BottomBar extends HBox {
                 );
             }
         });
+        // En BottomBar.java, alrededor de la línea 120
         eventBus.subscribe(EventType.DOWNLOAD_PROGRESS, (eventData -> {
-            progressBar.setVisible(true);
-            progressLabel.setVisible(true);
-            Platform.runLater(() -> progressLabel.setText(eventData.getInt("current") + "/" + eventData.getInt("total")));
-            progressBar.setProgress(
-                    calcProgress(eventData.getInt("type"),
-                            eventData.getInt("current"),
-                            eventData.getInt("total")));
+            Platform.runLater(() -> {
+                progressBar.setVisible(true);
 
+                int current = eventData.getInt("current");
+                int total = eventData.getInt("total");
+                int type = eventData.getInt("type");
+
+                progressLabel.setText(current + "/" + total);
+                progressBar.setProgress(calcProgress(type, current, total));
+            });
         }));
+
         eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, (eventData -> {
-            progressBar.setVisible(false);
-            progressLabel.setVisible(false);
+            Platform.runLater(() -> {
+                progressBar.setVisible(false);
+                progressLabel.setText("Version " + eventData.getString("version") + " ha sido descargada");
+                progressBar.setProgress(0);
+            });
         }));
         eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> {
             Platform.runLater(() -> {

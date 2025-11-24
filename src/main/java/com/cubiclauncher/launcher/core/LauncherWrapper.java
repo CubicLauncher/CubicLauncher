@@ -68,8 +68,6 @@ public class LauncherWrapper {
                 new DownloadCallback() {
                     @Override
                     public void onProgress(int type, int current, int total, String fileName) {
-                        log.debug("Progreso de descarga - Tipo: {}, Actual: {}/{}, Archivo: {}",
-                                type, current, total, fileName);
                         EVENT_BUS.emit(EventType.DOWNLOAD_PROGRESS,
                                 EventData.builder()
                                         .put("type", type)
@@ -81,13 +79,11 @@ public class LauncherWrapper {
 
                     @Override
                     public void onComplete() {
-                        log.info("Descarga completada para versión: {}", versionId);
-                        EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED, EventData.empty());
+                        EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED, EventData.builder().put("version", versionId).build());
                     }
 
                     @Override
                     public void onError(String error) {
-                        log.error("Error durante la descarga: {}", error);
                         EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED,
                                 EventData.error("Error en descarga: " + error, null));
                     }
