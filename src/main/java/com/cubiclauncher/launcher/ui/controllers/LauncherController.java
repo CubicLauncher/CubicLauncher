@@ -41,5 +41,7 @@ public class LauncherController {
             }
         });
     }
-
+    public static void createInstance(String name, String version) {
+        instanceManager.createInstance(name, version);
+    }
 }

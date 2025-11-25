@@ -141,7 +141,7 @@ public class Sidebar extends VBox {
                 icon.getStyleClass().add("instance-icon");
 
                 VBox info = new VBox(2);
-                Label nameLabel = new Label(item.getVersion());
+                Label nameLabel = new Label(item.getName());
                 nameLabel.getStyleClass().add("instance-name");
 
                 info.getChildren().addAll(nameLabel);

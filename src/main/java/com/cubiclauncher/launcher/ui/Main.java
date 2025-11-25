@@ -43,6 +43,7 @@ import java.io.InputStream;
 
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
+    private static final UIBridge uiBridge = UIBridge.getInstance();
     private static final EventBus eventBus = EventBus.get();
     final SettingsManager settings = SettingsManager.getInstance();
     private InstanceViewer instanceViewer;
@@ -69,7 +70,7 @@ public class Main extends Application {
 
         // --- Componentes principales estilo Steam ---
         Sidebar sidebar = new Sidebar();
-        BottomBar bottomBar = new BottomBar();
+        BottomBar bottomBar = BottomBar.getInstance();
         instanceViewer = InstanceViewer.getInstance();
 
         // --- Configurar la navegación ---
@@ -108,7 +109,7 @@ public class Main extends Application {
 
     private void showViewWithAnimation(Node newView) {
         Node currentView = root.getCenter();
-
+        uiBridge.cleanup();
         if (currentView == newView) {
             return; // Ya está mostrando esta vista
         }

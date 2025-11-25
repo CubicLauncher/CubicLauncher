@@ -61,19 +61,14 @@ public class LauncherWrapper {
 
     public void downloadMinecraftVersion(String versionId) {
         log.info("Iniciando descarga de versión: {}", versionId);
-
+        // TODO: Implementar queue de descarga para permitir una descarga a la vez.
         startMinecraftDownload(pm.getGamePath().resolve("shared").toString(),
                 versionId,
                 new DownloadCallback() {
                     @Override
                     public void onProgress(int type, int current, int total, String fileName) {
                         EVENT_BUS.emit(EventType.DOWNLOAD_PROGRESS,
-                                EventData.builder()
-                                        .put("type", type)
-                                        .put("current", current)
-                                        .put("total", total)
-                                        .put("fileName", fileName)
-                                        .build());
+                                EventData.downloadProgress(type, current, total, fileName, versionId));
                     }
 
                     @Override

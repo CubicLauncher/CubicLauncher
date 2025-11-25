@@ -39,13 +39,19 @@ public class EventData {
                 .put("stackTrace", error != null ? error.getStackTrace() : null)
                 .build();
     }
-
-    public static EventData downloadProgress(int type, int current, int total, String filename) {
+    public static EventData instanceCreated(String instanceName, String versionId) {
+        return builder()
+                .put("message", instanceName)
+                .put("error", versionId)
+                .build();
+    }
+    public static EventData downloadProgress(int type, int current, int total, String filename, String versionId) {
         return builder()
                 .put("type", type)
                 .put("current", current)
                 .put("total", total)
                 .put("filename", filename)
+                .put("version", versionId)
                 .build();
     }
 
