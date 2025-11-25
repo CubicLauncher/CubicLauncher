@@ -226,9 +226,10 @@ public class VersionsView {
         nameField.setPromptText("Mi Mundo Survival");
         nameField.getStyleClass().add("form-field");
 
-        TextFormatter<String> textFormatter = new TextFormatter<>(change ->
-                change.getControlNewText().length() <= 16 ? change : null
-        );
+        TextFormatter<String> textFormatter = new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            return (newText.length() <= 16 && newText.matches("[a-zA-Z0-9 _-]*")) ? change : null;
+        });
         nameField.setTextFormatter(textFormatter);
 
         Label versionLabel = new Label("Versión:");
@@ -454,7 +455,6 @@ public class VersionsView {
                 alert.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
                         // TODO: Implementar desinstalación real
-                        System.out.println("Desinstalar: " + version);
                         taskManager.runAsync(() -> loadInstalledVersions(parentList));
                     }
                 });

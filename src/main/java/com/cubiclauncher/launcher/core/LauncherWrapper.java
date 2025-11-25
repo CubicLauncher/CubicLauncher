@@ -149,28 +149,32 @@ public class LauncherWrapper {
     }
 
     public void startVersion(String versionId, Path instanceDir) throws IOException, InterruptedException {
-        String versionManifestPath = pm.getGamePath()
-                .resolve("shared")
-                .resolve("versions")
-                .resolve(versionId)
-                .resolve(versionId + ".json")
-                .toString();
-        String minimumJREVersion = new VersionInfo(versionManifestPath, pm.getGamePath().toString()).getMinimumJREVersion();
+        try {
+            String versionManifestPath = pm.getGamePath()
+                    .resolve("shared")
+                    .resolve("versions")
+                    .resolve(versionId)
+                    .resolve(versionId + ".json")
+                    .toString();
+            String minimumJREVersion = new VersionInfo(versionManifestPath, pm.getGamePath().toString()).getMinimumJREVersion();
 
-        Map<String, String> customArgs = new HashMap<>();
-        if (sm.isForceDiscreteGpu() && System.getProperty("os.name").toLowerCase().contains("linux")) {
-            customArgs.put("DRI_PRIME", "1");
+            Map<String, String> customArgs = new HashMap<>();
+            if (sm.isForceDiscreteGpu() && System.getProperty("os.name").toLowerCase().contains("linux")) {
+                customArgs.put("DRI_PRIME", "1");
+            }
+
+            Launcher.launch(
+                    versionManifestPath,
+                    pm.getGamePath().toString(),
+                    instanceDir,
+                    sm.getUsername(),
+                    getJavaPath(minimumJREVersion),
+                    sm.getMinMemoryInMB() + "M",
+                    sm.getMaxMemoryInMB() + "M",
+                    900, 600, false, LaunchOptions.defaults(), customArgs);
+        } catch (IOException | InterruptedException e) {
+            log.error("Error launching version: {}", versionId, e);
         }
-
-        Launcher.launch(
-                versionManifestPath,
-                pm.getGamePath().toString(),
-                instanceDir,
-                sm.getUsername(),
-                getJavaPath(minimumJREVersion),
-                sm.getMinMemoryInMB() + "M",
-                sm.getMaxMemoryInMB() + "M",
-                900, 600, false, LaunchOptions.defaults(), customArgs);
     }
 
     /**

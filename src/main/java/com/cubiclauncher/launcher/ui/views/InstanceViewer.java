@@ -2,6 +2,8 @@ package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.ui.controllers.LauncherController;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -13,7 +15,7 @@ import javafx.scene.layout.VBox;
 public class InstanceViewer extends BorderPane {
     private static InstanceViewer instance;
     private InstanceManager.Instance currentInstance;
-
+    private final ObjectProperty<InstanceManager.Instance> currentInstanceProperty = new SimpleObjectProperty<>();
     private Label instanceName;
     private Label instanceVersion;
     private Button playButton;
@@ -153,9 +155,9 @@ public class InstanceViewer extends BorderPane {
         versionValue.getStyleClass().add("info-value");
         versionValue.textProperty().bind(
                 javafx.beans.binding.Bindings.when(
-                        javafx.beans.binding.Bindings.isNotNull(currentInstanceProperty())
+                        javafx.beans.binding.Bindings.isNotNull(currentInstanceProperty)
                 ).then(
-                        javafx.beans.binding.Bindings.selectString(currentInstanceProperty(), "version")
+                        javafx.beans.binding.Bindings.selectString(currentInstanceProperty, "version")
                 ).otherwise("No seleccionada")
         );
 
@@ -166,11 +168,11 @@ public class InstanceViewer extends BorderPane {
         pathValue.getStyleClass().add("info-value");
         pathValue.textProperty().bind(
                 javafx.beans.binding.Bindings.when(
-                        javafx.beans.binding.Bindings.isNotNull(currentInstanceProperty())
+                        javafx.beans.binding.Bindings.isNotNull(currentInstanceProperty)
                 ).then(
                         javafx.beans.binding.Bindings.createStringBinding(
                                 () -> "./instances/" + (currentInstance != null ? currentInstance.getName() : ""),
-                                currentInstanceProperty()
+                                currentInstanceProperty
                         )
                 ).otherwise("No seleccionada")
         );
@@ -244,9 +246,5 @@ public class InstanceViewer extends BorderPane {
         if (cleaned.endsWith("-")) cleaned = cleaned.substring(0, cleaned.length() - 1);
 
         return cleaned.isEmpty() ? "Minecraft" : "Minecraft " + cleaned;
-    }
-
-    private javafx.beans.property.ObjectProperty<InstanceManager.Instance> currentInstanceProperty() {
-        return new javafx.beans.property.SimpleObjectProperty<>(currentInstance);
     }
 }
