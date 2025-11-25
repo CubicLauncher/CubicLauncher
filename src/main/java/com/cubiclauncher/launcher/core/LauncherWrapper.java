@@ -148,7 +148,7 @@ public class LauncherWrapper {
         }
     }
 
-    public void startVersion(String versionId, Path instanceDir) throws IOException, InterruptedException {
+    public void startVersion(String versionId, Path instanceDir) {
         try {
             String versionManifestPath = pm.getGamePath()
                     .resolve("shared")

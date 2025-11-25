@@ -43,11 +43,6 @@ public class InstanceViewer extends BorderPane {
         return instance;
     }
 
-    // Resetear singleton
-    public static void resetInstance() {
-        instance = null;
-    }
-
     private void initializeHeader() {
         VBox header = new VBox(15);
         header.getStyleClass().add("instance-header");
