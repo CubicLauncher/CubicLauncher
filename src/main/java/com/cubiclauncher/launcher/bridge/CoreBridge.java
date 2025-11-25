@@ -1,4 +1,4 @@
-package com.cubiclauncher.launcher.core.bridge;
+package com.cubiclauncher.launcher.bridge;
 
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
