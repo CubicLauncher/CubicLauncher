@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see https://www.gnu.org/licenses/.
- */
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
@@ -29,10 +13,16 @@ import javafx.scene.layout.VBox;
 public class InstanceViewer extends BorderPane {
     private static InstanceViewer instance;
     private InstanceManager.Instance currentInstance;
+
     private Label instanceName;
     private Label instanceVersion;
     private Button playButton;
     private TabPane contentTabs;
+
+    // Labels de stats
+    private Label lastPlayedLabel;
+    private Label playTimeLabel;
+    private Label achievementsLabel;
 
     // Constructor privado para Singleton
     private InstanceViewer() {
@@ -43,7 +33,7 @@ public class InstanceViewer extends BorderPane {
         showEmptyState();
     }
 
-    // Método estático para obtener la instancia única
+    // Obtener instancia única
     public static InstanceViewer getInstance() {
         if (instance == null) {
             instance = new InstanceViewer();
@@ -51,7 +41,7 @@ public class InstanceViewer extends BorderPane {
         return instance;
     }
 
-    // Método para resetear el Singleton (útil para testing)
+    // Resetear singleton
     public static void resetInstance() {
         instance = null;
     }
@@ -64,7 +54,7 @@ public class InstanceViewer extends BorderPane {
         HBox banner = new HBox(20);
         banner.setAlignment(Pos.CENTER_LEFT);
 
-        // Imagen placeholder de la instancia
+        // Imagen placeholder
         StackPane imageContainer = new StackPane();
         imageContainer.getStyleClass().add("instance-image-container");
         imageContainer.setMinSize(460, 215);
@@ -82,15 +72,22 @@ public class InstanceViewer extends BorderPane {
         instanceVersion = new Label();
         instanceVersion.getStyleClass().add("instance-subtitle");
 
+        // Stats
         HBox stats = new HBox(30);
         stats.setAlignment(Pos.CENTER_LEFT);
 
-        VBox lastPlayed = createStatBox("ÚLTIMA VEZ", "Hace 2 días");
-        VBox playTime = createStatBox("TIEMPO TOTAL", "23.9 h");
-        VBox achievements = createStatBox("LOGROS", "0/0");
+        lastPlayedLabel = new Label("Nunca");
+        VBox lastPlayed = createStatBox("ÚLTIMA VEZ", lastPlayedLabel);
+
+        playTimeLabel = new Label("0 h");
+        VBox playTime = createStatBox("TIEMPO TOTAL", playTimeLabel);
+
+        achievementsLabel = new Label("0/0");
+        VBox achievements = createStatBox("LOGROS", achievementsLabel);
 
         stats.getChildren().addAll(lastPlayed, playTime, achievements);
 
+        // Barra de acciones
         HBox actionBar = new HBox(15);
         actionBar.setAlignment(Pos.CENTER_LEFT);
 
@@ -102,21 +99,21 @@ public class InstanceViewer extends BorderPane {
         optionsButton.getStyleClass().add("options-button");
 
         actionBar.getChildren().addAll(playButton, optionsButton);
+
         info.getChildren().addAll(instanceName, instanceVersion, stats, actionBar);
         banner.getChildren().addAll(imageContainer, info);
-
         header.getChildren().add(banner);
         setTop(header);
     }
 
-    private VBox createStatBox(String title, String value) {
+    // Crea un statBox a partir de un Label existente
+    private VBox createStatBox(String title, Label valueLabel) {
         VBox box = new VBox(2);
         box.setAlignment(Pos.CENTER_LEFT);
 
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().add("stat-title");
 
-        Label valueLabel = new Label(value);
         valueLabel.getStyleClass().add("stat-value");
 
         box.getChildren().addAll(titleLabel, valueLabel);
@@ -127,12 +124,10 @@ public class InstanceViewer extends BorderPane {
         contentTabs = new TabPane();
         contentTabs.getStyleClass().add("instance-tabs");
 
-        // Pestaña de Detalles
         Tab detailsTab = new Tab("DETALLES");
         detailsTab.setClosable(false);
         detailsTab.setContent(createDetailsContent());
 
-        // Pestaña de Configuración
         Tab settingsTab = new Tab("CONFIGURACIÓN");
         settingsTab.setClosable(false);
         settingsTab.setContent(createSettingsContent());
@@ -148,7 +143,6 @@ public class InstanceViewer extends BorderPane {
         Label description = new Label("Información detallada de la instancia");
         description.getStyleClass().add("content-description");
 
-        // Información de la versión
         VBox versionInfo = new VBox(10);
         versionInfo.getStyleClass().add("info-box");
 
@@ -157,7 +151,6 @@ public class InstanceViewer extends BorderPane {
 
         Label versionValue = new Label();
         versionValue.getStyleClass().add("info-value");
-        // Usamos un binding para mostrar la versión de la instancia actual
         versionValue.textProperty().bind(
                 javafx.beans.binding.Bindings.when(
                         javafx.beans.binding.Bindings.isNotNull(currentInstanceProperty())
@@ -166,7 +159,6 @@ public class InstanceViewer extends BorderPane {
                 ).otherwise("No seleccionada")
         );
 
-        // Información adicional
         Label pathTitle = new Label("Ubicación");
         pathTitle.getStyleClass().add("info-title");
 
@@ -196,7 +188,6 @@ public class InstanceViewer extends BorderPane {
         Label description = new Label("Configuración específica de esta instancia");
         description.getStyleClass().add("content-description");
 
-        // Configuraciones específicas de la instancia
         VBox settingsContainer = new VBox(10);
 
         CheckBox autoUpdate = new CheckBox("Actualizar automáticamente");
@@ -214,6 +205,10 @@ public class InstanceViewer extends BorderPane {
         instanceVersion.setText("Elige una instancia para ver los detalles");
         playButton.setDisable(true);
         contentTabs.setDisable(true);
+
+        lastPlayedLabel.setText("Nunca");
+        playTimeLabel.setText("0 h");
+        achievementsLabel.setText("0/0");
     }
 
     public void showInstance(InstanceManager.Instance instance) {
@@ -221,13 +216,14 @@ public class InstanceViewer extends BorderPane {
 
         if (instance != null) {
             instanceName.setText(instance.getName());
-
-            // Limpiar la versión para mostrar solo Minecraft
-            String version = cleanVersion(instance.getVersion());
-            instanceVersion.setText(version);
-
+            instanceVersion.setText(cleanVersion(instance.getVersion()));
             playButton.setDisable(false);
             contentTabs.setDisable(false);
+
+            // Actualiza los stats dinámicamente
+            lastPlayedLabel.setText(instance.getLastPlayedFormatted());
+            playTimeLabel.setText("not implemented");
+            achievementsLabel.setText("not implemented");
         } else {
             showEmptyState();
         }
@@ -236,7 +232,6 @@ public class InstanceViewer extends BorderPane {
     private String cleanVersion(String version) {
         if (version == null) return "Minecraft";
 
-        // Remover quilt, fabric, forge, etc.
         String cleaned = version
                 .replace("quilt", "")
                 .replace("fabric", "")
@@ -245,14 +240,12 @@ public class InstanceViewer extends BorderPane {
                 .replace("-loader", "")
                 .trim();
 
-        // Limpiar guiones extras
         if (cleaned.startsWith("-")) cleaned = cleaned.substring(1);
         if (cleaned.endsWith("-")) cleaned = cleaned.substring(0, cleaned.length() - 1);
 
         return cleaned.isEmpty() ? "Minecraft" : "Minecraft " + cleaned;
     }
 
-    // Property para bindings
     private javafx.beans.property.ObjectProperty<InstanceManager.Instance> currentInstanceProperty() {
         return new javafx.beans.property.SimpleObjectProperty<>(currentInstance);
     }

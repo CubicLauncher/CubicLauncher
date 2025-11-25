@@ -29,10 +29,6 @@ public class SettingsView {
     private static SettingsController controller;
     private static TextField javaPathField;
 
-    public static VBox create() {
-        return create(null);
-    }
-
     public static VBox create(Stage stage) {
         controller = new SettingsController();
         if (stage != null) {

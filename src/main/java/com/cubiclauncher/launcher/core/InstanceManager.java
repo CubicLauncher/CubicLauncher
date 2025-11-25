@@ -28,6 +28,10 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -177,7 +181,7 @@ public class InstanceManager {
                     }
 
                     log.info("Iniciando instancia '{}' con versión {}", instanceName, instanceToStart.getVersion());
-
+                    EventBus.get().emit(EventType.GAME_STARTED, EventData.builder().put("version", instanceName).build());
                     launcherWrapper.startVersion(
                             instanceToStart.getVersion(),
                             instanceToStart.getInstanceDir(instancesDir)
@@ -322,6 +326,12 @@ public class InstanceManager {
 
         public void updateLastPlayed() {
             this.lastPlayed = System.currentTimeMillis();
+        }
+        public String getLastPlayedFormatted() {
+            Instant instant = Instant.ofEpochMilli(this.lastPlayed);
+            LocalDateTime dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            return dateTime.format(formatter);
         }
 
         // Cambio: Ahora crea un directorio con el nombre y usa instance.cub

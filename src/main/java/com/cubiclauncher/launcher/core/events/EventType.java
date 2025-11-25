@@ -22,6 +22,7 @@ public enum EventType {
     DOWNLOAD_COMPLETED,
 
     GAME_CRASHED,
+    GAME_STARTED,
     // Instances
     INSTANCE_CREATED,
     INSTANCE_VERSION_NOT_INSTALLED

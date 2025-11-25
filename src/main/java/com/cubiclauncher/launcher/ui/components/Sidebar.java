@@ -141,7 +141,7 @@ public class Sidebar extends VBox {
                 icon.getStyleClass().add("instance-icon");
 
                 VBox info = new VBox(2);
-                Label nameLabel = new Label(String.format("%s-%s", item.getName(), item.getVersion()));
+                Label nameLabel = new Label(item.getVersion());
                 nameLabel.getStyleClass().add("instance-name");
 
                 info.getChildren().addAll(nameLabel);
@@ -151,23 +151,5 @@ public class Sidebar extends VBox {
             }
         }
 
-        private String cleanVersion(String version) {
-            if (version == null) return "Minecraft";
-
-            // Remover quilt, fabric, forge, etc.
-            String cleaned = version
-                    .replace("quilt", "")
-                    .replace("fabric", "")
-                    .replace("forge", "")
-                    .replace("--", "-")
-                    .replace("-loader", "")
-                    .trim();
-
-            // Limpiar guiones extras
-            if (cleaned.startsWith("-")) cleaned = cleaned.substring(1);
-            if (cleaned.endsWith("-")) cleaned = cleaned.substring(0, cleaned.length() - 1);
-
-            return cleaned.isEmpty() ? "Minecraft" : cleaned;
-        }
     }
 }

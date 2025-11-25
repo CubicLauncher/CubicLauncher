@@ -19,6 +19,8 @@ package com.cubiclauncher.launcher.ui.views;
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.LauncherWrapper;
 import com.cubiclauncher.launcher.core.TaskManager;
+import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.core.events.EventType;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -34,9 +36,13 @@ public class VersionsView {
     private static final LauncherWrapper launcher = LauncherWrapper.getInstance();
     private static final InstanceManager instanceManager = InstanceManager.getInstance();
     private static final TaskManager taskManager = TaskManager.getInstance();
+    private static final EventBus eventBus = EventBus.get();
 
-    // Estado del lazy loading
+    // Estado del lazy loading y referencias
     private static boolean availableVersionsLoaded = false;
+    private static ListView<String> currentVersionsList;
+    private static ToggleButton currentInstalledBtn;
+    private static ToggleButton currentAvailableBtn;
 
     public static BorderPane create() {
         BorderPane root = new BorderPane();
@@ -48,6 +54,9 @@ public class VersionsView {
 
         VBox content = createContent();
         root.setCenter(content);
+
+        // Suscribirse a eventos de descarga completada
+        setupEventListeners();
 
         return root;
     }
@@ -71,16 +80,16 @@ public class VersionsView {
 
         HBox toggleBox = createToggleButtons();
 
-        ListView<String> versionsList = new ListView<>();
-        versionsList.getStyleClass().add("version-list");
-        versionsList.setPrefHeight(350);
-        VBox.setVgrow(versionsList, Priority.ALWAYS);
+        currentVersionsList = new ListView<>();
+        currentVersionsList.getStyleClass().add("version-list");
+        currentVersionsList.setPrefHeight(350);
+        VBox.setVgrow(currentVersionsList, Priority.ALWAYS);
 
         VBox createInstanceSection = createInstanceCreationSection();
 
-        content.getChildren().addAll(toggleBox, versionsList, new Separator(), createInstanceSection);
+        content.getChildren().addAll(toggleBox, currentVersionsList, new Separator(), createInstanceSection);
 
-        setupToggleButtons(toggleBox, versionsList);
+        setupToggleButtons(toggleBox, currentVersionsList);
 
         return content;
     }
@@ -92,16 +101,16 @@ public class VersionsView {
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
-        ToggleButton installedBtn = new ToggleButton("Instaladas");
-        installedBtn.setUserData("installed");
-        installedBtn.getStyleClass().add("toggle-button-left");
-        installedBtn.setToggleGroup(toggleGroup);
-        installedBtn.setSelected(true);
+        currentInstalledBtn = new ToggleButton("Instaladas");
+        currentInstalledBtn.setUserData("installed");
+        currentInstalledBtn.getStyleClass().add("toggle-button-left");
+        currentInstalledBtn.setToggleGroup(toggleGroup);
+        currentInstalledBtn.setSelected(true);
 
-        ToggleButton availableBtn = new ToggleButton("Disponibles");
-        availableBtn.setUserData("available");
-        availableBtn.getStyleClass().add("toggle-button-right");
-        availableBtn.setToggleGroup(toggleGroup);
+        currentAvailableBtn = new ToggleButton("Disponibles");
+        currentAvailableBtn.setUserData("available");
+        currentAvailableBtn.getStyleClass().add("toggle-button-right");
+        currentAvailableBtn.setToggleGroup(toggleGroup);
 
         Button refreshBtn = new Button("↻");
         refreshBtn.getStyleClass().add("refresh-button");
@@ -110,7 +119,7 @@ public class VersionsView {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        toggleBox.getChildren().addAll(installedBtn, availableBtn, spacer, refreshBtn);
+        toggleBox.getChildren().addAll(currentInstalledBtn, currentAvailableBtn, spacer, refreshBtn);
 
         return toggleBox;
     }
@@ -120,8 +129,10 @@ public class VersionsView {
         ToggleButton availableBtn = (ToggleButton) toggleBox.getChildren().get(1);
         Button refreshBtn = (Button) toggleBox.getChildren().get(3);
 
-        taskManager.runAsync(() -> loadInstalledVersions(versionsList));
+        // Cargar instaladas por defecto
+        loadInstalledVersions(versionsList);
 
+        // LAZY LOADING: Solo cargar disponibles cuando se selecciona
         availableBtn.setOnAction(e -> {
             if (availableBtn.isSelected()) {
                 if (!availableVersionsLoaded) {
@@ -153,7 +164,7 @@ public class VersionsView {
                 taskManager.runAsync(launcher::getAvailableVersions)
                         .thenAccept(versions -> Platform.runLater(() -> {
                             versionsList.setItems(FXCollections.observableArrayList(versions));
-                            versionsList.setCellFactory(lv -> new AvailableVersionCell(versionsList));
+                            versionsList.setCellFactory(lv -> new AvailableVersionCell());
                             availableVersionsLoaded = true;
                             refreshBtn.setDisable(false);
                             refreshBtn.setText("↻");
@@ -167,6 +178,31 @@ public class VersionsView {
                             return null;
                         });
             }
+        });
+    }
+
+    // ==================== EVENT BUS INTEGRATION ====================
+
+    private static void setupEventListeners() {
+        // Actualizar lista cuando se complete una descarga
+        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, eventData -> {
+            String downloadedVersion = eventData.getString("version");
+
+            Platform.runLater(() -> {
+                // Si estamos viendo "Instaladas", actualizar la lista
+                if (currentInstalledBtn != null && currentInstalledBtn.isSelected()) {
+                    loadInstalledVersions(currentVersionsList);
+                }
+
+                // Si estamos viendo "Disponibles", actualizar para mostrar (I)
+                if (currentAvailableBtn != null && currentAvailableBtn.isSelected()) {
+                    // Forzar recarga para actualizar el estado instalado/no instalado
+                    availableVersionsLoaded = false;
+                    loadAvailableVersionsLazy(currentVersionsList);
+                }
+
+                System.out.println("✓ Lista de versiones actualizada después de descargar: " + downloadedVersion);
+            });
         });
     }
 
@@ -203,10 +239,17 @@ public class VersionsView {
         versionCombo.getStyleClass().add("form-combo");
         versionCombo.setMaxWidth(Double.MAX_VALUE);
 
+        // Cargar versiones instaladas inicialmente
         taskManager.runAsync(launcher::getInstalledVersions)
                 .thenAccept(versions -> Platform.runLater(() ->
                         versionCombo.setItems(FXCollections.observableArrayList(versions))
                 ));
+
+        // EVENT BUS: Actualizar combo cuando se descargue una versión
+        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, eventData -> Platform.runLater(() -> taskManager.runAsync(launcher::getInstalledVersions)
+                .thenAccept(versions -> Platform.runLater(() ->
+                        versionCombo.setItems(FXCollections.observableArrayList(versions))
+                ))));
 
         grid.add(nameLabel, 0, 0);
         grid.add(nameField, 1, 0);
@@ -272,11 +315,13 @@ public class VersionsView {
         return section;
     }
 
+    // ==================== LAZY LOADING HELPERS ====================
+
     private static void loadAvailableVersionsLazy(ListView<String> listView) {
         taskManager.runAsync(launcher::getAvailableVersions)
                 .thenAccept(versions -> Platform.runLater(() -> {
                     listView.setItems(FXCollections.observableArrayList(versions));
-                    listView.setCellFactory(lv -> new AvailableVersionCell(listView));
+                    listView.setCellFactory(lv -> new AvailableVersionCell());
                     availableVersionsLoaded = true;
                 }))
                 .exceptionally(error -> {
@@ -335,7 +380,7 @@ public class VersionsView {
         taskManager.runAsync(launcher::getAvailableVersions)
                 .thenAccept(versions -> Platform.runLater(() -> {
                     listView.setItems(FXCollections.observableArrayList(versions));
-                    listView.setCellFactory(lv -> new AvailableVersionCell(listView));
+                    listView.setCellFactory(lv -> new AvailableVersionCell());
                 }));
     }
 
@@ -408,6 +453,7 @@ public class VersionsView {
 
                 alert.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
+                        // TODO: Implementar desinstalación real
                         System.out.println("Desinstalar: " + version);
                         taskManager.runAsync(() -> loadInstalledVersions(parentList));
                     }
@@ -420,12 +466,6 @@ public class VersionsView {
     }
 
     private static class AvailableVersionCell extends ListCell<String> {
-        private final ListView<String> parentList;
-
-        public AvailableVersionCell(ListView<String> parentList) {
-            this.parentList = parentList;
-        }
-
         @Override
         protected void updateItem(String version, boolean empty) {
             super.updateItem(version, empty);
@@ -443,7 +483,7 @@ public class VersionsView {
 
             boolean isInstalled = launcher.getInstalledVersions().contains(version);
 
-            Circle indicator = new Circle(4, isInstalled ?
+            Circle indicator = new Circle(6, isInstalled ?
                     Color.web("#90c090") : Color.web("#555555"));
 
             VBox infoBox = new VBox(3);
@@ -466,6 +506,7 @@ public class VersionsView {
                     actionBtn.setDisable(true);
                     actionBtn.setText("Instalando...");
                     taskManager.runAsync(() -> launcher.downloadMinecraftVersion(version));
+                    // EVENT BUS se encargará de actualizar la UI cuando termine
                 });
             }
 

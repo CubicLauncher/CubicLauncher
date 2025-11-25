@@ -22,6 +22,7 @@ import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -39,6 +40,7 @@ public class BottomBar extends HBox {
     private final ProgressBar progressBar;
     private final Label progressLabel;
     private final Label progressText;
+    private final Label statusLabel;
     private final LauncherWrapper launcher = LauncherWrapper.getInstance();
 
     public BottomBar() {
@@ -87,9 +89,7 @@ public class BottomBar extends HBox {
         // Espaciador derecho
         Region rightSpacer = new Region();
         HBox.setHgrow(rightSpacer, Priority.ALWAYS);
-
-        // Estado del launcher
-        Label statusLabel = new Label("Listo");
+        statusLabel = new Label("Listo");
         statusLabel.getStyleClass().add("status-label");
 
         getChildren().addAll(userProfile, leftSpacer, progressCenter, rightSpacer, statusLabel);
@@ -153,6 +153,11 @@ public class BottomBar extends HBox {
             progressBar.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
             progressLabel.setText("");
         })));
+        eventBus.subscribe(EventType.GAME_STARTED, eventData -> {
+            TaskManager.getInstance().runAsyncAtJFXThread(() -> {
+                statusLabel.setText(String.format("Iniciando %s", eventData.getString("version")));
+            });
+        });
     }
 
     private String getDownloadTypeText(int type) {
