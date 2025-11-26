@@ -11,9 +11,6 @@ import org.slf4j.Marker;
 /**
  * Puente entre el Core y el EventBus.
  * El Core NO conoce la UI, solo emite eventos.
- *
- * Filosofía Rust: Los componentes del core son como módulos independientes
- * que comunican a través de canales (aquí, el EventBus).
  */
 public class CoreBridge {
     private static final Logger log = LoggerFactory.getLogger(CoreBridge.class);
@@ -26,4 +23,5 @@ public class CoreBridge {
         eventBus.emit(EventType.INSTANCE_CREATED,
                 EventData.instanceCreated(name, version));
     }
+
 }

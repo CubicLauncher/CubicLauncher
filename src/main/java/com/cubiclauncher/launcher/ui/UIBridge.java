@@ -6,16 +6,12 @@ import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import javafx.application.Platform;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class UIBridge {
     private static final EventBus eventBus = EventBus.get();
     private static UIBridge instance;
-    private static TaskManager taskManager = TaskManager.getInstance();
-    private final List<Subscription> subscriptions = new ArrayList<>();
+    private static final TaskManager taskManager = TaskManager.getInstance();
     private final BottomBar bottomBar;
 
     private UIBridge() {
@@ -89,12 +85,6 @@ public class UIBridge {
 
     private void subscribe(EventType type, Consumer<EventData> handler) {
         eventBus.subscribe(type, handler);
-        subscriptions.add(new Subscription(type, handler));
     }
 
-    public void cleanup() {
-        subscriptions.clear();
-    }
-
-    private record Subscription(EventType type, Consumer<EventData> handler) {}
 }

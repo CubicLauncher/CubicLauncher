@@ -109,9 +109,8 @@ public class Main extends Application {
 
     private void showViewWithAnimation(Node newView) {
         Node currentView = root.getCenter();
-        uiBridge.cleanup();
         if (currentView == newView) {
-            return; // Ya está mostrando esta vista
+            return;
         }
 
         if (currentView == null) {
