@@ -297,6 +297,28 @@
   -fx-font-size: 13px;
 }
 
+.user-profile-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: #b0b0b0;
+    -fx-font-weight: 500;
+    -fx-font-size: 13px;
+    -fx-border-color: #404040;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 1 0 0 0;
+}
+
+.cancel-edit-button {
+    -fx-text-fill: #666666;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 5;
+    -fx-cursor: hand;
+}
+
+.cancel-edit-button:hover {
+    -fx-text-fill: #999999;
+}
+
 .progress-text {
   -fx-text-fill: #888888;
   -fx-font-size: 12px;
