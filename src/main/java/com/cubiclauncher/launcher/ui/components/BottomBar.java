@@ -177,7 +177,6 @@ public class BottomBar extends HBox {
         avatarImage.errorProperty().addListener((obs, wasError, isError) -> {
             if (isError) {
                 System.err.println("Failed to load avatar for: " + username);
-                // Don't print stack trace for common errors like 404
                 if (avatarImage.getException() != null && !(avatarImage.getException() instanceof java.io.FileNotFoundException)) {
                     avatarImage.getException().printStackTrace();
                 }

@@ -127,7 +127,7 @@ public class SettingsView {
     private static VBox createLauncherInfo() {
         VBox infoBox = new VBox(5);
 
-        Label versionLabel = new Label("Versión: 1alpha");
+        Label versionLabel = new Label("Versión: alpha 0.0.1");
         Label devLabel = new Label("Desarrollado por: Santiagolxx, Notstaff & CubicLauncher contributors");
 
         HBox sourceCodeBox = new HBox(5);
