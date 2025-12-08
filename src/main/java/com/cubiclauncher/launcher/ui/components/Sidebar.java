@@ -111,6 +111,10 @@ public class Sidebar extends VBox {
         instancesList.getItems().setAll(InstanceManager.getInstance().getAllInstances());
     }
 
+    public void clearSelection() {
+        instancesList.getSelectionModel().clearSelection();
+    }
+
     public void setOnInstanceSelected(Consumer<Instance> handler) {
         this.onInstanceSelected = handler;
     }

@@ -79,8 +79,14 @@ public class Main extends Application {
             instanceViewer.showInstance(instance);
         });
 
-        sidebar.setOnSettingsAction(() -> showViewWithAnimation(SettingsView.create(primaryStage)));
-        sidebar.setOnVersionsAction(() -> showViewWithAnimation(VersionsView.create()));
+        sidebar.setOnSettingsAction(() -> {
+            showViewWithAnimation(SettingsView.create(primaryStage));
+            sidebar.clearSelection();
+        });
+        sidebar.setOnVersionsAction(() -> {
+            showViewWithAnimation(VersionsView.create());
+            sidebar.clearSelection();
+        });
 
         // --- Vista inicial ---
         root.setLeft(sidebar);
@@ -109,6 +115,10 @@ public class Main extends Application {
 
     private void showViewWithAnimation(Node newView) {
         Node currentView = root.getCenter();
+        final String currentViewName = (currentView != null) ? currentView.getClass().getSimpleName() : "ninguna";
+        final String newViewName = (newView != null) ? newView.getClass().getSimpleName() : "ninguna";
+        log.info("Cambiando la vista central de '{}' a '{}'", currentViewName, newViewName);
+
         if (currentView == newView) {
             return;
         }
@@ -126,12 +136,14 @@ public class Main extends Application {
         fadeOut.setOnFinished(e -> {
             root.setCenter(newView);
 
-            // Fade in
-            newView.setOpacity(0.0);
-            FadeTransition fadeIn = new FadeTransition(Duration.millis(200), newView);
-            fadeIn.setFromValue(0.0);
-            fadeIn.setToValue(1.0);
-            fadeIn.play();
+            if (newView != null) {
+                // Fade in
+                newView.setOpacity(0.0);
+                FadeTransition fadeIn = new FadeTransition(Duration.millis(200), newView);
+                fadeIn.setFromValue(0.0);
+                fadeIn.setToValue(1.0);
+                fadeIn.play();
+            }
         });
 
         fadeOut.play();
