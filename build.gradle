@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.cubiclauncher"
-version = "1.0-SNAPSHOT"
+version = "2501a"
 
 java {
     toolchain {
@@ -65,7 +65,7 @@ tasks.run {
 
 tasks.register('fatJar', Jar) {
     archiveBaseName.set("CubicLauncher")
-    archiveClassifier.set("all")
+    archiveClassifier.set(platform)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     manifest {
