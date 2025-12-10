@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -229,6 +230,57 @@ public class InstanceManager {
     }
 
     /**
+     * Renombra una instancia
+     */
+    public boolean renameInstance(String oldName, String newName) {
+        if (instanceExists(newName)) {
+            log.warn("No se puede renombrar la instancia a '{}': ya existe", newName);
+            return false;
+        }
+
+        Optional<Instance> instanceOpt = getInstance(oldName);
+        if (instanceOpt.isPresent()) {
+            Instance instance = instanceOpt.get();
+            String originalName = instance.getName();
+            Path oldDir = instance.getInstanceDir(instancesDir);
+
+            instance.setName(newName);
+            Path newDir = instance.getInstanceDir(instancesDir);
+
+            try {
+                // 1. Rename directory
+                Files.move(oldDir, newDir, StandardCopyOption.REPLACE_EXISTING);
+
+                // 2. Save updated instance file
+                if (!saveInstance(instance)) {
+                    // saveInstance failed and logged the error. Revert the directory move.
+                    log.warn("Falló el guardado de la configuración, revirtiendo el renombrado del directorio de la instancia.");
+                    try {
+                        Files.move(newDir, oldDir, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException revertEx) {
+                        log.error("¡FALLO CRÍTICO! No se pudo revertir el renombrado del directorio. El directorio '{}' debe ser renombrado a '{}' manualmente.", newDir, oldDir, revertEx);
+                    }
+                    instance.setName(originalName); // Revert name on object
+                    return false;
+                }
+
+                // 3. Success
+                log.info("Instancia '{}' renombrada a '{}'", oldName, newName);
+                eventBus.emit(EventType.INSTANCE_RENAME, EventData.empty());
+                return true;
+
+            } catch (IOException e) {
+                // This catches failure on the first Files.move
+                log.error("Error renombrando el directorio de la instancia '{}': {}", oldName, e.getMessage(), e);
+                instance.setName(originalName); // Revert name on object
+                return false;
+            }
+        }
+        log.warn("No se pudo renombrar la instancia '{}': no existe", oldName);
+        return false;
+    }
+
+    /**
      * Método auxiliar para eliminar directorios recursivamente
      */
     private void deleteDirectory(Path path) throws IOException {
@@ -278,7 +330,6 @@ public class InstanceManager {
         getInstance(name).ifPresent(inst -> {
             inst.updateLastPlayed();
             saveInstance(inst);
-            log.debug("Actualizada última vez jugada para instancia: {}", name);
         });
     }
 
@@ -297,7 +348,7 @@ public class InstanceManager {
     }
 
     public static class Instance {
-        private final String name;
+        private String name;
         private final String version;
         private long lastPlayed;
 
@@ -311,6 +362,10 @@ public class InstanceManager {
         // Getters
         public String getName() {
             return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
         }
 
         public String getVersion() {

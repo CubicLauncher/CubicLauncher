@@ -26,5 +26,6 @@ public enum EventType {
     // Instances
     INSTANCE_CREATED,
     INSTANCE_DELETED,
+    INSTANCE_RENAME,
     INSTANCE_VERSION_NOT_INSTALLED
 }

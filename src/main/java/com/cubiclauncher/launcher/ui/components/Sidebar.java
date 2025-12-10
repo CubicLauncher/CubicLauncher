@@ -28,6 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class Sidebar extends VBox {
@@ -68,9 +69,18 @@ public class Sidebar extends VBox {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         // Botón de menú de acciones de instancia
-        instanceActionsButton = new MenuButton("Acciones"); // Changed from "..." to "Acciones"
+        instanceActionsButton = new MenuButton("Acciones");
         instanceActionsButton.getStyleClass().add("menu-button-sidebar");
         instanceActionsButton.setVisible(false); // Oculto por defecto
+
+        MenuItem renameItem = new MenuItem("Renombrar");
+        renameItem.setOnAction(e -> {
+            Instance selected = instancesList.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                showRenameDialog(selected);
+            }
+        });
+
         MenuItem deleteItem = new MenuItem("Borrar");
         deleteItem.setOnAction(e -> {
             Instance selected = instancesList.getSelectionModel().getSelectedItem();
@@ -78,7 +88,7 @@ public class Sidebar extends VBox {
                 InstanceManager.getInstance().deleteInstance(selected.getName());
             }
         });
-        instanceActionsButton.getItems().add(deleteItem);
+        instanceActionsButton.getItems().addAll(renameItem, deleteItem);
 
         instancesHeader.getChildren().addAll(instancesLabel, spacer, instanceActionsButton);
 
@@ -118,6 +128,21 @@ public class Sidebar extends VBox {
         });
         eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
         eventBus.subscribe(EventType.INSTANCE_DELETED, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
+        eventBus.subscribe(EventType.INSTANCE_RENAME, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
+    }
+
+    private void showRenameDialog(Instance instance) {
+        TextInputDialog dialog = new TextInputDialog(instance.getName());
+        dialog.setTitle("Renombrar Instancia");
+        dialog.setHeaderText("Renombrar la instancia '" + instance.getName() + "'");
+        dialog.setContentText("Nuevo nombre:");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(newName -> {
+            if (!newName.isEmpty() && !newName.equals(instance.getName())) {
+                InstanceManager.getInstance().renameInstance(instance.getName(), newName);
+            }
+        });
     }
 
     private Button createActionButton(String text) {
