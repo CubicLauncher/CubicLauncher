@@ -25,5 +25,6 @@ public enum EventType {
     GAME_STARTED,
     // Instances
     INSTANCE_CREATED,
+    INSTANCE_DELETED,
     INSTANCE_VERSION_NOT_INSTALLED
 }

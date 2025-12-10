@@ -23,10 +23,7 @@ import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -35,6 +32,7 @@ import java.util.function.Consumer;
 
 public class Sidebar extends VBox {
     private final ListView<Instance> instancesList;
+    private final MenuButton instanceActionsButton;
     private Consumer<Instance> onInstanceSelected;
     private Runnable onSettingsAction;
     private Runnable onVersionsAction;
@@ -43,6 +41,8 @@ public class Sidebar extends VBox {
 
     public Sidebar() {
         super(10);
+        this.instancesList = new ListView<>(); // Initialize instancesList here
+
         setPadding(new Insets(15));
         getStyleClass().add("sidebar");
         setPrefWidth(280);
@@ -59,11 +59,30 @@ public class Sidebar extends VBox {
         HBox.setHgrow(header, Priority.ALWAYS);
         header.getChildren().add(title);
 
-        // Lista de instancias
+        // Encabezado de la lista de instancias
+        HBox instancesHeader = new HBox();
+        instancesHeader.setAlignment(Pos.CENTER_LEFT);
         Label instancesLabel = new Label("TUS INSTANCIAS");
         instancesLabel.getStyleClass().add("instances-label");
+        HBox spacer = new HBox();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        instancesList = new ListView<>();
+        // Botón de menú de acciones de instancia
+        instanceActionsButton = new MenuButton("Acciones"); // Changed from "..." to "Acciones"
+        instanceActionsButton.getStyleClass().add("menu-button-sidebar");
+        instanceActionsButton.setVisible(false); // Oculto por defecto
+        MenuItem deleteItem = new MenuItem("Borrar");
+        deleteItem.setOnAction(e -> {
+            Instance selected = instancesList.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                InstanceManager.getInstance().deleteInstance(selected.getName());
+            }
+        });
+        instanceActionsButton.getItems().add(deleteItem);
+
+        instancesHeader.getChildren().addAll(instancesLabel, spacer, instanceActionsButton);
+
+        // Lista de instancias
         instancesList.getStyleClass().add("instance-list");
         VBox.setVgrow(instancesList, Priority.ALWAYS);
         instancesList.setCellFactory(lv -> new InstanceCell());
@@ -88,15 +107,17 @@ public class Sidebar extends VBox {
 
         actionButtons.getChildren().addAll(versionsButton, settingsButton);
 
-        getChildren().addAll(header, instancesLabel, instancesList, actionButtons);
+        getChildren().addAll(header, instancesHeader, instancesList, actionButtons);
 
         // Configurar selección
         instancesList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
+            instanceActionsButton.setVisible(selected != null);
             if (selected != null && onInstanceSelected != null) {
                 onInstanceSelected.accept(selected);
             }
         });
         eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
+        eventBus.subscribe(EventType.INSTANCE_DELETED, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
     }
 
     private Button createActionButton(String text) {
@@ -154,6 +175,5 @@ public class Sidebar extends VBox {
                 setGraphic(container);
             }
         }
-
     }
 }
