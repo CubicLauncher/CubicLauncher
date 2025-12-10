@@ -228,7 +228,7 @@ public class VersionsView {
 
         TextFormatter<String> textFormatter = new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
-            return (newText.length() <= 16 && newText.length() >= 1 && newText.matches("[a-zA-Z0-9 _-]*")) ? change : null;
+            return (newText.length() <= 16 && newText.matches("[a-zA-Z0-9 _-]*")) ? change : null;
         });
         nameField.setTextFormatter(textFormatter);
 
