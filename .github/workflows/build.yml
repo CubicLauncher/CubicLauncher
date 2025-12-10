@@ -1,0 +1,37 @@
+name: Build Fat JAR
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Grant execute permission for Gradle (Linux only)
+        if: runner.os == 'Linux'
+        run: chmod +x ./gradlew
+
+      - name: Build fat JAR
+        run: ./gradlew fatJar
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cubiclauncher-${{ runner.os }}
+          path: build/libs/*.jar
