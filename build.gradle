@@ -25,7 +25,10 @@ def os = org.gradle.internal.os.OperatingSystem.current()
 def platform = os.isWindows() ? "win" :
         os.isLinux()   ? "linux" :
                 os.isMacOsX()  ? "mac" : null
-
+def arch = System.getProperty("os.arch").toLowerCase()
+def normalizedArch = arch.contains("64") ? "x64" :
+        arch.contains("arm") || arch.contains("aarch64") ? "aarch64" :
+                "x86"
 if (platform == null) {
     throw new GradleException("Unsupported platform for JavaFX")
 }
@@ -65,7 +68,7 @@ tasks.run {
 
 tasks.register('fatJar', Jar) {
     archiveBaseName.set("CubicLauncher")
-    archiveClassifier.set(platform)
+    archiveClassifier.set(platform + "-" + normalizedArch)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     manifest {
