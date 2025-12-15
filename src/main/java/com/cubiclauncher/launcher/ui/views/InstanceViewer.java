@@ -1,58 +1,42 @@
-/*
- * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see https://www.gnu.org/licenses/.
- */
-
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
-import com.cubiclauncher.launcher.ui.controllers.LauncherController;
+import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.core.events.EventData;
+import com.cubiclauncher.launcher.core.events.EventType;
+import com.cubiclauncher.launcher.ui.controllers.InstanceController;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 
 public class InstanceViewer extends BorderPane {
     private static InstanceViewer instance;
     private InstanceManager.Instance currentInstance;
     private final ObjectProperty<InstanceManager.Instance> currentInstanceProperty = new SimpleObjectProperty<>();
+
     private Label instanceName;
     private Label instanceVersion;
     private Button playButton;
-    private TabPane contentTabs;
-
-    // Labels de stats
+    private TextArea logsArea;
+    private ScrollPane logsScrollPane;
+    private Label versionLabel;
+    private Label loaderLabel;
+    private Label locationLabel;
     private Label lastPlayedLabel;
-    private Label playTimeLabel;
-    private Label achievementsLabel;
 
-    // Constructor privado para Singleton
     private InstanceViewer() {
         super();
         getStyleClass().add("instance-viewer");
         initializeHeader();
         initializeContent();
         showEmptyState();
+        setupEventSubscriptions();
     }
 
-    // Obtener instancia única
     public static InstanceViewer getInstance() {
         if (instance == null) {
             instance = new InstanceViewer();
@@ -60,203 +44,252 @@ public class InstanceViewer extends BorderPane {
         return instance;
     }
 
+    private void setupEventSubscriptions() {
+        EventBus eventBus = EventBus.get();
+        eventBus.subscribe(EventType.GAME_OUTPUT, eventData -> {
+            String instance_name = eventData.getString("instance_name");
+            String output = eventData.getString("line");
+            if (output != null && !output.trim().isEmpty() && currentInstance != null && currentInstance.getName().equals(instance_name)) {
+                Platform.runLater(() -> appendLog(output));
+            }
+        });
+    }
+
     private void initializeHeader() {
-        VBox header = new VBox(15);
+        VBox header = new VBox(20);
         header.getStyleClass().add("instance-header");
-        header.setPadding(new Insets(30, 40, 20, 40));
+        header.setPadding(new Insets(40, 40, 40, 40));
 
-        HBox banner = new HBox(20);
-        banner.setAlignment(Pos.CENTER_LEFT);
+        // Main content container
+        HBox mainContent = new HBox(40);
+        mainContent.setAlignment(Pos.CENTER_LEFT);
 
-        // Imagen placeholder
+        // Minimalist image container
         StackPane imageContainer = new StackPane();
-        imageContainer.getStyleClass().add("instance-image-container");
-        imageContainer.setMinSize(460, 215);
-        imageContainer.setMaxSize(460, 215);
+        imageContainer.getStyleClass().add("instance-image");
+        imageContainer.setMinSize(180, 180);
+        imageContainer.setMaxSize(180, 180);
 
-        Label imagePlaceholder = new Label("IMAGEN DE LA INSTANCIA");
-        imagePlaceholder.getStyleClass().add("instance-image-placeholder");
-        imageContainer.getChildren().add(imagePlaceholder);
+        Label imageIcon = new Label("⬢");
+        imageIcon.getStyleClass().add("instance-icon");
+        imageContainer.getChildren().add(imageIcon);
 
-        // Información de la instancia
-        VBox info = new VBox(8);
+        // Instance information - clean and minimal
+        VBox info = new VBox(16);
+        info.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
         instanceName = new Label();
-        instanceName.getStyleClass().add("instance-title");
+        instanceName.getStyleClass().add("instance-name");
 
         instanceVersion = new Label();
-        instanceVersion.getStyleClass().add("instance-subtitle");
+        instanceVersion.getStyleClass().add("instance-version");
 
-        // Stats
-        HBox stats = new HBox(30);
-        stats.setAlignment(Pos.CENTER_LEFT);
+        // Minimalist info grid
+        GridPane metaInfo = new GridPane();
+        metaInfo.getStyleClass().add("instance-meta");
+        metaInfo.setHgap(32);
+        metaInfo.setVgap(8);
 
-        lastPlayedLabel = new Label("Nunca");
-        VBox lastPlayed = createStatBox("ÚLTIMA VEZ", lastPlayedLabel);
+        Label lastPlayedTitle = new Label("Last played");
+        lastPlayedTitle.getStyleClass().add("meta-label");
 
-        playTimeLabel = new Label("0 h");
-        VBox playTime = createStatBox("TIEMPO TOTAL", playTimeLabel);
+        lastPlayedLabel = new Label("Never");
+        lastPlayedLabel.getStyleClass().add("meta-value");
 
-        achievementsLabel = new Label("0/0");
-        VBox achievements = createStatBox("LOGROS", achievementsLabel);
+        metaInfo.add(lastPlayedTitle, 0, 0);
+        metaInfo.add(lastPlayedLabel, 0, 1);
 
-        stats.getChildren().addAll(lastPlayed, playTime, achievements);
+        // Primary action button - minimalist design
+        playButton = new Button("Play");
+        playButton.getStyleClass().add("play-button-primary");
+        playButton.setOnAction(e -> {
+            if (currentInstance != null) {
+                InstanceController.launchInstance(currentInstance.getName());
+            }
+        });
 
-        // Barra de acciones
-        HBox actionBar = new HBox(15);
-        actionBar.setAlignment(Pos.CENTER_LEFT);
-
-        playButton = new Button("JUGAR");
-        playButton.getStyleClass().add("play-button-large");
-        playButton.setOnAction(e -> LauncherController.launchInstance(getInstance().currentInstance.getName()));
-
-        Button optionsButton = new Button("Gestionar");
-        optionsButton.getStyleClass().add("options-button");
-
-        actionBar.getChildren().addAll(playButton, optionsButton);
-
-        info.getChildren().addAll(instanceName, instanceVersion, stats, actionBar);
-        banner.getChildren().addAll(imageContainer, info);
-        header.getChildren().add(banner);
+        info.getChildren().addAll(instanceName, instanceVersion, metaInfo, playButton);
+        mainContent.getChildren().addAll(imageContainer, info);
+        header.getChildren().add(mainContent);
         setTop(header);
     }
 
-    // Crea un statBox a partir de un Label existente
-    private VBox createStatBox(String title, Label valueLabel) {
-        VBox box = new VBox(2);
-        box.setAlignment(Pos.CENTER_LEFT);
+    private void initializeContent() {
+        // Contenedor principal con las dos cards juntas
+        HBox content = new HBox(32);
+        content.getStyleClass().add("instance-content");
+        content.setPadding(new Insets(32, 40, 40, 20));
 
-        Label titleLabel = new Label(title);
-        titleLabel.getStyleClass().add("stat-title");
+        // Details card
+        VBox detailsCard = new VBox(12);
+        detailsCard.getStyleClass().add("details-card");
+        detailsCard.setPrefWidth(400);
 
-        valueLabel.getStyleClass().add("stat-value");
+        Label detailsTitle = new Label("Details");
+        detailsTitle.getStyleClass().add("section-title");
+
+        // Grid de detalles
+        VBox detailsGrid = new VBox(16);
+        detailsGrid.getStyleClass().add("details-grid");
+
+        // Version info
+        VBox versionBox = createInfoBox("Version", versionLabel = new Label("-"));
+
+        // Loader info
+        VBox loaderBox = createInfoBox("Loader", loaderLabel = new Label("-"));
+
+        // Location info
+        VBox locationBox = createInfoBox("Location", locationLabel = new Label("-"));
+
+        detailsGrid.getChildren().addAll(versionBox, loaderBox, locationBox);
+        detailsCard.getChildren().addAll(detailsTitle, detailsGrid);
+
+        // Logs card
+        VBox logsCard = new VBox(0);
+        logsCard.getStyleClass().add("logs-card");
+        HBox.setHgrow(logsCard, Priority.ALWAYS);
+
+        // Header de logs
+        HBox logsHeader = new HBox(8);
+        logsHeader.setAlignment(Pos.CENTER_LEFT);
+
+        Label logsTitle = new Label("Console");
+        logsTitle.getStyleClass().add("section-title");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button copyLogsButton = new Button("Copy");
+        copyLogsButton.getStyleClass().add("btn-secondary");
+        copyLogsButton.setOnAction(e -> {
+            if (!logsArea.getText().isEmpty()) {
+                javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+                javafx.scene.input.ClipboardContent clipboardContent = new javafx.scene.input.ClipboardContent();
+                clipboardContent.putString(logsArea.getText());
+                clipboard.setContent(clipboardContent);
+            }
+        });
+
+        Button clearLogsButton = new Button("Clear");
+        clearLogsButton.getStyleClass().add("btn-secondary");
+        clearLogsButton.setOnAction(e -> {
+            logsArea.clear();
+            appendLog("Console cleared");
+        });
+
+        logsHeader.getChildren().addAll(logsTitle, spacer, copyLogsButton, clearLogsButton);
+
+        // Área de logs - estilo terminal minimalista
+        logsArea = new TextArea();
+        logsArea.getStyleClass().add("console-area");
+        logsArea.setEditable(false);
+        logsArea.setWrapText(true);
+        logsArea.setStyle("-fx-background-color: transparent; -fx-control-inner-background: transparent;");
+
+        logsScrollPane = new ScrollPane(logsArea);
+        logsScrollPane.getStyleClass().add("console-scroll");
+        logsScrollPane.setFitToWidth(true);
+        logsScrollPane.setFitToHeight(true);
+        logsScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        logsScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+        // Quitar el fondo blanco del ScrollPane también
+        logsScrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        VBox logsContainer = new VBox(0);
+        logsContainer.getStyleClass().add("logs-container");
+        logsContainer.getChildren().addAll(logsHeader, logsScrollPane);
+        VBox.setVgrow(logsScrollPane, Priority.ALWAYS);
+
+        logsCard.getChildren().add(logsContainer);
+
+        // Añadir ambas cards al contenido principal
+        content.getChildren().addAll(detailsCard, logsCard);
+        setCenter(content);
+    }
+
+    private VBox createInfoBox(String label, Label valueLabel) {
+        VBox box = new VBox(4);
+        box.getStyleClass().add("info-box");
+
+        Label titleLabel = new Label(label);
+        titleLabel.getStyleClass().add("info-label");
+
+        valueLabel.getStyleClass().add("info-value");
 
         box.getChildren().addAll(titleLabel, valueLabel);
         return box;
     }
 
-    private void initializeContent() {
-        contentTabs = new TabPane();
-        contentTabs.getStyleClass().add("instance-tabs");
-
-        Tab detailsTab = new Tab("DETALLES");
-        detailsTab.setClosable(false);
-        detailsTab.setContent(createDetailsContent());
-
-        Tab settingsTab = new Tab("CONFIGURACIÓN");
-        settingsTab.setClosable(false);
-        settingsTab.setContent(createSettingsContent());
-
-        contentTabs.getTabs().addAll(detailsTab, settingsTab);
-        setCenter(contentTabs);
-    }
-
-    private VBox createDetailsContent() {
-        VBox content = new VBox(15);
-        content.setPadding(new Insets(20));
-
-        Label description = new Label("Información detallada de la instancia");
-        description.getStyleClass().add("content-description");
-
-        VBox versionInfo = new VBox(10);
-        versionInfo.getStyleClass().add("info-box");
-
-        Label versionTitle = new Label("Versión de Minecraft");
-        versionTitle.getStyleClass().add("info-title");
-
-        Label versionValue = new Label();
-        versionValue.getStyleClass().add("info-value");
-        versionValue.textProperty().bind(
-                javafx.beans.binding.Bindings.when(
-                        javafx.beans.binding.Bindings.isNotNull(currentInstanceProperty)
-                ).then(
-                        javafx.beans.binding.Bindings.selectString(currentInstanceProperty, "version")
-                ).otherwise("No seleccionada")
-        );
-
-        Label pathTitle = new Label("Ubicación");
-        pathTitle.getStyleClass().add("info-title");
-
-        Label pathValue = new Label();
-        pathValue.getStyleClass().add("info-value");
-        pathValue.textProperty().bind(
-                javafx.beans.binding.Bindings.when(
-                        javafx.beans.binding.Bindings.isNotNull(currentInstanceProperty)
-                ).then(
-                        javafx.beans.binding.Bindings.createStringBinding(
-                                () -> "./instances/" + (currentInstance != null ? currentInstance.getName() : ""),
-                                currentInstanceProperty
-                        )
-                ).otherwise("No seleccionada")
-        );
-
-        versionInfo.getChildren().addAll(versionTitle, versionValue, pathTitle, pathValue);
-        content.getChildren().addAll(description, versionInfo);
-
-        return content;
-    }
-
-    private VBox createSettingsContent() {
-        VBox content = new VBox(15);
-        content.setPadding(new Insets(20));
-
-        Label description = new Label("Configuración específica de esta instancia");
-        description.getStyleClass().add("content-description");
-
-        VBox settingsContainer = new VBox(10);
-
-        CheckBox autoUpdate = new CheckBox("Actualizar automáticamente");
-        CheckBox enableSnapshots = new CheckBox("Permitir snapshots");
-        CheckBox keepLauncherOpen = new CheckBox("Mantener launcher abierto");
-
-        settingsContainer.getChildren().addAll(autoUpdate, enableSnapshots, keepLauncherOpen);
-        content.getChildren().addAll(description, settingsContainer);
-
-        return content;
-    }
-
     private void showEmptyState() {
-        instanceName.setText("Selecciona una instancia");
-        instanceVersion.setText("Elige una instancia para ver los detalles");
+        instanceName.setText("No instance selected");
+        instanceVersion.setText("");
         playButton.setDisable(true);
-        contentTabs.setDisable(true);
 
-        lastPlayedLabel.setText("Nunca");
-        playTimeLabel.setText("0 h");
-        achievementsLabel.setText("0/0");
+        versionLabel.setText("-");
+        loaderLabel.setText("-");
+        locationLabel.setText("-");
+        lastPlayedLabel.setText("Never");
+
+        logsArea.clear();
+        logsArea.appendText("Select an instance to view console output\n");
     }
 
     public void showInstance(InstanceManager.Instance instance) {
         this.currentInstance = instance;
+        this.currentInstanceProperty.set(instance);
 
         if (instance != null) {
             instanceName.setText(instance.getName());
-            instanceVersion.setText(cleanVersion(instance.getVersion()));
+            instanceVersion.setText(formatVersion(instance.getVersion()));
             playButton.setDisable(false);
-            contentTabs.setDisable(false);
 
-            // Actualiza los stats dinámicamente
+            versionLabel.setText(instance.getVersion());
+            loaderLabel.setText(extractLoader(instance.getVersion()));
+            locationLabel.setText("./instances/" + instance.getName());
             lastPlayedLabel.setText(instance.getLastPlayedFormatted());
-            playTimeLabel.setText("not implemented");
-            achievementsLabel.setText("not implemented");
+
+            logsArea.clear();
+            logsArea.appendText("Instance: " + instance.getName() + "\n");
+            logsArea.appendText("Version: " + instance.getVersion() + "\n");
+            logsArea.appendText("Ready\n");
+
         } else {
             showEmptyState();
         }
     }
 
-    private String cleanVersion(String version) {
-        if (version == null) return "Minecraft";
+    private String formatVersion(String version) {
+        if (version == null) return "";
+        return version.replace("-", " ").replace("loader", "").trim();
+    }
 
-        String cleaned = version
-                .replace("quilt", "")
-                .replace("fabric", "")
-                .replace("forge", "")
-                .replace("--", "-")
-                .replace("-loader", "")
-                .trim();
+    private String extractLoader(String version) {
+        if (version == null) return "Vanilla";
+        if (version.contains("fabric")) return "Fabric";
+        if (version.contains("forge")) return "Forge";
+        if (version.contains("quilt")) return "Quilt";
+        return "Vanilla";
+    }
 
-        if (cleaned.startsWith("-")) cleaned = cleaned.substring(1);
-        if (cleaned.endsWith("-")) cleaned = cleaned.substring(0, cleaned.length() - 1);
+    public void appendLog(String message) {
+        if (logsArea != null) {
+            String timestamp = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            Platform.runLater(() -> logsArea.appendText("[" + timestamp + "] " + message + "\n"));
+        }
+    }
 
-        return cleaned.isEmpty() ? "Minecraft" : "Minecraft " + cleaned;
+    public void appendError(String error) {
+        if (logsArea != null) {
+            String timestamp = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            Platform.runLater(() -> logsArea.appendText("[" + timestamp + "] ERROR: " + error + "\n"));
+        }
+    }
+
+    public void clearLogs() {
+        if (logsArea != null) {
+            logsArea.clear();
+        }
     }
 }

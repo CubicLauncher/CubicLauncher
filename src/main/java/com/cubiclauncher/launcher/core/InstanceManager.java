@@ -54,8 +54,12 @@ public class InstanceManager {
         this.instances = new ArrayList<>();
 
         loadInstances();
-        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> taskManager.runAsync(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
-
+        eventBus.
+                subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> taskManager.runAsync(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
+        eventBus.
+                subscribe(EventType.REQUEST_LAUNCH_INSTANCE, (eventData -> taskManager.runAsync(() -> startInstance(eventData.getString("instance_name")))));
+        eventBus.
+                subscribe(EventType.REQUEST_INSTANCE_CREATION, (eventData -> taskManager.runAsync(() -> createInstance(eventData.getString("instance_name"), eventData.getString("instance_version")))));
     }
 
     // Singleton getter
@@ -128,7 +132,7 @@ public class InstanceManager {
             // Si es una nueva instancia, agregarla a la lista
             if (!instances.contains(instance)) {
                 instances.add(instance);
-                log.info("Nueva instancia agregada: {}", instance.getName());
+                log.info("New instance: {} ({})", instance.getName(), instance.getVersion());
             } else {
                 log.debug("Instancia actualizada: {}", instance.getName());
             }
@@ -151,16 +155,12 @@ public class InstanceManager {
         Instance newInstance = new Instance(name, version);
 
         if (saveInstance(newInstance)) {
-            log.info("Instancia '{}' creada con versión {}", name, version);
             eventBus.emit(EventType.INSTANCE_CREATED, EventData.empty());
         } else {
             throw new RuntimeException("No se pudo guardar la instancia: " + name);
         }
     }
 
-    /**
-     * Inicia una instancia por nombre
-     */
     public void startInstance(String instanceName) {
         Optional<Instance> optionalInstance = getInstance(instanceName);
 
@@ -183,18 +183,45 @@ public class InstanceManager {
 
                     log.info("Iniciando instancia '{}' con versión {}", instanceName, instanceToStart.getVersion());
                     EventBus.get().emit(EventType.GAME_STARTED, EventData.builder().put("version", instanceName).build());
-                    launcherWrapper.startVersion(
-                            instanceToStart.getVersion(),
-                            instanceToStart.getInstanceDir(instancesDir)
-                    );
+                    try {
+                        Process process = launcherWrapper.launchVersion(
+                                instanceToStart.getVersion(),
+                                instanceToStart.getInstanceDir(instancesDir)
+                        );
+                        // Guardar el proceso en la instancia
+                        instanceToStart.attachProcess(process);
 
-                    // Actualizar última vez jugada
-                    instanceToStart.updateLastPlayed();
-                    saveInstance(instanceToStart);
+                        // Actualizar última vez jugada
+                        instanceToStart.updateLastPlayed();
+                        saveInstance(instanceToStart);
 
-                    log.info("Instancia '{}' iniciada exitosamente", instanceName);
+                        // Monitorear el proceso para detectar cuando termina
+                        new Thread(() -> {
+                            try {
+                                int exitCode = process.waitFor();
+                                instanceToStart.detachProcess();
+                                eventBus.emit(EventType.GAME_EXITED,
+                                        EventData.builder()
+                                                .put("instance", instanceName)
+                                                .put("exitCode", exitCode)
+                                                .build());
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }).start();
+
+                        // También podemos monitorear la salida del proceso si queremos
+                        launcherWrapper.monitorProcessWithEvents(process, instanceName);
+
+                        log.info("Instancia '{}' iniciada exitosamente", instanceName);
+                    } catch (IOException e) {
+                        log.error("Error al lanzar la instancia '{}': {}", instanceName, e.getMessage(), e);
+                        eventBus.emit(EventType.GAME_CRASHED,
+                                EventData.error("Error al lanzar la instancia: " + instanceName, e));
+                    }
                 },
                 () -> {
+                    // Este es el onComplete del taskManager, no necesario en este caso
                 },
                 error -> {
                     log.error("Error iniciando instancia '{}': {}", instanceName, error.getMessage(), error);
@@ -351,12 +378,25 @@ public class InstanceManager {
         private String name;
         private final String version;
         private long lastPlayed;
+        private transient Process process;
 
         // Constructor para nueva instancia
         public Instance(String name, String version) {
             this.name = name;
             this.version = version;
             this.lastPlayed = System.currentTimeMillis();
+        }
+
+        public void attachProcess(Process process) {
+            this.process = process;
+        }
+
+        public void detachProcess() {
+            this.process = null;
+        }
+
+        public Process getProcess() {
+            return process;
         }
 
         // Getters

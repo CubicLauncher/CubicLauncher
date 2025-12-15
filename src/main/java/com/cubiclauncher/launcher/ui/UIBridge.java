@@ -22,6 +22,7 @@ import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
+import com.cubiclauncher.launcher.ui.views.VersionsView;
 import javafx.application.Platform;
 import java.util.function.Consumer;
 
@@ -30,9 +31,11 @@ public class UIBridge {
     private static UIBridge instance;
     private static final TaskManager taskManager = TaskManager.getInstance();
     private final BottomBar bottomBar;
+    private final VersionsView versionsView;
 
     private UIBridge() {
         bottomBar = BottomBar.getInstance();
+        versionsView = VersionsView.getInstance();
         registerListeners();
     }
 
@@ -72,7 +75,6 @@ public class UIBridge {
                 bottomBar.getStatusLabel().setText("listo");
             });
         }));
-
         subscribe(EventType.GAME_STARTED, data -> Platform.runLater(() ->
                 bottomBar.getStatusLabel().setText("La versión " + data.getString("version") + " ha sido iniciada.")
         ));
