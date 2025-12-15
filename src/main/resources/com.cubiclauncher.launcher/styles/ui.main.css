@@ -212,50 +212,6 @@
   -fx-border-color: #333333;
 }
 
-/* Instance Tabs */
-.instance-tabs {
-  -fx-background-color: transparent;
-}
-
-.instance-tabs .tab-header-area {
-  -fx-background-color: #151515;
-  -fx-border-color: #252525;
-  -fx-border-width: 0 0 1 0;
-}
-
-.instance-tabs .tab-header-background {
-  -fx-background-color: transparent;
-}
-
-.instance-tabs .tab {
-  -fx-background-color: transparent;
-  -fx-background-insets: 0;
-  -fx-background-radius: 0;
-  -fx-padding: 12 24;
-  -fx-border-color: transparent;
-}
-
-.instance-tabs .tab:selected {
-  -fx-background-color: #0f0f0f;
-  -fx-border-color: #e0e0e0;
-  -fx-border-width: 0 0 2 0;
-}
-
-.instance-tabs .tab .tab-label {
-  -fx-text-fill: #888888;
-  -fx-font-size: 12px;
-  -fx-font-weight: 500;
-}
-
-.instance-tabs .tab:selected .tab-label {
-  -fx-text-fill: #e0e0e0;
-}
-
-.instance-tabs .tab-content-area {
-  -fx-background-color: #0f0f0f;
-  -fx-padding: 0;
-}
-
 /* Content Styles */
 .content-section-title {
   -fx-text-fill: #e0e0e0;
@@ -388,32 +344,6 @@
   -fx-text-fill: #666666;
   -fx-font-size: 12px;
   -fx-font-weight: 500;
-}
-
-/* Botones de navegación - Transiciones suaves */
-.nav-button {
-  -fx-background-color: transparent;
-  -fx-text-fill: #888888;
-  -fx-border-color: transparent;
-  -fx-border-width: 1;
-  -fx-border-radius: 8;
-  -fx-background-radius: 8;
-  -fx-padding: 10 16;
-  -fx-font-size: 13;
-  -fx-font-weight: normal;
-  -fx-cursor: hand;
-}
-
-.nav-button:hover {
-  -fx-background-color: #1a1a1a;
-  -fx-text-fill: #b0b0b0;
-  -fx-border-color: #2a2a2a;
-}
-
-.nav-button.active {
-  -fx-background-color: #1f1f1f;
-  -fx-text-fill: #e0e0e0;
-  -fx-border-color: #333333;
 }
 
 /* Botón principal - Discreto pero funcional */
@@ -600,55 +530,68 @@
   -fx-padding: 0;
 }
 
-/* TabPane de configuración */
-.settings-tab-pane {
-  -fx-background-color: #151515;
-  -fx-border-color: #2a2a2a;
-  -fx-border-width: 1;
-  -fx-border-radius: 8;
+/* ==================== SETTINGS VIEW ==================== */
+.settings-scroll-pane {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
 }
 
-.settings-tab-pane .tab-header-area .tab-header-background {
-  -fx-background-color: #151515;
-  -fx-border-color: transparent transparent #252525 transparent;
-  -fx-border-width: 0 0 1 0;
+.settings-content {
+    -fx-background-color: transparent;
 }
 
-.settings-tab-pane .tab {
-  -fx-background-color: transparent;
-  -fx-focus-color: transparent;
-  -fx-faint-focus-color: transparent;
-  -fx-border-color: transparent #1f1f1f transparent transparent;
-  -fx-border-width: 0 1 0 0;
-  -fx-padding: 8 16;
-  -fx-background-insets: 0;
+.settings-category-title {
+    -fx-text-fill: #999999;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-transform: uppercase;
+    -fx-padding: 0 0 0 5;
 }
 
-.settings-tab-pane .tab:selected {
-  -fx-background-color: #0f0f0f;
-  -fx-border-color: #333333;
-  -fx-border-width: 0 0 2 0;
+.settings-card {
+    -fx-background-color: #151515;
+    -fx-border-color: #252525;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 20;
 }
 
-.settings-tab-pane .tab:hover {
-  -fx-background-color: #1a1a1a;
+.settings-subtitle {
+    -fx-text-fill: #b0b0b0;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-padding: 0 0 5 0;
 }
 
-.settings-tab-pane .tab .tab-label {
-  -fx-text-fill: #666666;
-  -fx-font-weight: 500;
-  -fx-font-size: 13;
+.settings-navigation {
+    -fx-background-color: #151515;
+    -fx-border-color: #252525;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
 }
 
-.settings-tab-pane .tab:selected .tab-label {
-  -fx-text-fill: #b0b0b0;
+.settings-navigation .nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #b0b0b0;
+    -fx-font-weight: 500;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 12 18;
+    -fx-alignment: CENTER_LEFT;
 }
 
-.settings-tab-pane > .tab-content-area {
-  -fx-background-color: #0f0f0f;
-  -fx-padding: 24;
-  -fx-border-color: #1a1a1a;
-  -fx-border-width: 1 0 0 0;
+.settings-navigation .nav-button:hover {
+    -fx-background-color: #1f1f1f;
+    -fx-text-fill: #e0e0e0;
+}
+
+.settings-navigation .nav-button.selected {
+    -fx-background-color: #2a2a2a;
+    -fx-text-fill: #ffffff;
 }
 
 /* Controles dentro de las pestañas */
