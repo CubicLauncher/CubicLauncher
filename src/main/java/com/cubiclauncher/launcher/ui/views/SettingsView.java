@@ -202,7 +202,7 @@ public class SettingsView {
 
     private static VBox createLauncherInfo() {
         VBox infoBox = new VBox(5);
-        Label versionLabel = new Label("Versión: 2501a");
+        Label versionLabel = new Label("Versión: 2502a");
         Label devLabel = new Label("Desarrollado por: Santiagolxx, Notstaff & CubicLauncher contributors");
         HBox sourceCodeBox = new HBox(5);
         sourceCodeBox.setAlignment(Pos.CENTER_LEFT);
