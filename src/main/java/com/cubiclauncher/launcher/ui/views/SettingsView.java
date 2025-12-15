@@ -127,6 +127,17 @@ public class SettingsView {
     private static void updateNavigationSelection(ScrollPane scrollPane, VBox content, VBox navigation, List<Node> sections) {
         double viewportHeight = scrollPane.getViewportBounds().getHeight();
         double scrollY = (content.getBoundsInLocal().getHeight() - viewportHeight) * scrollPane.getVvalue();
+        Node closestSection = getNode(sections, scrollY, viewportHeight);
+
+        if (closestSection != null) {
+            int selectedIndex = sections.indexOf(closestSection);
+            if (selectedIndex != -1) {
+                updateSelectedButton(navigation, (Button) navigation.getChildren().get(selectedIndex));
+            }
+        }
+    }
+
+    private static Node getNode(List<Node> sections, double scrollY, double viewportHeight) {
         double viewportCenter = scrollY + viewportHeight / 2;
 
         Node closestSection = null;
@@ -140,13 +151,7 @@ public class SettingsView {
                 closestSection = section;
             }
         }
-
-        if (closestSection != null) {
-            int selectedIndex = sections.indexOf(closestSection);
-            if (selectedIndex != -1) {
-                updateSelectedButton(navigation, (Button) navigation.getChildren().get(selectedIndex));
-            }
-        }
+        return closestSection;
     }
 
     private static void updateSelectedButton(VBox parent, Button selectedButton) {
@@ -230,7 +235,6 @@ public class SettingsView {
         return subSection;
     }
 
-    @SuppressWarnings("CommentedOutCode")
     private static Node createIntegrationsSection() {
         VBox subSection = new VBox(10);
         Label title = new Label("Integraciones");
