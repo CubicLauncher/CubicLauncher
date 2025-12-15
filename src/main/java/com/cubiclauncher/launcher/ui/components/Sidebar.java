@@ -49,7 +49,6 @@ public class Sidebar extends VBox {
         getStyleClass().add("sidebar");
         setPrefWidth(280);
         setMinWidth(280);
-
         // Header con logo y perfil
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -182,18 +181,23 @@ public class Sidebar extends VBox {
                 setText(null);
                 setGraphic(null);
             } else {
-                HBox container = new HBox(8);
+                HBox container = new HBox(2);
                 container.setAlignment(Pos.CENTER_LEFT);
-                container.setPadding(new Insets(2));
+                container.setPadding(new Insets(0));  // Cambiado de 1 a 0
                 container.getStyleClass().add("instance-cell");
+                container.setPrefHeight(30);  // Establecemos altura preferida
 
                 // Icono de Minecraft
                 Label icon = new Label("⛏");
                 icon.getStyleClass().add("instance-icon");
+                // Ajustar el tamaño del icono si es necesario
+                icon.setStyle("-fx-font-size: 14px;");  // Tamaño de icono
 
                 VBox info = new VBox(2);
+                info.setAlignment(Pos.CENTER_LEFT);
                 Label nameLabel = new Label(item.getName());
                 nameLabel.getStyleClass().add("instance-name");
+                nameLabel.setStyle("-fx-font-size: 12px;");  // Tamaño de fuente más pequeño
 
                 info.getChildren().addAll(nameLabel);
                 container.getChildren().addAll(icon, info);
@@ -202,4 +206,4 @@ public class Sidebar extends VBox {
             }
         }
     }
-}
+    }

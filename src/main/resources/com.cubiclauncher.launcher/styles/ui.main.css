@@ -1158,3 +1158,356 @@
 .indicator-available {
   -fx-fill: #555555;
 }
+
+/* ==================== INSTANCE VIEWER - SPECIFIC STYLES ==================== */
+
+.instance-viewer {
+    -fx-background-color: #0f0f0f;
+}
+
+.instance-header {
+    -fx-background-color: #151515;
+    -fx-border-color: #252525;
+    -fx-border-width: 0 0 1 0;
+}
+
+.instance-image {
+    -fx-background-color: #1a1a1a;
+    -fx-border-color: #2a2a2a;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.instance-icon {
+    -fx-text-fill: #666666;
+    -fx-font-size: 72px;
+    -fx-font-family: "Segoe UI";
+}
+
+.instance-name {
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+
+.instance-version {
+    -fx-text-fill: #888888;
+    -fx-font-size: 14px;
+}
+
+.instance-meta {
+    -fx-background-color: transparent;
+}
+
+.meta-label {
+    -fx-text-fill: #666666;
+    -fx-font-size: 11px;
+    -fx-font-weight: 500;
+    -fx-text-transform: uppercase;
+    -fx-letter-spacing: 0.5px;
+}
+
+.meta-value {
+    -fx-text-fill: #b0b0b0;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
+
+.play-button-primary {
+    -fx-background-color: #e8e8e8;
+    -fx-text-fill: #0f0f0f;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1;
+    -fx-font-weight: 600;
+    -fx-font-size: 14px;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-padding: 12 32;
+    -fx-effect: null;
+    -fx-cursor: hand;
+    -fx-min-width: 120px;
+}
+
+.play-button-primary:hover {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #e0e0e0;
+}
+
+.play-button-primary:disabled {
+    -fx-background-color: #2a2a2a;
+    -fx-text-fill: #666666;
+    -fx-border-color: #333333;
+}
+
+.instance-content {
+    -fx-background-color: transparent;
+}
+
+.details-section {
+    -fx-background-color: #151515;
+    -fx-border-color: #252525;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 8;
+    -fx-padding: 20;
+}
+
+.section-title {
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+}
+
+.details-grid {
+    -fx-background-color: transparent;
+}
+
+.info-box {
+    -fx-background-color: transparent;
+    -fx-spacing: 4;
+}
+
+.info-label {
+    -fx-text-fill: #888888;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+}
+
+.info-value {
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
+
+.logs-section {
+    -fx-background-color: #151515;
+    -fx-border-color: #252525;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+}
+
+.btn-secondary {
+    -fx-background-color: #1a1a1a;
+    -fx-text-fill: #b0b0b0;
+    -fx-border-color: #2a2a2a;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 8 16;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #1f1f1f;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #333333;
+}
+
+.console-area {
+    -fx-background-color: #0f0f0f;
+    -fx-text-fill: #b0b0b0;
+    -fx-font-family: "Consolas", "Monaco", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-border-color: #252525;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 4px;
+}
+
+.console-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.console-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.console-scroll .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.console-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #2a2a2a;
+    -fx-background-radius: 4;
+}
+
+.console-scroll .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #333333;
+}
+
+/* ==================== CONTEXT MENU STYLES ==================== */
+.context-menu {
+    -fx-background-color: #151515;
+    -fx-border-color: #2a2a2a;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 4 0;
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+}
+
+.menu-item .label {
+    -fx-text-fill: #b0b0b0;
+    -fx-font-size: 13px;
+}
+
+.menu-item:hover {
+    -fx-background-color: #1f1f1f;
+}
+
+.menu-item:hover .label {
+    -fx-text-fill: #e0e0e0;
+}
+
+.menu-item:disabled .label {
+    -fx-text-fill: #666666;
+}
+
+/* ==================== TEXT AREA SCROLLBAR STYLES ==================== */
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .content {
+    -fx-background-color: transparent;
+}
+
+/* ==================== ADDITIONAL UTILITY CLASSES ==================== */
+.text-muted {
+    -fx-text-fill: #666666;
+}
+
+.text-italic {
+    -fx-font-style: italic;
+}
+
+.text-small {
+    -fx-font-size: 11px;
+}
+
+.text-monospace {
+    -fx-font-family: "Consolas", "Monaco", "Courier New", monospace;
+}
+
+/* ==================== LOADING STATES ==================== */
+.loading-indicator {
+    -fx-text-fill: #888888;
+    -fx-font-size: 13px;
+    -fx-font-style: italic;
+}
+
+/* ==================== STATUS BADGES ==================== */
+.status-badge {
+    -fx-padding: 2 8;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+}
+
+.status-badge-success {
+    -fx-background-color: rgba(144, 192, 144, 0.2);
+    -fx-text-fill: #90c090;
+    -fx-border-color: rgba(144, 192, 144, 0.3);
+    -fx-border-width: 1;
+}
+
+.status-badge-warning {
+    -fx-background-color: rgba(255, 204, 102, 0.2);
+    -fx-text-fill: #ffcc66;
+    -fx-border-color: rgba(255, 204, 102, 0.3);
+    -fx-border-width: 1;
+}
+
+.status-badge-error {
+    -fx-background-color: rgba(255, 102, 102, 0.2);
+    -fx-text-fill: #ff6666;
+    -fx-border-color: rgba(255, 102, 102, 0.3);
+    -fx-border-width: 1;
+}
+
+/* ==================== TOOLTIP STYLES ==================== */
+.tooltip {
+    -fx-background-color: #151515;
+    -fx-text-fill: #b0b0b0;
+    -fx-border-color: #2a2a2a;
+    -fx-border-width: 1;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
+}
+
+/* ==================== SEPARATOR STYLES ==================== */
+.separator-horizontal {
+    -fx-background-color: #252525;
+    -fx-pref-height: 1;
+}
+
+.separator-vertical {
+    -fx-background-color: #252525;
+    -fx-pref-width: 1;
+}
+
+/* ==================== FORM VALIDATION ==================== */
+.validation-error {
+    -fx-border-color: #ff6666 !important;
+    -fx-border-width: 1.5 !important;
+}
+
+.validation-message {
+    -fx-text-fill: #ff6666;
+    -fx-font-size: 12px;
+    -fx-font-style: italic;
+}
+
+/* ==================== FOCUS INDICATORS ==================== */
+.focus-indicator {
+    -fx-border-color: #404040;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 4;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    -fx-opacity: 0;
+    animation: fade-in 0.3s ease-in forwards;
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+@media screen and (max-width: 1024px) {
+    .instance-image {
+        -fx-min-size: 140px;
+        -fx-max-size: 140px;
+    }
+
+    .instance-icon {
+        -fx-font-size: 56px;
+    }
+
+    .instance-name {
+        -fx-font-size: 24px;
+    }
+}

@@ -84,7 +84,7 @@ public class Main extends Application {
             sidebar.clearSelection();
         });
         sidebar.setOnVersionsAction(() -> {
-            showViewWithAnimation(VersionsView.create());
+            showViewWithAnimation(VersionsView.getInstance().create());
             sidebar.clearSelection();
         });
 

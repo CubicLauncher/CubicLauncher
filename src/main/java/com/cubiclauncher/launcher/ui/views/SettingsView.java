@@ -180,7 +180,7 @@ public class SettingsView {
         CheckBox closeLaunchCheckbox = new CheckBox("Cerrar launcher al abrir el juego");
         closeLaunchCheckbox.setSelected(controller.getSettings().isCloseLauncherOnGameStart());
         closeLaunchCheckbox.setOnAction(e -> controller.onCloseLauncherChanged(closeLaunchCheckbox.isSelected()));
-        CheckBox nativeStyles = new CheckBox("Utilizar estilos nativos");
+        CheckBox nativeStyles = new CheckBox("Utilizar estilos nativos (MUY BUG)");
         nativeStyles.setSelected(controller.getSettings().isNative_styles());
         nativeStyles.setOnAction(e -> controller.onNativeStylesChanged(nativeStyles.isSelected()));
         VBox infoSection = createLauncherInfo();

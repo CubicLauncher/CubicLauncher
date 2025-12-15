@@ -29,14 +29,17 @@ import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class LauncherWrapper {
     static final SettingsManager sm = SettingsManager.getInstance();
@@ -160,32 +163,283 @@ public class LauncherWrapper {
         }
     }
 
+    /**
+     * Método de conveniencia que mantiene compatibilidad con código existente
+     * Lanza el juego y maneja el proceso automáticamente
+     */
     public void startVersion(String versionId, Path instanceDir) {
         try {
-            String versionManifestPath = pm.getGamePath()
-                    .resolve("shared")
-                    .resolve("versions")
-                    .resolve(versionId)
-                    .resolve(versionId + ".json")
-                    .toString();
-            String minimumJREVersion = new VersionInfo(versionManifestPath, pm.getGamePath().toString()).getMinimumJREVersion();
+            Process process = launchVersion(versionId, instanceDir);
+            TaskManager.getInstance().runAsync(() -> {
+                try {
+                    int exitCode = process.waitFor();
+                    log.info("Juego finalizado con código: {}", exitCode);
+                    EVENT_BUS.emit(EventType.GAME_EXITED,
+                            EventData.builder()
+                                    .put("exitCode", exitCode)
+                                    .put("version", versionId)
+                                    .build());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+        } catch (IOException e) {
+            log.error("Error lanzando versión: {}", versionId, e);
+            EVENT_BUS.emit(EventType.GAME_ERROR,
+                    EventData.error("Error lanzando juego: " + e.getMessage(), e));
+        }
+    }
 
-            Map<String, String> customArgs = new HashMap<>();
-            if (sm.isForceDiscreteGpu() && System.getProperty("os.name").toLowerCase().contains("linux")) {
-                customArgs.put("DRI_PRIME", "1");
+    /**
+     * Inicia una versión de Minecraft y devuelve el Process para controlarlo
+     * @param versionId ID de la versión a lanzar
+     * @param instanceDir Directorio de la instancia
+     * @return Process del juego en ejecución
+     * @throws IOException Si ocurre un error al lanzar el juego
+     */
+    public Process launchVersion(String versionId, Path instanceDir) throws IOException {
+        String versionManifestPath = pm.getGamePath()
+                .resolve("shared")
+                .resolve("versions")
+                .resolve(versionId)
+                .resolve(versionId + ".json")
+                .toString();
+        String minimumJREVersion = new VersionInfo(versionManifestPath,
+                pm.getGamePath().toString()).getMinimumJREVersion();
+
+        Map<String, String> customArgs = new HashMap<>();
+        if (sm.isForceDiscreteGpu() && System.getProperty("os.name").toLowerCase().contains("linux")) {
+            customArgs.put("DRI_PRIME", "1");
+        }
+
+        return Launcher.launchWithProcess(
+                versionManifestPath,
+                pm.getGamePath().toString(),
+                instanceDir,
+                sm.getUsername(),
+                getJavaPath(minimumJREVersion),
+                sm.getMinMemoryInMB() + "M",
+                sm.getMaxMemoryInMB() + "M",
+                900, 600, false, LaunchOptions.defaults(), customArgs);
+
+    }
+
+    /**
+     * Obtiene la salida estándar (stdout) del proceso
+     * @param process Proceso del juego
+     * @return Reader para leer la salida línea por línea
+     */
+    public BufferedReader getStdoutReader(Process process) {
+        return new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Obtiene la salida de error (stderr) del proceso
+     * @param process Proceso del juego
+     * @return Reader para leer los errores línea por línea
+     */
+    public BufferedReader getStderrReader(Process process) {
+        return new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Obtiene un InputStream directo de la salida estándar
+     * @param process Proceso del juego
+     * @return InputStream de stdout
+     */
+    public InputStream getStdoutStream(Process process) {
+        return process.getInputStream();
+    }
+
+    /**
+     * Obtiene un InputStream directo de la salida de error
+     * @param process Proceso del juego
+     * @return InputStream de stderr
+     */
+    public InputStream getStderrStream(Process process) {
+        return process.getErrorStream();
+    }
+
+    /**
+     * Mata el proceso forzosamente
+     * @param process Proceso a terminar
+     */
+    public void forceKill(Process process) {
+        if (process != null && process.isAlive()) {
+            process.destroyForcibly();
+            log.info("Proceso terminado forzosamente");
+        }
+    }
+
+    /**
+     * Termina el proceso de forma limpia
+     * @param process Proceso a terminar
+     * @param timeout Tiempo máximo de espera en segundos
+     * @return true si el proceso terminó limpiamente
+     */
+    public boolean gracefulShutdown(Process process, int timeout) {
+        if (process == null || !process.isAlive()) {
+            return true;
+        }
+
+        process.destroy(); // Envía señal de terminación
+
+        try {
+            if (process.waitFor(timeout, TimeUnit.SECONDS)) {
+                log.info("Proceso terminado limpiamente");
+                return true;
+            } else {
+                log.warn("Timeout - forzando terminación");
+                process.destroyForcibly();
+                return false;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            process.destroyForcibly();
+            return false;
+        }
+    }
+
+    /**
+     * Monitorea la salida del proceso en tiempo real
+     * @param process Proceso a monitorear
+     * @param onOutputLine Callback para cada línea de salida
+     * @param onErrorLine Callback para cada línea de error
+     */
+    public void monitorProcessOutput(Process process,
+                                     Consumer<String> onOutputLine,
+                                     Consumer<String> onErrorLine) {
+
+        Thread outputThread = new Thread(() -> {
+            try (BufferedReader reader = getStdoutReader(process)) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    onOutputLine.accept(line);
+                }
+            } catch (IOException e) {
+                log.debug("Stream de salida cerrado", e);
+            }
+        });
+        outputThread.setDaemon(true);
+        outputThread.start();
+
+        Thread errorThread = new Thread(() -> {
+            try (BufferedReader reader = getStderrReader(process)) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    onErrorLine.accept(line);
+                }
+            } catch (IOException e) {
+                log.debug("Stream de error cerrado", e);
+            }
+        });
+        errorThread.setDaemon(true);
+        errorThread.start();
+    }
+
+    /**
+     * Monitorea la salida del proceso y emite eventos al EventBus
+     * @param process Proceso a monitorear
+     * @param instance_name ID de la versión para identificar en los eventos
+     */
+    public void monitorProcessWithEvents(Process process, String instance_name) {
+        monitorProcessOutput(process,
+                line -> {
+                    EVENT_BUS.emit(EventType.GAME_OUTPUT,
+                            EventData.builder()
+                                    .put("instance_name", instance_name)
+                                    .put("line", line)
+                                    .put("type", "stdout")
+                                    .build());
+                },
+                line -> {
+                    EVENT_BUS.emit(EventType.GAME_OUTPUT,
+                            EventData.builder()
+                                    .put("version", instance_name)
+                                    .put("line", line)
+                                    .put("type", "stderr")
+                                    .build());
+                }
+        );
+
+        // Monitorear el proceso para detectar cuando termina
+        new Thread(() -> {
+            try {
+                int exitCode = process.waitFor();
+                EVENT_BUS.emit(EventType.GAME_EXITED,
+                        EventData.builder()
+                                .put("version", instance_name)
+                                .put("exitCode", exitCode)
+                                .build());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+
+    /**
+     * Guarda el log completo del juego a un archivo
+     * @param process Proceso del juego
+     * @param outputFile Archivo donde guardar el log
+     * @throws IOException Si hay error al escribir el archivo
+     */
+    public void saveGameLogToFile(Process process, Path outputFile) throws IOException {
+        try (BufferedReader stdoutReader = getStdoutReader(process);
+             BufferedReader stderrReader = getStderrReader(process);
+             PrintWriter writer = new PrintWriter(Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8))) {
+
+            String line;
+            // Leer stdout
+            while ((line = stdoutReader.readLine()) != null) {
+                writer.println("[STDOUT] " + line);
             }
 
-            Launcher.launch(
-                    versionManifestPath,
-                    pm.getGamePath().toString(),
-                    instanceDir,
-                    sm.getUsername(),
-                    getJavaPath(minimumJREVersion),
-                    sm.getMinMemoryInMB() + "M",
-                    sm.getMaxMemoryInMB() + "M",
-                    900, 600, false, LaunchOptions.defaults(), customArgs);
-        } catch (IOException | InterruptedException e) {
-            log.error("Error launching version: {}", versionId, e);
+            // Leer stderr (podría haber datos pendientes)
+            while ((line = stderrReader.readLine()) != null) {
+                writer.println("[STDERR] " + line);
+            }
+        }
+    }
+
+    /**
+     * Obtiene el PID del proceso si está disponible
+     * @param process Proceso del juego
+     * @return PID del proceso o -1 si no está disponible
+     */
+    public long getProcessPid(Process process) {
+        try {
+            if (process.getClass().getName().equals("java.lang.UNIXProcess")) {
+                java.lang.reflect.Field pidField = process.getClass().getDeclaredField("pid");
+                pidField.setAccessible(true);
+                return pidField.getLong(process);
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo obtener el PID del proceso", e);
+        }
+        return -1;
+    }
+
+    /**
+     * Verifica si el proceso sigue en ejecución
+     * @param process Proceso a verificar
+     * @return true si el proceso está vivo
+     */
+    public boolean isProcessAlive(Process process) {
+        return process != null && process.isAlive();
+    }
+
+    /**
+     * Espera a que el proceso termine con un timeout
+     * @param process Proceso a esperar
+     * @param timeout Tiempo máximo en segundos
+     * @return true si el proceso terminó dentro del timeout
+     */
+    public boolean waitForProcess(Process process, int timeout) {
+        try {
+            return process.waitFor(timeout, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 
