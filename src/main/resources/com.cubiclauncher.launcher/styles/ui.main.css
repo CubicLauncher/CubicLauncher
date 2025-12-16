@@ -1,4 +1,4 @@
-/* Cubic CDARK theme
+/* Cubic cDARK theme
 
 /* Base Colors - Minimalista y discreto */
 .root {
@@ -62,6 +62,50 @@
   -fx-text-fill: #666666;
   -fx-font-size: 10px;
   -fx-font-style: italic;
+}
+
+/* Instance Tabs */
+.instance-tabs {
+  -fx-background-color: transparent;
+}
+
+.instance-tabs .tab-header-area {
+  -fx-background-color: #151515;
+  -fx-border-color: #252525;
+  -fx-border-width: 0 0 1 0;
+}
+
+.instance-tabs .tab-header-background {
+  -fx-background-color: transparent;
+}
+
+.instance-tabs .tab {
+  -fx-background-color: transparent;
+  -fx-background-insets: 0;
+  -fx-background-radius: 0;
+  -fx-padding: 12 24;
+  -fx-border-color: transparent;
+}
+
+.instance-tabs .tab:selected {
+  -fx-background-color: #0f0f0f;
+  -fx-border-color: #e0e0e0;
+  -fx-border-width: 0 0 2 0;
+}
+
+.instance-tabs .tab .tab-label {
+  -fx-text-fill: #888888;
+  -fx-font-size: 12px;
+  -fx-font-weight: 500;
+}
+
+.instance-tabs .tab:selected .tab-label {
+  -fx-text-fill: #e0e0e0;
+}
+
+.instance-tabs .tab-content-area {
+  -fx-background-color: #0f0f0f;
+  -fx-padding: 0;
 }
 
 .sidebar-action-button {
@@ -592,51 +636,6 @@
 .settings-navigation .nav-button.selected {
     -fx-background-color: #2a2a2a;
     -fx-text-fill: #ffffff;
-}
-
-
-/* Instance Tabs */
-.instance-tabs {
-  -fx-background-color: transparent;
-}
-
-.instance-tabs .tab-header-area {
-  -fx-background-color: #151515;
-  -fx-border-color: #252525;
-  -fx-border-width: 0 0 1 0;
-}
-
-.instance-tabs .tab-header-background {
-  -fx-background-color: transparent;
-}
-
-.instance-tabs .tab {
-  -fx-background-color: transparent;
-  -fx-background-insets: 0;
-  -fx-background-radius: 0;
-  -fx-padding: 12 24;
-  -fx-border-color: transparent;
-}
-
-.instance-tabs .tab:selected {
-  -fx-background-color: #0f0f0f;
-  -fx-border-color: #e0e0e0;
-  -fx-border-width: 0 0 2 0;
-}
-
-.instance-tabs .tab .tab-label {
-  -fx-text-fill: #888888;
-  -fx-font-size: 12px;
-  -fx-font-weight: 500;
-}
-
-.instance-tabs .tab:selected .tab-label {
-  -fx-text-fill: #e0e0e0;
-}
-
-.instance-tabs .tab-content-area {
-  -fx-background-color: #0f0f0f;
-  -fx-padding: 0;
 }
 
 /* Controles dentro de las pestañas */

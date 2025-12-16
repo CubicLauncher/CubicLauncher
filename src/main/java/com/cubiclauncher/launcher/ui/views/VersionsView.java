@@ -31,6 +31,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class VersionsView {
@@ -38,6 +39,7 @@ public class VersionsView {
     private static final InstanceManager instanceManager = InstanceManager.getInstance();
     private static final TaskManager taskManager = TaskManager.getInstance();
     private static final EventBus eventBus = EventBus.get();
+    private static final List<EventBus.Subscription> subscriptions = new ArrayList<>();
 
     // Estado del lazy loading y referencias
     private static boolean availableVersionsLoaded = false;
@@ -60,6 +62,14 @@ public class VersionsView {
         setupEventListeners();
 
         return root;
+    }
+
+    // TODO: Llamar a este método cuando la vista ya no se utilice para evitar fugas de memoria
+    public static void dispose() {
+        for (EventBus.Subscription subscription : subscriptions) {
+            subscription.unsubscribe();
+        }
+        subscriptions.clear();
     }
 
     private static VBox createHeader() {
@@ -186,7 +196,7 @@ public class VersionsView {
 
     private static void setupEventListeners() {
         // Actualizar lista cuando se complete una descarga
-        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, eventData -> {
+        subscriptions.add(eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, eventData -> {
             String downloadedVersion = eventData.getString("version");
 
             Platform.runLater(() -> {
@@ -204,7 +214,7 @@ public class VersionsView {
 
                 System.out.println("✓ Lista de versiones actualizada después de descargar: " + downloadedVersion);
             });
-        });
+        }));
     }
 
     private static VBox createInstanceCreationSection() {
@@ -248,10 +258,10 @@ public class VersionsView {
                 ));
 
         // EVENT BUS: Actualizar combo cuando se descargue una versión
-        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, eventData -> Platform.runLater(() -> taskManager.runAsync(launcher::getInstalledVersions)
+        subscriptions.add(eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, eventData -> Platform.runLater(() -> taskManager.runAsync(launcher::getInstalledVersions)
                 .thenAccept(versions -> Platform.runLater(() ->
                         versionCombo.setItems(FXCollections.observableArrayList(versions))
-                ))));
+                )))));
 
         grid.add(nameLabel, 0, 0);
         grid.add(nameField, 1, 0);

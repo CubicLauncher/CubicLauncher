@@ -42,9 +42,10 @@ public class EventBus {
     /**
      * Registrar un listener para un tipo de evento
      */
-    public void subscribe(EventType type, Consumer<EventData> listener) {
+    public Subscription subscribe(EventType type, Consumer<EventData> listener) {
         listeners.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>())
                 .add(listener);
+        return new Subscription(type, listener, this);
     }
 
     /**
@@ -71,8 +72,24 @@ public class EventBus {
         listeners.clear();
     }
 
+    /**
+     * Eliminar un listener
+     */
+    public void unsubscribe(EventType type, Consumer<EventData> listener) {
+        List<Consumer<EventData>> eventListeners = listeners.get(type);
+        if (eventListeners != null) {
+            eventListeners.remove(listener);
+        }
+    }
+
     public static class Holder {
         static final EventBus INSTANCE = new EventBus();
     }
 
+    public record Subscription(EventType eventType, Consumer<EventData> listener, EventBus eventBus) {
+
+        public void unsubscribe() {
+                eventBus.unsubscribe(eventType, listener);
+            }
+        }
 }

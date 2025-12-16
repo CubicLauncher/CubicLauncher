@@ -43,7 +43,11 @@ public class LauncherWrapper {
     static final PathManager pm = PathManager.getInstance();
     private static final EventBus EVENT_BUS = EventBus.get();
     private static final Logger log = LoggerFactory.getLogger(LauncherWrapper.class);
+    private static final long PROGRESS_UPDATE_INTERVAL = 100; // 100ms
     private static LauncherWrapper instance;
+    private final Queue<String> downloadQueue = new LinkedList<>();
+    private boolean isDownloading = false;
+    private long lastProgressUpdate = 0;
 
     static {
         try {
@@ -77,26 +81,46 @@ public class LauncherWrapper {
     private native void startMinecraftDownload(String targetPath, String version, DownloadCallback callback);
 
     public void downloadMinecraftVersion(String versionId) {
+        log.info("Añadiendo a la cola de descargas la versión: {}", versionId);
+        downloadQueue.add(versionId);
+        startNextDownload();
+    }
+
+    private void startNextDownload() {
+        if (isDownloading || downloadQueue.isEmpty()) {
+            return; // Si ya hay una descarga o la cola está vacía, no hacer nada
+        }
+
+        isDownloading = true;
+        String versionId = downloadQueue.poll();
         log.info("Iniciando descarga de versión: {}", versionId);
-        // TODO: Implementar queue de descarga para permitir una descarga a la vez.
+
         startMinecraftDownload(pm.getGamePath().resolve("shared").toString(),
                 versionId,
                 new DownloadCallback() {
                     @Override
                     public void onProgress(int type, int current, int total, String fileName) {
-                        EVENT_BUS.emit(EventType.DOWNLOAD_PROGRESS,
-                                EventData.downloadProgress(type, current, total, fileName, versionId));
+                        long now = System.currentTimeMillis();
+                        if (now - lastProgressUpdate > PROGRESS_UPDATE_INTERVAL || current == total) {
+                            EVENT_BUS.emit(EventType.DOWNLOAD_PROGRESS,
+                                    EventData.downloadProgress(type, current, total, fileName, versionId));
+                            lastProgressUpdate = now;
+                        }
                     }
 
                     @Override
                     public void onComplete() {
                         EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED, EventData.builder().put("version", versionId).build());
+                        isDownloading = false;
+                        startNextDownload();
                     }
 
                     @Override
                     public void onError(String error) {
                         EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED,
                                 EventData.error("Error en descarga: " + error, null));
+                        isDownloading = false;
+                        startNextDownload();
                     }
                 });
     }
@@ -112,8 +136,7 @@ public class LauncherWrapper {
 
     public List<String> getAvailableVersions() {
         List<String> versions = new ArrayList<>();
-        try {
-            var client = HttpClient.newHttpClient();
+        try (var client = HttpClient.newHttpClient()) {
             var request = HttpRequest.newBuilder()
                     .uri(URI.create("""
                             https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"""))

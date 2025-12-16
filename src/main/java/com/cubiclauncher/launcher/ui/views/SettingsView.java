@@ -18,9 +18,6 @@
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.ui.controllers.SettingsController;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -28,16 +25,13 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-
-import java.util.List;
 
 public class SettingsView {
     private static SettingsController controller;
     private static TextField javaPathField;
-    private static boolean isScrollingProgrammatically = false;
 
     public static VBox create(Stage stage) {
         controller = new SettingsController();
@@ -52,37 +46,24 @@ public class SettingsView {
         Label settingsTitle = new Label("Ajustes");
         settingsTitle.getStyleClass().add("welcome-title");
 
-        VBox launcherSection = createSection("Launcher", createLauncherPane());
-        VBox minecraftSection = createSection("Minecraft", createMinecraftPane());
-        VBox javaSection = createSection("Java", createJavaPane());
+        VBox launcherPane = createLauncherPane();
+        VBox minecraftPane = createMinecraftPane();
+        VBox javaPane = createJavaPane();
 
-        VBox contentVBox = new VBox(30);
-        contentVBox.setPadding(new Insets(5));
-        contentVBox.getStyleClass().add("settings-content");
-        contentVBox.getChildren().addAll(launcherSection, minecraftSection, javaSection);
+        StackPane contentStack = new StackPane(launcherPane, minecraftPane, javaPane);
+        contentStack.setAlignment(Pos.TOP_CENTER);
 
-        ScrollPane scrollPane = new ScrollPane(contentVBox);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.getStyleClass().add("settings-scroll-pane");
+        VBox navigationMenu = createNavigationMenu(contentStack, launcherPane, minecraftPane, javaPane);
 
-        VBox navigationMenu = createNavigationMenu(scrollPane, contentVBox, launcherSection, minecraftSection, javaSection);
-
-        scrollPane.vvalueProperty().addListener((obs, oldVal, newVal) -> {
-            if (!isScrollingProgrammatically) {
-                updateNavigationSelection(scrollPane, contentVBox, navigationMenu, List.of(launcherSection, minecraftSection, javaSection));
-            }
-        });
-
-        HBox mainLayout = new HBox(20, navigationMenu, scrollPane);
-        HBox.setHgrow(scrollPane, Priority.ALWAYS);
+        HBox mainLayout = new HBox(20, navigationMenu, contentStack);
+        HBox.setHgrow(contentStack, Priority.ALWAYS);
         VBox.setVgrow(mainLayout, Priority.ALWAYS);
 
         settingsLayout.getChildren().addAll(settingsTitle, mainLayout);
         return settingsLayout;
     }
 
-    private static VBox createNavigationMenu(ScrollPane scrollPane, VBox content, Node... sections) {
+    private static VBox createNavigationMenu(StackPane contentStack, Node... sections) {
         VBox navigation = new VBox(10);
         navigation.setPadding(new Insets(10));
         navigation.getStyleClass().add("settings-navigation");
@@ -92,12 +73,17 @@ public class SettingsView {
         Button minecraftButton = createNavButton("Minecraft");
         Button javaButton = createNavButton("Java");
 
-        launcherButton.setOnAction(e -> scrollTo(scrollPane, content, sections[0], navigation, launcherButton));
-        minecraftButton.setOnAction(e -> scrollTo(scrollPane, content, sections[1], navigation, minecraftButton));
-        javaButton.setOnAction(e -> scrollTo(scrollPane, content, sections[2], navigation, javaButton));
+        launcherButton.setOnAction(e -> showSection(contentStack, sections[0], navigation, launcherButton));
+        minecraftButton.setOnAction(e -> showSection(contentStack, sections[1], navigation, minecraftButton));
+        javaButton.setOnAction(e -> showSection(contentStack, sections[2], navigation, javaButton));
 
         navigation.getChildren().addAll(launcherButton, minecraftButton, javaButton);
-        Platform.runLater(() -> launcherButton.getStyleClass().add("selected"));
+
+        Platform.runLater(() -> {
+            showSection(contentStack, sections[0], navigation, launcherButton);
+            launcherButton.getStyleClass().add("selected");
+        });
+
         return navigation;
     }
 
@@ -108,50 +94,10 @@ public class SettingsView {
         return button;
     }
 
-    private static void scrollTo(ScrollPane scrollPane, VBox content, Node section, VBox navigation, Button button) {
-        isScrollingProgrammatically = true;
+    private static void showSection(StackPane contentStack, Node section, VBox navigation, Button button) {
+        contentStack.getChildren().forEach(child -> child.setVisible(false));
+        section.setVisible(true);
         updateSelectedButton(navigation, button);
-
-        double contentHeight = content.getBoundsInLocal().getHeight();
-        double nodeY = section.getBoundsInParent().getMinY();
-        double vValue = nodeY / (contentHeight - scrollPane.getViewportBounds().getHeight());
-
-        Timeline timeline = new Timeline();
-        KeyValue kv = new KeyValue(scrollPane.vvalueProperty(), vValue);
-        KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
-        timeline.getKeyFrames().add(kf);
-        timeline.setOnFinished(event -> isScrollingProgrammatically = false);
-        timeline.play();
-    }
-
-    private static void updateNavigationSelection(ScrollPane scrollPane, VBox content, VBox navigation, List<Node> sections) {
-        double viewportHeight = scrollPane.getViewportBounds().getHeight();
-        double scrollY = (content.getBoundsInLocal().getHeight() - viewportHeight) * scrollPane.getVvalue();
-        Node closestSection = getNode(sections, scrollY, viewportHeight);
-
-        if (closestSection != null) {
-            int selectedIndex = sections.indexOf(closestSection);
-            if (selectedIndex != -1) {
-                updateSelectedButton(navigation, (Button) navigation.getChildren().get(selectedIndex));
-            }
-        }
-    }
-
-    private static Node getNode(List<Node> sections, double scrollY, double viewportHeight) {
-        double viewportCenter = scrollY + viewportHeight / 2;
-
-        Node closestSection = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (Node section : sections) {
-            double sectionCenter = section.getBoundsInParent().getMinY() + section.getBoundsInLocal().getHeight() / 2;
-            double distance = Math.abs(sectionCenter - viewportCenter);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestSection = section;
-            }
-        }
-        return closestSection;
     }
 
     private static void updateSelectedButton(VBox parent, Button selectedButton) {
@@ -159,17 +105,10 @@ public class SettingsView {
         selectedButton.getStyleClass().add("selected");
     }
 
-    private static VBox createSection(String title, VBox pane) {
-        VBox sectionWrapper = new VBox(10);
-        Label sectionTitle = new Label(title);
-        sectionTitle.getStyleClass().add("settings-category-title");
-        sectionWrapper.getChildren().addAll(sectionTitle, pane);
-        return sectionWrapper;
-    }
-
     private static VBox createLauncherPane() {
         VBox pane = new VBox(15);
         pane.getStyleClass().add("settings-card");
+        pane.setPadding(new Insets(25));
         HBox languageBox = createLanguageSelector();
         CheckBox autoUpdateCheckbox = new CheckBox("Habilitar actualizaciones automáticas");
         autoUpdateCheckbox.setSelected(controller.getSettings().isAutoUpdate());
@@ -217,6 +156,7 @@ public class SettingsView {
     private static VBox createMinecraftPane() {
         VBox pane = new VBox(15);
         pane.getStyleClass().add("settings-card");
+        pane.setPadding(new Insets(25));
         pane.getChildren().addAll(createVersionVisibilitySection(), new Separator(), createIntegrationsSection(), new Separator(), createPerformanceSection());
         return pane;
     }
@@ -257,6 +197,7 @@ public class SettingsView {
     private static VBox createJavaPane() {
         VBox pane = new VBox(15);
         pane.getStyleClass().add("settings-card");
+        pane.setPadding(new Insets(25));
         pane.getChildren().addAll(createJavaExecutableSection(), new Separator(), createMemoryAllocationSection(), new Separator(), createAdvancedSection());
         return pane;
     }
