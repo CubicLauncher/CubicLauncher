@@ -46,16 +46,18 @@ public class InstanceManager {
     private final PathManager pathManager = PathManager.getInstance();
     private final LauncherWrapper launcherWrapper = LauncherWrapper.getInstance();
     private final TaskManager taskManager;
+    private final DownloadManager downloadManager;
     private final List<Instance> instances;
     private final Path instancesDir = pathManager.getInstancePath();
 
     private InstanceManager() {
         this.taskManager = TaskManager.getInstance();
+        this.downloadManager = DownloadManager.getInstance();
         this.instances = new ArrayList<>();
 
         loadInstances();
         eventBus.
-                subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> taskManager.runAsync(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
+                subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> downloadManager.submitDownload(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
         eventBus.
                 subscribe(EventType.REQUEST_LAUNCH_INSTANCE, (eventData -> taskManager.runAsync(() -> startInstance(eventData.getString("instance_name")))));
         eventBus.

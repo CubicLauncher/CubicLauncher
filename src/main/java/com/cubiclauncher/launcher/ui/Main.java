@@ -17,6 +17,7 @@
 
 package com.cubiclauncher.launcher.ui;
 
+import com.cubiclauncher.launcher.core.DownloadManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -53,6 +54,7 @@ public class Main extends Application {
     public void stop() {
         log.info("Apagando threads");
         TaskManager.getInstance().shutdown();
+        DownloadManager.getInstance().shutdown();
         log.info("Eliminando listeners de eventos");
         eventBus.clearAll();
         log.info("Closing CubicLauncher. Goodbye :)");
