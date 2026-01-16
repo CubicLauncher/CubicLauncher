@@ -22,6 +22,7 @@ import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,12 +57,12 @@ public class InstanceManager {
         this.instances = new ArrayList<>();
 
         loadInstances();
-        eventBus.
-                subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> downloadManager.submitDownload(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
-        eventBus.
-                subscribe(EventType.REQUEST_LAUNCH_INSTANCE, (eventData -> taskManager.runAsync(() -> startInstance(eventData.getString("instance_name")))));
-        eventBus.
-                subscribe(EventType.REQUEST_INSTANCE_CREATION, (eventData -> taskManager.runAsync(() -> createInstance(eventData.getString("instance_name"), eventData.getString("instance_version")))));
+        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> downloadManager
+                .submitDownload(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
+        eventBus.subscribe(EventType.REQUEST_LAUNCH_INSTANCE,
+                (eventData -> taskManager.runAsync(() -> startInstance(eventData.getString("instance_name")))));
+        eventBus.subscribe(EventType.REQUEST_INSTANCE_CREATION, (eventData -> taskManager.runAsync(
+                () -> createInstance(eventData.getString("instance_name"), eventData.getString("instance_version")))));
     }
 
     // Singleton getter
@@ -179,17 +180,18 @@ public class InstanceManager {
                 () -> {
                     if (!launcherWrapper.getInstalledVersions().contains(instanceToStart.getVersion())) {
                         log.info("Versión {} no instalada, iniciando descarga", instanceToStart.getVersion());
-                        eventBus.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.builder().put("version", instanceToStart.version).build());
+                        eventBus.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED,
+                                EventData.builder().put("version", instanceToStart.version).build());
                         return;
                     }
 
                     log.info("Iniciando instancia '{}' con versión {}", instanceName, instanceToStart.getVersion());
-                    EventBus.get().emit(EventType.GAME_STARTED, EventData.builder().put("version", instanceName).build());
+                    EventBus.get().emit(EventType.GAME_STARTED,
+                            EventData.builder().put("version", instanceName).build());
                     try {
                         Process process = launcherWrapper.launchVersion(
                                 instanceToStart.getVersion(),
-                                instanceToStart.getInstanceDir(instancesDir)
-                        );
+                                instanceToStart.getInstanceDir(instancesDir));
                         // Guardar el proceso en la instancia
                         instanceToStart.attachProcess(process);
 
@@ -216,6 +218,12 @@ public class InstanceManager {
                         launcherWrapper.monitorProcessWithEvents(process, instanceName);
 
                         log.info("Instancia '{}' iniciada exitosamente", instanceName);
+
+                        // Cerrar el launcher si la opción está activada
+                        if (SettingsManager.getInstance().isCloseLauncherOnGameStart()) {
+                            log.info("Cerrando el launcher tras iniciar el juego (opción activada)");
+                            Platform.exit();
+                        }
                     } catch (IOException e) {
                         log.error("Error al lanzar la instancia '{}': {}", instanceName, e.getMessage(), e);
                         eventBus.emit(EventType.GAME_CRASHED,
@@ -229,8 +237,7 @@ public class InstanceManager {
                     log.error("Error iniciando instancia '{}': {}", instanceName, error.getMessage(), error);
                     eventBus.emit(EventType.GAME_CRASHED,
                             EventData.error("Error iniciando instancia: " + instanceName, error));
-                }
-        );
+                });
     }
 
     /**
@@ -283,11 +290,14 @@ public class InstanceManager {
                 // 2. Save updated instance file
                 if (!saveInstance(instance)) {
                     // saveInstance failed and logged the error. Revert the directory move.
-                    log.warn("Falló el guardado de la configuración, revirtiendo el renombrado del directorio de la instancia.");
+                    log.warn(
+                            "Falló el guardado de la configuración, revirtiendo el renombrado del directorio de la instancia.");
                     try {
                         Files.move(newDir, oldDir, StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException revertEx) {
-                        log.error("¡FALLO CRÍTICO! No se pudo revertir el renombrado del directorio. El directorio '{}' debe ser renombrado a '{}' manualmente.", newDir, oldDir, revertEx);
+                        log.error(
+                                "¡FALLO CRÍTICO! No se pudo revertir el renombrado del directorio. El directorio '{}' debe ser renombrado a '{}' manualmente.",
+                                newDir, oldDir, revertEx);
                     }
                     instance.setName(originalName); // Revert name on object
                     return false;
@@ -425,6 +435,7 @@ public class InstanceManager {
         public void updateLastPlayed() {
             this.lastPlayed = System.currentTimeMillis();
         }
+
         public String getLastPlayedFormatted() {
             Instant instant = Instant.ofEpochMilli(this.lastPlayed);
             LocalDateTime dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
@@ -449,8 +460,10 @@ public class InstanceManager {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
             Instance instance = (Instance) o;
             return name.equals(instance.name);
         }
