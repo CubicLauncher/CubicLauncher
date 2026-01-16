@@ -131,6 +131,12 @@ public class Main extends Application {
         }
 
         // Fade out
+        FadeTransition fadeOut = getFadeOut(newView, currentView);
+
+        fadeOut.play();
+    }
+
+    private FadeTransition getFadeOut(Node newView, Node currentView) {
         FadeTransition fadeOut = new FadeTransition(Duration.millis(150), currentView);
         fadeOut.setFromValue(1.0);
         fadeOut.setToValue(0.0);
@@ -147,7 +153,6 @@ public class Main extends Application {
                 fadeIn.play();
             }
         });
-
-        fadeOut.play();
+        return fadeOut;
     }
 }
