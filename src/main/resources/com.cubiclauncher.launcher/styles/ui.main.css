@@ -541,57 +541,89 @@
 }
 
 .settings-category-title {
-  -fx-text-fill: #999999;
-  -fx-font-size: 12px;
-  -fx-font-weight: bold;
+  -fx-text-fill: #777777;
+  -fx-font-size: 11px;
+  -fx-font-weight: 700;
   -fx-text-transform: uppercase;
-  -fx-padding: 0 0 0 5;
+  -fx-letter-spacing: 1px;
+  -fx-padding: 0 0 8 4;
 }
 
 .settings-card {
-  -fx-background-color: #151515;
-  -fx-border-color: #252525;
+  -fx-background-color: linear-gradient(to bottom right, #1a1a1a, #151515);
+  -fx-border-color: #2a2a2a;
   -fx-border-width: 1;
-  -fx-border-radius: 8;
-  -fx-background-radius: 8;
-  -fx-padding: 20;
+  -fx-border-radius: 12;
+  -fx-background-radius: 12;
+  -fx-padding: 24;
+  /* subtle inner glow effect if supported by border */
+}
+
+.settings-card:hover {
+  -fx-border-color: #3a3a3a;
 }
 
 .settings-subtitle {
-  -fx-text-fill: #b0b0b0;
-  -fx-font-size: 14px;
-  -fx-font-weight: 500;
-  -fx-padding: 0 0 5 0;
+  -fx-text-fill: #d0d0d0;
+  -fx-font-size: 15px;
+  -fx-font-weight: 600;
+  -fx-padding: 0 0 10 0;
 }
 
 .settings-navigation {
-  -fx-background-color: #151515;
-  -fx-border-color: #252525;
+  -fx-background-color: #121212;
+  -fx-border-color: #222222;
   -fx-border-width: 1;
-  -fx-border-radius: 8;
-  -fx-background-radius: 8;
+  -fx-border-radius: 10;
+  -fx-background-radius: 10;
+  -fx-padding: 5;
 }
 
 .settings-navigation .nav-button {
   -fx-background-color: transparent;
-  -fx-text-fill: #b0b0b0;
+  -fx-text-fill: #999999;
   -fx-font-weight: 500;
+  -fx-font-size: 13px;
   -fx-border-color: transparent;
-  -fx-border-width: 0;
+  -fx-border-width: 0 0 0 3;
+  /* Indicator on the left */
   -fx-background-radius: 6;
-  -fx-border-radius: 6;
-  -fx-padding: 12 18;
+  -fx-border-radius: 0;
+  -fx-padding: 10 15;
   -fx-alignment: CENTER_LEFT;
+  -fx-cursor: hand;
 }
 
 .settings-navigation .nav-button:hover {
-  -fx-background-color: #1f1f1f;
-  -fx-text-fill: #e0e0e0;
+  -fx-background-color: #1a1a1a;
+  -fx-text-fill: #cccccc;
 }
 
 .settings-navigation .nav-button.selected {
-  -fx-background-color: #2a2a2a;
+  -fx-background-color: #1e1e1e;
   -fx-text-fill: #ffffff;
+  -fx-border-color: #e0e0e0;
+  /* White/Light indicator */
+  -fx-font-weight: 600;
+}
+
+/* Settings Controls - Readability improvements */
+.settings-card .label {
+  -fx-text-fill: #e0e0e0;
+  -fx-font-size: 13px;
+  -fx-font-weight: 500;
+}
+
+.settings-card .check-box .text {
+  -fx-fill: #e0e0e0;
+  -fx-font-size: 13px;
+  -fx-font-weight: 500;
+}
+
+.settings-card .radio-button .text {
+  -fx-fill: #e0e0e0;
+  -fx-font-size: 13px;
+  -fx-font-weight: 500;
 }
 
 
