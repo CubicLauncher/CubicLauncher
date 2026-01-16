@@ -27,7 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Manages a queue for download tasks to control concurrency and reduce memory usage.
+ * Manages a queue for download tasks to control concurrency and reduce memory
+ * usage.
  */
 public class DownloadManager {
     private static DownloadManager instance;
@@ -61,7 +62,7 @@ public class DownloadManager {
             try {
                 downloadTask.run();
             } catch (Exception e) {
-            } finally {
+                log.error("Error executing download task: {}", e.getMessage(), e);
             }
         });
     }
@@ -70,6 +71,7 @@ public class DownloadManager {
      * Shuts down the download executor service.
      */
     public void shutdown() {
+        log.info("Shutting down DownloadManager...");
         downloadExecutor.shutdown();
         try {
             if (!downloadExecutor.awaitTermination(5, TimeUnit.SECONDS)) {

@@ -17,12 +17,10 @@
 
 package com.cubiclauncher.launcher.ui.controllers;
 
-import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
-import jdk.jfr.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,24 +29,27 @@ import org.slf4j.LoggerFactory;
  */
 public class InstanceController {
     private static final Logger log = LoggerFactory.getLogger(InstanceController.class);
-    private static final InstanceManager instanceManager = InstanceManager.getInstance();
     private static final TaskManager taskManager = TaskManager.getInstance();
     private static final EventBus eventBus = EventBus.get();
+
     /**
      * Configura el manejo del botón JUGAR
      */
     public static void launchInstance(String instance) {
         taskManager.runAsync(() -> {
             try {
-                eventBus.emit(EventType.REQUEST_LAUNCH_INSTANCE, EventData.builder().put("instance_name", instance).build());
+                eventBus.emit(EventType.REQUEST_LAUNCH_INSTANCE,
+                        EventData.builder().put("instance_name", instance).build());
                 log.info("Launch request for {}", instance);
             } catch (Exception e) {
                 log.error("Error while requesting launch for: {}", instance);
             }
         });
     }
+
     public static void createInstance(String name, String version) {
-        eventBus.emit(EventType.REQUEST_INSTANCE_CREATION, EventData.builder().put("instance_name", name).put("instance_version", version).build());
+        eventBus.emit(EventType.REQUEST_INSTANCE_CREATION,
+                EventData.builder().put("instance_name", name).put("instance_version", version).build());
         log.info("Create instance request for {} ({})", name, version);
     }
 }
