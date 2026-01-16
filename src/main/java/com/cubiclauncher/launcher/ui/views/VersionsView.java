@@ -17,6 +17,7 @@
 
 package com.cubiclauncher.launcher.ui.views;
 
+import com.cubiclauncher.launcher.core.DownloadManager;
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.LauncherWrapper;
 import com.cubiclauncher.launcher.core.TaskManager;
@@ -45,6 +46,7 @@ public class VersionsView {
     private final LauncherWrapper launcher = LauncherWrapper.getInstance();
     private final InstanceManager instanceManager = InstanceManager.getInstance();
     private final TaskManager taskManager = TaskManager.getInstance();
+    private final DownloadManager downloadManager = DownloadManager.getInstance();
     private final EventBus eventBus = EventBus.get();
 
     // Estado del lazy loading y referencias
@@ -256,7 +258,7 @@ public class VersionsView {
                     loadInstalledVersions();
                 }
 
-                // Si estamos viendo "Disponibles", actualizar para mostrar (I)
+                // Sí estamos viendo "Disponibles", actualizar para mostrar (I)
                 if (currentAvailableBtn != null && currentAvailableBtn.isSelected()) {
                     // Forzar recarga para actualizar el estado instalado/no instalado
                     availableVersionsLoaded = false;
@@ -579,8 +581,8 @@ public class VersionsView {
             if (!isInstalled) {
                 actionBtn.setOnAction(e -> {
                     actionBtn.setDisable(true);
-                    actionBtn.setText("Instalando...");
-                    taskManager.runAsync(() -> launcher.downloadMinecraftVersion(version));
+                    actionBtn.setText("En cola...");
+                    downloadManager.submitDownload(() -> launcher.downloadMinecraftVersion(version));
                     // EVENT BUS se encargará de actualizar la UI cuando termine
                 });
             }
