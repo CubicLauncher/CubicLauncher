@@ -41,7 +41,7 @@ public class DownloadManager {
             t.setDaemon(true);
             return t;
         };
-        // Use a fixed thread pool to limit concurrent downloads
+        // Utiliza un grupo de subprocesos fijo para limitar las descargas simultáneas.
         this.downloadExecutor = Executors.newFixedThreadPool(3, factory);
     }
 
@@ -58,14 +58,14 @@ public class DownloadManager {
      * @param downloadTask The download task to execute.
      */
     public void submitDownload(Runnable downloadTask) {
-        log.info("New download task submitted.");
+        log.info("Nueva tarea de descarga enviada.");
         downloadExecutor.submit(() -> {
             try {
                 downloadTask.run();
             } catch (Exception e) {
-                log.error("Error in download task: {}", e.getMessage(), e);
+                log.error("Error en la tarea de descarga: {}", e.getMessage(), e);
             } finally {
-                log.info("Download task finished.");
+                log.info("Download Descarga completada.");
             }
         });
     }
@@ -74,18 +74,18 @@ public class DownloadManager {
      * Shuts down the download executor service.
      */
     public void shutdown() {
-        log.info("Shutting down DownloadManager...");
+        log.info("Cerrando DownloadManager...");
         downloadExecutor.shutdown();
         try {
             if (!downloadExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                log.warn("Timeout waiting for download tasks to complete, forcing shutdown...");
+                log.warn("Tiempo de espera agotado esperando a que se completen las tareas de descarga, forzando el apagado...");
                 downloadExecutor.shutdownNow();
             }
         } catch (InterruptedException e) {
-            log.error("Interrupted while shutting down DownloadManager", e);
+            log.error("Interrumpido durante el cierre de DownloadManager", e);
             downloadExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }
-        log.info("DownloadManager shut down.");
+        log.info("Descargar el gestor de descargas.");
     }
 }
