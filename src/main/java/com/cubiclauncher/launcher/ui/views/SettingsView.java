@@ -119,7 +119,7 @@ public class SettingsView {
         CheckBox closeLaunchCheckbox = new CheckBox("Cerrar launcher al abrir el juego");
         closeLaunchCheckbox.setSelected(controller.getSettings().isCloseLauncherOnGameStart());
         closeLaunchCheckbox.setOnAction(e -> controller.onCloseLauncherChanged(closeLaunchCheckbox.isSelected()));
-        CheckBox nativeStyles = new CheckBox("Utilizar estilos nativos");
+        CheckBox nativeStyles = new CheckBox("Utilizar estilos nativos (MUY BUG)");
         nativeStyles.setSelected(controller.getSettings().isNative_styles());
         nativeStyles.setOnAction(e -> controller.onNativeStylesChanged(nativeStyles.isSelected()));
         VBox infoSection = createLauncherInfo();
@@ -141,7 +141,7 @@ public class SettingsView {
 
     private static VBox createLauncherInfo() {
         VBox infoBox = new VBox(5);
-        Label versionLabel = new Label("Versión: 2501a");
+        Label versionLabel = new Label("Versión: 2502a");
         Label devLabel = new Label("Desarrollado por: Santiagolxx, Notstaff & CubicLauncher contributors");
         HBox sourceCodeBox = new HBox(5);
         sourceCodeBox.setAlignment(Pos.CENTER_LEFT);

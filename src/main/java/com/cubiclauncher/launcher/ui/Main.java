@@ -17,6 +17,7 @@
 
 package com.cubiclauncher.launcher.ui;
 
+import com.cubiclauncher.launcher.core.DownloadManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -53,6 +54,7 @@ public class Main extends Application {
     public void stop() {
         log.info("Apagando threads");
         TaskManager.getInstance().shutdown();
+        DownloadManager.getInstance().shutdown();
         log.info("Eliminando listeners de eventos");
         eventBus.clearAll();
         log.info("Closing CubicLauncher. Goodbye :)");
@@ -84,7 +86,7 @@ public class Main extends Application {
             sidebar.clearSelection();
         });
         sidebar.setOnVersionsAction(() -> {
-            showViewWithAnimation(VersionsView.create());
+            showViewWithAnimation(VersionsView.getInstance().create());
             sidebar.clearSelection();
         });
 
@@ -129,6 +131,12 @@ public class Main extends Application {
         }
 
         // Fade out
+        FadeTransition fadeOut = getFadeOut(newView, currentView);
+
+        fadeOut.play();
+    }
+
+    private FadeTransition getFadeOut(Node newView, Node currentView) {
         FadeTransition fadeOut = new FadeTransition(Duration.millis(150), currentView);
         fadeOut.setFromValue(1.0);
         fadeOut.setToValue(0.0);
@@ -145,7 +153,6 @@ public class Main extends Application {
                 fadeIn.play();
             }
         });
-
-        fadeOut.play();
+        return fadeOut;
     }
 }

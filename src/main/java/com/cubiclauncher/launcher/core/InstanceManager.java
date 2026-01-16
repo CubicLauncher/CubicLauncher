@@ -22,6 +22,7 @@ import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import javafx.application.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,16 +47,22 @@ public class InstanceManager {
     private final PathManager pathManager = PathManager.getInstance();
     private final LauncherWrapper launcherWrapper = LauncherWrapper.getInstance();
     private final TaskManager taskManager;
+    private final DownloadManager downloadManager;
     private final List<Instance> instances;
     private final Path instancesDir = pathManager.getInstancePath();
 
     private InstanceManager() {
         this.taskManager = TaskManager.getInstance();
+        this.downloadManager = DownloadManager.getInstance();
         this.instances = new ArrayList<>();
 
         loadInstances();
-        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> taskManager.runAsync(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
-
+        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> downloadManager
+                .submitDownload(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
+        eventBus.subscribe(EventType.REQUEST_LAUNCH_INSTANCE,
+                (eventData -> taskManager.runAsync(() -> startInstance(eventData.getString("instance_name")))));
+        eventBus.subscribe(EventType.REQUEST_INSTANCE_CREATION, (eventData -> taskManager.runAsync(
+                () -> createInstance(eventData.getString("instance_name"), eventData.getString("instance_version")))));
     }
 
     // Singleton getter
@@ -128,7 +135,7 @@ public class InstanceManager {
             // Si es una nueva instancia, agregarla a la lista
             if (!instances.contains(instance)) {
                 instances.add(instance);
-                log.info("Nueva instancia agregada: {}", instance.getName());
+                log.info("New instance: {} ({})", instance.getName(), instance.getVersion());
             } else {
                 log.debug("Instancia actualizada: {}", instance.getName());
             }
@@ -151,16 +158,12 @@ public class InstanceManager {
         Instance newInstance = new Instance(name, version);
 
         if (saveInstance(newInstance)) {
-            log.info("Instancia '{}' creada con versión {}", name, version);
             eventBus.emit(EventType.INSTANCE_CREATED, EventData.empty());
         } else {
             throw new RuntimeException("No se pudo guardar la instancia: " + name);
         }
     }
 
-    /**
-     * Inicia una instancia por nombre
-     */
     public void startInstance(String instanceName) {
         Optional<Instance> optionalInstance = getInstance(instanceName);
 
@@ -177,31 +180,64 @@ public class InstanceManager {
                 () -> {
                     if (!launcherWrapper.getInstalledVersions().contains(instanceToStart.getVersion())) {
                         log.info("Versión {} no instalada, iniciando descarga", instanceToStart.getVersion());
-                        eventBus.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED, EventData.builder().put("version", instanceToStart.version).build());
+                        eventBus.emit(EventType.INSTANCE_VERSION_NOT_INSTALLED,
+                                EventData.builder().put("version", instanceToStart.version).build());
                         return;
                     }
 
                     log.info("Iniciando instancia '{}' con versión {}", instanceName, instanceToStart.getVersion());
-                    EventBus.get().emit(EventType.GAME_STARTED, EventData.builder().put("version", instanceName).build());
-                    launcherWrapper.startVersion(
-                            instanceToStart.getVersion(),
-                            instanceToStart.getInstanceDir(instancesDir)
-                    );
+                    EventBus.get().emit(EventType.GAME_STARTED,
+                            EventData.builder().put("version", instanceName).build());
+                    try {
+                        Process process = launcherWrapper.launchVersion(
+                                instanceToStart.getVersion(),
+                                instanceToStart.getInstanceDir(instancesDir));
+                        // Guardar el proceso en la instancia
+                        instanceToStart.attachProcess(process);
 
-                    // Actualizar última vez jugada
-                    instanceToStart.updateLastPlayed();
-                    saveInstance(instanceToStart);
+                        // Actualizar última vez jugada
+                        instanceToStart.updateLastPlayed();
+                        saveInstance(instanceToStart);
 
-                    log.info("Instancia '{}' iniciada exitosamente", instanceName);
+                        // Monitorear el proceso para detectar cuando termina
+                        new Thread(() -> {
+                            try {
+                                int exitCode = process.waitFor();
+                                instanceToStart.detachProcess();
+                                eventBus.emit(EventType.GAME_EXITED,
+                                        EventData.builder()
+                                                .put("instance", instanceName)
+                                                .put("exitCode", exitCode)
+                                                .build());
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }).start();
+
+                        // También podemos monitorear la salida del proceso si queremos
+                        launcherWrapper.monitorProcessWithEvents(process, instanceName);
+
+                        log.info("Instancia '{}' iniciada exitosamente", instanceName);
+
+                        // Cerrar el launcher si la opción está activada
+                        if (SettingsManager.getInstance().isCloseLauncherOnGameStart()) {
+                            log.info("Cerrando el launcher tras iniciar el juego (opción activada)");
+                            Platform.exit();
+                        }
+                    } catch (IOException e) {
+                        log.error("Error al lanzar la instancia '{}': {}", instanceName, e.getMessage(), e);
+                        eventBus.emit(EventType.GAME_CRASHED,
+                                EventData.error("Error al lanzar la instancia: " + instanceName, e));
+                    }
                 },
                 () -> {
+                    // Este es el onComplete del taskManager, no necesario en este caso
                 },
                 error -> {
                     log.error("Error iniciando instancia '{}': {}", instanceName, error.getMessage(), error);
                     eventBus.emit(EventType.GAME_CRASHED,
                             EventData.error("Error iniciando instancia: " + instanceName, error));
-                }
-        );
+                });
     }
 
     /**
@@ -254,11 +290,14 @@ public class InstanceManager {
                 // 2. Save updated instance file
                 if (!saveInstance(instance)) {
                     // saveInstance failed and logged the error. Revert the directory move.
-                    log.warn("Falló el guardado de la configuración, revirtiendo el renombrado del directorio de la instancia.");
+                    log.warn(
+                            "Falló el guardado de la configuración, revirtiendo el renombrado del directorio de la instancia.");
                     try {
                         Files.move(newDir, oldDir, StandardCopyOption.REPLACE_EXISTING);
                     } catch (IOException revertEx) {
-                        log.error("¡FALLO CRÍTICO! No se pudo revertir el renombrado del directorio. El directorio '{}' debe ser renombrado a '{}' manualmente.", newDir, oldDir, revertEx);
+                        log.error(
+                                "¡FALLO CRÍTICO! No se pudo revertir el renombrado del directorio. El directorio '{}' debe ser renombrado a '{}' manualmente.",
+                                newDir, oldDir, revertEx);
                     }
                     instance.setName(originalName); // Revert name on object
                     return false;
@@ -351,12 +390,25 @@ public class InstanceManager {
         private String name;
         private final String version;
         private long lastPlayed;
+        private transient Process process;
 
         // Constructor para nueva instancia
         public Instance(String name, String version) {
             this.name = name;
             this.version = version;
             this.lastPlayed = System.currentTimeMillis();
+        }
+
+        public void attachProcess(Process process) {
+            this.process = process;
+        }
+
+        public void detachProcess() {
+            this.process = null;
+        }
+
+        public Process getProcess() {
+            return process;
         }
 
         // Getters
@@ -383,6 +435,7 @@ public class InstanceManager {
         public void updateLastPlayed() {
             this.lastPlayed = System.currentTimeMillis();
         }
+
         public String getLastPlayedFormatted() {
             Instant instant = Instant.ofEpochMilli(this.lastPlayed);
             LocalDateTime dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
@@ -407,8 +460,10 @@ public class InstanceManager {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
             Instance instance = (Instance) o;
             return name.equals(instance.name);
         }
