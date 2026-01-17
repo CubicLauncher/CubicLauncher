@@ -123,7 +123,8 @@ public class SettingsView {
         nativeStyles.setSelected(controller.getSettings().isNative_styles());
         nativeStyles.setOnAction(e -> controller.onNativeStylesChanged(nativeStyles.isSelected()));
         VBox infoSection = createLauncherInfo();
-        pane.getChildren().addAll(languageBox, autoUpdateCheckbox, errorConsoleCheckbox, closeLaunchCheckbox, nativeStyles, new Separator(), infoSection);
+        pane.getChildren().addAll(languageBox, autoUpdateCheckbox, errorConsoleCheckbox, closeLaunchCheckbox,
+                nativeStyles, new Separator(), infoSection);
         return pane;
     }
 
@@ -141,7 +142,7 @@ public class SettingsView {
 
     private static VBox createLauncherInfo() {
         VBox infoBox = new VBox(5);
-        Label versionLabel = new Label("Versión: 2502a");
+        Label versionLabel = new Label("Versión: 2601a");
         Label devLabel = new Label("Desarrollado por: Santiagolxx, Notstaff & CubicLauncher contributors");
         HBox sourceCodeBox = new HBox(5);
         sourceCodeBox.setAlignment(Pos.CENTER_LEFT);
@@ -157,7 +158,8 @@ public class SettingsView {
         VBox pane = new VBox(15);
         pane.getStyleClass().add("settings-card");
         pane.setPadding(new Insets(25));
-        pane.getChildren().addAll(createVersionVisibilitySection(), new Separator(), createIntegrationsSection(), new Separator(), createPerformanceSection());
+        pane.getChildren().addAll(createVersionVisibilitySection(), new Separator(), createIntegrationsSection(),
+                new Separator(), createPerformanceSection());
         return pane;
     }
 
@@ -198,7 +200,8 @@ public class SettingsView {
         VBox pane = new VBox(15);
         pane.getStyleClass().add("settings-card");
         pane.setPadding(new Insets(25));
-        pane.getChildren().addAll(createJavaExecutableSection(), new Separator(), createMemoryAllocationSection(), new Separator(), createAdvancedSection());
+        pane.getChildren().addAll(createJavaExecutableSection(), new Separator(), createMemoryAllocationSection(),
+                new Separator(), createAdvancedSection());
         return pane;
     }
 
@@ -276,7 +279,8 @@ public class SettingsView {
         return subSection;
     }
 
-    private static HBox createMemoryInput(String labelText, int memoryInMB, java.util.function.Consumer<Integer> onChange) {
+    private static HBox createMemoryInput(String labelText, int memoryInMB,
+            java.util.function.Consumer<Integer> onChange) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
         Label label = new Label(labelText);
@@ -298,7 +302,8 @@ public class SettingsView {
                 } else {
                     field.setText(String.valueOf(currentValue * 1024));
                 }
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         });
         field.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !newVal.equals(oldVal)) {
@@ -306,7 +311,8 @@ public class SettingsView {
                     int value = Integer.parseInt(newVal);
                     int memoryMB = "GB".equals(unit.getValue()) ? value * 1024 : value;
                     onChange.accept(memoryMB);
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         });
         box.getChildren().addAll(label, field, unit);
@@ -321,7 +327,8 @@ public class SettingsView {
         argsLabel.getStyleClass().add("jvm-args-label");
         TextField argsField = new TextField();
         argsField.setPromptText("-XX:+UnlockExperimentalVMOptions ...");
-        if (controller.getSettings().getJvmArguments() != null && !controller.getSettings().getJvmArguments().isEmpty()) {
+        if (controller.getSettings().getJvmArguments() != null
+                && !controller.getSettings().getJvmArguments().isEmpty()) {
             argsField.setText(controller.getSettings().getJvmArguments());
         }
         argsField.textProperty().addListener((obs, oldVal, newVal) -> controller.onJvmArgsChanged(newVal));

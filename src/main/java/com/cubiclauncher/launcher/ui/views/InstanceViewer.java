@@ -1,8 +1,8 @@
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
-import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
 import com.cubiclauncher.launcher.ui.controllers.InstanceController;
 import javafx.application.Platform;
@@ -11,7 +11,13 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InstanceViewer extends BorderPane {
     private static InstanceViewer instance;
@@ -27,6 +33,8 @@ public class InstanceViewer extends BorderPane {
     private Label loaderLabel;
     private Label locationLabel;
     private Label lastPlayedLabel;
+    private ImageView imageView;
+    private Label imageIcon;
 
     private InstanceViewer() {
         super();
@@ -49,7 +57,8 @@ public class InstanceViewer extends BorderPane {
         eventBus.subscribe(EventType.GAME_OUTPUT, eventData -> {
             String instance_name = eventData.getString("instance_name");
             String output = eventData.getString("line");
-            if (output != null && !output.trim().isEmpty() && currentInstance != null && currentInstance.getName().equals(instance_name)) {
+            if (output != null && !output.trim().isEmpty() && currentInstance != null
+                    && currentInstance.getName().equals(instance_name)) {
                 Platform.runLater(() -> appendLog(output));
             }
         });
@@ -70,9 +79,20 @@ public class InstanceViewer extends BorderPane {
         imageContainer.setMinSize(180, 180);
         imageContainer.setMaxSize(180, 180);
 
-        Label imageIcon = new Label("⬢");
+        imageIcon = new Label("⬢");
         imageIcon.getStyleClass().add("instance-icon");
-        imageContainer.getChildren().add(imageIcon);
+
+        imageView = new ImageView();
+        imageView.setFitWidth(180);
+        imageView.setFitHeight(180);
+        imageView.setPreserveRatio(false);
+
+        Rectangle clip = new Rectangle(180, 180);
+        clip.setArcWidth(20);
+        clip.setArcHeight(20);
+        imageView.setClip(clip);
+
+        imageContainer.getChildren().addAll(imageIcon, imageView);
 
         // Instance information - clean and minimal
         VBox info = new VBox(16);
@@ -232,6 +252,8 @@ public class InstanceViewer extends BorderPane {
         locationLabel.setText("-");
         lastPlayedLabel.setText("Never");
 
+        updateCoverImage(null);
+
         logsArea.clear();
         logsArea.appendText("Select an instance to view console output\n");
     }
@@ -245,9 +267,12 @@ public class InstanceViewer extends BorderPane {
             instanceVersion.setText(formatVersion(instance.getVersion()));
             playButton.setDisable(false);
 
+            // Update image
+            updateCoverImage(instance);
+
             versionLabel.setText(instance.getVersion());
             loaderLabel.setText(extractLoader(instance.getVersion()));
-            locationLabel.setText("./instances/" + instance.getName());
+            locationLabel.setText(PathManager.getInstance().getInstancePath().resolve(instance.getName()).toString());
             lastPlayedLabel.setText(instance.getLastPlayedFormatted());
 
             logsArea.clear();
@@ -260,29 +285,248 @@ public class InstanceViewer extends BorderPane {
         }
     }
 
+    public void showEditDialog(InstanceManager.Instance instance) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Editar Instancia");
+        dialog.getDialogPane().getStyleClass().add("editor-dialog-pane");
+        dialog.setHeaderText(null);
+        dialog.setGraphic(null);
+
+        ButtonType saveButtonType = new ButtonType("GUARDAR", ButtonBar.ButtonData.OK_DONE);
+        ButtonType deleteButtonType = new ButtonType("ELIMINAR", ButtonBar.ButtonData.OTHER);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, deleteButtonType, ButtonType.CANCEL);
+
+        // Styling buttons
+        Button saveBtn = (Button) dialog.getDialogPane().lookupButton(saveButtonType);
+        saveBtn.getStyleClass().add("play-button-primary");
+        saveBtn.setStyle("-fx-font-size: 11px; -fx-padding: 8 24;");
+
+        Button deleteBtn = (Button) dialog.getDialogPane().lookupButton(deleteButtonType);
+        deleteBtn.getStyleClass().add("btn-secondary");
+        deleteBtn.setStyle("-fx-text-fill: #ff5555; -fx-font-size: 11px; -fx-padding: 8 20;");
+
+        VBox content = new VBox(25);
+        content.getStyleClass().add("editor-content");
+        content.setPrefWidth(500); // Slightly wider for gallery
+        content.setAlignment(Pos.TOP_LEFT);
+
+        // Modal Title
+        Label modalTitle = new Label("Editor de Instancia");
+        modalTitle.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(15);
+        grid.setVgap(20);
+        grid.setAlignment(Pos.CENTER_LEFT);
+
+        TextField nameField = createModalField(grid, "Nombre", instance.getName(), 0);
+        TextField versionField = createModalField(grid, "Versión", instance.getVersion(), 1);
+
+        // RAM Fields
+        Label ramLabel = new Label("RAM (MB)");
+        ramLabel.getStyleClass().add("editor-field-label");
+        HBox ramBox = new HBox(10);
+        TextField minMemField = new TextField(
+                instance.getMinMemory() != null ? String.valueOf(instance.getMinMemory()) : "");
+        TextField maxMemField = new TextField(
+                instance.getMaxMemory() != null ? String.valueOf(instance.getMaxMemory()) : "");
+        minMemField.getStyleClass().add("editor-text-field");
+        maxMemField.getStyleClass().add("editor-text-field");
+        minMemField.setPromptText("Min");
+        maxMemField.setPromptText("Max");
+        minMemField.setPrefWidth(110);
+        maxMemField.setPrefWidth(110);
+        ramBox.getChildren().addAll(minMemField, maxMemField);
+
+        grid.add(ramLabel, 0, 2);
+        grid.add(ramBox, 1, 2);
+
+        TextField jvmArgsField = createModalField(grid, "Argumentos JVM",
+                instance.getJvmArgs() != null ? instance.getJvmArgs() : "", 3);
+
+        // Screenshot Gallery Section
+        VBox gallerySection = new VBox(10);
+        Label galleryLabel = new Label("Seleccionar Portada (Capturas)");
+        galleryLabel.getStyleClass().add("editor-field-label");
+
+        HBox galleryItems = new HBox(10);
+        galleryItems.setPadding(new Insets(5));
+
+        String[] selectedCover = { instance.getCoverImage() };
+
+        List<File> screenshots = getScreenshots(instance);
+        if (screenshots.isEmpty()) {
+            Label noScreenshots = new Label("No se encontraron capturas en la carpeta de la instancia.");
+            noScreenshots.setStyle("-fx-text-fill: #666; -fx-font-size: 12px;");
+            galleryItems.getChildren().add(noScreenshots);
+        } else {
+            for (File screenshot : screenshots) {
+                VBox thumbContainer = createThumbnail(screenshot, selectedCover);
+                galleryItems.getChildren().add(thumbContainer);
+            }
+        }
+
+        ScrollPane galleryScroll = new ScrollPane(galleryItems);
+        galleryScroll.setPrefHeight(120);
+        galleryScroll.getStyleClass().add("console-scroll"); // Reusing styled scroll
+        galleryScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        galleryScroll.setFitToHeight(true);
+        galleryScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        gallerySection.getChildren().addAll(galleryLabel, galleryScroll);
+
+        content.getChildren().addAll(modalTitle, grid, gallerySection);
+        dialog.getDialogPane().setContent(content);
+
+        dialog.getDialogPane().getScene().getStylesheets()
+                .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
+
+        Platform.runLater(nameField::requestFocus);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                String oldName = instance.getName();
+                String newName = nameField.getText();
+
+                instance.setVersion(versionField.getText());
+                try {
+                    instance.setMinMemory(
+                            minMemField.getText().isEmpty() ? null : Integer.parseInt(minMemField.getText()));
+                    instance.setMaxMemory(
+                            maxMemField.getText().isEmpty() ? null : Integer.parseInt(maxMemField.getText()));
+                } catch (NumberFormatException e) {
+                    // Ignore
+                }
+                instance.setJvmArgs(jvmArgsField.getText());
+                instance.setCoverImage(selectedCover[0]);
+
+                if (!newName.equals(oldName)) {
+                    InstanceManager.getInstance().renameInstance(oldName, newName);
+                } else {
+                    InstanceManager.getInstance().saveInstance(instance);
+                    showInstance(instance);
+                }
+            } else if (dialogButton == deleteButtonType) {
+                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+                confirm.setTitle("Confirmar Eliminación");
+                confirm.setHeaderText("Eliminar Instancia: " + instance.getName());
+                confirm.setContentText(
+                        "¿Estás seguro de que deseas eliminar esta instancia? Esta acción no se puede deshacer.");
+                confirm.getDialogPane().getStylesheets()
+                        .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
+                confirm.getDialogPane().getStyleClass().add("editor-dialog-pane");
+
+                if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                    InstanceManager.getInstance().deleteInstance(instance.getName());
+                }
+            }
+            return null;
+        });
+
+        dialog.showAndWait();
+    }
+
+    private List<File> getScreenshots(InstanceManager.Instance instance) {
+        List<File> screenshots = new ArrayList<>();
+        File screenshotsDir = PathManager.getInstance().getInstancePath()
+                .resolve(instance.getName())
+                .resolve("screenshots")
+                .toFile();
+
+        if (screenshotsDir.exists() && screenshotsDir.isDirectory()) {
+            File[] files = screenshotsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png")
+                    || name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg"));
+            if (files != null) {
+                for (File f : files)
+                    screenshots.add(f);
+            }
+        }
+        return screenshots;
+    }
+
+    private VBox createThumbnail(File file, String[] selectedCover) {
+        VBox container = new VBox();
+        container.setPrefSize(100, 100);
+        container.getStyleClass().add("instance-image"); // Reusing box style
+        container.setAlignment(Pos.CENTER);
+
+        ImageView thumb = new ImageView(new Image(file.toURI().toString(), 90, 90, true, true));
+        thumb.setFitWidth(90);
+        thumb.setFitHeight(90);
+        thumb.setPreserveRatio(true);
+
+        container.getChildren().add(thumb);
+
+        updateThumbStyle(container, file.getAbsolutePath().equals(selectedCover[0]));
+
+        container.setOnMouseClicked(e -> {
+            selectedCover[0] = file.getAbsolutePath();
+            // Update UI for all siblings
+            if (container.getParent() instanceof Pane) {
+                Pane parent = (Pane) container.getParent();
+                parent.getChildren().forEach(node -> {
+                    if (node instanceof VBox) {
+                        updateThumbStyle((VBox) node, false);
+                    }
+                });
+            }
+            updateThumbStyle(container, true);
+        });
+
+        return container;
+    }
+
+    private void updateThumbStyle(VBox container, boolean selected) {
+        if (selected) {
+            container.setStyle("-fx-border-color: #3a86ff; -fx-border-width: 2; -fx-background-color: #1a1a1a;");
+        } else {
+            container.setStyle("-fx-border-color: #2a2a2a; -fx-border-width: 1; -fx-background-color: transparent;");
+        }
+    }
+
+    private TextField createModalField(GridPane grid, String label, String value, int row) {
+        Label fieldLabel = new Label(label);
+        fieldLabel.getStyleClass().add("editor-field-label");
+
+        TextField field = new TextField(value);
+        field.getStyleClass().add("editor-text-field");
+        field.setPrefWidth(230);
+
+        grid.add(fieldLabel, 0, row);
+        grid.add(field, 1, row);
+        return field;
+    }
+
     private String formatVersion(String version) {
-        if (version == null) return "";
+        if (version == null)
+            return "";
         return version.replace("-", " ").replace("loader", "").trim();
     }
 
     private String extractLoader(String version) {
-        if (version == null) return "Vanilla";
-        if (version.contains("fabric")) return "Fabric";
-        if (version.contains("forge")) return "Forge";
-        if (version.contains("quilt")) return "Quilt";
+        if (version == null)
+            return "Vanilla";
+        if (version.contains("fabric"))
+            return "Fabric";
+        if (version.contains("forge"))
+            return "Forge";
+        if (version.contains("quilt"))
+            return "Quilt";
         return "Vanilla";
     }
 
     public void appendLog(String message) {
         if (logsArea != null) {
-            String timestamp = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            String timestamp = java.time.LocalTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
             Platform.runLater(() -> logsArea.appendText("[" + timestamp + "] " + message + "\n"));
         }
     }
 
     public void appendError(String error) {
         if (logsArea != null) {
-            String timestamp = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            String timestamp = java.time.LocalTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
             Platform.runLater(() -> logsArea.appendText("[" + timestamp + "] ERROR: " + error + "\n"));
         }
     }
@@ -291,5 +535,25 @@ public class InstanceViewer extends BorderPane {
         if (logsArea != null) {
             logsArea.clear();
         }
+    }
+
+    private void updateCoverImage(InstanceManager.Instance instance) {
+        if (instance != null && instance.getCoverImage() != null) {
+            File imgFile = new File(instance.getCoverImage());
+            if (imgFile.exists()) {
+                try {
+                    Image image = new Image(imgFile.toURI().toString(), 180, 180, false, true);
+                    imageView.setImage(image);
+                    imageIcon.setVisible(false);
+                    imageView.setVisible(true);
+                    return;
+                } catch (Exception e) {
+                    // Fallback to icon
+                }
+            }
+        }
+        imageView.setImage(null);
+        imageView.setVisible(false);
+        imageIcon.setVisible(true);
     }
 }

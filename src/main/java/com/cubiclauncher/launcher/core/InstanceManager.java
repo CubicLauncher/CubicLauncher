@@ -191,7 +191,10 @@ public class InstanceManager {
                     try {
                         Process process = launcherWrapper.launchVersion(
                                 instanceToStart.getVersion(),
-                                instanceToStart.getInstanceDir(instancesDir));
+                                instanceToStart.getInstanceDir(instancesDir),
+                                instanceToStart.getMinMemory(),
+                                instanceToStart.getMaxMemory(),
+                                instanceToStart.getJvmArgs());
                         // Guardar el proceso en la instancia
                         instanceToStart.attachProcess(process);
 
@@ -388,8 +391,12 @@ public class InstanceManager {
 
     public static class Instance {
         private String name;
-        private final String version;
+        private String version;
         private long lastPlayed;
+        private Integer minMemory;
+        private Integer maxMemory;
+        private String jvmArgs;
+        private String coverImage;
         private transient Process process;
 
         // Constructor para nueva instancia
@@ -434,6 +441,42 @@ public class InstanceManager {
 
         public void updateLastPlayed() {
             this.lastPlayed = System.currentTimeMillis();
+        }
+
+        public Integer getMinMemory() {
+            return minMemory;
+        }
+
+        public void setMinMemory(Integer minMemory) {
+            this.minMemory = minMemory;
+        }
+
+        public Integer getMaxMemory() {
+            return maxMemory;
+        }
+
+        public void setMaxMemory(Integer maxMemory) {
+            this.maxMemory = maxMemory;
+        }
+
+        public String getJvmArgs() {
+            return jvmArgs;
+        }
+
+        public void setJvmArgs(String jvmArgs) {
+            this.jvmArgs = jvmArgs;
+        }
+
+        public void setVersion(String version) {
+            this.version = version;
+        }
+
+        public String getCoverImage() {
+            return coverImage;
+        }
+
+        public void setCoverImage(String coverImage) {
+            this.coverImage = coverImage;
         }
 
         public String getLastPlayedFormatted() {
