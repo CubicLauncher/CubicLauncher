@@ -4,6 +4,7 @@ import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
+import com.cubiclauncher.launcher.ui.components.ModalHeader;
 import com.cubiclauncher.launcher.ui.controllers.InstanceController;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -38,9 +39,6 @@ public class InstanceViewer extends BorderPane {
     private Label lastPlayedLabel;
     private ImageView imageView;
     private Label imageIcon;
-
-    private double xOffset = 0;
-    private double yOffset = 0;
 
     private InstanceViewer() {
         super();
@@ -307,38 +305,14 @@ public class InstanceViewer extends BorderPane {
         if (closeBtnType != null)
             closeBtnType.setVisible(false);
         dialogPane.setBackground(null);
+        dialogPane.setPadding(Insets.EMPTY);
 
         VBox windowRoot = new VBox();
         windowRoot.getStyleClass().add("editor-window-root");
         windowRoot.setPrefWidth(500);
 
-        // --- Custom Header (Draggable) ---
-        HBox customHeader = new HBox();
-        customHeader.getStyleClass().add("editor-header");
-        customHeader.setAlignment(Pos.CENTER_LEFT);
-
-        Label titleLabel = new Label("Editor de Instancia");
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        Button closeButton = new Button("✕");
-        closeButton.getStyleClass().add("editor-close-button");
-        closeButton.setOnAction(e -> {
-            dialog.setResult(null);
-            dialog.close();
-        });
-
-        customHeader.getChildren().addAll(titleLabel, spacer, closeButton);
-
-        // Dragging logic
-        customHeader.setOnMousePressed(event -> {
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
-        });
-        customHeader.setOnMouseDragged(event -> {
-            dialog.setX(event.getScreenX() - xOffset);
-            dialog.setY(event.getScreenY() - yOffset);
-        });
+        // --- Reusable Header ---
+        ModalHeader customHeader = new ModalHeader("Editor de Instancia", dialog);
 
         // --- Content ---
         VBox content = new VBox(25);
