@@ -10,11 +10,14 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Modality;
+import javafx.stage.StageStyle;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +38,9 @@ public class InstanceViewer extends BorderPane {
     private Label lastPlayedLabel;
     private ImageView imageView;
     private Label imageIcon;
+
+    private double xOffset = 0;
+    private double yOffset = 0;
 
     private InstanceViewer() {
         super();
@@ -85,7 +91,7 @@ public class InstanceViewer extends BorderPane {
         imageView = new ImageView();
         imageView.setFitWidth(180);
         imageView.setFitHeight(180);
-        imageView.setPreserveRatio(false);
+        imageView.setPreserveRatio(true);
 
         Rectangle clip = new Rectangle(180, 180);
         clip.setArcWidth(20);
@@ -287,32 +293,57 @@ public class InstanceViewer extends BorderPane {
 
     public void showEditDialog(InstanceManager.Instance instance) {
         Dialog<Void> dialog = new Dialog<>();
+        dialog.initOwner(getScene().getWindow());
+        dialog.initModality(Modality.WINDOW_MODAL);
+        dialog.initStyle(StageStyle.TRANSPARENT);
         dialog.setTitle("Editar Instancia");
-        dialog.getDialogPane().getStyleClass().add("editor-dialog-pane");
-        dialog.setHeaderText(null);
-        dialog.setGraphic(null);
 
-        ButtonType saveButtonType = new ButtonType("GUARDAR", ButtonBar.ButtonData.OK_DONE);
-        ButtonType deleteButtonType = new ButtonType("ELIMINAR", ButtonBar.ButtonData.OTHER);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, deleteButtonType, ButtonType.CANCEL);
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getStyleClass().add("editor-dialog-pane");
+        dialogPane.setHeaderText(null);
+        dialogPane.setGraphic(null);
+        dialogPane.getButtonTypes().add(ButtonType.CLOSE);
+        Node closeBtnType = dialogPane.lookupButton(ButtonType.CLOSE);
+        if (closeBtnType != null)
+            closeBtnType.setVisible(false);
+        dialogPane.setBackground(null);
 
-        // Styling buttons
-        Button saveBtn = (Button) dialog.getDialogPane().lookupButton(saveButtonType);
-        saveBtn.getStyleClass().add("play-button-primary");
-        saveBtn.setStyle("-fx-font-size: 11px; -fx-padding: 8 24;");
+        VBox windowRoot = new VBox();
+        windowRoot.getStyleClass().add("editor-window-root");
+        windowRoot.setPrefWidth(500);
 
-        Button deleteBtn = (Button) dialog.getDialogPane().lookupButton(deleteButtonType);
-        deleteBtn.getStyleClass().add("btn-secondary");
-        deleteBtn.setStyle("-fx-text-fill: #ff5555; -fx-font-size: 11px; -fx-padding: 8 20;");
+        // --- Custom Header (Draggable) ---
+        HBox customHeader = new HBox();
+        customHeader.getStyleClass().add("editor-header");
+        customHeader.setAlignment(Pos.CENTER_LEFT);
 
+        Label titleLabel = new Label("Editor de Instancia");
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button closeButton = new Button("✕");
+        closeButton.getStyleClass().add("editor-close-button");
+        closeButton.setOnAction(e -> {
+            dialog.setResult(null);
+            dialog.close();
+        });
+
+        customHeader.getChildren().addAll(titleLabel, spacer, closeButton);
+
+        // Dragging logic
+        customHeader.setOnMousePressed(event -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
+        customHeader.setOnMouseDragged(event -> {
+            dialog.setX(event.getScreenX() - xOffset);
+            dialog.setY(event.getScreenY() - yOffset);
+        });
+
+        // --- Content ---
         VBox content = new VBox(25);
         content.getStyleClass().add("editor-content");
-        content.setPrefWidth(500); // Slightly wider for gallery
         content.setAlignment(Pos.TOP_LEFT);
-
-        // Modal Title
-        Label modalTitle = new Label("Editor de Instancia");
-        modalTitle.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;");
 
         GridPane grid = new GridPane();
         grid.setHgap(15);
@@ -322,7 +353,6 @@ public class InstanceViewer extends BorderPane {
         TextField nameField = createModalField(grid, "Nombre", instance.getName(), 0);
         TextField versionField = createModalField(grid, "Versión", instance.getVersion(), 1);
 
-        // RAM Fields
         Label ramLabel = new Label("RAM (MB)");
         ramLabel.getStyleClass().add("editor-field-label");
         HBox ramBox = new HBox(10);
@@ -344,7 +374,6 @@ public class InstanceViewer extends BorderPane {
         TextField jvmArgsField = createModalField(grid, "Argumentos JVM",
                 instance.getJvmArgs() != null ? instance.getJvmArgs() : "", 3);
 
-        // Screenshot Gallery Section
         VBox gallerySection = new VBox(10);
         Label galleryLabel = new Label("Seleccionar Portada (Capturas)");
         galleryLabel.getStyleClass().add("editor-field-label");
@@ -367,60 +396,84 @@ public class InstanceViewer extends BorderPane {
         }
 
         ScrollPane galleryScroll = new ScrollPane(galleryItems);
-        galleryScroll.setPrefHeight(120);
-        galleryScroll.getStyleClass().add("console-scroll"); // Reusing styled scroll
+        galleryScroll.setPrefHeight(130);
+        galleryScroll.getStyleClass().add("console-scroll");
         galleryScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         galleryScroll.setFitToHeight(true);
         galleryScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
 
         gallerySection.getChildren().addAll(galleryLabel, galleryScroll);
+        content.getChildren().addAll(grid, gallerySection);
 
-        content.getChildren().addAll(modalTitle, grid, gallerySection);
-        dialog.getDialogPane().setContent(content);
+        // --- Footer ---
+        HBox footer = new HBox(15);
+        footer.getStyleClass().add("editor-footer");
+        footer.setAlignment(Pos.CENTER_RIGHT);
 
-        dialog.getDialogPane().getScene().getStylesheets()
-                .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
+        Button deleteBtn = new Button("ELIMINAR");
+        deleteBtn.getStyleClass().add("btn-secondary");
+        deleteBtn.setStyle("-fx-text-fill: #ff5555; -fx-font-size: 11px; -fx-padding: 8 20;");
 
-        Platform.runLater(nameField::requestFocus);
+        Button saveBtn = new Button("GUARDAR CAMBIOS");
+        saveBtn.getStyleClass().add("play-button-primary");
+        saveBtn.setStyle("-fx-font-size: 11px; -fx-padding: 8 24;");
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == saveButtonType) {
-                String oldName = instance.getName();
-                String newName = nameField.getText();
+        Region footerSpacer = new Region();
+        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
 
-                instance.setVersion(versionField.getText());
-                try {
-                    instance.setMinMemory(
-                            minMemField.getText().isEmpty() ? null : Integer.parseInt(minMemField.getText()));
-                    instance.setMaxMemory(
-                            maxMemField.getText().isEmpty() ? null : Integer.parseInt(maxMemField.getText()));
-                } catch (NumberFormatException e) {
-                    // Ignore
-                }
-                instance.setJvmArgs(jvmArgsField.getText());
-                instance.setCoverImage(selectedCover[0]);
+        footer.getChildren().addAll(deleteBtn, footerSpacer, saveBtn);
 
-                if (!newName.equals(oldName)) {
-                    InstanceManager.getInstance().renameInstance(oldName, newName);
-                } else {
-                    InstanceManager.getInstance().saveInstance(instance);
-                    showInstance(instance);
-                }
-            } else if (dialogButton == deleteButtonType) {
-                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-                confirm.setTitle("Confirmar Eliminación");
-                confirm.setHeaderText("Eliminar Instancia: " + instance.getName());
-                confirm.setContentText(
-                        "¿Estás seguro de que deseas eliminar esta instancia? Esta acción no se puede deshacer.");
-                confirm.getDialogPane().getStylesheets()
-                        .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
-                confirm.getDialogPane().getStyleClass().add("editor-dialog-pane");
+        windowRoot.getChildren().addAll(customHeader, content, footer);
+        dialogPane.setContent(windowRoot);
 
-                if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-                    InstanceManager.getInstance().deleteInstance(instance.getName());
-                }
+        // Handle buttons manually since we use custom footer
+        saveBtn.setOnAction(e -> {
+            String oldName = instance.getName();
+            String newName = nameField.getText();
+
+            instance.setVersion(versionField.getText());
+            try {
+                instance.setMinMemory(minMemField.getText().isEmpty() ? null : Integer.parseInt(minMemField.getText()));
+                instance.setMaxMemory(maxMemField.getText().isEmpty() ? null : Integer.parseInt(maxMemField.getText()));
+            } catch (NumberFormatException ex) {
             }
-            return null;
+
+            instance.setJvmArgs(jvmArgsField.getText());
+            instance.setCoverImage(selectedCover[0]);
+
+            if (!newName.equals(oldName)) {
+                InstanceManager.getInstance().renameInstance(oldName, newName);
+            } else {
+                InstanceManager.getInstance().saveInstance(instance);
+                showInstance(instance);
+            }
+            dialog.close();
+        });
+
+        deleteBtn.setOnAction(e -> {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+            confirm.setTitle("Confirmar Eliminación");
+            confirm.setHeaderText("Eliminar Instancia: " + instance.getName());
+            confirm.setContentText(
+                    "¿Estás seguro de que deseas eliminar esta instancia? Esta acción no se puede deshacer.");
+            confirm.getDialogPane().getStylesheets()
+                    .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
+            confirm.getDialogPane().getStyleClass().add("editor-dialog-pane");
+
+            if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                InstanceManager.getInstance().deleteInstance(instance.getName());
+                dialog.close();
+            }
+        });
+
+        // Style the Scene for transparency
+        Platform.runLater(() -> {
+            if (dialogPane.getScene() != null) {
+                dialogPane.getScene().setFill(null);
+                dialogPane.getScene().getStylesheets()
+                        .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
+            }
+            nameField.requestFocus();
         });
 
         dialog.showAndWait();
@@ -447,7 +500,7 @@ public class InstanceViewer extends BorderPane {
     private VBox createThumbnail(File file, String[] selectedCover) {
         VBox container = new VBox();
         container.setPrefSize(100, 100);
-        container.getStyleClass().add("instance-image"); // Reusing box style
+        container.getStyleClass().add("editor-thumb-container");
         container.setAlignment(Pos.CENTER);
 
         ImageView thumb = new ImageView(new Image(file.toURI().toString(), 90, 90, true, true));
@@ -542,7 +595,7 @@ public class InstanceViewer extends BorderPane {
             File imgFile = new File(instance.getCoverImage());
             if (imgFile.exists()) {
                 try {
-                    Image image = new Image(imgFile.toURI().toString(), 180, 180, false, true);
+                    Image image = new Image(imgFile.toURI().toString(), 180, 180, true, true);
                     imageView.setImage(image);
                     imageIcon.setVisible(false);
                     imageView.setVisible(true);

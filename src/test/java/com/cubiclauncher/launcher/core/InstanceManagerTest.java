@@ -3,7 +3,6 @@ package com.cubiclauncher.launcher.core;
 import com.cubiclauncher.launcher.core.InstanceManager.Instance;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
