@@ -17,6 +17,7 @@
 
 package com.cubiclauncher.launcher.ui.views;
 
+import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.ui.controllers.SettingsController;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -32,6 +33,7 @@ import javafx.stage.Stage;
 public class SettingsView {
     private static SettingsController controller;
     private static TextField javaPathField;
+    private static final LanguageManager lm = LanguageManager.getInstance();
 
     public static VBox create(Stage stage) {
         controller = new SettingsController();
@@ -43,7 +45,7 @@ public class SettingsView {
         settingsLayout.setAlignment(Pos.TOP_CENTER);
         settingsLayout.setPadding(new Insets(20));
 
-        Label settingsTitle = new Label("Ajustes");
+        Label settingsTitle = new Label(lm.get("settings.title"));
         settingsTitle.getStyleClass().add("welcome-title");
 
         VBox launcherPane = createLauncherPane();
@@ -69,9 +71,9 @@ public class SettingsView {
         navigation.getStyleClass().add("settings-navigation");
         navigation.setPrefWidth(150);
 
-        Button launcherButton = createNavButton("Launcher");
-        Button minecraftButton = createNavButton("Minecraft");
-        Button javaButton = createNavButton("Java");
+        Button launcherButton = createNavButton(lm.get("settings.launcher"));
+        Button minecraftButton = createNavButton(lm.get("settings.minecraft"));
+        Button javaButton = createNavButton(lm.get("settings.java"));
 
         launcherButton.setOnAction(e -> showSection(contentStack, sections[0], navigation, launcherButton));
         minecraftButton.setOnAction(e -> showSection(contentStack, sections[1], navigation, minecraftButton));
@@ -110,42 +112,51 @@ public class SettingsView {
         pane.getStyleClass().add("settings-card");
         pane.setPadding(new Insets(25));
         HBox languageBox = createLanguageSelector();
-        CheckBox autoUpdateCheckbox = new CheckBox("Habilitar actualizaciones automáticas");
+        CheckBox autoUpdateCheckbox = new CheckBox(lm.get("settings.auto_update"));
         autoUpdateCheckbox.setSelected(controller.getSettings().isAutoUpdate());
         autoUpdateCheckbox.setOnAction(e -> controller.onAutoUpdateChanged(autoUpdateCheckbox.isSelected()));
-        CheckBox errorConsoleCheckbox = new CheckBox("Habilitar consola de errores");
+        CheckBox errorConsoleCheckbox = new CheckBox(lm.get("settings.error_console"));
         errorConsoleCheckbox.setSelected(controller.getSettings().isErrorConsole());
         errorConsoleCheckbox.setOnAction(e -> controller.onErrorConsoleChanged(errorConsoleCheckbox.isSelected()));
-        CheckBox closeLaunchCheckbox = new CheckBox("Cerrar launcher al abrir el juego");
+        CheckBox closeLaunchCheckbox = new CheckBox(lm.get("settings.close_launcher"));
         closeLaunchCheckbox.setSelected(controller.getSettings().isCloseLauncherOnGameStart());
         closeLaunchCheckbox.setOnAction(e -> controller.onCloseLauncherChanged(closeLaunchCheckbox.isSelected()));
-        CheckBox nativeStyles = new CheckBox("Utilizar estilos nativos (MUY BUG)");
+        CheckBox nativeStyles = new CheckBox(lm.get("settings.native_styles"));
         nativeStyles.setSelected(controller.getSettings().isNative_styles());
         nativeStyles.setOnAction(e -> controller.onNativeStylesChanged(nativeStyles.isSelected()));
         VBox infoSection = createLauncherInfo();
-        pane.getChildren().addAll(languageBox, autoUpdateCheckbox, errorConsoleCheckbox, closeLaunchCheckbox, nativeStyles, new Separator(), infoSection);
+        pane.getChildren().addAll(languageBox, autoUpdateCheckbox, errorConsoleCheckbox, closeLaunchCheckbox,
+                nativeStyles, new Separator(), infoSection);
         return pane;
     }
 
     private static HBox createLanguageSelector() {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
-        Label label = new Label("Idioma:");
+        Label label = new Label(lm.get("settings.language"));
         ComboBox<String> comboBox = new ComboBox<>();
         comboBox.getItems().addAll("Español", "English");
-        comboBox.setValue(controller.getSettings().getLanguage());
-        comboBox.setOnAction(e -> controller.onLanguageChanged(comboBox.getValue()));
+
+        String currentLang = controller.getSettings().getLanguage();
+        comboBox.setValue(currentLang.equals("es_es") ? "Español" : "English");
+
+        comboBox.setOnAction(e -> {
+            String selected = comboBox.getValue();
+            String code = selected.equals("Español") ? "es_es" : "en_us";
+            controller.onLanguageChanged(code);
+        });
         box.getChildren().addAll(label, comboBox);
         return box;
     }
 
     private static VBox createLauncherInfo() {
         VBox infoBox = new VBox(5);
-        Label versionLabel = new Label("Versión: 2502a");
-        Label devLabel = new Label("Desarrollado por: Santiagolxx, Notstaff & CubicLauncher contributors");
+        Label versionLabel = new Label(lm.get("settings.version", "2601a"));
+        Label devLabel = new Label(
+                lm.get("settings.developed_by", "Santiagolxx, Notstaff & CubicLauncher contributors"));
         HBox sourceCodeBox = new HBox(5);
         sourceCodeBox.setAlignment(Pos.CENTER_LEFT);
-        Label sourceCodeLabel = new Label("Código Fuente:");
+        Label sourceCodeLabel = new Label(lm.get("settings.source_code"));
         Hyperlink sourceCodeLink = new Hyperlink("github.com/CubicLauncher/CubicLauncher");
         sourceCodeLink.setOnAction(e -> controller.onSourceCodeLinkClicked());
         sourceCodeBox.getChildren().addAll(sourceCodeLabel, sourceCodeLink);
@@ -157,18 +168,19 @@ public class SettingsView {
         VBox pane = new VBox(15);
         pane.getStyleClass().add("settings-card");
         pane.setPadding(new Insets(25));
-        pane.getChildren().addAll(createVersionVisibilitySection(), new Separator(), createIntegrationsSection(), new Separator(), createPerformanceSection());
+        pane.getChildren().addAll(createVersionVisibilitySection(), new Separator(), createIntegrationsSection(),
+                new Separator(), createPerformanceSection());
         return pane;
     }
 
     private static Node createVersionVisibilitySection() {
         VBox subSection = new VBox(10);
-        Label title = new Label("Visibilidad de Versiones");
+        Label title = new Label(lm.get("settings.version_visibility"));
         title.getStyleClass().add("settings-subtitle");
-        CheckBox showAlphas = new CheckBox("Mostrar versiones Alpha (muy inestables)");
+        CheckBox showAlphas = new CheckBox(lm.get("settings.show_alphas"));
         showAlphas.setSelected(controller.getSettings().isShowAlphaVersions());
         showAlphas.setOnAction(e -> controller.onShowAlphasChanged(showAlphas.isSelected()));
-        CheckBox showBetas = new CheckBox("Mostrar versiones betas");
+        CheckBox showBetas = new CheckBox(lm.get("settings.show_betas"));
         showBetas.setSelected(controller.getSettings().isShowBetaVersions());
         showBetas.setOnAction(e -> controller.onShowBetasChanged(showBetas.isSelected()));
         subSection.getChildren().addAll(title, showAlphas, showBetas);
@@ -177,7 +189,7 @@ public class SettingsView {
 
     private static Node createIntegrationsSection() {
         VBox subSection = new VBox(10);
-        Label title = new Label("Integraciones");
+        Label title = new Label(lm.get("settings.integrations"));
         title.getStyleClass().add("settings-subtitle");
         subSection.getChildren().add(title);
         return subSection;
@@ -185,9 +197,9 @@ public class SettingsView {
 
     private static Node createPerformanceSection() {
         VBox subSection = new VBox(10);
-        Label title = new Label("Rendimiento");
+        Label title = new Label(lm.get("settings.performance"));
         title.getStyleClass().add("settings-subtitle");
-        CheckBox useDiscreteGpu = new CheckBox("Forzar el uso de la tarjeta gráfica dedicada");
+        CheckBox useDiscreteGpu = new CheckBox(lm.get("settings.force_gpu"));
         useDiscreteGpu.setSelected(controller.getSettings().isForceDiscreteGpu());
         useDiscreteGpu.setOnAction(e -> controller.onUseDiscreteGpuChanged(useDiscreteGpu.isSelected()));
         subSection.getChildren().addAll(title, useDiscreteGpu);
@@ -198,28 +210,29 @@ public class SettingsView {
         VBox pane = new VBox(15);
         pane.getStyleClass().add("settings-card");
         pane.setPadding(new Insets(25));
-        pane.getChildren().addAll(createJavaExecutableSection(), new Separator(), createMemoryAllocationSection(), new Separator(), createAdvancedSection());
+        pane.getChildren().addAll(createJavaExecutableSection(), new Separator(), createMemoryAllocationSection(),
+                new Separator(), createAdvancedSection());
         return pane;
     }
 
     private static Node createJavaExecutableSection() {
         VBox subSection = new VBox(10);
-        Label title = new Label("Ejecutable de Java");
+        Label title = new Label(lm.get("settings.java_executable"));
         title.getStyleClass().add("settings-subtitle");
         HBox radioContainer = createJavaVersionRadioButtons();
         HBox pathBox = new HBox(5);
         pathBox.setAlignment(Pos.CENTER_LEFT);
         javaPathField = new TextField();
-        javaPathField.setPromptText("Ruta automática (dejar vacío)");
+        javaPathField.setPromptText(lm.get("settings.java_path_prompt"));
         String initialPath = controller.getSettings().getJava8Path();
         if (initialPath != null && !initialPath.isEmpty()) {
             javaPathField.setText(initialPath);
         }
         javaPathField.textProperty().addListener((obs, oldVal, newVal) -> controller.onJavaPathChanged(newVal));
         HBox.setHgrow(javaPathField, Priority.ALWAYS);
-        Button browseButton = new Button("Examinar...");
+        Button browseButton = new Button(lm.get("settings.browse"));
         browseButton.setOnAction(e -> controller.onBrowseJavaPath(javaPathField));
-        pathBox.getChildren().addAll(new Label("Ruta:"), javaPathField, browseButton);
+        pathBox.getChildren().addAll(new Label(lm.get("settings.java_path")), javaPathField, browseButton);
         subSection.getChildren().addAll(title, radioContainer, pathBox);
         return subSection;
     }
@@ -247,7 +260,8 @@ public class SettingsView {
             controller.onJava21Selected();
             updateJavaPathField();
         });
-        radioContainer.getChildren().addAll(new Label("Editar ruta de:"), java8Radio, java17Radio, java21Radio);
+        radioContainer.getChildren().addAll(new Label(lm.get("settings.edit_path_for")), java8Radio, java17Radio,
+                java21Radio);
         return radioContainer;
     }
 
@@ -266,17 +280,18 @@ public class SettingsView {
 
     private static Node createMemoryAllocationSection() {
         VBox subSection = new VBox(10);
-        Label title = new Label("Asignación de Memoria");
+        Label title = new Label(lm.get("settings.memory_allocation"));
         title.getStyleClass().add("settings-subtitle");
-        int minMemMB = controller.getSettings().getMinMemoryInMB();
-        int maxMemMB = controller.getSettings().getMaxMemoryInMB();
-        HBox minMemoryBox = createMemoryInput("RAM Mínima:", minMemMB, controller::onMinMemoryChanged);
-        HBox maxMemoryBox = createMemoryInput("RAM Máxima:", maxMemMB, controller::onMaxMemoryChanged);
+        int minMemoryMB = controller.getSettings().getMinMemoryInMB();
+        int maxMemoryMB = controller.getSettings().getMaxMemoryInMB();
+        HBox minMemoryBox = createMemoryInput(lm.get("settings.min_ram"), minMemoryMB, controller::onMinMemoryChanged);
+        HBox maxMemoryBox = createMemoryInput(lm.get("settings.max_ram"), maxMemoryMB, controller::onMaxMemoryChanged);
         subSection.getChildren().addAll(title, minMemoryBox, maxMemoryBox);
         return subSection;
     }
 
-    private static HBox createMemoryInput(String labelText, int memoryInMB, java.util.function.Consumer<Integer> onChange) {
+    private static HBox createMemoryInput(String labelText, int memoryInMB,
+            java.util.function.Consumer<Integer> onChange) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
         Label label = new Label(labelText);
@@ -298,7 +313,8 @@ public class SettingsView {
                 } else {
                     field.setText(String.valueOf(currentValue * 1024));
                 }
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
         });
         field.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.isEmpty() && !newVal.equals(oldVal)) {
@@ -306,7 +322,8 @@ public class SettingsView {
                     int value = Integer.parseInt(newVal);
                     int memoryMB = "GB".equals(unit.getValue()) ? value * 1024 : value;
                     onChange.accept(memoryMB);
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
         });
         box.getChildren().addAll(label, field, unit);
@@ -315,13 +332,14 @@ public class SettingsView {
 
     private static Node createAdvancedSection() {
         VBox subSection = new VBox(10);
-        Label title = new Label("Avanzado");
+        Label title = new Label(lm.get("settings.advanced"));
         title.getStyleClass().add("settings-subtitle");
-        Label argsLabel = new Label("Argumentos de JVM:");
+        Label argsLabel = new Label(lm.get("settings.jvm_args"));
         argsLabel.getStyleClass().add("jvm-args-label");
         TextField argsField = new TextField();
         argsField.setPromptText("-XX:+UnlockExperimentalVMOptions ...");
-        if (controller.getSettings().getJvmArguments() != null && !controller.getSettings().getJvmArguments().isEmpty()) {
+        if (controller.getSettings().getJvmArguments() != null
+                && !controller.getSettings().getJvmArguments().isEmpty()) {
             argsField.setText(controller.getSettings().getJvmArguments());
         }
         argsField.textProperty().addListener((obs, oldVal, newVal) -> controller.onJvmArgsChanged(newVal));

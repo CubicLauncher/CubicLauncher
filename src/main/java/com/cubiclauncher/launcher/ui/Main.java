@@ -104,7 +104,8 @@ public class Main extends Application {
             StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
         }
 
-        InputStream iconStream = com.cubiclauncher.launcher.Launcher.class.getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png");
+        InputStream iconStream = com.cubiclauncher.launcher.Launcher.class
+                .getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png");
         if (iconStream != null) {
             primaryStage.getIcons().add(new Image(iconStream));
         } else {

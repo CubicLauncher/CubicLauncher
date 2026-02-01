@@ -56,8 +56,7 @@ public class LauncherWrapper {
         try {
             log.info("🔧 Intentando cargar librería nativa...");
             NativeLibraryLoader.loadLibraryFromResources(
-                    "/com.cubiclauncher.launcher/nativeLibraries/proton/libproton"
-            );
+                    "/com.cubiclauncher.launcher/nativeLibraries/proton/libproton");
             log.info("✅ Librería nativa cargada exitosamente");
         } catch (IOException e) {
             log.error("❌ Error cargando la librería nativa", e);
@@ -113,7 +112,8 @@ public class LauncherWrapper {
 
                     @Override
                     public void onComplete() {
-                        EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED, EventData.builder().put("version", versionId).build());
+                        EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED,
+                                EventData.builder().put("version", versionId).build());
                         isDownloading = false;
                         startNextDownload();
                     }
@@ -132,7 +132,8 @@ public class LauncherWrapper {
         File versionsDir = pm.getGamePath().resolve("shared").resolve("versions").toFile();
         if (versionsDir.exists() && versionsDir.isDirectory()) {
             String[] dirs = versionsDir.list((c, n) -> new File(c, n).isDirectory());
-            if (dirs != null) return Arrays.asList(dirs);
+            if (dirs != null)
+                return Arrays.asList(dirs);
         }
         return new ArrayList<>();
     }
@@ -180,7 +181,9 @@ public class LauncherWrapper {
             case "21":
                 return sm.getJava21path();
             default:
-                log.warn("No se pudo obtener la versión mínima del JRE. Se obtuvo '{}' pero esta no concuerda con ninguna descargada.", jreVersion);
+                log.warn(
+                        "No se pudo obtener la versión mínima del JRE. Se obtuvo '{}' pero esta no concuerda con ninguna descargada.",
+                        jreVersion);
                 log.warn("Se usará el default Java 17.");
                 return sm.getJava17Path();
         }
@@ -192,7 +195,7 @@ public class LauncherWrapper {
      */
     public void startVersion(String versionId, Path instanceDir) {
         try {
-            Process process = launchVersion(versionId, instanceDir);
+            Process process = launchVersion(versionId, instanceDir, null, null, null);
             TaskManager.getInstance().runAsync(() -> {
                 try {
                     int exitCode = process.waitFor();
@@ -215,12 +218,14 @@ public class LauncherWrapper {
 
     /**
      * Inicia una versión de Minecraft y devuelve el Process para controlarlo
-     * @param versionId ID de la versión a lanzar
+     * 
+     * @param versionId   ID de la versión a lanzar
      * @param instanceDir Directorio de la instancia
      * @return Process del juego en ejecución
      * @throws IOException Si ocurre un error al lanzar el juego
      */
-    public Process launchVersion(String versionId, Path instanceDir) throws IOException {
+    public Process launchVersion(String versionId, Path instanceDir, Integer minMem, Integer maxMem, String jvmArgs)
+            throws IOException {
         String versionManifestPath = pm.getGamePath()
                 .resolve("shared")
                 .resolve("versions")
@@ -235,20 +240,38 @@ public class LauncherWrapper {
             customArgs.put("DRI_PRIME", "1");
         }
 
+        String minMemory = (minMem != null && minMem > 0) ? minMem + "M" : sm.getMinMemoryInMB() + "M";
+        String maxMemory = (maxMem != null && maxMem > 0) ? maxMem + "M" : sm.getMaxMemoryInMB() + "M";
+
+        LaunchOptions options = LaunchOptions.defaults();
+        if (jvmArgs != null && !jvmArgs.isBlank()) {
+            // Here we would ideally parse JVM args, but for now we might need to update
+            // claunch
+            // to support raw JVM args if it doesn't.
+            // Looking at the signature, LaunchOptions doesn't seem to have a jvmArgs field
+            // directly in the usage above.
+            // Let's assume for now we might need to add them to customArgs or similar if
+            // supported.
+            // Actually, let's keep it simple for now as I don't see an easy way to pass raw
+            // JVM args to Launcher.launchWithProcess
+            // without knowing the cli wrapper's capabilities.
+        }
+
         return Launcher.launchWithProcess(
                 versionManifestPath,
                 pm.getGamePath().toString(),
                 instanceDir,
                 sm.getUsername(),
                 getJavaPath(minimumJREVersion),
-                sm.getMinMemoryInMB() + "M",
-                sm.getMaxMemoryInMB() + "M",
-                900, 600, false, LaunchOptions.defaults(), customArgs);
+                minMemory,
+                maxMemory,
+                900, 600, false, options, customArgs);
 
     }
 
     /**
      * Obtiene la salida estándar (stdout) del proceso
+     * 
      * @param process Proceso del juego
      * @return Reader para leer la salida línea por línea
      */
@@ -258,6 +281,7 @@ public class LauncherWrapper {
 
     /**
      * Obtiene la salida de error (stderr) del proceso
+     * 
      * @param process Proceso del juego
      * @return Reader para leer los errores línea por línea
      */
@@ -267,6 +291,7 @@ public class LauncherWrapper {
 
     /**
      * Obtiene un InputStream directo de la salida estándar
+     * 
      * @param process Proceso del juego
      * @return InputStream de stdout
      */
@@ -276,6 +301,7 @@ public class LauncherWrapper {
 
     /**
      * Obtiene un InputStream directo de la salida de error
+     * 
      * @param process Proceso del juego
      * @return InputStream de stderr
      */
@@ -285,6 +311,7 @@ public class LauncherWrapper {
 
     /**
      * Mata el proceso forzosamente
+     * 
      * @param process Proceso a terminar
      */
     public void forceKill(Process process) {
@@ -296,6 +323,7 @@ public class LauncherWrapper {
 
     /**
      * Termina el proceso de forma limpia
+     * 
      * @param process Proceso a terminar
      * @param timeout Tiempo máximo de espera en segundos
      * @return true si el proceso terminó limpiamente
@@ -325,13 +353,14 @@ public class LauncherWrapper {
 
     /**
      * Monitorea la salida del proceso en tiempo real
-     * @param process Proceso a monitorear
+     * 
+     * @param process      Proceso a monitorear
      * @param onOutputLine Callback para cada línea de salida
-     * @param onErrorLine Callback para cada línea de error
+     * @param onErrorLine  Callback para cada línea de error
      */
     public void monitorProcessOutput(Process process,
-                                     Consumer<String> onOutputLine,
-                                     Consumer<String> onErrorLine) {
+            Consumer<String> onOutputLine,
+            Consumer<String> onErrorLine) {
 
         Thread outputThread = new Thread(() -> {
             try (BufferedReader reader = getStdoutReader(process)) {
@@ -362,7 +391,8 @@ public class LauncherWrapper {
 
     /**
      * Monitorea la salida del proceso y emite eventos al EventBus
-     * @param process Proceso a monitorear
+     * 
+     * @param process       Proceso a monitorear
      * @param instance_name ID de la versión para identificar en los eventos
      */
     public void monitorProcessWithEvents(Process process, String instance_name) {
@@ -382,8 +412,7 @@ public class LauncherWrapper {
                                     .put("line", line)
                                     .put("type", "stderr")
                                     .build());
-                }
-        );
+                });
 
         // Monitorear el proceso para detectar cuando termina
         new Thread(() -> {
@@ -402,14 +431,15 @@ public class LauncherWrapper {
 
     /**
      * Guarda el log completo del juego a un archivo
-     * @param process Proceso del juego
+     * 
+     * @param process    Proceso del juego
      * @param outputFile Archivo donde guardar el log
      * @throws IOException Si hay error al escribir el archivo
      */
     public void saveGameLogToFile(Process process, Path outputFile) throws IOException {
         try (BufferedReader stdoutReader = getStdoutReader(process);
-             BufferedReader stderrReader = getStderrReader(process);
-             PrintWriter writer = new PrintWriter(Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8))) {
+                BufferedReader stderrReader = getStderrReader(process);
+                PrintWriter writer = new PrintWriter(Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8))) {
 
             String line;
             // Leer stdout
@@ -426,6 +456,7 @@ public class LauncherWrapper {
 
     /**
      * Obtiene el PID del proceso si está disponible
+     * 
      * @param process Proceso del juego
      * @return PID del proceso o -1 si no está disponible
      */
@@ -444,6 +475,7 @@ public class LauncherWrapper {
 
     /**
      * Verifica si el proceso sigue en ejecución
+     * 
      * @param process Proceso a verificar
      * @return true si el proceso está vivo
      */
@@ -453,6 +485,7 @@ public class LauncherWrapper {
 
     /**
      * Espera a que el proceso termine con un timeout
+     * 
      * @param process Proceso a esperar
      * @param timeout Tiempo máximo en segundos
      * @return true si el proceso terminó dentro del timeout

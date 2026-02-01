@@ -1,22 +1,38 @@
 package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.LanguageManager;
+import com.cubiclauncher.launcher.core.PathManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
-import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
+import com.cubiclauncher.launcher.ui.components.ModalHeader;
 import com.cubiclauncher.launcher.ui.controllers.InstanceController;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Modality;
+import javafx.stage.StageStyle;
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InstanceViewer extends BorderPane {
     private static InstanceViewer instance;
     private InstanceManager.Instance currentInstance;
     private final ObjectProperty<InstanceManager.Instance> currentInstanceProperty = new SimpleObjectProperty<>();
+    private final LanguageManager lm = LanguageManager.getInstance();
 
     private Label instanceName;
     private Label instanceVersion;
@@ -27,6 +43,8 @@ public class InstanceViewer extends BorderPane {
     private Label loaderLabel;
     private Label locationLabel;
     private Label lastPlayedLabel;
+    private ImageView imageView;
+    private Label imageIcon;
 
     private InstanceViewer() {
         super();
@@ -49,7 +67,8 @@ public class InstanceViewer extends BorderPane {
         eventBus.subscribe(EventType.GAME_OUTPUT, eventData -> {
             String instance_name = eventData.getString("instance_name");
             String output = eventData.getString("line");
-            if (output != null && !output.trim().isEmpty() && currentInstance != null && currentInstance.getName().equals(instance_name)) {
+            if (output != null && !output.trim().isEmpty() && currentInstance != null
+                    && currentInstance.getName().equals(instance_name)) {
                 Platform.runLater(() -> appendLog(output));
             }
         });
@@ -70,9 +89,20 @@ public class InstanceViewer extends BorderPane {
         imageContainer.setMinSize(180, 180);
         imageContainer.setMaxSize(180, 180);
 
-        Label imageIcon = new Label("⬢");
+        imageIcon = new Label("⬢");
         imageIcon.getStyleClass().add("instance-icon");
-        imageContainer.getChildren().add(imageIcon);
+
+        imageView = new ImageView();
+        imageView.setFitWidth(180);
+        imageView.setFitHeight(180);
+        imageView.setPreserveRatio(true);
+
+        Rectangle clip = new Rectangle(180, 180);
+        clip.setArcWidth(20);
+        clip.setArcHeight(20);
+        imageView.setClip(clip);
+
+        imageContainer.getChildren().addAll(imageIcon, imageView);
 
         // Instance information - clean and minimal
         VBox info = new VBox(16);
@@ -91,17 +121,17 @@ public class InstanceViewer extends BorderPane {
         metaInfo.setHgap(32);
         metaInfo.setVgap(8);
 
-        Label lastPlayedTitle = new Label("Last played");
+        Label lastPlayedTitle = new Label(lm.get("instance.last_played"));
         lastPlayedTitle.getStyleClass().add("meta-label");
 
-        lastPlayedLabel = new Label("Never");
+        lastPlayedLabel = new Label(lm.get("instance.never"));
         lastPlayedLabel.getStyleClass().add("meta-value");
 
         metaInfo.add(lastPlayedTitle, 0, 0);
         metaInfo.add(lastPlayedLabel, 0, 1);
 
         // Primary action button - minimalist design
-        playButton = new Button("Play");
+        playButton = new Button(lm.get("instance.play"));
         playButton.getStyleClass().add("play-button-primary");
         playButton.setOnAction(e -> {
             if (currentInstance != null) {
@@ -126,7 +156,7 @@ public class InstanceViewer extends BorderPane {
         detailsCard.getStyleClass().add("details-card");
         detailsCard.setPrefWidth(400);
 
-        Label detailsTitle = new Label("Details");
+        Label detailsTitle = new Label(lm.get("instance.details"));
         detailsTitle.getStyleClass().add("section-title");
 
         // Grid de detalles
@@ -134,13 +164,13 @@ public class InstanceViewer extends BorderPane {
         detailsGrid.getStyleClass().add("details-grid");
 
         // Version info
-        VBox versionBox = createInfoBox("Version", versionLabel = new Label("-"));
+        VBox versionBox = createInfoBox(lm.get("instance.version"), versionLabel = new Label("-"));
 
         // Loader info
-        VBox loaderBox = createInfoBox("Loader", loaderLabel = new Label("-"));
+        VBox loaderBox = createInfoBox(lm.get("instance.loader"), loaderLabel = new Label("-"));
 
         // Location info
-        VBox locationBox = createInfoBox("Location", locationLabel = new Label("-"));
+        VBox locationBox = createInfoBox(lm.get("instance.location"), locationLabel = new Label("-"));
 
         detailsGrid.getChildren().addAll(versionBox, loaderBox, locationBox);
         detailsCard.getChildren().addAll(detailsTitle, detailsGrid);
@@ -154,13 +184,13 @@ public class InstanceViewer extends BorderPane {
         HBox logsHeader = new HBox(8);
         logsHeader.setAlignment(Pos.CENTER_LEFT);
 
-        Label logsTitle = new Label("Console");
+        Label logsTitle = new Label(lm.get("instance.console"));
         logsTitle.getStyleClass().add("section-title");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button copyLogsButton = new Button("Copy");
+        Button copyLogsButton = new Button(lm.get("instance.copy"));
         copyLogsButton.getStyleClass().add("btn-secondary");
         copyLogsButton.setOnAction(e -> {
             if (!logsArea.getText().isEmpty()) {
@@ -171,11 +201,11 @@ public class InstanceViewer extends BorderPane {
             }
         });
 
-        Button clearLogsButton = new Button("Clear");
+        Button clearLogsButton = new Button(lm.get("instance.clear"));
         clearLogsButton.getStyleClass().add("btn-secondary");
         clearLogsButton.setOnAction(e -> {
             logsArea.clear();
-            appendLog("Console cleared");
+            appendLog(lm.get("instance.console_cleared"));
         });
 
         logsHeader.getChildren().addAll(logsTitle, spacer, copyLogsButton, clearLogsButton);
@@ -223,17 +253,19 @@ public class InstanceViewer extends BorderPane {
     }
 
     private void showEmptyState() {
-        instanceName.setText("No instance selected");
+        instanceName.setText(lm.get("instance.no_selection"));
         instanceVersion.setText("");
         playButton.setDisable(true);
 
         versionLabel.setText("-");
         loaderLabel.setText("-");
         locationLabel.setText("-");
-        lastPlayedLabel.setText("Never");
+        lastPlayedLabel.setText(lm.get("instance.never"));
+
+        updateCoverImage(null);
 
         logsArea.clear();
-        logsArea.appendText("Select an instance to view console output\n");
+        logsArea.appendText(lm.get("instance.select_hint") + "\n");
     }
 
     public void showInstance(InstanceManager.Instance instance) {
@@ -245,44 +277,303 @@ public class InstanceViewer extends BorderPane {
             instanceVersion.setText(formatVersion(instance.getVersion()));
             playButton.setDisable(false);
 
+            // Update image
+            updateCoverImage(instance);
+
             versionLabel.setText(instance.getVersion());
             loaderLabel.setText(extractLoader(instance.getVersion()));
-            locationLabel.setText("./instances/" + instance.getName());
+            locationLabel.setText(PathManager.getInstance().getInstancePath().resolve(instance.getName()).toString());
             lastPlayedLabel.setText(instance.getLastPlayedFormatted());
 
             logsArea.clear();
-            logsArea.appendText("Instance: " + instance.getName() + "\n");
-            logsArea.appendText("Version: " + instance.getVersion() + "\n");
-            logsArea.appendText("Ready\n");
+            logsArea.appendText(lm.get("instance.field_name") + ": " + instance.getName() + "\n");
+            logsArea.appendText(lm.get("instance.field_version") + ": " + instance.getVersion() + "\n");
+            logsArea.appendText(lm.get("instance.ready") + "\n");
 
         } else {
             showEmptyState();
         }
     }
 
+    public void showEditDialog(InstanceManager.Instance instance) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.initOwner(getScene().getWindow());
+        dialog.initModality(Modality.WINDOW_MODAL);
+        dialog.initStyle(StageStyle.TRANSPARENT);
+        dialog.setTitle(lm.get("instance.edit_title"));
+
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getStyleClass().add("editor-dialog-pane");
+        dialogPane.setHeaderText(null);
+        dialogPane.setGraphic(null);
+        dialogPane.getButtonTypes().add(ButtonType.CLOSE);
+        Node closeBtnType = dialogPane.lookupButton(ButtonType.CLOSE);
+        if (closeBtnType != null)
+            closeBtnType.setVisible(false);
+        dialogPane.setBackground(null);
+        dialogPane.setPadding(Insets.EMPTY);
+
+        VBox windowRoot = new VBox();
+        windowRoot.getStyleClass().add("editor-window-root");
+        windowRoot.setPrefWidth(500);
+
+        // --- Reusable Header ---
+        ModalHeader instancesEditor = new ModalHeader(lm.get("instance.edit_title"), dialog);
+
+        // --- Content ---
+        VBox content = new VBox(25);
+        content.getStyleClass().add("editor-content");
+        content.setAlignment(Pos.TOP_LEFT);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(15);
+        grid.setVgap(20);
+        grid.setAlignment(Pos.CENTER_LEFT);
+
+        TextField nameField = createModalField(grid, lm.get("instance.field_name"), instance.getName(), 0);
+        TextField versionField = createModalField(grid, lm.get("instance.field_version"), instance.getVersion(), 1);
+
+        Label ramLabel = new Label(lm.get("instance.field_ram"));
+        ramLabel.getStyleClass().add("editor-field-label");
+        HBox ramBox = new HBox(10);
+        TextField minMemField = new TextField(
+                instance.getMinMemory() != null ? String.valueOf(instance.getMinMemory()) : "");
+        TextField maxMemField = new TextField(
+                instance.getMaxMemory() != null ? String.valueOf(instance.getMaxMemory()) : "");
+        minMemField.getStyleClass().add("editor-text-field");
+        maxMemField.getStyleClass().add("editor-text-field");
+        minMemField.setPromptText("Min");
+        maxMemField.setPromptText("Max");
+        minMemField.setPrefWidth(110);
+        maxMemField.setPrefWidth(110);
+        ramBox.getChildren().addAll(minMemField, maxMemField);
+
+        grid.add(ramLabel, 0, 2);
+        grid.add(ramBox, 1, 2);
+
+        TextField jvmArgsField = createModalField(grid, lm.get("instance.field_jvm_args"),
+                instance.getJvmArgs() != null ? instance.getJvmArgs() : "", 3);
+
+        VBox gallerySection = new VBox(10);
+        HBox galleryHeader = new HBox(10);
+        galleryHeader.setAlignment(Pos.CENTER_LEFT);
+
+        Label galleryLabel = new Label(lm.get("instance.gallery_title"));
+        galleryLabel.getStyleClass().add("editor-field-label");
+
+        Button openFolderBtn = new Button(lm.get("instance.open_folder"));
+        openFolderBtn.getStyleClass().add("btn-secondary");
+        openFolderBtn.setStyle("-fx-font-size: 9px; -fx-padding: 4 8;");
+        openFolderBtn.setOnAction(e -> openScreenshotsFolder(instance));
+
+        galleryHeader.getChildren().addAll(galleryLabel, openFolderBtn);
+
+        HBox galleryItems = new HBox(10);
+        galleryItems.setPadding(new Insets(5));
+
+        String[] selectedCover = { instance.getCoverImage() };
+
+        List<File> screenshots = getScreenshots(instance);
+        if (screenshots.isEmpty()) {
+            Label noScreenshots = new Label(lm.get("instance.no_screenshots"));
+            noScreenshots.setStyle("-fx-text-fill: #666; -fx-font-size: 12px;");
+            galleryItems.getChildren().add(noScreenshots);
+        } else {
+            for (File screenshot : screenshots) {
+                VBox thumbContainer = createThumbnail(screenshot, selectedCover);
+                galleryItems.getChildren().add(thumbContainer);
+            }
+        }
+
+        ScrollPane galleryScroll = new ScrollPane(galleryItems);
+        galleryScroll.setPrefHeight(130);
+        galleryScroll.getStyleClass().add("console-scroll");
+        galleryScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        galleryScroll.setFitToHeight(true);
+        galleryScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        gallerySection.getChildren().addAll(galleryHeader, galleryScroll);
+        content.getChildren().addAll(grid, gallerySection);
+
+        // --- Footer ---
+        HBox footer = new HBox(15);
+        footer.getStyleClass().add("editor-footer");
+        footer.setAlignment(Pos.CENTER_RIGHT);
+
+        Button deleteBtn = new Button(lm.get("instance.btn_delete"));
+        deleteBtn.getStyleClass().add("btn-secondary");
+        deleteBtn.setStyle("-fx-text-fill: #ff5555; -fx-font-size: 11px; -fx-padding: 8 20;");
+
+        Button saveBtn = new Button(lm.get("instance.btn_save"));
+        saveBtn.getStyleClass().add("play-button-primary");
+        saveBtn.setStyle("-fx-font-size: 11px; -fx-padding: 8 24;");
+
+        Region footerSpacer = new Region();
+        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
+
+        footer.getChildren().addAll(deleteBtn, footerSpacer, saveBtn);
+
+        windowRoot.getChildren().addAll(instancesEditor, content, footer);
+        dialogPane.setContent(windowRoot);
+
+        // Handle buttons manually since we use custom footer
+        saveBtn.setOnAction(e -> {
+            String oldName = instance.getName();
+            String newName = nameField.getText();
+
+            instance.setVersion(versionField.getText());
+            try {
+                instance.setMinMemory(minMemField.getText().isEmpty() ? null : Integer.parseInt(minMemField.getText()));
+                instance.setMaxMemory(maxMemField.getText().isEmpty() ? null : Integer.parseInt(maxMemField.getText()));
+            } catch (NumberFormatException ex) {
+            }
+
+            instance.setJvmArgs(jvmArgsField.getText());
+            instance.setCoverImage(selectedCover[0]);
+
+            if (!newName.equals(oldName)) {
+                InstanceManager.getInstance().renameInstance(oldName, newName);
+            } else {
+                InstanceManager.getInstance().saveInstance(instance);
+                showInstance(instance);
+            }
+            dialog.close();
+        });
+
+        deleteBtn.setOnAction(e -> {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+            confirm.setTitle(lm.get("instance.confirm_delete_title"));
+            confirm.setHeaderText(lm.get("instance.confirm_delete_header", instance.getName()));
+            confirm.setContentText(lm.get("instance.confirm_delete_content"));
+            confirm.getDialogPane().getStylesheets()
+                    .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
+            confirm.getDialogPane().getStyleClass().add("editor-dialog-pane");
+
+            if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                InstanceManager.getInstance().deleteInstance(instance.getName());
+                dialog.close();
+            }
+        });
+
+        // Style the Scene for transparency
+        Platform.runLater(() -> {
+            if (dialogPane.getScene() != null) {
+                dialogPane.getScene().setFill(null);
+                dialogPane.getScene().getStylesheets()
+                        .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
+            }
+            nameField.requestFocus();
+        });
+
+        dialog.showAndWait();
+    }
+
+    private List<File> getScreenshots(InstanceManager.Instance instance) {
+        List<File> screenshots = new ArrayList<>();
+        File screenshotsDir = PathManager.getInstance().getInstancePath()
+                .resolve(instance.getName())
+                .resolve("screenshots")
+                .toFile();
+
+        if (screenshotsDir.exists() && screenshotsDir.isDirectory()) {
+            File[] files = screenshotsDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png")
+                    || name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg"));
+            if (files != null) {
+                for (File f : files)
+                    screenshots.add(f);
+            }
+        }
+        return screenshots;
+    }
+
+    private VBox createThumbnail(File file, String[] selectedCover) {
+        VBox container = new VBox();
+        container.setPrefSize(100, 100);
+        container.getStyleClass().add("editor-thumb-container");
+        container.setAlignment(Pos.CENTER);
+
+        Image image = new Image(file.toURI().toString());
+        ImageView thumb = new ImageView(image);
+        double width = image.getWidth();
+        double height = image.getHeight();
+        double side = Math.min(width, height);
+        thumb.setViewport(new Rectangle2D((width - side) / 2, (height - side) / 2, side, side));
+        thumb.setFitWidth(90);
+        thumb.setFitHeight(90);
+        thumb.setPreserveRatio(true);
+
+        container.getChildren().add(thumb);
+
+        updateThumbStyle(container, file.getAbsolutePath().equals(selectedCover[0]));
+
+        container.setOnMouseClicked(e -> {
+            selectedCover[0] = file.getAbsolutePath();
+            // Update UI for all siblings
+            if (container.getParent() instanceof Pane) {
+                Pane parent = (Pane) container.getParent();
+                parent.getChildren().forEach(node -> {
+                    if (node instanceof VBox) {
+                        updateThumbStyle((VBox) node, false);
+                    }
+                });
+            }
+            updateThumbStyle(container, true);
+        });
+
+        return container;
+    }
+
+    private void updateThumbStyle(VBox container, boolean selected) {
+        if (selected) {
+            container.setStyle("-fx-border-color: #3a86ff; -fx-border-width: 2; -fx-background-color: #1a1a1a;");
+        } else {
+            container.setStyle("-fx-border-color: #2a2a2a; -fx-border-width: 1; -fx-background-color: transparent;");
+        }
+    }
+
+    private TextField createModalField(GridPane grid, String label, String value, int row) {
+        Label fieldLabel = new Label(label);
+        fieldLabel.getStyleClass().add("editor-field-label");
+
+        TextField field = new TextField(value);
+        field.getStyleClass().add("editor-text-field");
+        field.setPrefWidth(230);
+
+        grid.add(fieldLabel, 0, row);
+        grid.add(field, 1, row);
+        return field;
+    }
+
     private String formatVersion(String version) {
-        if (version == null) return "";
+        if (version == null)
+            return "";
         return version.replace("-", " ").replace("loader", "").trim();
     }
 
     private String extractLoader(String version) {
-        if (version == null) return "Vanilla";
-        if (version.contains("fabric")) return "Fabric";
-        if (version.contains("forge")) return "Forge";
-        if (version.contains("quilt")) return "Quilt";
+        if (version == null)
+            return "Vanilla";
+        if (version.contains("fabric"))
+            return "Fabric";
+        if (version.contains("forge"))
+            return "Forge";
+        if (version.contains("quilt"))
+            return "Quilt";
         return "Vanilla";
     }
 
     public void appendLog(String message) {
         if (logsArea != null) {
-            String timestamp = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            String timestamp = java.time.LocalTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
             Platform.runLater(() -> logsArea.appendText("[" + timestamp + "] " + message + "\n"));
         }
     }
 
     public void appendError(String error) {
         if (logsArea != null) {
-            String timestamp = java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
+            String timestamp = java.time.LocalTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
             Platform.runLater(() -> logsArea.appendText("[" + timestamp + "] ERROR: " + error + "\n"));
         }
     }
@@ -290,6 +581,57 @@ public class InstanceViewer extends BorderPane {
     public void clearLogs() {
         if (logsArea != null) {
             logsArea.clear();
+        }
+    }
+
+    private void updateCoverImage(InstanceManager.Instance instance) {
+        if (instance != null && instance.getCoverImage() != null) {
+            File imgFile = new File(instance.getCoverImage());
+            if (imgFile.exists()) {
+                try {
+                    // Load proportionally ensuring it covers at least 180x180
+                    Image image = new Image(imgFile.toURI().toString());
+                    double width = image.getWidth();
+                    double height = image.getHeight();
+
+                    double side = Math.min(width, height);
+                    double x = (width - side) / 2;
+                    double y = (height - side) / 2;
+
+                    imageView.setViewport(new Rectangle2D(x, y, side, side));
+                    imageView.setFitWidth(180);
+                    imageView.setFitHeight(180);
+                    imageView.setImage(image);
+
+                    imageIcon.setVisible(false);
+                    imageView.setVisible(true);
+                    return;
+                } catch (Exception e) {
+                    // Fallback to icon
+                }
+            }
+        }
+        imageView.setImage(null);
+        imageView.setVisible(false);
+        imageIcon.setVisible(true);
+    }
+
+    private void openScreenshotsFolder(InstanceManager.Instance instance) {
+        Path path = PathManager.getInstance().getInstancePath()
+                .resolve(instance.getName())
+                .resolve("screenshots");
+        File folder = path.toFile();
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        try {
+            if (System.getProperty("os.name").toLowerCase().contains("linux")) {
+                new ProcessBuilder("xdg-open", folder.getAbsolutePath()).start();
+            } else if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+                Desktop.getDesktop().open(folder);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

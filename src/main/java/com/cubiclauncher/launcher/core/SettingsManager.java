@@ -27,7 +27,7 @@ public class SettingsManager {
     private static final PathManager pathManager = PathManager.getInstance();
     private static SettingsManager instance;
     // Launcher settings
-    public String language = "Español";
+    public String language = "es_es";
     public boolean autoUpdate = true;
     public boolean errorConsole = false;
     public boolean closeLauncherOnGameStart = false;
@@ -57,6 +57,7 @@ public class SettingsManager {
     public static SettingsManager getInstance() {
         if (instance == null) {
             instance = load();
+            LanguageManager.getInstance().loadLanguage(instance.getLanguage());
         }
         return instance;
     }

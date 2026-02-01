@@ -19,9 +19,11 @@ package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.InstanceManager.Instance;
+import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
+import com.cubiclauncher.launcher.ui.views.InstanceViewer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -29,17 +31,17 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 public class Sidebar extends VBox {
     private final ListView<Instance> instancesList;
-    private final MenuButton instanceActionsButton;
+    private final Button editInstanceButton;
     private Consumer<Instance> onInstanceSelected;
     private Runnable onSettingsAction;
     private Runnable onVersionsAction;
     private static final EventBus eventBus = EventBus.get();
     private static final TaskManager taskManager = TaskManager.getInstance();
+    private final LanguageManager lm = LanguageManager.getInstance();
 
     public Sidebar() {
         super(10);
@@ -63,34 +65,23 @@ public class Sidebar extends VBox {
         // Encabezado de la lista de instancias
         HBox instancesHeader = new HBox();
         instancesHeader.setAlignment(Pos.CENTER_LEFT);
-        Label instancesLabel = new Label("TUS INSTANCIAS");
+        Label instancesLabel = new Label(lm.get("sidebar.instances_title"));
         instancesLabel.getStyleClass().add("instances-label");
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Botón de menú de acciones de instancia
-        instanceActionsButton = new MenuButton("Acciones");
-        instanceActionsButton.getStyleClass().add("menu-button-sidebar");
-        instanceActionsButton.setVisible(false); // Oculto por defecto
-
-        MenuItem renameItem = new MenuItem("Renombrar");
-        renameItem.setOnAction(e -> {
+        // Botón de editar instancia
+        editInstanceButton = new Button(lm.get("sidebar.edit"));
+        editInstanceButton.getStyleClass().add("menu-button-sidebar");
+        editInstanceButton.setVisible(false); // Oculto por defecto
+        editInstanceButton.setOnAction(e -> {
             Instance selected = instancesList.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                showRenameDialog(selected);
+                InstanceViewer.getInstance().showEditDialog(selected);
             }
         });
 
-        MenuItem deleteItem = new MenuItem("Borrar");
-        deleteItem.setOnAction(e -> {
-            Instance selected = instancesList.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                InstanceManager.getInstance().deleteInstance(selected.getName());
-            }
-        });
-        instanceActionsButton.getItems().addAll(renameItem, deleteItem);
-
-        instancesHeader.getChildren().addAll(instancesLabel, spacer, instanceActionsButton);
+        instancesHeader.getChildren().addAll(instancesLabel, spacer, editInstanceButton);
 
         // Lista de instancias
         instancesList.getStyleClass().add("instance-list");
@@ -104,15 +95,17 @@ public class Sidebar extends VBox {
         VBox actionButtons = new VBox(8);
         actionButtons.setPadding(new Insets(10, 0, 0, 0));
 
-        Button versionsButton = createActionButton("Descargar Versiones");
-        Button settingsButton = createActionButton("Ajustes");
+        Button versionsButton = createActionButton(lm.get("sidebar.versions"));
+        Button settingsButton = createActionButton(lm.get("sidebar.settings"));
 
         versionsButton.setOnAction(e -> {
-            if (onVersionsAction != null) onVersionsAction.run();
+            if (onVersionsAction != null)
+                onVersionsAction.run();
         });
 
         settingsButton.setOnAction(e -> {
-            if (onSettingsAction != null) onSettingsAction.run();
+            if (onSettingsAction != null)
+                onSettingsAction.run();
         });
 
         actionButtons.getChildren().addAll(versionsButton, settingsButton);
@@ -121,28 +114,17 @@ public class Sidebar extends VBox {
 
         // Configurar selección
         instancesList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
-            instanceActionsButton.setVisible(selected != null);
+            editInstanceButton.setVisible(selected != null);
             if (selected != null && onInstanceSelected != null) {
                 onInstanceSelected.accept(selected);
             }
         });
-        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
-        eventBus.subscribe(EventType.INSTANCE_DELETED, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
-        eventBus.subscribe(EventType.INSTANCE_RENAME, eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
-    }
-
-    private void showRenameDialog(Instance instance) {
-        TextInputDialog dialog = new TextInputDialog(instance.getName());
-        dialog.setTitle("Renombrar Instancia");
-        dialog.setHeaderText("Renombrar la instancia '" + instance.getName() + "'");
-        dialog.setContentText("Nuevo nombre:");
-
-        Optional<String> result = dialog.showAndWait();
-        result.ifPresent(newName -> {
-            if (!newName.isEmpty() && !newName.equals(instance.getName())) {
-                InstanceManager.getInstance().renameInstance(instance.getName(), newName);
-            }
-        });
+        eventBus.subscribe(EventType.INSTANCE_CREATED,
+                eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
+        eventBus.subscribe(EventType.INSTANCE_DELETED,
+                eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
+        eventBus.subscribe(EventType.INSTANCE_RENAME,
+                eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
     }
 
     private Button createActionButton(String text) {
@@ -183,21 +165,21 @@ public class Sidebar extends VBox {
             } else {
                 HBox container = new HBox(2);
                 container.setAlignment(Pos.CENTER_LEFT);
-                container.setPadding(new Insets(0));  // Cambiado de 1 a 0
+                container.setPadding(new Insets(0)); // Cambiado de 1 a 0
                 container.getStyleClass().add("instance-cell");
-                container.setPrefHeight(30);  // Establecemos altura preferida
+                container.setPrefHeight(30); // Establecemos altura preferida
 
                 // Icono de Minecraft
                 Label icon = new Label("⛏");
                 icon.getStyleClass().add("instance-icon");
                 // Ajustar el tamaño del icono si es necesario
-                icon.setStyle("-fx-font-size: 14px;");  // Tamaño de icono
+                icon.setStyle("-fx-font-size: 14px;"); // Tamaño de icono
 
                 VBox info = new VBox(2);
                 info.setAlignment(Pos.CENTER_LEFT);
                 Label nameLabel = new Label(item.getName());
                 nameLabel.getStyleClass().add("instance-name");
-                nameLabel.setStyle("-fx-font-size: 12px;");  // Tamaño de fuente más pequeño
+                nameLabel.setStyle("-fx-font-size: 12px;"); // Tamaño de fuente más pequeño
 
                 info.getChildren().addAll(nameLabel);
                 container.getChildren().addAll(icon, info);
@@ -206,4 +188,4 @@ public class Sidebar extends VBox {
             }
         }
     }
-    }
+}

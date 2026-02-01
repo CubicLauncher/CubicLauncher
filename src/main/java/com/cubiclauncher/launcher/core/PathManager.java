@@ -27,11 +27,13 @@ public class PathManager {
     private final Path settingsPath;
     private final Path instancePath;
     private final Path gamePath;
+    private final Path langPath;
 
     private PathManager() {
         this.settingsPath = ensure(settingsDirectory());
         this.gamePath = ensure(gameDirectory());
         this.instancePath = ensure(instanceDirectory());
+        this.langPath = ensure(langDirectory());
     }
 
     public static PathManager getInstance() {
@@ -68,6 +70,10 @@ public class PathManager {
         }
     }
 
+    private static Path langDirectory() {
+        return settingsDirectory().resolve("lang");
+    }
+
     private static Path ensure(Path dir) {
         File f = dir.toFile();
         if (!f.exists() && !f.mkdirs()) {
@@ -88,6 +94,10 @@ public class PathManager {
 
     public Path getGamePath() {
         return gamePath;
+    }
+
+    public Path getLangPath() {
+        return langPath;
     }
 
     private static class Holder {
