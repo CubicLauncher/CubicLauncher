@@ -19,6 +19,7 @@ package com.cubiclauncher.launcher.ui.views;
 
 import com.cubiclauncher.launcher.core.DownloadManager;
 import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.LauncherWrapper;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -36,7 +37,8 @@ import javafx.scene.shape.Circle;
 import java.util.List;
 
 /**
- * Vista de gestión de versiones como Singleton con integración completa del EventBus
+ * Vista de gestión de versiones como Singleton con integración completa del
+ * EventBus
  */
 public class VersionsView {
     // Instancia única (Singleton)
@@ -48,6 +50,7 @@ public class VersionsView {
     private final TaskManager taskManager = TaskManager.getInstance();
     private final DownloadManager downloadManager = DownloadManager.getInstance();
     private final EventBus eventBus = EventBus.get();
+    private final LanguageManager lm = LanguageManager.getInstance();
 
     // Estado del lazy loading y referencias
     private boolean availableVersionsLoaded = false;
@@ -128,10 +131,10 @@ public class VersionsView {
         VBox header = new VBox(15);
         header.setPadding(new Insets(0, 0, 20, 0));
 
-        Label title = new Label("Gestor de Versiones");
+        Label title = new Label(lm.get("versions.title"));
         title.getStyleClass().add("versions-main-title");
 
-        Label subtitle = new Label("Administra las versiones de Minecraft y crea nuevas instancias");
+        Label subtitle = new Label(lm.get("versions.subtitle"));
         subtitle.getStyleClass().add("versions-subtitle");
 
         header.getChildren().addAll(title, subtitle);
@@ -164,20 +167,20 @@ public class VersionsView {
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
-        currentInstalledBtn = new ToggleButton("Instaladas");
+        currentInstalledBtn = new ToggleButton(lm.get("versions.installed"));
         currentInstalledBtn.setUserData("installed");
         currentInstalledBtn.getStyleClass().add("toggle-button-left");
         currentInstalledBtn.setToggleGroup(toggleGroup);
         currentInstalledBtn.setSelected(true);
 
-        currentAvailableBtn = new ToggleButton("Disponibles");
+        currentAvailableBtn = new ToggleButton(lm.get("versions.available"));
         currentAvailableBtn.setUserData("available");
         currentAvailableBtn.getStyleClass().add("toggle-button-right");
         currentAvailableBtn.setToggleGroup(toggleGroup);
 
         Button refreshBtn = new Button("↻");
         refreshBtn.getStyleClass().add("refresh-button");
-        refreshBtn.setTooltip(new Tooltip("Actualizar lista"));
+        refreshBtn.setTooltip(new Tooltip(lm.get("versions.refresh_tooltip")));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -286,7 +289,7 @@ public class VersionsView {
         section.getStyleClass().add("version-section");
         section.getStyleClass().add("create-instance-section");
 
-        Label sectionTitle = new Label("Crear Nueva Instancia");
+        Label sectionTitle = new Label(lm.get("versions.create_instance"));
         sectionTitle.getStyleClass().add("section-title");
 
         GridPane grid = new GridPane();
@@ -294,11 +297,11 @@ public class VersionsView {
         grid.setVgap(12);
         grid.getStyleClass().add("instance-form");
 
-        Label nameLabel = new Label("Nombre:");
+        Label nameLabel = new Label(lm.get("versions.instance_name"));
         nameLabel.getStyleClass().add("form-label");
 
         TextField nameField = new TextField();
-        nameField.setPromptText("Mi Mundo Survival");
+        nameField.setPromptText(lm.get("versions.name_prompt"));
         nameField.getStyleClass().add("form-field");
 
         TextFormatter<String> textFormatter = new TextFormatter<>(change -> {
@@ -307,26 +310,24 @@ public class VersionsView {
         });
         nameField.setTextFormatter(textFormatter);
 
-        Label versionLabel = new Label("Versión:");
+        Label versionLabel = new Label(lm.get("versions.instance_version"));
         versionLabel.getStyleClass().add("form-label");
 
         ComboBox<String> versionCombo = new ComboBox<>();
-        versionCombo.setPromptText("Selecciona una versión");
+        versionCombo.setPromptText(lm.get("versions.select_version"));
         versionCombo.getStyleClass().add("form-combo");
         versionCombo.setMaxWidth(Double.MAX_VALUE);
 
         // Cargar versiones instaladas inicialmente
         taskManager.runAsync(launcher::getInstalledVersions)
-                .thenAccept(versions -> Platform.runLater(() ->
-                        versionCombo.setItems(FXCollections.observableArrayList(versions))
-                ));
+                .thenAccept(versions -> Platform
+                        .runLater(() -> versionCombo.setItems(FXCollections.observableArrayList(versions))));
 
         // EVENT BUS: Actualizar combo cuando se descargue una versión
-        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED, eventData ->
-                Platform.runLater(() -> taskManager.runAsync(launcher::getInstalledVersions)
-                        .thenAccept(versions -> Platform.runLater(() ->
-                                versionCombo.setItems(FXCollections.observableArrayList(versions))
-                        ))));
+        eventBus.subscribe(EventType.DOWNLOAD_COMPLETED,
+                eventData -> Platform.runLater(() -> taskManager.runAsync(launcher::getInstalledVersions)
+                        .thenAccept(versions -> Platform
+                                .runLater(() -> versionCombo.setItems(FXCollections.observableArrayList(versions))))));
 
         grid.add(nameLabel, 0, 0);
         grid.add(nameField, 1, 0);
@@ -345,7 +346,7 @@ public class VersionsView {
         HBox actionBox = new HBox(10);
         actionBox.setAlignment(Pos.CENTER_RIGHT);
 
-        Button createButton = new Button("Crear Instancia");
+        Button createButton = new Button(lm.get("versions.btn_create"));
         createButton.getStyleClass().add("primary-button");
         createButton.setDisable(true);
 
@@ -353,20 +354,18 @@ public class VersionsView {
         statusLabel.getStyleClass().add("status-label");
         statusLabel.setVisible(false);
 
-        nameField.textProperty().addListener((obs, old, newVal) ->
-                createButton.setDisable(newVal.trim().isEmpty() || versionCombo.getValue() == null)
-        );
+        nameField.textProperty().addListener((obs, old, newVal) -> createButton
+                .setDisable(newVal.trim().isEmpty() || versionCombo.getValue() == null));
 
-        versionCombo.valueProperty().addListener((obs, old, newVal) ->
-                createButton.setDisable(newVal == null || nameField.getText().trim().isEmpty())
-        );
+        versionCombo.valueProperty().addListener(
+                (obs, old, newVal) -> createButton.setDisable(newVal == null || nameField.getText().trim().isEmpty()));
 
         createButton.setOnAction(e -> {
             String name = nameField.getText().trim();
             String version = versionCombo.getValue();
 
             if (instanceManager.instanceExists(name)) {
-                showStatus(statusLabel, "❌ Ya existe una instancia con ese nombre", false);
+                showStatus(statusLabel, lm.get("versions.err_exists"), false);
                 return;
             }
 
@@ -374,7 +373,7 @@ public class VersionsView {
             taskManager.runAsync(
                     () -> InstanceController.createInstance(name, version),
                     () -> {
-                        showStatus(statusLabel, "✓ Instancia creada exitosamente", true);
+                        showStatus(statusLabel, lm.get("versions.success_created"), true);
                         nameField.clear();
                         versionCombo.setValue(null);
                         createButton.setDisable(true);
@@ -383,10 +382,9 @@ public class VersionsView {
                         refreshInstalledVersions();
                     },
                     () -> {
-                        showStatus(statusLabel, "❌ Error al crear la instancia", false);
+                        showStatus(statusLabel, lm.get("versions.err_create"), false);
                         createButton.setDisable(false);
-                    }
-            );
+                    });
         });
 
         actionBox.getChildren().addAll(statusLabel, createButton);
@@ -418,7 +416,7 @@ public class VersionsView {
         ProgressIndicator progress = new ProgressIndicator();
         progress.setMaxSize(50, 50);
 
-        Label loadingText = new Label("Cargando versiones disponibles...");
+        Label loadingText = new Label(lm.get("versions.loading_available"));
         loadingText.getStyleClass().add("empty-state-hint");
 
         placeholder.getChildren().addAll(progress, loadingText);
@@ -434,7 +432,7 @@ public class VersionsView {
         Label icon = new Label("⚠️");
         icon.setStyle("-fx-font-size: 32px;");
 
-        Label errorText = new Label("Error al cargar versiones");
+        Label errorText = new Label(lm.get("versions.err_load"));
         errorText.getStyleClass().add("empty-state-title");
 
         Label errorDetail = new Label(errorMsg);
@@ -466,10 +464,7 @@ public class VersionsView {
 
     private void showStatus(Label statusLabel, String message, boolean isSuccess) {
         statusLabel.setText(message);
-        statusLabel.setStyle(isSuccess ?
-                "-fx-text-fill: #90c090;" :
-                "-fx-text-fill: #d08080;"
-        );
+        statusLabel.setStyle(isSuccess ? "-fx-text-fill: #90c090;" : "-fx-text-fill: #d08080;");
         statusLabel.setVisible(true);
 
         if (isSuccess) {
@@ -477,11 +472,12 @@ public class VersionsView {
                     () -> {
                         try {
                             Thread.sleep(3000);
-                        } catch (InterruptedException ignored) {}
+                        } catch (InterruptedException ignored) {
+                        }
                     },
                     () -> statusLabel.setVisible(false),
-                    e -> {}
-            );
+                    e -> {
+                    });
         }
     }
 
@@ -515,19 +511,19 @@ public class VersionsView {
             Label versionLabel = new Label(version);
             versionLabel.getStyleClass().add("version-name");
 
-            Label statusLabel = new Label("Instalada");
+            Label statusLabel = new Label(lm.get("versions.installed"));
             statusLabel.getStyleClass().add("version-status");
             statusLabel.setStyle("-fx-text-fill: #90c090;");
 
             infoBox.getChildren().addAll(versionLabel, statusLabel);
 
-            Button uninstallBtn = new Button("Desinstalar");
+            Button uninstallBtn = new Button(lm.get("versions.uninstall"));
             uninstallBtn.getStyleClass().add("danger-button-small");
             uninstallBtn.setOnAction(e -> {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmar Desinstalación");
-                alert.setHeaderText("¿Desinstalar %s?".formatted(version));
-                alert.setContentText("Esta acción no se puede deshacer.");
+                alert.setTitle(lm.get("versions.confirm_uninstall_title"));
+                alert.setHeaderText(lm.get("versions.confirm_uninstall_header", version));
+                alert.setContentText(lm.get("versions.confirm_uninstall_content"));
 
                 alert.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
@@ -560,8 +556,7 @@ public class VersionsView {
 
             boolean isInstalled = launcher.getInstalledVersions().contains(version);
 
-            Circle indicator = new Circle(6, isInstalled ?
-                    Color.web("#90c090") : Color.web("#555555"));
+            Circle indicator = new Circle(6, isInstalled ? Color.web("#90c090") : Color.web("#555555"));
 
             VBox infoBox = new VBox(3);
             HBox.setHgrow(infoBox, Priority.ALWAYS);
@@ -574,14 +569,15 @@ public class VersionsView {
 
             infoBox.getChildren().addAll(versionLabel, typeLabel);
 
-            Button actionBtn = new Button(isInstalled ? "Instalada ✓" : "Instalar");
+            Button actionBtn = new Button(
+                    isInstalled ? lm.get("versions.btn_installed") : lm.get("versions.btn_install"));
             actionBtn.getStyleClass().add(isInstalled ? "installed-button-small" : "primary-button-small");
             actionBtn.setDisable(isInstalled);
 
             if (!isInstalled) {
                 actionBtn.setOnAction(e -> {
                     actionBtn.setDisable(true);
-                    actionBtn.setText("En cola...");
+                    actionBtn.setText(lm.get("versions.btn_queuing"));
                     downloadManager.submitDownload(() -> launcher.downloadMinecraftVersion(version));
                     // EVENT BUS se encargará de actualizar la UI cuando termine
                 });

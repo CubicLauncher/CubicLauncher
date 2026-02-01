@@ -17,7 +17,10 @@
 
 package com.cubiclauncher.launcher.ui.components;
 
+import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
+import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.core.events.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -36,6 +39,7 @@ import javafx.scene.shape.Circle;
 
 public class BottomBar extends HBox {
     private static final SettingsManager sm = SettingsManager.getInstance();
+    private static final LanguageManager lm = LanguageManager.getInstance();
     private static BottomBar instance;
 
     private final ProgressBar progressBar;
@@ -94,7 +98,8 @@ public class BottomBar extends HBox {
 
         // --- Event Handlers ---
         userName.setOnMouseClicked(event -> {
-            if (isEditing) return;
+            if (isEditing)
+                return;
             isEditing = true;
             userNameField.setText(userName.getText());
             editContainer.setVisible(true);
@@ -150,14 +155,18 @@ public class BottomBar extends HBox {
         progressContainer.getChildren().addAll(progressBar, progressLabel);
         progressCenter.getChildren().addAll(progressText, progressContainer);
 
-        statusLabel = new Label("Listo");
+        statusLabel = new Label(lm.get("bottom_bar.ready"));
         statusLabel.getStyleClass().add("status-label");
 
         getChildren().addAll(userProfile, leftSpacer, progressCenter, rightSpacer, statusLabel);
+
+        // Subscribirse al cambio de idioma
+        EventBus.get().subscribe(EventType.LANGUAGE_CHANGED, e -> refreshTranslations());
     }
 
     private void updateUsername() {
-        if (!isEditing) return;
+        if (!isEditing)
+            return;
         String newUsername = userNameField.getText();
         if (newUsername != null && !newUsername.trim().isEmpty()) {
             sm.setUsername(newUsername);
@@ -170,7 +179,8 @@ public class BottomBar extends HBox {
     }
 
     private void cancelEdit() {
-        if (!isEditing) return;
+        if (!isEditing)
+            return;
         editContainer.setVisible(false);
         userName.setVisible(true);
         isEditing = false;
@@ -194,7 +204,8 @@ public class BottomBar extends HBox {
         avatarImage.errorProperty().addListener((obs, wasError, isError) -> {
             if (isError) {
                 System.err.println("Failed to load avatar for: " + username);
-                if (avatarImage.getException() != null && !(avatarImage.getException() instanceof java.io.FileNotFoundException)) {
+                if (avatarImage.getException() != null
+                        && !(avatarImage.getException() instanceof java.io.FileNotFoundException)) {
                     avatarImage.getException().printStackTrace();
                 }
                 fallbackAvatar.setVisible(true);
@@ -203,6 +214,14 @@ public class BottomBar extends HBox {
         });
     }
 
+    /**
+     * Updates UI labels with current translations from LanguageManager.
+     */
+    public void refreshTranslations() {
+        if (statusLabel != null) {
+            statusLabel.setText(lm.get("bottom_bar.ready"));
+        }
+    }
 
     public static BottomBar getInstance() {
         if (instance == null) {
@@ -212,8 +231,19 @@ public class BottomBar extends HBox {
     }
 
     // Getters para que UIBridge pueda actualizar la UI
-    public ProgressBar getProgressBar() { return progressBar; }
-    public Label getProgressLabel() { return progressLabel; }
-    public Label getProgressText() { return progressText; }
-    public Label getStatusLabel() { return statusLabel; }
+    public ProgressBar getProgressBar() {
+        return progressBar;
+    }
+
+    public Label getProgressLabel() {
+        return progressLabel;
+    }
+
+    public Label getProgressText() {
+        return progressText;
+    }
+
+    public Label getStatusLabel() {
+        return statusLabel;
+    }
 }

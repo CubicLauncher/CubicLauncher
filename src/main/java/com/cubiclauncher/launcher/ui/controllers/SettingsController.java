@@ -17,6 +17,7 @@
 
 package com.cubiclauncher.launcher.ui.controllers;
 
+import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.scene.Scene;
@@ -35,11 +36,13 @@ import java.io.File;
 public class SettingsController {
     private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
     private final SettingsManager settings;
+    private final LanguageManager lm;
     private Stage stage;
     private String selectedJavaVersion = "8"; // Por defecto Java 8
 
     public SettingsController() {
         this.settings = SettingsManager.getInstance();
+        this.lm = LanguageManager.getInstance();
     }
 
     public void setStage(Stage stage) {
@@ -48,10 +51,18 @@ public class SettingsController {
 
     // ==================== LAUNCHER SETTINGS ====================
 
-    public void onLanguageChanged(String language) {
-        settings.setLanguage(language);
-        log.info("Idioma cambiado a: {}", language);
-        // TODO: Implementar cambio de idioma en la UI
+    public void onLanguageChanged(String languageCode) {
+        settings.setLanguage(languageCode);
+        lm.loadLanguage(languageCode);
+        log.info("Idioma cambiado a: {}", languageCode);
+
+        // Refrescar BottomBar
+        com.cubiclauncher.launcher.ui.components.BottomBar.getInstance().refreshTranslations();
+
+        // Nota: El SettingsView actual no se refrescará automáticamente sin recargar la
+        // vista central.
+        // Podríamos intentar notificar al Main o simplemente avisar que algunos cambios
+        // requieren reinicio.
     }
 
     public void onAutoUpdateChanged(boolean enabled) {
@@ -159,12 +170,12 @@ public class SettingsController {
     private String[] getJavaExecutablePatterns() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            return new String[]{"*.exe", "*.bat"};
+            return new String[] { "*.exe", "*.bat" };
         } else if (os.contains("mac")) {
-            return new String[]{"*"};
+            return new String[] { "*" };
         } else {
             // Linux/Unix
-            return new String[]{"*"};
+            return new String[] { "*" };
         }
     }
 

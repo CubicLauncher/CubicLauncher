@@ -19,6 +19,7 @@ package com.cubiclauncher.launcher.ui.components;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.InstanceManager.Instance;
+import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
@@ -40,6 +41,7 @@ public class Sidebar extends VBox {
     private Runnable onVersionsAction;
     private static final EventBus eventBus = EventBus.get();
     private static final TaskManager taskManager = TaskManager.getInstance();
+    private final LanguageManager lm = LanguageManager.getInstance();
 
     public Sidebar() {
         super(10);
@@ -63,13 +65,13 @@ public class Sidebar extends VBox {
         // Encabezado de la lista de instancias
         HBox instancesHeader = new HBox();
         instancesHeader.setAlignment(Pos.CENTER_LEFT);
-        Label instancesLabel = new Label("TUS INSTANCIAS");
+        Label instancesLabel = new Label(lm.get("sidebar.instances_title"));
         instancesLabel.getStyleClass().add("instances-label");
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         // Botón de editar instancia
-        editInstanceButton = new Button("Editar");
+        editInstanceButton = new Button(lm.get("sidebar.edit"));
         editInstanceButton.getStyleClass().add("menu-button-sidebar");
         editInstanceButton.setVisible(false); // Oculto por defecto
         editInstanceButton.setOnAction(e -> {
@@ -93,8 +95,8 @@ public class Sidebar extends VBox {
         VBox actionButtons = new VBox(8);
         actionButtons.setPadding(new Insets(10, 0, 0, 0));
 
-        Button versionsButton = createActionButton("Descargar Versiones");
-        Button settingsButton = createActionButton("Ajustes");
+        Button versionsButton = createActionButton(lm.get("sidebar.versions"));
+        Button settingsButton = createActionButton(lm.get("sidebar.settings"));
 
         versionsButton.setOnAction(e -> {
             if (onVersionsAction != null)
