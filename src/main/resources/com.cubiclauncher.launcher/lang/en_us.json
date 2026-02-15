@@ -23,6 +23,7 @@
     "settings.java_path": "Path:",
     "settings.java_path_prompt": "Automatic path (leave empty)",
     "settings.browse": "Browse...",
+    "settings.detect_java": "Auto-detect Java",
     "settings.edit_path_for": "Edit path for:",
     "settings.memory_allocation": "Memory Allocation",
     "settings.min_ram": "Minimum RAM:",

@@ -220,6 +220,19 @@ public class SettingsView {
         Label title = new Label(lm.get("settings.java_executable"));
         title.getStyleClass().add("settings-subtitle");
         HBox radioContainer = createJavaVersionRadioButtons();
+
+        Button detectButton = new Button(lm.get("settings.detect_java"));
+        detectButton.getStyleClass().add("detect-button");
+        detectButton.setOnAction(e -> {
+            detectButton.setDisable(true);
+            controller.onDetectJava(success -> {
+                detectButton.setDisable(false);
+                if (success) {
+                    updateJavaPathField();
+                }
+            });
+        });
+
         HBox pathBox = new HBox(5);
         pathBox.setAlignment(Pos.CENTER_LEFT);
         javaPathField = new TextField();
@@ -233,7 +246,7 @@ public class SettingsView {
         Button browseButton = new Button(lm.get("settings.browse"));
         browseButton.setOnAction(e -> controller.onBrowseJavaPath(javaPathField));
         pathBox.getChildren().addAll(new Label(lm.get("settings.java_path")), javaPathField, browseButton);
-        subSection.getChildren().addAll(title, radioContainer, pathBox);
+        subSection.getChildren().addAll(title, radioContainer, detectButton, pathBox);
         return subSection;
     }
 

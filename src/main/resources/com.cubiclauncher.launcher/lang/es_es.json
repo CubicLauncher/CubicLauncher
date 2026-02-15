@@ -23,6 +23,7 @@
     "settings.java_path": "Ruta:",
     "settings.java_path_prompt": "Ruta automática (dejar vacío)",
     "settings.browse": "Examinar...",
+    "settings.detect_java": "Detectar Java automáticamente",
     "settings.edit_path_for": "Editar ruta de:",
     "settings.memory_allocation": "Asignación de Memoria",
     "settings.min_ram": "RAM Mínima:",

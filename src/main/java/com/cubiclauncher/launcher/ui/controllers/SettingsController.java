@@ -19,7 +19,10 @@ package com.cubiclauncher.launcher.ui.controllers;
 
 import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
+import com.cubiclauncher.launcher.core.TaskManager;
+import com.cubiclauncher.launcher.util.JavaDetector;
 import com.cubiclauncher.launcher.util.StylesLoader;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
@@ -29,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Controlador para manejar todas las acciones de la vista de configuración
@@ -143,6 +148,33 @@ public class SettingsController {
     public void onJava21Selected() {
         selectedJavaVersion = "21";
         log.info("Seleccionada versión Java 21 para editar");
+    }
+
+    public void onDetectJava(Consumer<Boolean> onComplete) {
+        TaskManager.getInstance().runAsync(() -> {
+            log.info("Iniciando detección automática de Java...");
+            Map<String, String> detected = JavaDetector
+                    .detectJavaInstallations();
+
+            boolean foundAny = false;
+            if (detected.containsKey("8") && (settings.getJava8Path() == null || settings.getJava8Path().isEmpty())) {
+                settings.setJre8_path(detected.get("8"));
+                foundAny = true;
+            }
+            if (detected.containsKey("17")
+                    && (settings.getJava17Path() == null || settings.getJava17Path().isEmpty())) {
+                settings.setJre17_path(detected.get("17"));
+                foundAny = true;
+            }
+            if (detected.containsKey("21")
+                    && (settings.getJava21path() == null || settings.getJava21path().isEmpty())) {
+                settings.setJre21_path(detected.get("21"));
+                foundAny = true;
+            }
+
+            final boolean result = foundAny;
+            Platform.runLater(() -> onComplete.accept(result));
+        });
     }
 
     public void onBrowseJavaPath(TextField javaPathField) {
