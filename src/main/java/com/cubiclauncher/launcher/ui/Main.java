@@ -41,6 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import javafx.stage.Screen;
+import javafx.geometry.Rectangle2D;
 
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
@@ -113,12 +115,16 @@ public class Main extends Application {
         }
         primaryStage.setScene(scene);
 
-        // Fix compatibility: Force windowed mode on Windows and Mac
-        // This addresses the issue where the launcher opens in full screen and cannot
-        // be exited
+        // Fix compatibility: Force windowed mode on Windows and Mac and adjust to
+        // resolution
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win") || os.contains("mac")) {
-            primaryStage.setMaximized(false);
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+            primaryStage.setX(bounds.getMinX());
+            primaryStage.setY(bounds.getMinY());
+            primaryStage.setWidth(bounds.getWidth());
+            primaryStage.setHeight(bounds.getHeight());
+            primaryStage.setMaximized(true);
             primaryStage.setFullScreen(false);
             primaryStage.setResizable(true);
         }
