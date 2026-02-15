@@ -112,6 +112,17 @@ public class Main extends Application {
             System.err.println("No se encontró el ícono en /assets/logos/cdark.png");
         }
         primaryStage.setScene(scene);
+
+        // Fix compatibility: Force windowed mode on Windows and Mac
+        // This addresses the issue where the launcher opens in full screen and cannot
+        // be exited
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win") || os.contains("mac")) {
+            primaryStage.setMaximized(false);
+            primaryStage.setFullScreen(false);
+            primaryStage.setResizable(true);
+        }
+
         primaryStage.show();
         log.info("Hi again :)");
     }
