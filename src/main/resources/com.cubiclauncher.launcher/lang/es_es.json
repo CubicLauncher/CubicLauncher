@@ -77,6 +77,7 @@
     "instance.no_screenshots": "No se encontraron capturas en la carpeta de la instancia.",
     "instance.btn_delete": "ELIMINAR",
     "instance.btn_save": "GUARDAR CAMBIOS",
+    "instance.btn_cancel": "CANCELAR",
     "instance.confirm_delete_title": "Confirmar Eliminación",
     "instance.confirm_delete_header": "Eliminar Instancia: %s",
     "instance.confirm_delete_content": "¿Estás seguro de que deseas eliminar esta instancia? Esta acción no se puede deshacer.",

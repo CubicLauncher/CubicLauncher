@@ -72,6 +72,18 @@ public class InstanceViewer extends BorderPane {
                 Platform.runLater(() -> appendLog(output));
             }
         });
+
+        eventBus.subscribe(EventType.INSTANCE_DELETED, eventData -> {
+            String instance_name = eventData.getString("instance_name");
+            if (currentInstance != null && currentInstance.getName().equals(instance_name)) {
+                Platform.runLater(this::showEmptyState);
+            }
+        });
+
+        eventBus.subscribe(EventType.INSTANCE_RENAME, eventData -> {
+            // Handle rename if needed, e.g. update name label
+            // For now assume Sidebar refresh handles selection change or we reload
+        });
     }
 
     private void initializeHeader() {
@@ -131,6 +143,9 @@ public class InstanceViewer extends BorderPane {
         metaInfo.add(lastPlayedLabel, 0, 1);
 
         // Primary action button - minimalist design
+        HBox actions = new HBox(10);
+        actions.setAlignment(Pos.CENTER_LEFT);
+
         playButton = new Button(lm.get("instance.play"));
         playButton.getStyleClass().add("play-button-primary");
         playButton.setOnAction(e -> {
@@ -139,7 +154,18 @@ public class InstanceViewer extends BorderPane {
             }
         });
 
-        info.getChildren().addAll(instanceName, instanceVersion, metaInfo, playButton);
+        Button deleteButton = new Button(lm.get("instance.btn_delete"));
+        deleteButton.getStyleClass().add("btn-secondary"); // Use secondary style
+        deleteButton.setStyle("-fx-text-fill: #ff5555;"); // Red text for danger
+        deleteButton.setOnAction(e -> {
+            if (currentInstance != null) {
+                showDeleteConfirmation(currentInstance, null);
+            }
+        });
+
+        actions.getChildren().addAll(playButton, deleteButton);
+
+        info.getChildren().addAll(instanceName, instanceVersion, metaInfo, actions);
         mainContent.getChildren().addAll(imageContainer, info);
         header.getChildren().add(mainContent);
         setTop(header);
@@ -441,18 +467,7 @@ public class InstanceViewer extends BorderPane {
         });
 
         deleteBtn.setOnAction(e -> {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-            confirm.setTitle(lm.get("instance.confirm_delete_title"));
-            confirm.setHeaderText(lm.get("instance.confirm_delete_header", instance.getName()));
-            confirm.setContentText(lm.get("instance.confirm_delete_content"));
-            confirm.getDialogPane().getStylesheets()
-                    .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
-            confirm.getDialogPane().getStyleClass().add("editor-dialog-pane");
-
-            if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
-                InstanceManager.getInstance().deleteInstance(instance.getName());
-                dialog.close();
-            }
+            showDeleteConfirmation(instance, dialog::close);
         });
 
         // Style the Scene for transparency
@@ -633,5 +648,93 @@ public class InstanceViewer extends BorderPane {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void showDeleteConfirmation(InstanceManager.Instance instance, Runnable onSuccess) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.initOwner(getScene().getWindow());
+        dialog.initModality(Modality.WINDOW_MODAL);
+        dialog.initStyle(StageStyle.TRANSPARENT);
+        dialog.setTitle(lm.get("instance.confirm_delete_title"));
+
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.getStyleClass().add("editor-dialog-pane");
+        dialogPane.setHeaderText(null);
+        dialogPane.setGraphic(null);
+        dialogPane.setBackground(null);
+        dialogPane.setPadding(Insets.EMPTY);
+        dialogPane.getButtonTypes().add(ButtonType.CLOSE);
+
+        Node closeBtnType = dialogPane.lookupButton(ButtonType.CLOSE);
+        if (closeBtnType != null)
+            closeBtnType.setVisible(false);
+
+        VBox windowRoot = new VBox();
+        windowRoot.getStyleClass().add("editor-window-root");
+        windowRoot.setPrefWidth(400);
+
+        // Header
+        ModalHeader header = new ModalHeader(lm.get("instance.confirm_delete_title"), dialog);
+
+        // Content
+        VBox content = new VBox(15);
+        content.getStyleClass().add("editor-content");
+        content.setAlignment(Pos.CENTER_LEFT);
+
+        Label headerText = new Label(lm.get("instance.confirm_delete_header", instance.getName()));
+        headerText.getStyleClass().add("section-title");
+        headerText.setWrapText(true);
+
+        Label contentText = new Label(lm.get("instance.confirm_delete_content"));
+        contentText.getStyleClass().add("info-label");
+        contentText.setWrapText(true);
+        contentText.setStyle("-fx-font-size: 14px;");
+
+        content.getChildren().addAll(headerText, contentText);
+
+        // Footer
+        HBox footer = new HBox(15);
+        footer.getStyleClass().add("editor-footer");
+        footer.setAlignment(Pos.CENTER_RIGHT);
+
+        Button btnCancel = new Button(lm.get("instance.btn_cancel", "Cancelar"));
+        btnCancel.getStyleClass().add("btn-secondary");
+        btnCancel.setOnAction(e -> dialog.setResult(ButtonType.CANCEL));
+
+        Button btnDelete = new Button(lm.get("instance.btn_delete"));
+        btnDelete.getStyleClass().add("btn-secondary");
+        // Custom styling for delete button to make it red
+        btnDelete.setStyle(
+                "-fx-text-fill: #ff5555; -fx-border-color: #ff5555; -fx-background-color: rgba(255, 85, 85, 0.1);");
+
+        btnDelete.setOnMouseEntered(e -> btnDelete.setStyle(
+                "-fx-text-fill: #ff5555; -fx-border-color: #ff5555; -fx-background-color: rgba(255, 85, 85, 0.2);"));
+        btnDelete.setOnMouseExited(e -> btnDelete.setStyle(
+                "-fx-text-fill: #ff5555; -fx-border-color: #ff5555; -fx-background-color: rgba(255, 85, 85, 0.1);"));
+
+        btnDelete.setOnAction(e -> dialog.setResult(ButtonType.OK));
+
+        footer.getChildren().addAll(btnCancel, btnDelete);
+
+        windowRoot.getChildren().addAll(header, content, footer);
+        dialogPane.setContent(windowRoot);
+
+        // Style scene
+        Platform.runLater(() -> {
+            if (dialogPane.getScene() != null) {
+                dialogPane.getScene().setFill(null);
+                dialogPane.getScene().getStylesheets()
+                        .add(getClass().getResource("/com.cubiclauncher.launcher/styles/ui.main.css").toExternalForm());
+            }
+        });
+
+        dialog.showAndWait().ifPresent(type -> {
+            if (type == ButtonType.OK) {
+                InstanceManager.getInstance().deleteInstance(instance.getName());
+                if (onSuccess != null) {
+                    onSuccess.run();
+                }
+            }
+        });
     }
 }

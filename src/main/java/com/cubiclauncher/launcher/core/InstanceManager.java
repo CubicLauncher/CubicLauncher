@@ -257,7 +257,7 @@ public class InstanceManager {
                 deleteDirectory(instanceDir);
                 instances.remove(instance);
                 log.info("Instancia '{}' eliminada", name);
-                eventBus.emit(EventType.INSTANCE_DELETED, EventData.empty());
+                eventBus.emit(EventType.INSTANCE_DELETED, EventData.builder().put("instance_name", name).build());
                 return true;
             } catch (IOException e) {
                 log.error("Error eliminando instancia '{}': {}", name, e.getMessage(), e);
