@@ -9,8 +9,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
 /**
- * Center content panel for the InstanceViewer.
- * Contains two cards side-by-side: Details and Console.
+ * Contenido principal.
+ * Contiene el panel de logs y los datos de la instance.
  */
 public class InstanceViewerContent extends HBox {
 

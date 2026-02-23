@@ -21,7 +21,7 @@ repositories {
 
 val fxVersion = "21.0.4"
 
-val os = org.gradle.internal.os.OperatingSystem.current()
+val os = org.gradle.internal.os.OperatingSystem.current()!!
 val platform = when {
     os.isWindows -> "win"
     os.isLinux -> "linux"

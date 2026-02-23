@@ -22,14 +22,14 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * Modal dialog for editing an existing instance's settings and cover image.
+ *  Modal dialog para editar la instance y su foto
  */
 public class InstanceEditDialog {
 
     private final LanguageManager lm = LanguageManager.getInstance();
     private final Window owner;
 
-    /** Called after a successful save so InstanceViewer can refresh its UI. */
+    /** Llamado despues de un guardado exitoso */
     private Consumer<InstanceManager.Instance> onSaved;
 
     public InstanceEditDialog(Window owner) {
@@ -74,11 +74,11 @@ public class InstanceEditDialog {
         GridPane grid = (GridPane) ((VBox) content.getChildren().getFirst()).getChildren().getFirst();
 
         // Pull field references from grid (they were added at rows 0-3)
-        TextField nameField    = (TextField) getGridCell(grid, 1, 0);
-        TextField versionField = (TextField) getGridCell(grid, 1, 1);
-        TextField minMemField  = (TextField) ((HBox) getGridCell(grid, 1, 2)).getChildren().get(0);
-        TextField maxMemField  = (TextField) ((HBox) getGridCell(grid, 1, 2)).getChildren().get(1);
-        TextField jvmArgsField = (TextField) getGridCell(grid, 1, 3);
+        TextField nameField    = (TextField) getGridCell(grid, 0);
+        TextField versionField = (TextField) getGridCell(grid, 1);
+        TextField minMemField  = (TextField) ((HBox) getGridCell(grid, 2)).getChildren().get(0);
+        TextField maxMemField  = (TextField) ((HBox) getGridCell(grid, 2)).getChildren().get(1);
+        TextField jvmArgsField = (TextField) getGridCell(grid, 3);
 
         // ── Footer ────────────────────────────────────────────────────────────
         footer.getStyleClass().add("editor-footer");
@@ -110,6 +110,7 @@ public class InstanceEditDialog {
                 instance.setMaxMemory(maxMemField.getText().isEmpty() ? null : Integer.parseInt(maxMemField.getText()));
             } catch (NumberFormatException ignored) {
                 // esto esta ignorado asi como me ignora ella
+                // TODO: tomar excepciones
             }
             instance.setJvmArgs(jvmArgsField.getText());
             instance.setCoverImage(selectedCover[0]);
@@ -274,10 +275,10 @@ public class InstanceEditDialog {
     // ── Helper ────────────────────────────────────────────────────────────────
 
     /** Retrieves a node from a GridPane by column and row index. */
-    private static Node getGridCell(GridPane grid, int col, int row) {
+    private static Node getGridCell(GridPane grid, int row) {
         for (Node n : grid.getChildren()) {
-            if (GridPane.getColumnIndex(n) == col && GridPane.getRowIndex(n) == row) return n;
+            if (GridPane.getColumnIndex(n) == 1 && GridPane.getRowIndex(n) == row) return n;
         }
-        throw new IllegalStateException("Grid cell not found at col=" + col + " row=" + row);
+        throw new IllegalStateException("Grid cell not found at col=" + 1 + " row=" + row);
     }
 }

@@ -108,17 +108,6 @@ public class VersionsView {
     }
 
     /**
-     * Actualiza la lista de versiones disponibles
-     */
-    public void refreshAvailableVersions() {
-        if (currentAvailableBtn != null && currentAvailableBtn.isSelected() && currentVersionsList != null) {
-            availableVersionsLoaded = false;
-            showLoadingPlaceholder();
-            loadAvailableVersionsLazy();
-        }
-    }
-
-    /**
      * Muestra un mensaje de error en la vista
      */
     public void showError(String errorMessage) {
@@ -213,7 +202,7 @@ public class VersionsView {
         installedBtn.setOnAction(e -> {
             if (installedBtn.isSelected()) {
                 loadInstalledVersions();
-                currentVersionsList.setCellFactory(lv -> new InstalledVersionCell(currentVersionsList));
+                currentVersionsList.setCellFactory(lv -> new InstalledVersionCell());
             }
         });
 
@@ -271,9 +260,7 @@ public class VersionsView {
         });
 
         // Actualizar lista cuando se elimine una instancia
-        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> {
-            Platform.runLater(this::refreshInstalledVersions);
-        });
+        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> Platform.runLater(this::refreshInstalledVersions));
 
         // Actualizar lista cuando haya un error en la descarga
         eventBus.subscribe(EventType.GAME_CRASHED, eventData -> {
@@ -450,7 +437,7 @@ public class VersionsView {
         List<String> installed = launcher.getInstalledVersions();
         Platform.runLater(() -> {
             currentVersionsList.setItems(FXCollections.observableArrayList(installed));
-            currentVersionsList.setCellFactory(lv -> new InstalledVersionCell(currentVersionsList));
+            currentVersionsList.setCellFactory(lv -> new InstalledVersionCell());
         });
     }
 
@@ -485,7 +472,7 @@ public class VersionsView {
 
     private class InstalledVersionCell extends ListCell<String> {
 
-        public InstalledVersionCell(ListView<String> parentList) {
+        public InstalledVersionCell() {
         }
 
         @Override

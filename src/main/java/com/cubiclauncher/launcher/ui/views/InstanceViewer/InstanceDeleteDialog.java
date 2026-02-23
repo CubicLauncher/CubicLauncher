@@ -8,7 +8,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.StageStyle;
@@ -17,7 +16,7 @@ import javafx.stage.Window;
 import java.util.Objects;
 
 /**
- * Modal dialog that asks the user to confirm deletion of an instance.
+ * Modal dialog que consulta al usuario si quiere eliminar esta instance
  */
 public class InstanceDeleteDialog {
 
@@ -29,8 +28,8 @@ public class InstanceDeleteDialog {
     }
 
     /**
-     * Shows the dialog. If the user confirms, the instance is deleted and
-     * {@code onSuccess} is called (may be null).
+     * Muestra el dialog, si el usuario acepta la instancia es eliminada
+     * {@code onSuccess} es llamado (Podría ser nulo).
      */
     public void show(InstanceManager.Instance instance, Runnable onSuccess) {
         Dialog<ButtonType> dialog = new Dialog<>();

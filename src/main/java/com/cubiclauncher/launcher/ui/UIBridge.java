@@ -31,11 +31,10 @@ public class UIBridge {
     private static UIBridge instance;
     private static final TaskManager taskManager = TaskManager.getInstance();
     private final BottomBar bottomBar;
-    private final VersionsView versionsView;
 
     private UIBridge() {
         bottomBar = BottomBar.getInstance();
-        versionsView = VersionsView.getInstance();
+        VersionsView versionsView = VersionsView.getInstance();
         registerListeners();
     }
 

@@ -46,7 +46,6 @@ import javafx.geometry.Rectangle2D;
 
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static final UIBridge uiBridge = UIBridge.getInstance();
     private static final EventBus eventBus = EventBus.get();
     final SettingsManager settings = SettingsManager.getInstance();
     private InstanceViewer instanceViewer;
@@ -60,7 +59,7 @@ public class Main extends Application {
         DownloadManager.getInstance().shutdown();
         log.info("Eliminando listeners de eventos");
         eventBus.clearAll();
-        log.info("Closing CubicLauncher. Goodbye :)");
+        log.info("Cerrando CubicLauncher. Adios :)");
     }
 
     @Override

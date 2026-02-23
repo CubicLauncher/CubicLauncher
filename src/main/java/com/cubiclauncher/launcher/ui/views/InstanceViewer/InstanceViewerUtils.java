@@ -51,7 +51,7 @@ public final class InstanceViewerUtils {
         return box;
     }
 
-    public static TextField createModalField(GridPane grid, String labelText, String value, int row) {
+    public static void createModalField(GridPane grid, String labelText, String value, int row) {
         Label fieldLabel = new Label(labelText);
         fieldLabel.getStyleClass().add("editor-field-label");
 
@@ -61,7 +61,6 @@ public final class InstanceViewerUtils {
 
         grid.add(fieldLabel, 0, row);
         grid.add(field, 1, row);
-        return field;
     }
 
     public static List<File> getScreenshots(com.cubiclauncher.launcher.core.InstanceManager.Instance instance) {
@@ -113,7 +112,7 @@ public final class InstanceViewerUtils {
                 .resolve(instance.getName())
                 .resolve("screenshots");
         File folder = path.toFile();
-        if (!folder.exists()) folder.mkdirs();
+        if (!folder.exists()) folder.mkdirs(); // TODO: tomar excepcion
 
         try {
             if (System.getProperty("os.name").toLowerCase().contains("linux")) {
@@ -122,7 +121,7 @@ public final class InstanceViewerUtils {
                 Desktop.getDesktop().open(folder);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // TODO: usar logger global
         }
     }
 }

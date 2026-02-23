@@ -5,9 +5,10 @@ import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.ui.controllers.InstanceController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
-import javafx.scene.layout.GridPane;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -16,13 +17,10 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
 
+import java.io.File;
+import java.util.Objects;
 import java.util.function.Consumer;
 
-/**
- * Header panel for the InstanceViewer.
- * Shows the cover image as a banner background, instance name/version,
- * last played date and action buttons.
- */
 public class InstanceViewerHeader extends StackPane {
 
     private final LanguageManager lm = LanguageManager.getInstance();
@@ -32,66 +30,117 @@ public class InstanceViewerHeader extends StackPane {
     private Label lastPlayedLabel;
     private Button playButton;
 
-    // Banner background
     private ImageView bannerImageView;
-    private Label     imageIcon; // fallback icon (kept for InstanceViewerUtils compat)
 
-    /** Called when the user clicks Delete from the header. */
     private Consumer<InstanceManager.Instance> onDeleteRequest;
 
     public InstanceViewerHeader() {
         super();
         getStyleClass().add("instance-header");
-        setMinHeight(220);
-        setMaxHeight(220);
+        setMinHeight(300);
+        setMaxHeight(300);
         build();
     }
 
     // ── Build ────────────────────────────────────────────────────────────────
 
     private void build() {
-        // ── Layer 0: banner image (fills the whole header) ──
+        // ── Layer 0: banner ──
         bannerImageView = new ImageView();
-        bannerImageView.setPreserveRatio(false); // we'll control size manually
+        bannerImageView.setPreserveRatio(true);
         bannerImageView.setSmooth(true);
 
-        // Keep image centered and "cover"-like by binding to parent size
-        bannerImageView.fitWidthProperty().bind(widthProperty());
-        bannerImageView.fitHeightProperty().bind(heightProperty());
+        // El clip define el área visible del banner
+        Rectangle bannerClip = new Rectangle();
+        bannerClip.widthProperty().bind(widthProperty());
+        bannerClip.heightProperty().bind(heightProperty());
+        bannerImageView.setClip(bannerClip);
 
-        // Clip to the header bounds (optional, keeps it tidy)
-        Rectangle clip = new Rectangle();
-        clip.widthProperty().bind(widthProperty());
-        clip.heightProperty().bind(heightProperty());
-        bannerImageView.setClip(clip);
+        widthProperty().addListener((obs, o, n) -> updateBannerViewport());
+        heightProperty().addListener((obs, o, n) -> updateBannerViewport());
 
-        // ── Layer 1: dark gradient overlay so text stays readable ──
+        // ── Layer 1: gradient overlay ──
+        Region overlay = getRegion();
+
+        // ── Layer 2: content row ──
+        HBox contentRow = new HBox(24);
+        contentRow.setAlignment(Pos.BOTTOM_LEFT);
+        contentRow.setPadding(new Insets(0, 40, 28, 40));
+        contentRow.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        StackPane.setAlignment(contentRow, Pos.BOTTOM_LEFT);
+
+        contentRow.getChildren().addAll(buildSquare(), buildInfoSection());
+
+        getChildren().addAll(bannerImageView, overlay, contentRow);
+    }
+
+    private static Region getRegion() {
         Region overlay = new Region();
         overlay.setBackground(new Background(new BackgroundFill(
                 new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
                         new Stop(0.0, Color.rgb(0, 0, 0, 0.10)),
-                        new Stop(0.6, Color.rgb(0, 0, 0, 0.55)),
-                        new Stop(1.0, Color.rgb(0, 0, 0, 0.80))),
+                        new Stop(0.30, Color.rgb(0, 0, 0, 0.55)),
+                        new Stop(0.75, Color.rgb(0, 0, 0, 0.55)),
+                        new Stop(1.0, Color.rgb(0, 0, 0, 0.85))),
                 CornerRadii.EMPTY, Insets.EMPTY)));
         overlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-
-        // ── Layer 2: fallback icon (shown when there is no image) ──
-        imageIcon = new Label("⬢");
-        imageIcon.getStyleClass().add("instance-icon");
-        imageIcon.setVisible(false); // hidden by default; shown by applyCoverImage when needed
-
-        // ── Layer 3: content (name, version, buttons) ──
-        VBox contentBox = buildContentBox();
-
-        getChildren().addAll(bannerImageView, overlay, imageIcon, contentBox);
+        return overlay;
     }
 
-    private VBox buildContentBox() {
-        VBox box = new VBox(12);
-        box.setAlignment(Pos.BOTTOM_LEFT);
-        box.setPadding(new Insets(0, 40, 30, 40));
-        box.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        StackPane.setAlignment(box, Pos.BOTTOM_LEFT);
+    private void updateBannerViewport() {
+        Image img = bannerImageView.getImage();
+        if (img == null || img.getWidth() == 0 || img.getHeight() == 0) return;
+
+        double containerW = getWidth();
+        double containerH = getHeight();
+        if (containerW <= 0 || containerH <= 0) return;
+
+        double imgW = img.getWidth();
+        double imgH = img.getHeight();
+
+        double scale = Math.max(containerW / imgW, containerH / imgH);
+
+        double visibleW = containerW / scale;
+        double visibleH = containerH / scale;
+
+        double x = (imgW - visibleW) / 2.0;
+        double y = (imgH - visibleH) / 2.0;
+
+        bannerImageView.setFitWidth(containerW);
+        bannerImageView.setFitHeight(containerH);
+        bannerImageView.setViewport(new Rectangle2D(x, y, visibleW, visibleH));
+    }
+
+    private StackPane buildSquare() {
+        StackPane square = new StackPane();
+        square.getStyleClass().add("instance-image");
+        square.setMinSize(100, 100);
+        square.setMaxSize(100, 100);
+
+        Label imageIcon = new Label();
+        imageIcon.getStyleClass().add("instance-icon");
+
+        ImageView icon = new ImageView(
+                new Image(Objects.requireNonNull(
+                        getClass().getResourceAsStream(
+                                "/com.cubiclauncher.launcher/assets/logos/cubic.png"
+                        )
+                ))
+        );
+        icon.setFitWidth(72);
+        icon.setFitHeight(72);
+        icon.setPreserveRatio(true);
+        icon.setSmooth(true);
+
+        square.getChildren().add(icon);
+        return square;
+    }
+
+    private VBox buildInfoSection() {
+        VBox info = new VBox(8);
+        info.setAlignment(Pos.BOTTOM_LEFT);
+        info.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(info, Priority.ALWAYS);
 
         instanceName = new Label();
         instanceName.getStyleClass().add("instance-name");
@@ -102,8 +151,8 @@ public class InstanceViewerHeader extends StackPane {
         GridPane metaInfo = buildMetaGrid();
         HBox     actions  = buildActions();
 
-        box.getChildren().addAll(instanceName, instanceVersion, metaInfo, actions);
-        return box;
+        info.getChildren().addAll(instanceName, instanceVersion, metaInfo, actions);
+        return info;
     }
 
     private GridPane buildMetaGrid() {
@@ -156,8 +205,7 @@ public class InstanceViewerHeader extends StackPane {
             instanceVersion.setText(InstanceViewerUtils.formatVersion(instance.getVersion()));
             lastPlayedLabel.setText(instance.getLastPlayedFormatted());
             playButton.setDisable(false);
-            // Pass bannerImageView; InstanceViewerUtils sets its image (or null)
-            InstanceViewerUtils.applyCoverImage(bannerImageView, imageIcon, instance);
+            applyBannerImage(instance);
         } else {
             showEmpty();
         }
@@ -169,17 +217,38 @@ public class InstanceViewerHeader extends StackPane {
         instanceVersion.setText("");
         lastPlayedLabel.setText(lm.get("instance.never"));
         playButton.setDisable(true);
-        InstanceViewerUtils.applyCoverImage(bannerImageView, imageIcon, null);
+        bannerImageView.setImage(null);
+        bannerImageView.setViewport(null);
+    }
+
+    private void applyBannerImage(InstanceManager.Instance instance) {
+        if (instance == null || instance.getCoverImage() == null || instance.getCoverImage().isBlank()) {
+            bannerImageView.setImage(null);
+            bannerImageView.setViewport(null);
+            return;
+        }
+        try {
+            File f = new File(instance.getCoverImage());
+            if (f.exists()) {
+                Image img = new Image(f.toURI().toString(), true);
+                bannerImageView.setImage(img);
+                // Una vez cargada la imagen, calcular el viewport
+                img.progressProperty().addListener((obs, o, progress) -> {
+                    if (progress.doubleValue() >= 1.0) updateBannerViewport();
+                });
+                // Por si ya estaba en caché
+                updateBannerViewport();
+            } else {
+                bannerImageView.setImage(null);
+                bannerImageView.setViewport(null);
+            }
+        } catch (Exception ex) {
+            bannerImageView.setImage(null);
+            bannerImageView.setViewport(null);
+        }
     }
 
     public void setOnDeleteRequest(Consumer<InstanceManager.Instance> handler) {
         this.onDeleteRequest = handler;
     }
-
-    /**
-     * Kept for backward-compat with InstanceViewer which may call these
-     * after an edit to refresh the cover.
-     */
-    public ImageView getImageView() { return bannerImageView; }
-    public Label     getImageIcon() { return imageIcon; }
 }

@@ -10,14 +10,14 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.BorderPane;
 
 /**
- * Main instance viewer panel.
- *
- * Responsibilities kept here:
- *  - Singleton lifecycle
- *  - EventBus subscriptions
- *  - Coordinating Header + Content + Dialogs
- *
- * Visual logic lives in:
+ * Panel de instance viewer
+ * <p>
+ * Las responsabilidades se mantienen aquí
+ *  - Ciclo de vida Singleton
+ *  - Subs al bus de eventos
+ *  - Coordinador de componentes
+ * <p>
+ * La lógica visual vive en:
  *  - {@link InstanceViewerHeader}
  *  - {@link InstanceViewerContent}
  *  - {@link InstanceEditDialog}
@@ -116,7 +116,7 @@ public class InstanceViewer extends BorderPane {
     /** Opens the edit dialog for the given instance. */
     public void showEditDialog(InstanceManager.Instance inst) {
         InstanceEditDialog editDialog = new InstanceEditDialog(getScene().getWindow());
-        editDialog.setOnSaved(saved -> showInstance(saved));
+        editDialog.setOnSaved(this::showInstance);
         editDialog.show(inst);
     }
 
