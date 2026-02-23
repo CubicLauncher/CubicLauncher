@@ -23,7 +23,7 @@ import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
-import com.cubiclauncher.launcher.ui.views.InstanceViewer.InstanceViewer;
+import com.cubiclauncher.launcher.ui.views.instanceViewer.InstanceViewer;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
 import com.cubiclauncher.launcher.ui.views.VersionsView;
 import com.cubiclauncher.launcher.util.StylesLoader;
