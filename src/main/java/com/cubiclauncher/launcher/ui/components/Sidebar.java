@@ -23,7 +23,7 @@ import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
-import com.cubiclauncher.launcher.ui.views.InstanceViewer;
+import com.cubiclauncher.launcher.ui.views.InstanceViewer.InstanceViewer;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -41,7 +41,6 @@ public class Sidebar extends VBox {
     private Runnable onVersionsAction;
     private static final EventBus eventBus = EventBus.get();
     private static final TaskManager taskManager = TaskManager.getInstance();
-    private final LanguageManager lm = LanguageManager.getInstance();
 
     public Sidebar() {
         super(10);
@@ -65,6 +64,7 @@ public class Sidebar extends VBox {
         // Encabezado de la lista de instancias
         HBox instancesHeader = new HBox();
         instancesHeader.setAlignment(Pos.CENTER_LEFT);
+        LanguageManager lm = LanguageManager.getInstance();
         Label instancesLabel = new Label(lm.get("sidebar.instances_title"));
         instancesLabel.getStyleClass().add("instances-label");
         HBox spacer = new HBox();
