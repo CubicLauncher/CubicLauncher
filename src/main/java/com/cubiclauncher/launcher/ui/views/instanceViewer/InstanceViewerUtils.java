@@ -1,4 +1,4 @@
-package com.cubiclauncher.launcher.ui.views.InstanceViewer;
+package com.cubiclauncher.launcher.ui.views.instanceViewer;
 
 import com.cubiclauncher.launcher.core.PathManager;
 import javafx.geometry.Rectangle2D;
@@ -8,6 +8,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -18,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class InstanceViewerUtils {
+    private static final Logger log = LoggerFactory.getLogger(InstanceViewerUtils.class);
 
     private InstanceViewerUtils() {}
 
@@ -121,7 +124,7 @@ public final class InstanceViewerUtils {
                 Desktop.getDesktop().open(folder);
             }
         } catch (IOException e) {
-            e.printStackTrace(); // TODO: usar logger global
+            log.error(e.getLocalizedMessage()); // TODO: usar logger global
         }
     }
 }

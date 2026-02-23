@@ -1,4 +1,4 @@
-package com.cubiclauncher.launcher.ui.views.InstanceViewer;
+package com.cubiclauncher.launcher.ui.views.instanceViewer;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.LanguageManager;

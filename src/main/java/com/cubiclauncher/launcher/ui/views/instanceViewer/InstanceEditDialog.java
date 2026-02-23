@@ -1,4 +1,4 @@
-package com.cubiclauncher.launcher.ui.views.InstanceViewer;
+package com.cubiclauncher.launcher.ui.views.instanceViewer;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.LanguageManager;
@@ -29,7 +29,7 @@ public class InstanceEditDialog {
     private final LanguageManager lm = LanguageManager.getInstance();
     private final Window owner;
 
-    /** Llamado despues de un guardado exitoso */
+    /** Llamado después de un guardado exitoso */
     private Consumer<InstanceManager.Instance> onSaved;
 
     public InstanceEditDialog(Window owner) {
