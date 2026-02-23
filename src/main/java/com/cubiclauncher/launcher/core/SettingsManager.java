@@ -49,6 +49,7 @@ public class SettingsManager {
 
     // Usuario
     public String username = "steve";
+    public boolean firstLaunch = true;
     public boolean native_styles = true;
 
     private SettingsManager() {
@@ -241,6 +242,15 @@ public class SettingsManager {
 
     public void setNativeStyles(boolean enabled) {
         this.native_styles = enabled;
+        save();
+    }
+
+    public boolean isFirstLaunch() {
+        return firstLaunch;
+    }
+
+    public void setFirstLaunch(boolean firstLaunch) {
+        this.firstLaunch = firstLaunch;
         save();
     }
 }

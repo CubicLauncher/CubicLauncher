@@ -21,6 +21,7 @@ import com.cubiclauncher.launcher.core.DownloadManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
+import com.cubiclauncher.launcher.ui.SetupWizardDialog;
 import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
 import com.cubiclauncher.launcher.ui.views.InstanceViewer;
@@ -51,6 +52,7 @@ public class Main extends Application {
     final SettingsManager settings = SettingsManager.getInstance();
     private InstanceViewer instanceViewer;
     private BorderPane root;
+    private Scene scene;
 
     @Override
     public void stop() {
@@ -98,13 +100,11 @@ public class Main extends Application {
         root.setBottom(bottomBar);
 
         // --- Escena ---
-        Scene scene = new Scene(root, 1400, 900);
+        scene = new Scene(root, 1400, 900);
         scene.setFill(Color.web("a1a1a1"));
 
         // Cargar estilos CSS unificados
-        if (!settings.isNative_styles()) {
-            StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
-        }
+        updateStyle();
 
         InputStream iconStream = com.cubiclauncher.launcher.Launcher.class
                 .getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png");
@@ -131,6 +131,63 @@ public class Main extends Application {
 
         primaryStage.show();
         log.info("Hi again :)");
+
+        // Show the first-launch setup wizard if needed
+        if (settings.isFirstLaunch()) {
+            javafx.application.Platform.runLater(() -> {
+                log.info("First launch detected — showing setup wizard");
+                SetupWizardDialog wizard = new SetupWizardDialog(primaryStage);
+                wizard.showAndWait();
+                // Apply changes to the main window after wizard is closed
+                refreshUI();
+            });
+        }
+    }
+
+    /**
+     * Refreshes the entire UI to apply language and style changes immediately.
+     */
+    public void refreshUI() {
+        log.info("Refreshing Main UI components...");
+        // Re-create components (they will pick up new language/settings automatically)
+        Sidebar sidebar = new Sidebar();
+
+        root.setLeft(sidebar);
+        // Refresh style
+        updateStyle();
+
+        // Setup navigation again for the new sidebar
+        sidebar.setOnInstanceSelected(instance -> {
+            showViewWithAnimation(instanceViewer);
+            instanceViewer.showInstance(instance);
+        });
+
+        sidebar.setOnSettingsAction(() -> {
+            showViewWithAnimation(SettingsView.create((Stage) scene.getWindow()));
+            sidebar.clearSelection();
+        });
+        sidebar.setOnVersionsAction(() -> {
+            showViewWithAnimation(VersionsView.getInstance().create());
+            sidebar.clearSelection();
+        });
+    }
+
+    private void updateStyle() {
+        if (scene == null)
+            return;
+        String cssPath = "/com.cubiclauncher.launcher/styles/ui.main.css";
+        java.net.URL cssUrl = StylesLoader.class.getResource(cssPath);
+        if (cssUrl == null)
+            return;
+        String cssExtern = cssUrl.toExternalForm();
+
+        if (settings.isNative_styles()) {
+            scene.getStylesheets().remove(cssExtern);
+        } else {
+            if (!scene.getStylesheets().contains(cssExtern)) {
+                scene.getStylesheets().add(cssExtern);
+            }
+        }
     }
 
     private void showViewWithAnimation(Node newView) {

@@ -1652,3 +1652,202 @@
   -fx-border-color: #252525;
   -fx-border-width: 1 0 0 0;
 }
+
+/* ==================== SETUP WIZARD ==================== */
+
+.wizard-root {
+  -fx-background-color: #0f0f0f;
+  -fx-background-radius: 16;
+  -fx-border-color: #2a2a2a;
+  -fx-border-width: 1;
+  -fx-border-radius: 16;
+  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 40, 0, 0, 8);
+}
+
+.wizard-step {
+  -fx-background-color: transparent;
+  -fx-alignment: center;
+}
+
+/* Big emoji / icon at top of each step */
+.wizard-big-emoji {
+  -fx-font-size: 52px;
+  -fx-padding: 0 0 4 0;
+}
+
+.wizard-style-icon {
+  -fx-font-size: 36px;
+}
+
+/* Step title */
+.wizard-step-title {
+  -fx-font-size: 22px;
+  -fx-font-weight: 700;
+  -fx-text-fill: #e8e8e8;
+  -fx-text-alignment: center;
+  -fx-wrap-text: true;
+}
+
+/* Step body text */
+.wizard-step-body {
+  -fx-font-size: 13px;
+  -fx-text-fill: #a0a0a0;
+  -fx-text-alignment: center;
+  -fx-wrap-text: true;
+}
+
+/* Small hint / warning text */
+.wizard-step-hint {
+  -fx-font-size: 11px;
+  -fx-text-fill: #666666;
+  -fx-text-alignment: center;
+  -fx-wrap-text: true;
+  -fx-font-style: italic;
+}
+
+/* ── Footer ── */
+.wizard-footer {
+  -fx-background-color: #111111;
+  -fx-border-color: #222222;
+  -fx-border-width: 1 0 0 0;
+  -fx-padding: 14 24 18 24;
+}
+
+/* ── Navigation buttons ── */
+.wizard-nav-btn {
+  -fx-background-color: #1e1e1e;
+  -fx-text-fill: #b0b0b0;
+  -fx-border-color: #2e2e2e;
+  -fx-border-width: 1;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-padding: 10 24;
+  -fx-font-size: 13px;
+  -fx-font-weight: 600;
+  -fx-cursor: hand;
+}
+
+.wizard-nav-btn:hover {
+  -fx-background-color: #272727;
+  -fx-text-fill: #d0d0d0;
+  -fx-border-color: #3a3a3a;
+}
+
+.wizard-nav-btn-primary {
+  -fx-background-color: linear-gradient(to bottom right, #3a6bd8, #2a5bc8);
+  -fx-text-fill: #ffffff;
+  -fx-border-color: #4a7be8;
+}
+
+.wizard-nav-btn-primary:hover {
+  -fx-background-color: linear-gradient(to bottom right, #4a7be8, #3a6bd8);
+  -fx-text-fill: #ffffff;
+  -fx-border-color: #5a8bf8;
+}
+
+.wizard-nav-btn-finish {
+  -fx-background-color: linear-gradient(to bottom right, #28a745, #1e8035);
+  -fx-text-fill: #ffffff;
+  -fx-border-color: #38b755;
+}
+
+.wizard-nav-btn-finish:hover {
+  -fx-background-color: linear-gradient(to bottom right, #38b755, #28a745);
+}
+
+/* ── Step progress dots ── */
+.wizard-dot {
+  -fx-text-fill: #333333;
+  -fx-font-size: 10px;
+}
+
+.wizard-dot-active {
+  -fx-text-fill: #4a7be8;
+  -fx-font-size: 14px;
+}
+
+/* ── Language / Style selector cards ── */
+.wizard-lang-card {
+  -fx-background-color: #1a1a1a;
+  -fx-border-color: #2a2a2a;
+  -fx-border-width: 2;
+  -fx-background-radius: 12;
+  -fx-border-radius: 12;
+  -fx-padding: 18 28;
+  -fx-cursor: hand;
+  -fx-pref-width: 140px;
+  -fx-min-width: 120px;
+}
+
+.wizard-lang-card:hover {
+  -fx-background-color: #222222;
+  -fx-border-color: #3a3a3a;
+}
+
+.wizard-lang-card-selected {
+  -fx-border-color: #4a7be8;
+  -fx-background-color: #1a2540;
+}
+
+.wizard-lang-flag {
+  -fx-font-size: 32px;
+  -fx-padding: 0 0 4 0;
+}
+
+.wizard-lang-name {
+  -fx-font-size: 13px;
+  -fx-font-weight: 600;
+  -fx-text-fill: #d0d0d0;
+}
+
+/* ── Java status label ── */
+.wizard-java-status {
+  -fx-font-size: 12px;
+  -fx-text-fill: #888888;
+  -fx-background-color: #141414;
+  -fx-border-color: #222222;
+  -fx-border-width: 1;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
+  -fx-padding: 10 16;
+}
+
+.wizard-java-status-ok {
+  -fx-text-fill: #4caf50;
+  -fx-border-color: #2a4a2a;
+  -fx-background-color: #0d1a0d;
+}
+
+.wizard-java-status-warn {
+  -fx-text-fill: #f0a030;
+  -fx-border-color: #4a3010;
+  -fx-background-color: #1a1200;
+}
+
+/* ── License card ── */
+.wizard-license-card {
+  -fx-background-color: #141414;
+  -fx-border-color: #2a2a2a;
+  -fx-border-width: 1;
+  -fx-background-radius: 10;
+  -fx-border-radius: 10;
+  -fx-padding: 16 20;
+}
+
+.wizard-license-title {
+  -fx-font-size: 12px;
+  -fx-font-weight: 700;
+  -fx-text-fill: #c0c0c0;
+  -fx-wrap-text: true;
+}
+
+.wizard-license-link {
+  -fx-text-fill: #4a7be8;
+  -fx-border-color: transparent;
+  -fx-underline: false;
+  -fx-font-size: 12px;
+}
+
+.wizard-license-link:hover {
+  -fx-text-fill: #6a9bf8;
+}
