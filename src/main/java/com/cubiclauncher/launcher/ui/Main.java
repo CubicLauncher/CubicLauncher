@@ -106,7 +106,7 @@ public class Main extends Application {
         scene.setFill(Color.web("a1a1a1"));
 
         // Cargar estilos CSS unificados
-        updateStyle();
+        StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
 
         InputStream iconStream = com.cubiclauncher.launcher.Launcher.class
                 .getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png");
@@ -171,7 +171,7 @@ public class Main extends Application {
 
         root.setLeft(sidebar);
         // Refresh style
-        updateStyle();
+        StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
 
         // Setup navigation again for the new sidebar
         sidebar.setOnInstanceSelected(instance -> {
@@ -187,24 +187,6 @@ public class Main extends Application {
             showViewWithAnimation(VersionsView.getInstance().create());
             sidebar.clearSelection();
         });
-    }
-
-    private void updateStyle() {
-        if (scene == null)
-            return;
-        String cssPath = "/com.cubiclauncher.launcher/styles/ui.main.css";
-        java.net.URL cssUrl = StylesLoader.class.getResource(cssPath);
-        if (cssUrl == null)
-            return;
-        String cssExtern = cssUrl.toExternalForm();
-
-        if (settings.isNative_styles()) {
-            scene.getStylesheets().remove(cssExtern);
-        } else {
-            if (!scene.getStylesheets().contains(cssExtern)) {
-                scene.getStylesheets().add(cssExtern);
-            }
-        }
     }
 
     private void showViewWithAnimation(Node newView) {
