@@ -7,7 +7,7 @@
     "settings.java": "Java",
     "settings.language": "Language:",
     "settings.auto_update": "Enable automatic updates",
-    "settings.error_console": "Enable error console",
+    "settings.error_console": "Enable launcher debug console",
     "settings.close_launcher": "Close launcher on game start",
     "settings.native_styles": "Use native styles (VERY BUGGY)",
     "settings.version": "Version: %s",

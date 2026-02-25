@@ -32,7 +32,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
@@ -102,12 +101,10 @@ public class SetupWizardDialog {
 
     // ─────────────────────────────────────────────────────────────────────────
 
-    public SetupWizardDialog(Stage owner) {
+    public SetupWizardDialog() {
         wizardStage = new Stage();
-        wizardStage.initModality(Modality.APPLICATION_MODAL);
-        wizardStage.initOwner(owner);
-        wizardStage.initStyle(StageStyle.UNDECORATED);
-        wizardStage.setResizable(false);
+        wizardStage.initStyle(StageStyle.DECORATED);
+        wizardStage.setResizable(true);
         wizardStage.setTitle("CubicLauncher - Configuración");
     }
 

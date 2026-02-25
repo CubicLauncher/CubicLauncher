@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.cubiclauncher"
-version = "2602a"
+version = "2603a"
 
 java {
     toolchain {

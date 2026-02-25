@@ -29,6 +29,7 @@ public class InstanceViewerHeader extends StackPane {
     private Label instanceVersion;
     private Label lastPlayedLabel;
     private Button playButton;
+    private Button deleteButton;
 
     private ImageView bannerImageView;
 
@@ -158,7 +159,7 @@ public class InstanceViewerHeader extends StackPane {
     private GridPane buildMetaGrid() {
         GridPane metaInfo = new GridPane();
         metaInfo.getStyleClass().add("instance-meta");
-        metaInfo.setHgap(32);
+        metaInfo.setHgap(24);
         metaInfo.setVgap(4);
 
         Label lastPlayedTitle = new Label(lm.get("instance.last_played"));
@@ -183,7 +184,7 @@ public class InstanceViewerHeader extends StackPane {
             if (current != null) InstanceController.launchInstance(current.getName());
         });
 
-        Button deleteButton = new Button(lm.get("instance.btn_delete"));
+        deleteButton = new Button(lm.get("instance.btn_delete"));
         deleteButton.getStyleClass().add("btn-secondary");
         deleteButton.setStyle("-fx-text-fill: #ff5555;");
         deleteButton.setOnAction(e -> {
@@ -205,6 +206,8 @@ public class InstanceViewerHeader extends StackPane {
             instanceVersion.setText(InstanceViewerUtils.formatVersion(instance.getVersion()));
             lastPlayedLabel.setText(instance.getLastPlayedFormatted());
             playButton.setDisable(false);
+            deleteButton.setDisable(false);
+
             applyBannerImage(instance);
         } else {
             showEmpty();
@@ -217,6 +220,7 @@ public class InstanceViewerHeader extends StackPane {
         instanceVersion.setText("");
         lastPlayedLabel.setText(lm.get("instance.never"));
         playButton.setDisable(true);
+        deleteButton.setDisable(true);
         bannerImageView.setImage(null);
         bannerImageView.setViewport(null);
     }

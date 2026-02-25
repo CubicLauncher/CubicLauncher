@@ -69,7 +69,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         initLogging();
         log.info("Starting CubicLauncher");
-        primaryStage.setTitle("CubicLauncher");
+        primaryStage.setTitle("CubicLauncher ALPHA");
         primaryStage.initStyle(StageStyle.DECORATED);
         primaryStage.setMinWidth(1000);
         primaryStage.setMinHeight(700);
@@ -130,20 +130,13 @@ public class Main extends Application {
             primaryStage.setFullScreen(false);
             primaryStage.setResizable(true);
         }
-
+        if (settings.isFirstLaunch()) {
+            SetupWizardDialog wizard = new SetupWizardDialog();
+            wizard.showAndWait();
+            refreshUI();
+        }
         primaryStage.show();
         log.info("Hi again :)");
-
-        // Show the first-launch setup wizard if needed
-        if (settings.isFirstLaunch()) {
-            javafx.application.Platform.runLater(() -> {
-                log.info("First launch detected — showing setup wizard");
-                SetupWizardDialog wizard = new SetupWizardDialog(primaryStage);
-                wizard.showAndWait();
-                // Apply changes to the main window after wizard is closed
-                refreshUI();
-            });
-        }
 
         if (settings.isErrorConsole()) {
             ErrorConsoleView.getInstance().show();
