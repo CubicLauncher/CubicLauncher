@@ -80,10 +80,10 @@ public class InstanceViewerHeader extends StackPane {
         overlay.setBackground(new Background(new BackgroundFill(
                 new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
                         new Stop(0.0, Color.rgb(0, 0, 0, 0.10)),
-                        new Stop(0.30, Color.rgb(0, 0, 0, 0.55)),
+                        new Stop(0.30, Color.rgb(0, 0, 0, 0.34)),
                         new Stop(0.75, Color.rgb(0, 0, 0, 0.55)),
                         new Stop(1.0, Color.rgb(0, 0, 0, 0.85))),
-                CornerRadii.EMPTY, Insets.EMPTY)));
+                CornerRadii.EMPTY, new Insets(0,0,-1,0)))); // lo gracioso era que el bug ese era solo un pixel xD
         overlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         return overlay;
     }
