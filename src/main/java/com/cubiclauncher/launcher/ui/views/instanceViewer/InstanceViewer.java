@@ -90,7 +90,6 @@ public class InstanceViewer extends BorderPane {
     // ── Public API ────────────────────────────────────────────────────────────
 
     public void showInstance(InstanceManager.Instance inst) {
-        if (this.currentInstance == inst) return;
 
         FadeTransition fadeOut = new FadeTransition(Duration.millis(150), this);
         fadeOut.setFromValue(1.0);
