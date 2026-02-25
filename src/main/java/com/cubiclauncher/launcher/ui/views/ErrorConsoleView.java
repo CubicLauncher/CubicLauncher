@@ -28,6 +28,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import java.util.Objects;
 
 public class ErrorConsoleView {
     private static ErrorConsoleView instance;
@@ -49,7 +50,7 @@ public class ErrorConsoleView {
     private void init() {
         Platform.runLater(() -> {
             stage = new Stage();
-            stage.setTitle(lm.get("settings.error_console"));
+            stage.setTitle(lm.get("launcher.debug_console.title"));
 
             VBox root = new VBox(10);
             root.setPadding(new Insets(10));
@@ -84,7 +85,7 @@ public class ErrorConsoleView {
 
             stage.setScene(scene);
             stage.getIcons().add(
-                    new Image(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png")));
+                    new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/logos/cdark.png"))));
         });
     }
 

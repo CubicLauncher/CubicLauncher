@@ -7,9 +7,7 @@ package com.cubiclauncher.launcher.ui.components.sidebar;
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.InstanceManager.Instance;
 import com.cubiclauncher.launcher.core.LanguageManager;
-import com.cubiclauncher.launcher.ui.views.instanceViewer.InstanceViewer;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
@@ -24,7 +22,6 @@ import java.util.function.Consumer;
 public class InstanceListPanel extends VBox {
 
     private final ListView<Instance> listView = new ListView<>();
-    private final Button editButton;
     private Consumer<Instance> onInstanceSelected;
 
     public InstanceListPanel() {
@@ -43,17 +40,7 @@ public class InstanceListPanel extends VBox {
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        editButton = new Button(lm.get("sidebar.edit"));
-        editButton.getStyleClass().add("menu-button-sidebar");
-        editButton.setVisible(false);
-        editButton.setOnAction(e -> {
-            Instance selected = listView.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                InstanceViewer.getInstance().showEditDialog(selected);
-            }
-        });
-
-        header.getChildren().addAll(instancesLabel, spacer, editButton);
+        header.getChildren().addAll(instancesLabel, spacer);
 
         // ── Lista ────────────────────────────────────────────────────────────
         listView.getStyleClass().add("instance-list");
@@ -64,7 +51,6 @@ public class InstanceListPanel extends VBox {
 
         // ── Selección ─────────────────────────────────────────────────────────
         listView.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
-            editButton.setVisible(selected != null);
             if (selected != null && onInstanceSelected != null) {
                 onInstanceSelected.accept(selected);
             }

@@ -29,11 +29,11 @@ public class InstanceViewerHeader extends StackPane {
     private Label instanceVersion;
     private Label lastPlayedLabel;
     private Button playButton;
-    private Button deleteButton;
+    private Button editButton;
 
     private ImageView bannerImageView;
 
-    private Consumer<InstanceManager.Instance> onDeleteRequest;
+    private Consumer<InstanceManager.Instance> onEditRequest;
 
     public InstanceViewerHeader() {
         super();
@@ -181,15 +181,18 @@ public class InstanceViewerHeader extends StackPane {
             if (current != null) InstanceController.launchInstance(current.getName());
         });
 
-        deleteButton = new Button(lm.get("instance.btn_delete"));
-        deleteButton.getStyleClass().add("btn-secondary");
-        deleteButton.setStyle("-fx-text-fill: #ff5555;");
-        deleteButton.setOnAction(e -> {
-            InstanceManager.Instance current = (InstanceManager.Instance) playButton.getUserData();
-            if (current != null && onDeleteRequest != null) onDeleteRequest.accept(current);
+        editButton = new Button(lm.get("instance.edit"));
+        editButton.getStyleClass().add("btn-secondary");
+        editButton.setOnAction(e -> {
+            InstanceManager.Instance current =
+                    (InstanceManager.Instance) playButton.getUserData();
+
+            if (current != null && onEditRequest != null) {
+                onEditRequest.accept(current);
+            }
         });
 
-        actions.getChildren().addAll(playButton, deleteButton);
+        actions.getChildren().addAll(playButton, editButton);
         return actions;
     }
 
@@ -203,7 +206,7 @@ public class InstanceViewerHeader extends StackPane {
             instanceVersion.setText(InstanceViewerUtils.formatVersion(instance.getVersion()));
             lastPlayedLabel.setText(instance.getLastPlayedFormatted());
             playButton.setDisable(false);
-            deleteButton.setDisable(false);
+            editButton.setDisable(false);
 
             applyBannerImage(instance);
         } else {
@@ -217,7 +220,7 @@ public class InstanceViewerHeader extends StackPane {
         instanceVersion.setText("");
         lastPlayedLabel.setText(lm.get("instance.never"));
         playButton.setDisable(true);
-        deleteButton.setDisable(true);
+        editButton.setDisable(true);
         bannerImageView.setImage(null);
         bannerImageView.setViewport(null);
     }
@@ -250,6 +253,6 @@ public class InstanceViewerHeader extends StackPane {
     }
 
     public void setOnDeleteRequest(Consumer<InstanceManager.Instance> handler) {
-        this.onDeleteRequest = handler;
+        this.onEditRequest = handler;
     }
 }

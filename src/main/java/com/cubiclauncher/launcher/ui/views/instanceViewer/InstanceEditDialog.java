@@ -2,23 +2,23 @@ package com.cubiclauncher.launcher.ui.views.instanceViewer;
 
 import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.LanguageManager;
-import com.cubiclauncher.launcher.ui.components.ModalHeader;
-import javafx.application.Platform;
+import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
 import java.io.File;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -28,6 +28,8 @@ public class InstanceEditDialog {
 
     private final LanguageManager lm = LanguageManager.getInstance();
     private final Window owner;
+
+    private final boolean[] deleteConfirm = { false };
 
     /** Llamado después de un guardado exitoso */
     private Consumer<InstanceManager.Instance> onSaved;
@@ -43,102 +45,95 @@ public class InstanceEditDialog {
     // ── Public entry point ───────────────────────────────────────────────────
 
     public void show(InstanceManager.Instance instance) {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.initOwner(owner);
-        dialog.initModality(Modality.WINDOW_MODAL);
-        dialog.initStyle(StageStyle.TRANSPARENT);
-        dialog.setTitle(lm.get("instance.edit_title"));
 
-        DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStyleClass().add("editor-dialog-pane");
-        dialogPane.setHeaderText(null);
-        dialogPane.setGraphic(null);
-        dialogPane.getButtonTypes().add(ButtonType.CLOSE);
-        Node closeBtn = dialogPane.lookupButton(ButtonType.CLOSE);
-        if (closeBtn != null) closeBtn.setVisible(false);
-        dialogPane.setBackground(null);
-        dialogPane.setPadding(Insets.EMPTY);
+        Stage stage = new Stage();
+        stage.initOwner(owner);
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initStyle(StageStyle.DECORATED);
+        stage.setTitle(lm.get("instance.edit_title"));
 
         // Editable state
         String[] selectedCover = { instance.getCoverImage() };
 
-        VBox windowRoot = new VBox();
-        windowRoot.getStyleClass().add("editor-window-root");
-        windowRoot.setPrefWidth(500);
+        VBox root = new VBox();
+        root.getStyleClass().add("editor-window-root");
+        root.setPrefWidth(500);
 
-        ModalHeader header  = new ModalHeader(lm.get("instance.edit_title"), dialog);
-        VBox        content = buildContent(instance, selectedCover);
-        HBox        footer  = new HBox(15); // filled below once fields are available
+        VBox content = buildContent(instance, selectedCover);
+        HBox footer  = new HBox(15);
 
-        // ── Fields (kept as locals to be referenced in saveBtn action) ────────
-        GridPane grid = (GridPane) ((VBox) content.getChildren().getFirst()).getChildren().getFirst();
+        // ── Fields ───────────────────────────────────────────────────────────
+        GridPane grid = (GridPane) ((VBox) content.getChildren().getFirst())
+                .getChildren().getFirst();
 
-        // Pull field references from grid (they were added at rows 0-3)
         TextField nameField    = (TextField) getGridCell(grid, 0);
         TextField versionField = (TextField) getGridCell(grid, 1);
-        TextField minMemField  = (TextField) ((HBox) getGridCell(grid, 2)).getChildren().get(0);
-        TextField maxMemField  = (TextField) ((HBox) getGridCell(grid, 2)).getChildren().get(1);
+        TextField minMemField  = (TextField) ((HBox) getGridCell(grid, 2))
+                .getChildren().get(0);
+        TextField maxMemField  = (TextField) ((HBox) getGridCell(grid, 2))
+                .getChildren().get(1);
         TextField jvmArgsField = (TextField) getGridCell(grid, 3);
 
-        // ── Footer ────────────────────────────────────────────────────────────
+        // ── Footer ───────────────────────────────────────────────────────────
         footer.getStyleClass().add("editor-footer");
         footer.setAlignment(Pos.CENTER_RIGHT);
 
         Button deleteBtn = new Button(lm.get("instance.btn_delete"));
         deleteBtn.getStyleClass().add("btn-secondary");
-        deleteBtn.setStyle("-fx-text-fill: #ff5555; -fx-font-size: 11px; -fx-padding: 8 20;");
+        deleteBtn.setStyle("-fx-text-fill: #ff5555; -fx-font-size: 11px;");
 
         Button saveBtn = new Button(lm.get("instance.btn_save"));
         saveBtn.getStyleClass().add("play-button-primary");
-        saveBtn.setStyle("-fx-font-size: 11px; -fx-padding: 8 24;");
+        saveBtn.setStyle("-fx-font-size: 11px;");
 
-        Region footerSpacer = new Region();
-        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
-        footer.getChildren().addAll(deleteBtn, footerSpacer, saveBtn);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        footer.getChildren().addAll(deleteBtn, spacer, saveBtn);
 
-        windowRoot.getChildren().addAll(header, content, footer);
-        dialogPane.setContent(windowRoot);
+        root.getChildren().addAll(content, footer);
 
-        // ── Actions ───────────────────────────────────────────────────────────
+        // ── Actions ──────────────────────────────────────────────────────────
         saveBtn.setOnAction(e -> {
             String oldName = instance.getName();
             String newName = nameField.getText();
 
             instance.setVersion(versionField.getText());
             try {
-                instance.setMinMemory(minMemField.getText().isEmpty() ? null : Integer.parseInt(minMemField.getText()));
-                instance.setMaxMemory(maxMemField.getText().isEmpty() ? null : Integer.parseInt(maxMemField.getText()));
-            } catch (NumberFormatException ignored) {
-                // esto esta ignorado asi como me ignora ella
-                // TODO: tomar excepciones
-            }
+                instance.setMinMemory(minMemField.getText().isEmpty()
+                        ? null : Integer.parseInt(minMemField.getText()));
+                instance.setMaxMemory(maxMemField.getText().isEmpty()
+                        ? null : Integer.parseInt(maxMemField.getText()));
+            } catch (NumberFormatException ignored) {}
+
             instance.setJvmArgs(jvmArgsField.getText());
             instance.setCoverImage(selectedCover[0]);
 
             if (!newName.equals(oldName)) {
-                InstanceManager.getInstance().renameInstance(oldName, newName);
+                InstanceManager.getInstance()
+                        .renameInstance(oldName, newName);
             } else {
                 InstanceManager.getInstance().saveInstance(instance);
                 if (onSaved != null) onSaved.accept(instance);
             }
-            dialog.close();
+            stage.close();
         });
 
-        deleteBtn.setOnAction(e ->
-                new InstanceDeleteDialog(owner).show(instance, dialog::close));
-
-        Platform.runLater(() -> {
-            if (dialogPane.getScene() != null) {
-                dialogPane.getScene().setFill(null);
-                dialogPane.getScene().getStylesheets().add(
-                        Objects.requireNonNull(getClass()
-                                        .getResource("/com.cubiclauncher.launcher/styles/ui.main.css"))
-                                .toExternalForm());
+        deleteBtn.setOnAction(e -> {
+            if (!deleteConfirm[0]) {
+                deleteConfirm[0] = true;
+                deleteBtn.setText(lm.get("instance.confirm"));
+            } else {
+                InstanceManager.getInstance()
+                        .deleteInstance(instance.getName());
+                stage.close();
             }
-            nameField.requestFocus();
         });
 
-        dialog.showAndWait();
+        Scene scene = new Scene(root);
+        StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
+
+        stage.setScene(scene);
+        stage.show();
     }
 
     // ── Content builder ───────────────────────────────────────────────────────

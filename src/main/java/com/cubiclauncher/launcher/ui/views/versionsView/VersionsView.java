@@ -15,7 +15,7 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-package com.cubiclauncher.launcher.ui.views;
+package com.cubiclauncher.launcher.ui.views.versionsView;
 
 import com.cubiclauncher.launcher.core.DownloadManager;
 import com.cubiclauncher.launcher.core.InstanceManager;

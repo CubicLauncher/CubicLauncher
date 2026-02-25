@@ -25,7 +25,6 @@ import javafx.util.Duration;
  *  - {@link InstanceViewerHeader}
  *  - {@link InstanceViewerContent}
  *  - {@link InstanceEditDialog}
- *  - {@link InstanceDeleteDialog}
  *  - {@link InstanceViewerUtils}
  */
 public class InstanceViewer extends BorderPane {
@@ -50,8 +49,7 @@ public class InstanceViewer extends BorderPane {
         setTop(header);
         setCenter(content);
 
-        header.setOnDeleteRequest(inst ->
-                new InstanceDeleteDialog(getScene().getWindow()).show(inst, null));
+        header.setOnDeleteRequest(this::showEditDialog);
 
         showEmptyState();
         setupEventSubscriptions();

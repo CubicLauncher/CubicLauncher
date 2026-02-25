@@ -25,7 +25,7 @@ import com.cubiclauncher.launcher.ui.components.BottomBar;
 import com.cubiclauncher.launcher.ui.components.Sidebar;
 import com.cubiclauncher.launcher.ui.views.instanceViewer.InstanceViewer;
 import com.cubiclauncher.launcher.ui.views.SettingsView;
-import com.cubiclauncher.launcher.ui.views.VersionsView;
+import com.cubiclauncher.launcher.ui.views.versionsView.VersionsView;
 import com.cubiclauncher.launcher.util.StylesLoader;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;

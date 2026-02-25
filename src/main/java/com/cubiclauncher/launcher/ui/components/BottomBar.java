@@ -34,7 +34,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 public class BottomBar extends HBox {
@@ -48,7 +47,6 @@ public class BottomBar extends HBox {
     private final Label statusLabel;
 
     private final ImageView userAvatar;
-    private final Circle fallbackAvatar;
     private final Label userName;
     private final HBox editContainer;
     private final TextField userNameField;
@@ -66,14 +64,13 @@ public class BottomBar extends HBox {
         userProfile.setAlignment(Pos.CENTER_LEFT);
 
         // Avatar
-        fallbackAvatar = new Circle(14, Color.web("#4a6bff"));
         userAvatar = new ImageView();
         userAvatar.setFitWidth(28);
         userAvatar.setFitHeight(28);
         Circle clip = new Circle(14, 14, 14);
         userAvatar.setClip(clip);
 
-        StackPane avatarContainer = new StackPane(fallbackAvatar, userAvatar);
+        StackPane avatarContainer = new StackPane(userAvatar);
         avatarContainer.setPrefSize(28, 28);
 
         updateAvatar(sm.getUsername());
@@ -187,7 +184,6 @@ public class BottomBar extends HBox {
     }
 
     private void updateAvatar(String username) {
-        fallbackAvatar.setVisible(true);
         userAvatar.setVisible(false);
 
         String avatarUrl = "https://minotar.net/avatar/" + username + "/28";
@@ -196,7 +192,6 @@ public class BottomBar extends HBox {
         avatarImage.progressProperty().addListener((obs, oldProgress, newProgress) -> {
             if (newProgress.doubleValue() == 1.0) {
                 userAvatar.setImage(avatarImage);
-                fallbackAvatar.setVisible(false);
                 userAvatar.setVisible(true);
             }
         });
@@ -208,8 +203,7 @@ public class BottomBar extends HBox {
                         && !(avatarImage.getException() instanceof java.io.FileNotFoundException)) {
                     avatarImage.getException().printStackTrace();
                 }
-                fallbackAvatar.setVisible(true);
-                userAvatar.setVisible(false);
+                userAvatar.setImage(new Image("/com.cubiclauncher.launcher/assets/logos/cubic.png"));
             }
         });
     }
