@@ -4,12 +4,14 @@ import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.BorderPane;
+import javafx.util.Duration;
 
 /**
  * Panel de instance viewer
@@ -90,20 +92,35 @@ public class InstanceViewer extends BorderPane {
     // ── Public API ────────────────────────────────────────────────────────────
 
     public void showInstance(InstanceManager.Instance inst) {
-        this.currentInstance = inst;
-        this.currentInstanceProperty.set(inst);
+        if (this.currentInstance == inst) return;
 
-        if (inst != null) {
-            header.update(inst);
-            content.update(inst);
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(150), this);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
 
-            content.clearLogs();
-            content.appendLog(lm.get("instance.field_name")    + ": " + inst.getName());
-            content.appendLog(lm.get("instance.field_version") + ": " + inst.getVersion());
-            content.appendLog(lm.get("instance.ready"));
-        } else {
-            showEmptyState();
-        }
+        fadeOut.setOnFinished(e -> {
+            // Actualizar la instancia actual y los datos
+            this.currentInstance = inst;
+            this.currentInstanceProperty.set(inst);
+
+            if (inst != null) {
+                header.update(inst);
+                content.update(inst);
+                content.clearLogs();
+                content.appendLog(lm.get("instance.field_name")    + ": " + inst.getName());
+                content.appendLog(lm.get("instance.field_version") + ": " + inst.getVersion());
+                content.appendLog(lm.get("instance.ready"));
+            } else {
+                showEmptyState(); // Ya actualiza UI esto.
+            }
+
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(200), this);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            fadeIn.play();
+        });
+
+        fadeOut.play();
     }
 
     public void showEmptyState() {
