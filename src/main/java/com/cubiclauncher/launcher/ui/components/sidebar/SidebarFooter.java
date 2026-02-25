@@ -27,8 +27,14 @@ public class SidebarFooter extends VBox {
         Button versionsButton = createActionButton(lm.get("sidebar.versions"));
         Button settingsButton = createActionButton(lm.get("sidebar.settings"));
 
-        versionsButton.setOnAction(e -> { if (onVersionsAction != null) onVersionsAction.run(); });
-        settingsButton.setOnAction(e -> { if (onSettingsAction != null) onSettingsAction.run(); });
+        versionsButton.setOnAction(e -> {
+            if (onVersionsAction != null)
+                onVersionsAction.run();
+        });
+        settingsButton.setOnAction(e -> {
+            if (onSettingsAction != null)
+                onSettingsAction.run();
+        });
 
         getChildren().addAll(versionsButton, settingsButton);
     }
@@ -41,6 +47,11 @@ public class SidebarFooter extends VBox {
         return button;
     }
 
-    public void setOnVersionsAction(Runnable action) { this.onVersionsAction = action; }
-    public void setOnSettingsAction(Runnable action) { this.onSettingsAction = action; }
+    public void setOnVersionsAction(Runnable action) {
+        this.onVersionsAction = action;
+    }
+
+    public void setOnSettingsAction(Runnable action) {
+        this.onSettingsAction = action;
+    }
 }

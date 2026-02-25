@@ -151,7 +151,7 @@ public class SettingsView {
 
     private static VBox createLauncherInfo() {
         VBox infoBox = new VBox(5);
-        Label versionLabel = new Label(lm.get("settings.version", "2601a"));
+        Label versionLabel = new Label(lm.get("settings.version", "2602a"));
         Label devLabel = new Label(
                 lm.get("settings.developed_by", "Santiagolxx, Notstaff & CubicLauncher contributors"));
         HBox sourceCodeBox = new HBox(5);

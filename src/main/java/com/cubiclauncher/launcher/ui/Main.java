@@ -37,9 +37,12 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import com.cubiclauncher.launcher.ui.views.ErrorConsoleView;
+import com.cubiclauncher.launcher.util.LogAppender;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.InputStream;
 import javafx.stage.Screen;
 import javafx.geometry.Rectangle2D;
@@ -64,6 +67,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        initLogging();
         log.info("Starting CubicLauncher");
         primaryStage.setTitle("CubicLauncher");
         primaryStage.initStyle(StageStyle.DECORATED);
@@ -140,6 +144,28 @@ public class Main extends Application {
                 refreshUI();
             });
         }
+
+        if (settings.isErrorConsole()) {
+            ErrorConsoleView.getInstance().show();
+        }
+    }
+
+    private void initLogging() {
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        PatternLayoutEncoder ple = new PatternLayoutEncoder();
+
+        ple.setPattern("%d{HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n");
+        ple.setContext(lc);
+        ple.start();
+
+        LogAppender logAppender = new LogAppender();
+        logAppender.setContext(lc);
+        logAppender.setEncoder(ple);
+        logAppender.start();
+
+        ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory
+                .getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        root.addAppender(logAppender);
     }
 
     /**

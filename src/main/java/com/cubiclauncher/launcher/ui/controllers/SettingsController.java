@@ -78,6 +78,11 @@ public class SettingsController {
     public void onErrorConsoleChanged(boolean enabled) {
         settings.setErrorConsole(enabled);
         log.info("Consola de errores: {}", enabled ? "activada" : "desactivada");
+        if (enabled) {
+            com.cubiclauncher.launcher.ui.views.ErrorConsoleView.getInstance().show();
+        } else {
+            com.cubiclauncher.launcher.ui.views.ErrorConsoleView.getInstance().hide();
+        }
     }
 
     public void onCloseLauncherChanged(boolean enabled) {
