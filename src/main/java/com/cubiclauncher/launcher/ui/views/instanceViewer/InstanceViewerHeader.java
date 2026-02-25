@@ -38,18 +38,15 @@ public class InstanceViewerHeader extends StackPane {
     public InstanceViewerHeader() {
         super();
         getStyleClass().add("instance-header");
-        setMinHeight(300);
-        setMaxHeight(300);
         build();
     }
-
-    // ── Build ────────────────────────────────────────────────────────────────
 
     private void build() {
         // ── Layer 0: banner ──
         bannerImageView = new ImageView();
         bannerImageView.setPreserveRatio(true);
         bannerImageView.setSmooth(true);
+        bannerImageView.setManaged(false);
 
         // El clip define el área visible del banner
         Rectangle bannerClip = new Rectangle();
@@ -83,7 +80,7 @@ public class InstanceViewerHeader extends StackPane {
                         new Stop(0.30, Color.rgb(0, 0, 0, 0.34)),
                         new Stop(0.75, Color.rgb(0, 0, 0, 0.55)),
                         new Stop(1.0, Color.rgb(0, 0, 0, 0.85))),
-                CornerRadii.EMPTY, new Insets(0,0,-1,0)))); // lo gracioso era que el bug ese era solo un pixel xD
+                CornerRadii.EMPTY, new Insets(0,0,-1,0))));
         overlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         return overlay;
     }

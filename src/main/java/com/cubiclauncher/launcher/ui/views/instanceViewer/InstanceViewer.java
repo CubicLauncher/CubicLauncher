@@ -5,6 +5,8 @@ import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.BorderPane;
@@ -40,11 +42,12 @@ public class InstanceViewer extends BorderPane {
     private InstanceViewer() {
         super();
         getStyleClass().add("instance-viewer");
-
+        NumberBinding headerHeight = Bindings.min(heightProperty().multiply(0.3), 300);
+        header.prefHeightProperty().bind(headerHeight);
+        header.maxHeightProperty().bind(headerHeight);
         setTop(header);
         setCenter(content);
 
-        // Header delete button → show delete dialog
         header.setOnDeleteRequest(inst ->
                 new InstanceDeleteDialog(getScene().getWindow()).show(inst, null));
 
