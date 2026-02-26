@@ -17,15 +17,15 @@
 
 package com.cubiclauncher.launcher.core;
 
+import com.cubiclauncher.launcher.util.GsonProvider;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.io.*;
 
 public class SettingsManager {
-    private static final String SETTINGS_FILE = "settings.json";
+    private static final String SETTINGS_FILE = "settings.cub";
     private static final PathManager pathManager = PathManager.getInstance();
-    private static SettingsManager instance;
+    private static volatile SettingsManager instance;
+    private static final Gson Gson = GsonProvider.PRETTY;
     // Launcher settings
     public String language = "es_es";
     public boolean autoUpdate = true;
@@ -55,7 +55,7 @@ public class SettingsManager {
     private SettingsManager() {
     }
 
-    public static SettingsManager getInstance() {
+    public static synchronized SettingsManager getInstance() {
         if (instance == null) {
             instance = load();
             LanguageManager.getInstance().loadLanguage(instance.getLanguage());
@@ -76,8 +76,7 @@ public class SettingsManager {
         }
 
         try (Reader reader = new FileReader(file)) {
-            Gson gson = new Gson();
-            SettingsManager settings = gson.fromJson(reader, SettingsManager.class);
+            SettingsManager settings = Gson.fromJson(reader, SettingsManager.class);
             return settings != null ? settings : new SettingsManager();
         } catch (IOException e) {
             System.err.println("Error al cargar configuración: " + e.getMessage());
@@ -88,8 +87,7 @@ public class SettingsManager {
     public void save() {
         File file = getSettingsFile();
         try (Writer writer = new FileWriter(file)) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            gson.toJson(this, writer);
+            Gson.toJson(this, writer);
         } catch (IOException e) {
             System.err.println("Error al guardar configuración: " + e.getMessage());
         }

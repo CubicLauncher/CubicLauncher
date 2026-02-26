@@ -34,7 +34,7 @@ public class NativeLibraryLoader {
         try (InputStream in = NativeLibraryLoader.class.getResourceAsStream(resourcePath + extension)) {
             if (in == null) throw new FileNotFoundException("Recurso no encontrado: " + resourcePath);
 
-            File tempFile = Files.createTempFile("libtemp", extension).toFile();
+            File tempFile = Files.createTempFile("cubic", extension).toFile();
             tempFile.deleteOnExit();
 
             try (OutputStream out = new FileOutputStream(tempFile)) {

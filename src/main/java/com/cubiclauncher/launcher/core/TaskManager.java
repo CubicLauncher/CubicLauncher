@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  * Gestor centralizado de tareas asíncronas con Virtual Threads
  */
 public class TaskManager {
-    private static TaskManager instance;
+    private static volatile TaskManager instance;
     private final ExecutorService executorService;
     private final ScheduledExecutorService scheduler;
     private final Logger log = LoggerFactory.getLogger(TaskManager.class);
@@ -48,19 +48,9 @@ public class TaskManager {
             t.setDaemon(true);
             return t;
         });
-
-        // Monitor opcional para debugging (cada 30 segundos)
-        scheduler.scheduleAtFixedRate(() -> {
-            int active = activeTasks.get();
-            if (active > 10) {
-                log.warn("Hay {} tareas activas ejecutándose", active);
-            } else if (active > 0) {
-                log.debug("Tareas activas: {}", active);
-            }
-        }, 30, 30, TimeUnit.SECONDS);
     }
 
-    public static TaskManager getInstance() {
+    public static synchronized TaskManager getInstance() {
         if (instance == null) {
             instance = new TaskManager();
         }
@@ -95,7 +85,7 @@ public class TaskManager {
             try {
                 Platform.runLater(task);
             } catch (Exception e) {
-                log.error("Error en tarea asíncrona: {}", e.getMessage(), e);
+                log.error(e.getLocalizedMessage());
             } finally {
                 activeTasks.decrementAndGet();
             }

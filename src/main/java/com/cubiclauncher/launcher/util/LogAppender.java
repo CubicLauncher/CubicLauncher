@@ -25,14 +25,11 @@ import com.cubiclauncher.launcher.ui.views.ErrorConsoleView;
 public class LogAppender extends AppenderBase<ILoggingEvent> {
     private PatternLayoutEncoder encoder;
 
-    @Override
     protected void append(ILoggingEvent eventObject) {
-        if (encoder != null) {
-            String formattedMessage = new String(encoder.encode(eventObject));
-            ErrorConsoleView.getInstance().log(formattedMessage.trim());
-        } else {
-            ErrorConsoleView.getInstance().log(eventObject.getFormattedMessage());
-        }
+        String msg = encoder != null
+                ? new String(encoder.encode(eventObject)).trim()
+                : eventObject.getFormattedMessage();
+        ErrorConsoleView.getInstance().log(msg);
     }
 
     public PatternLayoutEncoder getEncoder() {

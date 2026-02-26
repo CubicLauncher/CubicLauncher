@@ -20,10 +20,11 @@ package com.cubiclauncher.launcher.core.events;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public class EventBus {
@@ -41,9 +42,11 @@ public class EventBus {
 
     /**
      * Registrar un listener para un tipo de evento
+     *
+     * @return Subscription
      */
     public Subscription subscribe(EventType type, Consumer<EventData> listener) {
-        listeners.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>())
+        listeners.computeIfAbsent(type, k -> Collections.synchronizedList(new ArrayList<>()))
                 .add(listener);
         return new Subscription(type, listener, this);
     }
@@ -53,14 +56,18 @@ public class EventBus {
      */
     public void emit(EventType type, EventData data) {
         List<Consumer<EventData>> eventListeners = listeners.get(type);
+        if (eventListeners == null || eventListeners.isEmpty()) return;
 
-        if (eventListeners != null && !eventListeners.isEmpty()) {
-            for (Consumer<EventData> listener : eventListeners) {
-                try {
-                    listener.accept(data);
-                } catch (Exception e) {
-                    log.error("Error ejecutando listener para {}", type, e);
-                }
+        List<Consumer<EventData>> snapshot;
+        synchronized (eventListeners) {
+            snapshot = new ArrayList<>(eventListeners);
+        }
+
+        for (Consumer<EventData> listener : snapshot) {
+            try {
+                listener.accept(data);
+            } catch (Exception e) {
+                log.error("Error ejecutando listener para {}", type, e);
             }
         }
     }
@@ -89,7 +96,7 @@ public class EventBus {
     public record Subscription(EventType eventType, Consumer<EventData> listener, EventBus eventBus) {
 
         public void unsubscribe() {
-                eventBus.unsubscribe(eventType, listener);
-            }
+            eventBus.unsubscribe(eventType, listener);
         }
+    }
 }

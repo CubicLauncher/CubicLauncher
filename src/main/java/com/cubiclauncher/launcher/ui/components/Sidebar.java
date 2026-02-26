@@ -27,6 +27,8 @@ import javafx.geometry.Insets;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -39,6 +41,7 @@ public class Sidebar extends VBox {
 
     private static final EventBus eventBus = EventBus.get();
     private static final TaskManager taskManager = TaskManager.getInstance();
+    private final List<EventBus.Subscription> subscriptions = new ArrayList<>();
 
     private final InstanceListPanel instanceListPanel;
     private final SidebarFooter footer;
@@ -57,16 +60,19 @@ public class Sidebar extends VBox {
         VBox.setVgrow(instanceListPanel, Priority.ALWAYS);
         getChildren().addAll(header, instanceListPanel, footer);
 
-        eventBus.subscribe(EventType.INSTANCE_CREATED,
-                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh));
-        eventBus.subscribe(EventType.INSTANCE_DELETED,
-                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh));
-        eventBus.subscribe(EventType.INSTANCE_RENAME,
-                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh));
+        subscriptions.add(eventBus.subscribe(EventType.INSTANCE_CREATED,
+                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh)));
+        subscriptions.add(eventBus.subscribe(EventType.INSTANCE_DELETED,
+                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh)));
+        subscriptions.add(eventBus.subscribe(EventType.INSTANCE_RENAME,
+                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh)));
 
         instanceListPanel.refresh();
     }
-
+    public void dispose() {
+        subscriptions.forEach(EventBus.Subscription::unsubscribe);
+        subscriptions.clear();
+    }
     // ── API público idéntico al original ─────────────────────────────────────
 
     public void refreshInstances() {

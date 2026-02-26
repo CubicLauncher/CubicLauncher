@@ -17,7 +17,7 @@
 
 package com.cubiclauncher.launcher.ui;
 
-import com.cubiclauncher.launcher.core.DownloadManager;
+import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
@@ -57,12 +57,14 @@ public class Main extends Application {
 
     @Override
     public void stop() {
+        Node left = root.getLeft();
+        if (left instanceof Sidebar s) s.dispose();
         log.info("Apagando threads");
         TaskManager.getInstance().shutdown();
-        DownloadManager.getInstance().shutdown();
         log.info("Eliminando listeners de eventos");
         eventBus.clearAll();
         log.info("Cerrando CubicLauncher. Adios :)");
+        InstanceManager.getInstance().dispose();
     }
 
     @Override
@@ -166,7 +168,10 @@ public class Main extends Application {
      */
     public void refreshUI() {
         log.info("Refreshing Main UI components...");
-        // Re-create components (they will pick up new language/settings automatically)
+        Node oldLeft = root.getLeft();
+        if (oldLeft instanceof Sidebar oldSidebar) {
+            oldSidebar.dispose();
+        }
         Sidebar sidebar = new Sidebar();
 
         root.setLeft(sidebar);

@@ -156,7 +156,8 @@ public class BottomBar extends HBox {
         statusLabel.getStyleClass().add("status-label");
 
         getChildren().addAll(userProfile, leftSpacer, progressCenter, rightSpacer, statusLabel);
-
+        EventBus.get().subscribe(EventType.LANGUAGE_CHANGED,
+                e -> refreshTranslations());
         // Subscribirse al cambio de idioma
         EventBus.get().subscribe(EventType.LANGUAGE_CHANGED, e -> refreshTranslations());
     }
