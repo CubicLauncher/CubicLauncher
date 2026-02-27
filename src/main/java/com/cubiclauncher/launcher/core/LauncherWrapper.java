@@ -38,7 +38,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class LauncherWrapper {
@@ -48,9 +50,10 @@ public class LauncherWrapper {
     private static final Logger log = LoggerFactory.getLogger(LauncherWrapper.class);
     private static final long PROGRESS_UPDATE_INTERVAL = 100; // 100ms
     private static LauncherWrapper instance;
-    private final Queue<String> downloadQueue = new LinkedList<>();
-    private boolean isDownloading = false;
+    private final Queue<String> downloadQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicBoolean isDownloading = new AtomicBoolean(false);
     private long lastProgressUpdate = 0;
+    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
     static {
         try {
@@ -89,12 +92,16 @@ public class LauncherWrapper {
     }
 
     private void startNextDownload() {
-        if (isDownloading || downloadQueue.isEmpty()) {
-            return; // Si ya hay una descarga o la cola está vacía, no hacer nada
+        if (!isDownloading.compareAndSet(false, true)) {
+            return; // Ya hay una descarga en curso
         }
 
-        isDownloading = true;
         String versionId = downloadQueue.poll();
+        if (versionId == null) {
+            isDownloading.set(false);
+            return; // Cola vacía
+        }
+
         log.info("Iniciando descarga de versión: {}", versionId);
 
         startMinecraftDownload(pm.getGamePath().resolve("shared").toString(),
@@ -114,7 +121,7 @@ public class LauncherWrapper {
                     public void onComplete() {
                         EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED,
                                 EventData.builder().put("version", versionId).build());
-                        isDownloading = false;
+                        isDownloading.set(false);
                         startNextDownload();
                     }
 
@@ -122,7 +129,7 @@ public class LauncherWrapper {
                     public void onError(String error) {
                         EVENT_BUS.emit(EventType.DOWNLOAD_COMPLETED,
                                 EventData.error("Error en descarga: " + error, null));
-                        isDownloading = false;
+                        isDownloading.set(false);
                         startNextDownload();
                     }
                 });
@@ -140,12 +147,12 @@ public class LauncherWrapper {
 
     public List<String> getAvailableVersions() {
         List<String> versions = new ArrayList<>();
-        try (var client = HttpClient.newHttpClient()) {
+        try {
             var request = HttpRequest.newBuilder()
                     .uri(URI.create("""
                             https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"""))
                     .build();
-            var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
             var json = new Gson().fromJson(response.body(), JsonObject.class);
             json.getAsJsonArray("versions").forEach(el -> {
                 var obj = el.getAsJsonObject();
@@ -397,22 +404,18 @@ public class LauncherWrapper {
      */
     public void monitorProcessWithEvents(Process process, String instance_name) {
         monitorProcessOutput(process,
-                line -> {
-                    EVENT_BUS.emit(EventType.GAME_OUTPUT,
-                            EventData.builder()
-                                    .put("instance_name", instance_name)
-                                    .put("line", line)
-                                    .put("type", "stdout")
-                                    .build());
-                },
-                line -> {
-                    EVENT_BUS.emit(EventType.GAME_OUTPUT,
-                            EventData.builder()
-                                    .put("version", instance_name)
-                                    .put("line", line)
-                                    .put("type", "stderr")
-                                    .build());
-                });
+                line -> EVENT_BUS.emit(EventType.GAME_OUTPUT,
+                        EventData.builder()
+                                .put("instance_name", instance_name)
+                                .put("line", line)
+                                .put("type", "stdout")
+                                .build()),
+                line -> EVENT_BUS.emit(EventType.GAME_OUTPUT,
+                        EventData.builder()
+                                .put("version", instance_name)
+                                .put("line", line)
+                                .put("type", "stderr")
+                                .build()));
 
         // Monitorear el proceso para detectar cuando termina
         new Thread(() -> {
@@ -462,11 +465,7 @@ public class LauncherWrapper {
      */
     public long getProcessPid(Process process) {
         try {
-            if (process.getClass().getName().equals("java.lang.UNIXProcess")) {
-                java.lang.reflect.Field pidField = process.getClass().getDeclaredField("pid");
-                pidField.setAccessible(true);
-                return pidField.getLong(process);
-            }
+            return process.pid();
         } catch (Exception e) {
             log.debug("No se pudo obtener el PID del proceso", e);
         }

@@ -17,6 +17,7 @@
 
 package com.cubiclauncher.launcher.core;
 
+import com.cubiclauncher.launcher.util.GsonProvider;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
@@ -38,15 +39,15 @@ import java.util.Map;
  */
 public class LanguageManager {
     private static final Logger log = LoggerFactory.getLogger(LanguageManager.class);
-    private static LanguageManager instance;
+    private static volatile LanguageManager instance;
     private Map<String, String> translations = new HashMap<>();
     private String currentLanguage = "en_us";
-
+    private static final Gson Gson = GsonProvider.PRETTY;
     private LanguageManager() {
         loadLanguage(currentLanguage);
     }
 
-    public static LanguageManager getInstance() {
+    public static synchronized LanguageManager getInstance() {
         if (instance == null) {
             instance = new LanguageManager();
         }
@@ -96,12 +97,12 @@ public class LanguageManager {
     }
 
     private void loadFromJson(InputStreamReader reader, String langCode) {
-        Gson gson = new Gson();
         Type type = new TypeToken<Map<String, String>>() {
         }.getType();
-        Map<String, String> loadedTranslations = gson.fromJson(reader, type);
+        Map<String, String> loadedTranslations = Gson.fromJson(reader, type);
 
         if (loadedTranslations != null) {
+            this.translations.clear();
             this.translations = loadedTranslations;
             this.currentLanguage = langCode;
         }
@@ -146,9 +147,5 @@ public class LanguageManager {
             log.warn("Error formatting translation for key {}: {}", key, e.getMessage());
             return translation;
         }
-    }
-
-    public String getCurrentLanguage() {
-        return currentLanguage;
     }
 }

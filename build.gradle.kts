@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.cubiclauncher"
-version = "1.0-SNAPSHOT"
+version = "2603a"
 
 java {
     toolchain {
@@ -21,7 +21,7 @@ repositories {
 
 val fxVersion = "21.0.4"
 
-val os = org.gradle.internal.os.OperatingSystem.current()
+val os = org.gradle.internal.os.OperatingSystem.current()!!
 val platform = when {
     os.isWindows -> "win"
     os.isLinux -> "linux"

@@ -15,7 +15,7 @@
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
 
-package com.cubiclauncher.launcher.ui.views;
+package com.cubiclauncher.launcher.ui.views.versionsView;
 
 import com.cubiclauncher.launcher.core.DownloadManager;
 import com.cubiclauncher.launcher.core.InstanceManager;
@@ -104,17 +104,6 @@ public class VersionsView {
     public void refreshInstalledVersions() {
         if (currentInstalledBtn != null && currentInstalledBtn.isSelected() && currentVersionsList != null) {
             loadInstalledVersions();
-        }
-    }
-
-    /**
-     * Actualiza la lista de versiones disponibles
-     */
-    public void refreshAvailableVersions() {
-        if (currentAvailableBtn != null && currentAvailableBtn.isSelected() && currentVersionsList != null) {
-            availableVersionsLoaded = false;
-            showLoadingPlaceholder();
-            loadAvailableVersionsLazy();
         }
     }
 
@@ -213,7 +202,7 @@ public class VersionsView {
         installedBtn.setOnAction(e -> {
             if (installedBtn.isSelected()) {
                 loadInstalledVersions();
-                currentVersionsList.setCellFactory(lv -> new InstalledVersionCell(currentVersionsList));
+                currentVersionsList.setCellFactory(lv -> new InstalledVersionCell());
             }
         });
 
@@ -228,13 +217,16 @@ public class VersionsView {
                 showLoadingPlaceholder();
 
                 taskManager.runAsync(launcher::getAvailableVersions)
-                        .thenAccept(versions -> Platform.runLater(() -> {
-                            currentVersionsList.setItems(FXCollections.observableArrayList(versions));
-                            currentVersionsList.setCellFactory(lv -> new AvailableVersionCell());
-                            availableVersionsLoaded = true;
-                            refreshBtn.setDisable(false);
-                            refreshBtn.setText("↻");
-                        }))
+                        .thenAccept(versions -> {
+                            List<String> installed = launcher.getInstalledVersions();
+                            Platform.runLater(() -> {
+                                currentVersionsList.setItems(FXCollections.observableArrayList(versions));
+                                currentVersionsList.setCellFactory(lv -> new AvailableVersionCell(installed));
+                                availableVersionsLoaded = true;
+                                refreshBtn.setDisable(false);
+                                refreshBtn.setText("↻");
+                            });
+                        })
                         .exceptionally(error -> {
                             Platform.runLater(() -> {
                                 showErrorPlaceholder(error.getMessage());
@@ -271,9 +263,7 @@ public class VersionsView {
         });
 
         // Actualizar lista cuando se elimine una instancia
-        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> {
-            Platform.runLater(this::refreshInstalledVersions);
-        });
+        eventBus.subscribe(EventType.INSTANCE_CREATED, eventData -> Platform.runLater(this::refreshInstalledVersions));
 
         // Actualizar lista cuando haya un error en la descarga
         eventBus.subscribe(EventType.GAME_CRASHED, eventData -> {
@@ -397,11 +387,14 @@ public class VersionsView {
 
     private void loadAvailableVersionsLazy() {
         taskManager.runAsync(launcher::getAvailableVersions)
-                .thenAccept(versions -> Platform.runLater(() -> {
-                    currentVersionsList.setItems(FXCollections.observableArrayList(versions));
-                    currentVersionsList.setCellFactory(lv -> new AvailableVersionCell());
-                    availableVersionsLoaded = true;
-                }))
+                .thenAccept(versions -> {
+                    List<String> installed = launcher.getInstalledVersions();
+                    Platform.runLater(() -> {
+                        currentVersionsList.setItems(FXCollections.observableArrayList(versions));
+                        currentVersionsList.setCellFactory(lv -> new AvailableVersionCell(installed));
+                        availableVersionsLoaded = true;
+                    });
+                })
                 .exceptionally(error -> {
                     Platform.runLater(() -> showErrorPlaceholder(error.getMessage()));
                     return null;
@@ -450,16 +443,19 @@ public class VersionsView {
         List<String> installed = launcher.getInstalledVersions();
         Platform.runLater(() -> {
             currentVersionsList.setItems(FXCollections.observableArrayList(installed));
-            currentVersionsList.setCellFactory(lv -> new InstalledVersionCell(currentVersionsList));
+            currentVersionsList.setCellFactory(lv -> new InstalledVersionCell());
         });
     }
 
     private void loadAvailableVersions() {
         taskManager.runAsync(launcher::getAvailableVersions)
-                .thenAccept(versions -> Platform.runLater(() -> {
-                    currentVersionsList.setItems(FXCollections.observableArrayList(versions));
-                    currentVersionsList.setCellFactory(lv -> new AvailableVersionCell());
-                }));
+                .thenAccept(versions -> {
+                    List<String> installed = launcher.getInstalledVersions();
+                    Platform.runLater(() -> {
+                        currentVersionsList.setItems(FXCollections.observableArrayList(versions));
+                        currentVersionsList.setCellFactory(lv -> new AvailableVersionCell(installed));
+                    });
+                });
     }
 
     private void showStatus(Label statusLabel, String message, boolean isSuccess) {
@@ -484,21 +480,11 @@ public class VersionsView {
     // ==================== CUSTOM CELLS ====================
 
     private class InstalledVersionCell extends ListCell<String> {
+        private final HBox container;
+        private final Label versionLabel;
 
-        public InstalledVersionCell(ListView<String> parentList) {
-        }
-
-        @Override
-        protected void updateItem(String version, boolean empty) {
-            super.updateItem(version, empty);
-
-            if (empty || version == null) {
-                setGraphic(null);
-                setText(null);
-                return;
-            }
-
-            HBox container = new HBox(15);
+        public InstalledVersionCell() {
+            container = new HBox(15);
             container.setAlignment(Pos.CENTER_LEFT);
             container.setPadding(new Insets(10));
             container.getStyleClass().add("version-cell");
@@ -508,7 +494,7 @@ public class VersionsView {
             VBox infoBox = new VBox(3);
             HBox.setHgrow(infoBox, Priority.ALWAYS);
 
-            Label versionLabel = new Label(version);
+            versionLabel = new Label();
             versionLabel.getStyleClass().add("version-name");
 
             Label statusLabel = new Label(lm.get("versions.installed"));
@@ -519,7 +505,12 @@ public class VersionsView {
 
             Button uninstallBtn = new Button(lm.get("versions.uninstall"));
             uninstallBtn.getStyleClass().add("danger-button-small");
+
+            // Lambda definido UNA sola vez, usa getItem() para el valor actual
             uninstallBtn.setOnAction(e -> {
+                String version = getItem();
+                if (version == null) return;
+
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle(lm.get("versions.confirm_uninstall_title"));
                 alert.setHeaderText(lm.get("versions.confirm_uninstall_header", version));
@@ -534,11 +525,8 @@ public class VersionsView {
             });
 
             container.getChildren().addAll(indicator, infoBox, uninstallBtn);
-            setGraphic(container);
         }
-    }
 
-    private class AvailableVersionCell extends ListCell<String> {
         @Override
         protected void updateItem(String version, boolean empty) {
             super.updateItem(version, empty);
@@ -549,41 +537,77 @@ public class VersionsView {
                 return;
             }
 
-            HBox container = new HBox(15);
+            // Solo actualizar datos, sin crear nodos ni lambdas
+            versionLabel.setText(version);
+            setGraphic(container);
+        }
+    }
+
+    private class AvailableVersionCell extends ListCell<String> {
+        private final List<String> installedVersions;
+        private final HBox container;
+        private final Circle indicator;
+        private final Label versionLabel;
+        private final Label typeLabel;
+        private final Button actionBtn;
+
+        public AvailableVersionCell(List<String> installedVersions) {
+            this.installedVersions = installedVersions;
+
+            container = new HBox(15);
             container.setAlignment(Pos.CENTER_LEFT);
             container.setPadding(new Insets(10));
             container.getStyleClass().add("version-cell");
 
-            boolean isInstalled = launcher.getInstalledVersions().contains(version);
-
-            Circle indicator = new Circle(6, isInstalled ? Color.web("#90c090") : Color.web("#555555"));
+            indicator = new Circle(6);
 
             VBox infoBox = new VBox(3);
             HBox.setHgrow(infoBox, Priority.ALWAYS);
 
-            Label versionLabel = new Label(version);
+            versionLabel = new Label();
             versionLabel.getStyleClass().add("version-name");
 
-            Label typeLabel = new Label(getVersionType(version));
+            typeLabel = new Label();
             typeLabel.getStyleClass().add("version-type");
 
             infoBox.getChildren().addAll(versionLabel, typeLabel);
 
-            Button actionBtn = new Button(
-                    isInstalled ? lm.get("versions.btn_installed") : lm.get("versions.btn_install"));
-            actionBtn.getStyleClass().add(isInstalled ? "installed-button-small" : "primary-button-small");
-            actionBtn.setDisable(isInstalled);
+            actionBtn = new Button();
 
-            if (!isInstalled) {
-                actionBtn.setOnAction(e -> {
-                    actionBtn.setDisable(true);
-                    actionBtn.setText(lm.get("versions.btn_queuing"));
-                    downloadManager.submitDownload(() -> launcher.downloadMinecraftVersion(version));
-                    // EVENT BUS se encargará de actualizar la UI cuando termine
-                });
-            }
+            // Lambda definido UNA sola vez en el constructor, usa getItem() para el valor actual
+            actionBtn.setOnAction(e -> {
+                String version = getItem();
+                if (version == null || installedVersions.contains(version)) return;
+
+                actionBtn.setDisable(true);
+                actionBtn.setText(lm.get("versions.btn_queuing"));
+                downloadManager.submitDownload(() -> launcher.downloadMinecraftVersion(version));
+                // EVENT BUS se encargará de actualizar la UI cuando termine
+            });
 
             container.getChildren().addAll(indicator, infoBox, actionBtn);
+        }
+
+        @Override
+        protected void updateItem(String version, boolean empty) {
+            super.updateItem(version, empty);
+
+            if (empty || version == null) {
+                setGraphic(null);
+                setText(null);
+                return;
+            }
+
+            // Solo actualizar datos, sin crear nodos ni lambdas
+            boolean isInstalled = installedVersions.contains(version);
+
+            indicator.setFill(isInstalled ? Color.web("#90c090") : Color.web("#555555"));
+            versionLabel.setText(version);
+            typeLabel.setText(getVersionType(version));
+            actionBtn.setText(isInstalled ? lm.get("versions.btn_installed") : lm.get("versions.btn_install"));
+            actionBtn.getStyleClass().setAll(isInstalled ? "installed-button-small" : "primary-button-small");
+            actionBtn.setDisable(isInstalled);
+
             setGraphic(container);
         }
 

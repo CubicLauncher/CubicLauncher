@@ -19,11 +19,6 @@ package com.cubiclauncher.launcher.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -32,18 +27,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class DownloadManager {
     private static DownloadManager instance;
-    private final ExecutorService downloadExecutor;
     private final Logger log = LoggerFactory.getLogger(DownloadManager.class);
     private final AtomicInteger downloadCounter = new AtomicInteger(0);
-
-    private DownloadManager() {
-        ThreadFactory factory = r -> {
-            Thread t = new Thread(r, "CubicLauncher-Download-" + downloadCounter.incrementAndGet());
-            t.setDaemon(true);
-            return t;
-        };
-        this.downloadExecutor = Executors.newFixedThreadPool(3, factory);
-    }
+    private final TaskManager taskManager = TaskManager.getInstance();
+    private DownloadManager() {}
 
     public static synchronized DownloadManager getInstance() {
         if (instance == null) {
@@ -58,28 +45,6 @@ public class DownloadManager {
      * @param downloadTask The download task to execute.
      */
     public void submitDownload(Runnable downloadTask) {
-        downloadExecutor.submit(() -> {
-            try {
-                downloadTask.run();
-            } catch (Exception e) {
-                log.error("Error executing download task: {}", e.getMessage(), e);
-            }
-        });
-    }
-
-    /**
-     * Shuts down the download executor service.
-     */
-    public void shutdown() {
-        log.info("Shutting down DownloadManager...");
-        downloadExecutor.shutdown();
-        try {
-            if (!downloadExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                downloadExecutor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            downloadExecutor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
+        taskManager.runAsync(downloadTask);
     }
 }

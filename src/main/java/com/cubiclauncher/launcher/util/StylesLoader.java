@@ -1,39 +1,61 @@
-/*
- * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see https://www.gnu.org/licenses/.
- */
-
 package com.cubiclauncher.launcher.util;
 
 import javafx.scene.Scene;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 
-public class StylesLoader {
-    /**
-     * Carga una hoja de estilos CSS desde la ruta de recursos especificada y la aplica a la escena.
-     *
-     * @param scene        La escena a la que se aplicará la hoja de estilos.
-     * @param resourcePath La ruta al archivo CSS dentro de los recursos (p. ej., "/path/to/style.css").
-     */
-    public static void load(Scene scene, String resourcePath) {
-        URL cssUrl = StylesLoader.class.getResource(resourcePath);
-        if (cssUrl != null) {
-            scene.getStylesheets().add(cssUrl.toExternalForm());
+public final class StylesLoader {
+
+    private StylesLoader() {}
+
+    private static String resolve(String path) {
+        URL url;
+
+        // 1. ¿Existe como archivo del sistema?
+        File file = new File(path);
+        if (file.exists() && file.isFile()) {
+            try {
+                url = file.toURI().toURL();
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException(
+                        "Ruta de archivo CSS inválida: " + path, e
+                );
+            }
         } else {
-            System.err.println("Error: No se pudo encontrar el archivo CSS en la ruta especificada: " + resourcePath);
+            // 2. Intentar como resource del classpath
+            url = StylesLoader.class.getResource(path);
+            if (url == null) {
+                throw new IllegalArgumentException(
+                        "No se encontró el CSS ni como archivo ni como resource: " + path
+                );
+            }
         }
+
+        return url.toExternalForm();
+    }
+
+    public static void load(Scene scene, String path) {
+        if (scene == null) return;
+
+        String css = resolve(path);
+        if (!scene.getStylesheets().contains(css)) {
+            scene.getStylesheets().add(css);
+        }
+    }
+
+    public static void unload(Scene scene, String path) {
+        if (scene == null) return;
+
+        String css = resolve(path);
+        scene.getStylesheets().remove(css);
+    }
+
+    public static boolean isLoaded(Scene scene, String path) {
+        if (scene == null) return false;
+
+        String css = resolve(path);
+        return scene.getStylesheets().contains(css);
     }
 }

@@ -14,178 +14,84 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see https://www.gnu.org/licenses/.
  */
-
 package com.cubiclauncher.launcher.ui.components;
 
-import com.cubiclauncher.launcher.core.InstanceManager;
 import com.cubiclauncher.launcher.core.InstanceManager.Instance;
-import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
-import com.cubiclauncher.launcher.ui.views.InstanceViewer;
+import com.cubiclauncher.launcher.ui.components.sidebar.InstanceListPanel;
+import com.cubiclauncher.launcher.ui.components.sidebar.SidebarFooter;
+import com.cubiclauncher.launcher.ui.components.sidebar.SidebarHeader;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Sidebar principal. Visual idéntica al original, lógica separada en:
+ * - SidebarHeader → título "CUBICLAUNCHER"
+ * - InstanceListPanel → header de instancias + botón editar + ListView
+ * - SidebarFooter → botones Versions y Settings
+ */
 public class Sidebar extends VBox {
-    private final ListView<Instance> instancesList;
-    private final Button editInstanceButton;
-    private Consumer<Instance> onInstanceSelected;
-    private Runnable onSettingsAction;
-    private Runnable onVersionsAction;
+
     private static final EventBus eventBus = EventBus.get();
     private static final TaskManager taskManager = TaskManager.getInstance();
-    private final LanguageManager lm = LanguageManager.getInstance();
+    private final List<EventBus.Subscription> subscriptions = new ArrayList<>();
+
+    private final InstanceListPanel instanceListPanel;
+    private final SidebarFooter footer;
 
     public Sidebar() {
         super(10);
-        this.instancesList = new ListView<>(); // Initialize instancesList here
-
         setPadding(new Insets(15));
         getStyleClass().add("sidebar");
         setPrefWidth(280);
         setMinWidth(280);
-        // Header con logo y perfil
-        HBox header = new HBox(12);
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(0, 0, 20, 0));
 
-        Label title = new Label("CUBICLAUNCHER");
-        title.getStyleClass().add("sidebar-title");
+        SidebarHeader header = new SidebarHeader();
+        instanceListPanel = new InstanceListPanel();
+        footer = new SidebarFooter();
 
-        HBox.setHgrow(header, Priority.ALWAYS);
-        header.getChildren().add(title);
+        VBox.setVgrow(instanceListPanel, Priority.ALWAYS);
+        getChildren().addAll(header, instanceListPanel, footer);
 
-        // Encabezado de la lista de instancias
-        HBox instancesHeader = new HBox();
-        instancesHeader.setAlignment(Pos.CENTER_LEFT);
-        Label instancesLabel = new Label(lm.get("sidebar.instances_title"));
-        instancesLabel.getStyleClass().add("instances-label");
-        HBox spacer = new HBox();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        subscriptions.add(eventBus.subscribe(EventType.INSTANCE_CREATED,
+                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh)));
+        subscriptions.add(eventBus.subscribe(EventType.INSTANCE_DELETED,
+                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh)));
+        subscriptions.add(eventBus.subscribe(EventType.INSTANCE_RENAME,
+                data -> taskManager.runAsyncAtJFXThread(instanceListPanel::refresh)));
 
-        // Botón de editar instancia
-        editInstanceButton = new Button(lm.get("sidebar.edit"));
-        editInstanceButton.getStyleClass().add("menu-button-sidebar");
-        editInstanceButton.setVisible(false); // Oculto por defecto
-        editInstanceButton.setOnAction(e -> {
-            Instance selected = instancesList.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                InstanceViewer.getInstance().showEditDialog(selected);
-            }
-        });
-
-        instancesHeader.getChildren().addAll(instancesLabel, spacer, editInstanceButton);
-
-        // Lista de instancias
-        instancesList.getStyleClass().add("instance-list");
-        VBox.setVgrow(instancesList, Priority.ALWAYS);
-        instancesList.setCellFactory(lv -> new InstanceCell());
-
-        // Cargar instancias
-        refreshInstances();
-
-        // Botones de acción en la parte inferior
-        VBox actionButtons = new VBox(8);
-        actionButtons.setPadding(new Insets(10, 0, 0, 0));
-
-        Button versionsButton = createActionButton(lm.get("sidebar.versions"));
-        Button settingsButton = createActionButton(lm.get("sidebar.settings"));
-
-        versionsButton.setOnAction(e -> {
-            if (onVersionsAction != null)
-                onVersionsAction.run();
-        });
-
-        settingsButton.setOnAction(e -> {
-            if (onSettingsAction != null)
-                onSettingsAction.run();
-        });
-
-        actionButtons.getChildren().addAll(versionsButton, settingsButton);
-
-        getChildren().addAll(header, instancesHeader, instancesList, actionButtons);
-
-        // Configurar selección
-        instancesList.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
-            editInstanceButton.setVisible(selected != null);
-            if (selected != null && onInstanceSelected != null) {
-                onInstanceSelected.accept(selected);
-            }
-        });
-        eventBus.subscribe(EventType.INSTANCE_CREATED,
-                eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
-        eventBus.subscribe(EventType.INSTANCE_DELETED,
-                eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
-        eventBus.subscribe(EventType.INSTANCE_RENAME,
-                eventData -> taskManager.runAsyncAtJFXThread(this::refreshInstances));
+        instanceListPanel.refresh();
     }
-
-    private Button createActionButton(String text) {
-        Button button = new Button(text);
-        button.getStyleClass().add("sidebar-action-button");
-        button.setMaxWidth(Double.MAX_VALUE);
-        button.setAlignment(Pos.CENTER_LEFT);
-        return button;
+    public void dispose() {
+        subscriptions.forEach(EventBus.Subscription::unsubscribe);
+        subscriptions.clear();
     }
+    // ── API público idéntico al original ─────────────────────────────────────
 
     public void refreshInstances() {
-        instancesList.getItems().setAll(InstanceManager.getInstance().getAllInstances());
+        instanceListPanel.refresh();
     }
 
     public void clearSelection() {
-        instancesList.getSelectionModel().clearSelection();
+        instanceListPanel.clearSelection();
     }
 
     public void setOnInstanceSelected(Consumer<Instance> handler) {
-        this.onInstanceSelected = handler;
+        instanceListPanel.setOnInstanceSelected(handler);
     }
 
     public void setOnSettingsAction(Runnable action) {
-        this.onSettingsAction = action;
+        footer.setOnSettingsAction(action);
     }
 
     public void setOnVersionsAction(Runnable action) {
-        this.onVersionsAction = action;
-    }
-
-    private static class InstanceCell extends ListCell<Instance> {
-        @Override
-        protected void updateItem(Instance item, boolean empty) {
-            super.updateItem(item, empty);
-            if (empty || item == null) {
-                setText(null);
-                setGraphic(null);
-            } else {
-                HBox container = new HBox(2);
-                container.setAlignment(Pos.CENTER_LEFT);
-                container.setPadding(new Insets(0)); // Cambiado de 1 a 0
-                container.getStyleClass().add("instance-cell");
-                container.setPrefHeight(30); // Establecemos altura preferida
-
-                // Icono de Minecraft
-                Label icon = new Label("⛏");
-                icon.getStyleClass().add("instance-icon");
-                // Ajustar el tamaño del icono si es necesario
-                icon.setStyle("-fx-font-size: 14px;"); // Tamaño de icono
-
-                VBox info = new VBox(2);
-                info.setAlignment(Pos.CENTER_LEFT);
-                Label nameLabel = new Label(item.getName());
-                nameLabel.getStyleClass().add("instance-name");
-                nameLabel.setStyle("-fx-font-size: 12px;"); // Tamaño de fuente más pequeño
-
-                info.getChildren().addAll(nameLabel);
-                container.getChildren().addAll(icon, info);
-
-                setGraphic(container);
-            }
-        }
+        footer.setOnVersionsAction(action);
     }
 }

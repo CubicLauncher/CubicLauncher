@@ -50,6 +50,7 @@ public class InstanceManager {
     private final DownloadManager downloadManager;
     private final List<Instance> instances;
     private final Path instancesDir = pathManager.getInstancePath();
+    private final List<EventBus.Subscription> subscriptions = new ArrayList<>();
 
     private InstanceManager() {
         this.taskManager = TaskManager.getInstance();
@@ -57,14 +58,17 @@ public class InstanceManager {
         this.instances = new ArrayList<>();
 
         loadInstances();
-        eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> downloadManager
-                .submitDownload(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version")))));
-        eventBus.subscribe(EventType.REQUEST_LAUNCH_INSTANCE,
-                (eventData -> taskManager.runAsync(() -> startInstance(eventData.getString("instance_name")))));
-        eventBus.subscribe(EventType.REQUEST_INSTANCE_CREATION, (eventData -> taskManager.runAsync(
-                () -> createInstance(eventData.getString("instance_name"), eventData.getString("instance_version")))));
+        subscriptions.add(eventBus.subscribe(EventType.INSTANCE_VERSION_NOT_INSTALLED, (eventData -> downloadManager
+                .submitDownload(() -> launcherWrapper.downloadMinecraftVersion(eventData.getString("version"))))));
+        subscriptions.add(eventBus.subscribe(EventType.REQUEST_LAUNCH_INSTANCE,
+                (eventData -> taskManager.runAsync(() -> startInstance(eventData.getString("instance_name"))))));
+        subscriptions.add(eventBus.subscribe(EventType.REQUEST_INSTANCE_CREATION, (eventData -> taskManager.runAsync(
+                () -> createInstance(eventData.getString("instance_name"), eventData.getString("instance_version"))))));
     }
-
+    public void dispose() {
+        subscriptions.forEach(EventBus.Subscription::unsubscribe);
+        subscriptions.clear();
+    }
     // Singleton getter
     public static InstanceManager getInstance() {
         if (instance == null) {
@@ -202,21 +206,6 @@ public class InstanceManager {
                         instanceToStart.updateLastPlayed();
                         saveInstance(instanceToStart);
 
-                        // Monitorear el proceso para detectar cuando termina
-                        new Thread(() -> {
-                            try {
-                                int exitCode = process.waitFor();
-                                instanceToStart.detachProcess();
-                                eventBus.emit(EventType.GAME_EXITED,
-                                        EventData.builder()
-                                                .put("instance", instanceName)
-                                                .put("exitCode", exitCode)
-                                                .build());
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        }).start();
-
                         // También podemos monitorear la salida del proceso si queremos
                         launcherWrapper.monitorProcessWithEvents(process, instanceName);
 
@@ -257,7 +246,7 @@ public class InstanceManager {
                 deleteDirectory(instanceDir);
                 instances.remove(instance);
                 log.info("Instancia '{}' eliminada", name);
-                eventBus.emit(EventType.INSTANCE_DELETED, EventData.empty());
+                eventBus.emit(EventType.INSTANCE_DELETED, EventData.builder().put("instance_name", name).build());
                 return true;
             } catch (IOException e) {
                 log.error("Error eliminando instancia '{}': {}", name, e.getMessage(), e);

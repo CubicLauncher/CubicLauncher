@@ -1,0 +1,279 @@
+package com.cubiclauncher.launcher.ui.views.instanceViewer;
+
+import com.cubiclauncher.launcher.core.InstanceManager;
+import com.cubiclauncher.launcher.core.LanguageManager;
+import com.cubiclauncher.launcher.util.StylesLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
+
+import java.io.File;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ *  Modal dialog para editar la instance y su foto
+ */
+public class InstanceEditDialog {
+
+    private final LanguageManager lm = LanguageManager.getInstance();
+    private final Window owner;
+
+    private final boolean[] deleteConfirm = { false };
+
+    /** Llamado después de un guardado exitoso */
+    private Consumer<InstanceManager.Instance> onSaved;
+
+    public InstanceEditDialog(Window owner) {
+        this.owner = owner;
+    }
+
+    public void setOnSaved(Consumer<InstanceManager.Instance> onSaved) {
+        this.onSaved = onSaved;
+    }
+
+    // ── Public entry point ───────────────────────────────────────────────────
+
+    public void show(InstanceManager.Instance instance) {
+
+        Stage stage = new Stage();
+        stage.initOwner(owner);
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initStyle(StageStyle.DECORATED);
+        stage.setTitle(lm.get("instance.edit_title"));
+
+        // Editable state
+        String[] selectedCover = { instance.getCoverImage() };
+
+        VBox root = new VBox();
+        root.getStyleClass().add("editor-window-root");
+        root.setPrefWidth(500);
+
+        VBox content = buildContent(instance, selectedCover);
+        HBox footer  = new HBox(15);
+
+        // ── Fields ───────────────────────────────────────────────────────────
+        GridPane grid = (GridPane) ((VBox) content.getChildren().getFirst())
+                .getChildren().getFirst();
+
+        TextField nameField    = (TextField) getGridCell(grid, 0);
+        TextField versionField = (TextField) getGridCell(grid, 1);
+        TextField minMemField  = (TextField) ((HBox) getGridCell(grid, 2))
+                .getChildren().get(0);
+        TextField maxMemField  = (TextField) ((HBox) getGridCell(grid, 2))
+                .getChildren().get(1);
+        TextField jvmArgsField = (TextField) getGridCell(grid, 3);
+
+        // ── Footer ───────────────────────────────────────────────────────────
+        footer.getStyleClass().add("editor-footer");
+        footer.setAlignment(Pos.CENTER_RIGHT);
+
+        Button deleteBtn = new Button(lm.get("instance.btn_delete"));
+        deleteBtn.getStyleClass().add("btn-secondary");
+        deleteBtn.setStyle("-fx-text-fill: #ff5555; -fx-font-size: 11px;");
+
+        Button saveBtn = new Button(lm.get("instance.btn_save"));
+        saveBtn.getStyleClass().add("play-button-primary");
+        saveBtn.setStyle("-fx-font-size: 11px;");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        footer.getChildren().addAll(deleteBtn, spacer, saveBtn);
+
+        root.getChildren().addAll(content, footer);
+
+        // ── Actions ──────────────────────────────────────────────────────────
+        saveBtn.setOnAction(e -> {
+            String oldName = instance.getName();
+            String newName = nameField.getText();
+
+            instance.setVersion(versionField.getText());
+            try {
+                instance.setMinMemory(minMemField.getText().isEmpty()
+                        ? null : Integer.parseInt(minMemField.getText()));
+                instance.setMaxMemory(maxMemField.getText().isEmpty()
+                        ? null : Integer.parseInt(maxMemField.getText()));
+            } catch (NumberFormatException ignored) {}
+
+            instance.setJvmArgs(jvmArgsField.getText());
+            instance.setCoverImage(selectedCover[0]);
+
+            if (!newName.equals(oldName)) {
+                InstanceManager.getInstance()
+                        .renameInstance(oldName, newName);
+            } else {
+                InstanceManager.getInstance().saveInstance(instance);
+                if (onSaved != null) onSaved.accept(instance);
+            }
+            stage.close();
+        });
+
+        deleteBtn.setOnAction(e -> {
+            if (!deleteConfirm[0]) {
+                deleteConfirm[0] = true;
+                deleteBtn.setText(lm.get("instance.confirm"));
+            } else {
+                InstanceManager.getInstance()
+                        .deleteInstance(instance.getName());
+                stage.close();
+            }
+        });
+
+        Scene scene = new Scene(root);
+        StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
+
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    // ── Content builder ───────────────────────────────────────────────────────
+
+    private VBox buildContent(InstanceManager.Instance instance, String[] selectedCover) {
+        VBox content = new VBox(25);
+        content.getStyleClass().add("editor-content");
+        content.setAlignment(Pos.TOP_LEFT);
+
+        // We wrap the grid in a VBox so we can retrieve it easily
+        VBox gridWrapper = new VBox();
+        GridPane grid = buildFieldGrid(instance);
+        gridWrapper.getChildren().add(grid);
+
+        VBox gallerySection = buildGallerySection(instance, selectedCover);
+        content.getChildren().addAll(gridWrapper, gallerySection);
+        return content;
+    }
+
+    private GridPane buildFieldGrid(InstanceManager.Instance instance) {
+        GridPane grid = new GridPane();
+        grid.setHgap(15);
+        grid.setVgap(20);
+        grid.setAlignment(Pos.CENTER_LEFT);
+
+        InstanceViewerUtils.createModalField(grid, lm.get("instance.field_name"),    instance.getName(),    0);
+        InstanceViewerUtils.createModalField(grid, lm.get("instance.field_version"), instance.getVersion(), 1);
+
+        Label ramLabel = new Label(lm.get("instance.field_ram"));
+        ramLabel.getStyleClass().add("editor-field-label");
+
+        TextField minMem = new TextField(instance.getMinMemory() != null ? String.valueOf(instance.getMinMemory()) : "");
+        TextField maxMem = new TextField(instance.getMaxMemory() != null ? String.valueOf(instance.getMaxMemory()) : "");
+        minMem.getStyleClass().add("editor-text-field");
+        maxMem.getStyleClass().add("editor-text-field");
+        minMem.setPromptText("Min");
+        maxMem.setPromptText("Max");
+        minMem.setPrefWidth(110);
+        maxMem.setPrefWidth(110);
+
+        HBox ramBox = new HBox(10);
+        ramBox.getChildren().addAll(minMem, maxMem);
+        grid.add(ramLabel, 0, 2);
+        grid.add(ramBox,   1, 2);
+
+        InstanceViewerUtils.createModalField(grid, lm.get("instance.field_jvm_args"),
+                instance.getJvmArgs() != null ? instance.getJvmArgs() : "", 3);
+
+        return grid;
+    }
+
+    private VBox buildGallerySection(InstanceManager.Instance instance, String[] selectedCover) {
+        VBox section = new VBox(10);
+
+        HBox galleryHeader = new HBox(10);
+        galleryHeader.setAlignment(Pos.CENTER_LEFT);
+
+        Label galleryLabel = new Label(lm.get("instance.gallery_title"));
+        galleryLabel.getStyleClass().add("editor-field-label");
+
+        Button openFolderBtn = new Button(lm.get("instance.open_folder"));
+        openFolderBtn.getStyleClass().add("btn-secondary");
+        openFolderBtn.setStyle("-fx-font-size: 9px; -fx-padding: 4 8;");
+        openFolderBtn.setOnAction(e -> InstanceViewerUtils.openScreenshotsFolder(instance));
+
+        galleryHeader.getChildren().addAll(galleryLabel, openFolderBtn);
+
+        HBox galleryItems = new HBox(10);
+        galleryItems.setPadding(new Insets(5));
+
+        List<File> screenshots = InstanceViewerUtils.getScreenshots(instance);
+        if (screenshots.isEmpty()) {
+            Label noScreenshots = new Label(lm.get("instance.no_screenshots"));
+            noScreenshots.setStyle("-fx-text-fill: #666; -fx-font-size: 12px;");
+            galleryItems.getChildren().add(noScreenshots);
+        } else {
+            for (File screenshot : screenshots) {
+                galleryItems.getChildren().add(createThumbnail(screenshot, selectedCover));
+            }
+        }
+
+        ScrollPane galleryScroll = new ScrollPane(galleryItems);
+        galleryScroll.setPrefHeight(130);
+        galleryScroll.getStyleClass().add("console-scroll");
+        galleryScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        galleryScroll.setFitToHeight(true);
+        galleryScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        section.getChildren().addAll(galleryHeader, galleryScroll);
+        return section;
+    }
+
+    // ── Thumbnail ─────────────────────────────────────────────────────────────
+
+    private VBox createThumbnail(File file, String[] selectedCover) {
+        VBox container = new VBox();
+        container.setPrefSize(100, 100);
+        container.getStyleClass().add("editor-thumb-container");
+        container.setAlignment(Pos.CENTER);
+
+        Image img  = new Image(file.toURI().toString());
+        ImageView thumb = new ImageView(img);
+        double w = img.getWidth(), h = img.getHeight();
+        double side = Math.min(w, h);
+        thumb.setViewport(new Rectangle2D((w - side) / 2, (h - side) / 2, side, side));
+        thumb.setFitWidth(90);
+        thumb.setFitHeight(90);
+        thumb.setPreserveRatio(true);
+
+        container.getChildren().add(thumb);
+        applyThumbStyle(container, file.getAbsolutePath().equals(selectedCover[0]));
+
+        container.setOnMouseClicked(e -> {
+            selectedCover[0] = file.getAbsolutePath();
+            if (container.getParent() instanceof Pane parent) {
+                parent.getChildren().forEach(node -> {
+                    if (node instanceof VBox vb) applyThumbStyle(vb, false);
+                });
+            }
+            applyThumbStyle(container, true);
+        });
+
+        return container;
+    }
+
+    private static void applyThumbStyle(VBox container, boolean selected) {
+        if (selected) {
+            container.setStyle("-fx-border-color: #3a86ff; -fx-border-width: 2; -fx-background-color: #1a1a1a;");
+        } else {
+            container.setStyle("-fx-border-color: #2a2a2a; -fx-border-width: 1; -fx-background-color: transparent;");
+        }
+    }
+
+    // ── Helper ────────────────────────────────────────────────────────────────
+
+    /** Retrieves a node from a GridPane by column and row index. */
+    private static Node getGridCell(GridPane grid, int row) {
+        for (Node n : grid.getChildren()) {
+            if (GridPane.getColumnIndex(n) == 1 && GridPane.getRowIndex(n) == row) return n;
+        }
+        throw new IllegalStateException("Grid cell not found at col=" + 1 + " row=" + row);
+    }
+}
