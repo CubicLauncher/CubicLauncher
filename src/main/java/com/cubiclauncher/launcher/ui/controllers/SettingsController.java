@@ -131,27 +131,20 @@ public class SettingsController {
     public void onDetectJava(Consumer<Boolean> onComplete) {
         TaskManager.getInstance().runAsync(() -> {
             log.info("Iniciando detección automática de Java...");
-            Map<String, String> detected = JavaDetector
-                    .detectJavaInstallations();
+            Map<String, String> detected = JavaDetector.detectJavaInstallations();
 
-            boolean foundAny = false;
-            if (detected.containsKey("8") && (settings.getJava8Path() == null || settings.getJava8Path().isEmpty())) {
+            boolean foundAny = !detected.isEmpty();
+            if (detected.containsKey("8")) {
                 settings.setJre8_path(detected.get("8"));
-                foundAny = true;
             }
-            if (detected.containsKey("17")
-                    && (settings.getJava17Path() == null || settings.getJava17Path().isEmpty())) {
+            if (detected.containsKey("17")) {
                 settings.setJre17_path(detected.get("17"));
-                foundAny = true;
             }
-            if (detected.containsKey("21")
-                    && (settings.getJava21path() == null || settings.getJava21path().isEmpty())) {
+            if (detected.containsKey("21")) {
                 settings.setJre21_path(detected.get("21"));
-                foundAny = true;
             }
 
-            final boolean result = foundAny;
-            Platform.runLater(() -> onComplete.accept(result));
+            Platform.runLater(() -> onComplete.accept(foundAny));
         });
     }
 
