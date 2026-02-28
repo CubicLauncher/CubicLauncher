@@ -108,10 +108,19 @@ public class BottomBar extends HBox {
 
         userNameField.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal && isEditing) {
-                // Lost focus, treat as cancel
+                // Lost focus, treat as cancel to avoid getting stuck if invalid
                 cancelEdit();
             }
         });
+
+        // Limit to 16 characters and only allow a-z, A-Z, 0-9, _
+        userNameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.length() > 16 || !newVal.matches("[a-zA-Z0-9_]*")) {
+                userNameField.setText(oldVal);
+            }
+        });
+
+        userNameField.setPromptText("a-Z, 0-9, _ (3-16)");
 
         userNameField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
@@ -165,15 +174,17 @@ public class BottomBar extends HBox {
     private void updateUsername() {
         if (!isEditing)
             return;
-        String newUsername = userNameField.getText();
-        if (newUsername != null && !newUsername.trim().isEmpty()) {
+        String newUsername = userNameField.getText().trim();
+        if (newUsername.matches("[a-zA-Z0-9_]{3,16}")) {
             sm.setUsername(newUsername);
             userName.setText(newUsername);
             updateAvatar(newUsername);
+            editContainer.setVisible(false);
+            userName.setVisible(true);
+            isEditing = false;
         }
-        editContainer.setVisible(false);
-        userName.setVisible(true);
-        isEditing = false;
+        // If length or characters are not valid, we keep the editing state so the user
+        // can correct it
     }
 
     private void cancelEdit() {
