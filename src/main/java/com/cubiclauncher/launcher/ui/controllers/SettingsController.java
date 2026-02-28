@@ -21,9 +21,9 @@ import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.TaskManager;
 import com.cubiclauncher.launcher.util.JavaDetector;
-import com.cubiclauncher.launcher.util.StylesLoader;
+
 import javafx.application.Platform;
-import javafx.scene.Scene;
+
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
@@ -88,33 +88,6 @@ public class SettingsController {
     public void onCloseLauncherChanged(boolean enabled) {
         settings.setCloseLauncherOnGameStart(enabled);
         log.info("Cerrar launcher: {}", enabled ? "activado" : "desactivado");
-    }
-
-    public void onNativeStylesChanged(boolean enabled) {
-        settings.setNativeStyles(enabled);
-        log.info("Estilos nativos: {}", enabled ? "activado" : "desactivado");
-
-        // Buscar cualquier ventana abierta
-        javafx.stage.Window window = javafx.stage.Window.getWindows().stream()
-                .filter(javafx.stage.Window::isShowing)
-                .findFirst()
-                .orElse(null);
-
-        if (window == null) {
-            log.debug("No hay ventana disponible");
-            return;
-        }
-
-        Scene scene = window.getScene();
-        if (scene == null) {
-            return;
-        }
-
-        scene.getStylesheets().clear();
-
-        if (!enabled) {
-            StylesLoader.load(scene, "/com.cubiclauncher.launcher/styles/ui.main.css");
-        }
     }
 
     public void onSourceCodeLinkClicked() {

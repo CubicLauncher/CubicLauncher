@@ -50,7 +50,6 @@ public class SettingsManager {
     // Usuario
     public String username = "steve";
     public boolean firstLaunch = true;
-    public boolean native_styles = true;
 
     private SettingsManager() {
     }
@@ -129,10 +128,6 @@ public class SettingsManager {
     public void setCloseLauncherOnGameStart(boolean closeLauncherOnGameStart) {
         this.closeLauncherOnGameStart = closeLauncherOnGameStart;
         save();
-    }
-
-    public boolean isNative_styles() {
-        return native_styles;
     }
 
     public boolean isShowAlphaVersions() {
@@ -235,11 +230,6 @@ public class SettingsManager {
 
     public void setJre21_path(String path) {
         this.jre21_path = path;
-        save();
-    }
-
-    public void setNativeStyles(boolean enabled) {
-        this.native_styles = enabled;
         save();
     }
 

@@ -58,7 +58,7 @@ public class SetupWizardDialog {
     private final StackPane contentArea = new StackPane();
 
     // Todos los paneles de pasos
-    private final Node[] steps = new Node[5];
+    private final Node[] steps = new Node[4];
     private int currentStep = 0;
 
     // Botones de navegación
@@ -79,13 +79,6 @@ public class SetupWizardDialog {
     // Paso 1 – Idioma
     private Label langTitle;
     private Label langBody;
-
-    // Paso 2 – Estilo
-    private Label styleTitle;
-    private Label styleBody;
-    private Label styleWarning;
-    private Label styleCustomName;
-    private Label styleNativeName;
 
     // Paso 3 – Java
     private Label javaTitle;
@@ -121,9 +114,8 @@ public class SetupWizardDialog {
     private void buildUI() {
         steps[0] = buildWelcomeStep();
         steps[1] = buildLanguageStep();
-        steps[2] = buildStyleStep();
-        steps[3] = buildJavaStep();
-        steps[4] = buildLicenseStep();
+        steps[2] = buildJavaStep();
+        steps[3] = buildLicenseStep();
 
         for (int i = 0; i < steps.length; i++) {
             steps[i].setVisible(i == 0);
@@ -162,7 +154,7 @@ public class SetupWizardDialog {
         wizardScene = new Scene(root, 640, 480);
         wizardScene.setFill(Color.TRANSPARENT);
 
-        applyStylesheet(settings.isNative_styles());
+        applyStylesheet();
 
         wizardStage.setScene(wizardScene);
 
@@ -282,7 +274,7 @@ public class SetupWizardDialog {
      * Se llama tanto durante la construcción inicial como cuando el usuario
      * selecciona una tarjeta de estilo.
      */
-    private void applyStylesheet(boolean nativeStyles) {
+    private void applyStylesheet() {
         if (wizardScene == null)
             return;
         URL cssUrl = StylesLoader.class.getResource(CSS_PATH);
@@ -291,14 +283,10 @@ public class SetupWizardDialog {
             return;
         }
         String cssExtern = cssUrl.toExternalForm();
-        if (nativeStyles) {
-            wizardScene.getStylesheets().remove(cssExtern);
-        } else {
-            if (!wizardScene.getStylesheets().contains(cssExtern)) {
-                wizardScene.getStylesheets().add(cssExtern);
-            }
+        if (!wizardScene.getStylesheets().contains(cssExtern)) {
+            wizardScene.getStylesheets().add(cssExtern);
         }
-        log.info("Estilo aplicado inmediatamente: nativeStyles={}", nativeStyles);
+        log.info("Estilo personalizado aplicado inmediatamente.");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -327,18 +315,6 @@ public class SetupWizardDialog {
             langTitle.setText(lm.get("wizard.language.title"));
         if (langBody != null)
             langBody.setText(lm.get("wizard.language.body"));
-
-        // Paso 2
-        if (styleTitle != null)
-            styleTitle.setText(lm.get("wizard.style.title"));
-        if (styleBody != null)
-            styleBody.setText(lm.get("wizard.style.body"));
-        if (styleWarning != null)
-            styleWarning.setText(lm.get("wizard.style.warning"));
-        if (styleCustomName != null)
-            styleCustomName.setText(lm.get("wizard.style.custom"));
-        if (styleNativeName != null)
-            styleNativeName.setText(lm.get("wizard.style.native"));
 
         // Paso 3
         if (javaTitle != null)
@@ -461,87 +437,6 @@ public class SetupWizardDialog {
     // ─────────────────────────────────────────────────────────────────────────
     // PASO 2 – ESTILO DE INTERFAZ
     // ─────────────────────────────────────────────────────────────────────────
-
-    private Node buildStyleStep() {
-        VBox box = new VBox(24);
-        box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(40, 60, 30, 60));
-        box.getStyleClass().add("wizard-step");
-
-        styleTitle = new Label(lm.get("wizard.style.title"));
-        styleTitle.getStyleClass().add("wizard-step-title");
-
-        styleBody = new Label(lm.get("wizard.style.body"));
-        styleBody.getStyleClass().add("wizard-step-body");
-        styleBody.setWrapText(true);
-        styleBody.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-        styleBody.setMaxWidth(400);
-
-        HBox styleCards = new HBox(16);
-        styleCards.setAlignment(Pos.CENTER);
-
-        Button[] selected = new Button[1];
-        Button customBtn = createStyleSelectCard(false, selected);
-        Button nativeBtn = createStyleSelectCard(true, selected);
-
-        Button initiallyActive = settings.isNative_styles() ? nativeBtn : customBtn;
-        initiallyActive.getStyleClass().add("wizard-lang-card-selected");
-        selected[0] = initiallyActive;
-
-        styleCards.getChildren().addAll(customBtn, nativeBtn);
-
-        styleWarning = new Label(lm.get("wizard.style.warning"));
-        styleWarning.getStyleClass().add("wizard-step-hint");
-        styleWarning.setWrapText(true);
-        styleWarning.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-
-        box.getChildren().addAll(styleTitle, styleBody, styleCards, styleWarning);
-        return box;
-    }
-
-    /**
-     * Crea una tarjeta de selección de estilo.
-     * Utiliza {@link Button} normales para evitar errores de deselección.
-     * Cambia la hoja de estilos del asistente <em>inmediatamente</em> al hacer
-     * clic.
-     */
-    private Button createStyleSelectCard(boolean nativeStyle, Button[] selected) {
-        // Etiqueta de nombre — almacenada como campo para que refreshAllLabels() pueda
-        // actualizarla
-        Label nameLbl = new Label(lm.get(nativeStyle ? "wizard.style.native" : "wizard.style.custom"));
-        nameLbl.getStyleClass().add("wizard-lang-name");
-        if (nativeStyle)
-            styleNativeName = nameLbl;
-        else
-            styleCustomName = nameLbl;
-
-        VBox inner = new VBox(6, nameLbl);
-        inner.setAlignment(Pos.CENTER);
-        inner.setPadding(new Insets(10, 20, 10, 20));
-
-        Button btn = new Button();
-        btn.setGraphic(inner);
-        btn.getStyleClass().add("wizard-lang-card");
-
-        btn.setOnAction(e -> {
-            // Deseleccionar anterior
-            if (selected[0] != null && selected[0] != btn) {
-                selected[0].getStyleClass().remove("wizard-lang-card-selected");
-            }
-            // Seleccionar este
-            if (!btn.getStyleClass().contains("wizard-lang-card-selected")) {
-                btn.getStyleClass().add("wizard-lang-card-selected");
-            }
-            selected[0] = btn;
-
-            // Aplicar ajuste y CSS inmediatamente
-            settings.setNativeStyles(nativeStyle);
-            applyStylesheet(nativeStyle);
-            log.info("Estilo cambiado inmediatamente: nativeStyles={}", nativeStyle);
-        });
-
-        return btn;
-    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // PASO 3 – CONFIGURACIÓN DE JAVA

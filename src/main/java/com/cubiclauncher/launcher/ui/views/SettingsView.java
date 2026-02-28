@@ -121,12 +121,9 @@ public class SettingsView {
         CheckBox closeLaunchCheckbox = new CheckBox(lm.get("settings.close_launcher"));
         closeLaunchCheckbox.setSelected(controller.getSettings().isCloseLauncherOnGameStart());
         closeLaunchCheckbox.setOnAction(e -> controller.onCloseLauncherChanged(closeLaunchCheckbox.isSelected()));
-        CheckBox nativeStyles = new CheckBox(lm.get("settings.native_styles"));
-        nativeStyles.setSelected(controller.getSettings().isNative_styles());
-        nativeStyles.setOnAction(e -> controller.onNativeStylesChanged(nativeStyles.isSelected()));
         VBox infoSection = createLauncherInfo();
         pane.getChildren().addAll(languageBox, autoUpdateCheckbox, errorConsoleCheckbox, closeLaunchCheckbox,
-                nativeStyles, new Separator(), infoSection);
+                new Separator(), infoSection);
         return pane;
     }
 
