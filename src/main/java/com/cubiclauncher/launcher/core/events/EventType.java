@@ -37,5 +37,6 @@ public enum EventType {
     REQUEST_LAUNCH_INSTANCE,
 
     // UI
-    LANGUAGE_CHANGED
+    LANGUAGE_CHANGED,
+    ACCOUNT_CHANGED
 }

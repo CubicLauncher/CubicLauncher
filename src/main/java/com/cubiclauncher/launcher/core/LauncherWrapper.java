@@ -18,8 +18,10 @@
 package com.cubiclauncher.launcher.core;
 
 import com.cubiclauncher.claunch.Launcher;
+import com.cubiclauncher.claunch.auth.Account;
 import com.cubiclauncher.claunch.models.LaunchOptions;
 import com.cubiclauncher.claunch.models.VersionInfo;
+import com.cubiclauncher.launcher.core.auth.AccountManagerProvider;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventData;
 import com.cubiclauncher.launcher.core.events.EventType;
@@ -252,27 +254,21 @@ public class LauncherWrapper {
 
         LaunchOptions options = LaunchOptions.defaults();
         if (jvmArgs != null && !jvmArgs.isBlank()) {
-            // Here we would ideally parse JVM args, but for now we might need to update
-            // claunch
-            // to support raw JVM args if it doesn't.
-            // Looking at the signature, LaunchOptions doesn't seem to have a jvmArgs field
-            // directly in the usage above.
-            // Let's assume for now we might need to add them to customArgs or similar if
-            // supported.
-            // Actually, let's keep it simple for now as I don't see an easy way to pass raw
-            // JVM args to Launcher.launchWithProcess
-            // without knowing the cli wrapper's capabilities.
+            // TODO: Parse raw JVM args when claunch adds support for them
         }
+
+        // Obtener la cuenta seleccionada del AccountManager
+        Account account = AccountManagerProvider.getInstance().getSelectedAccount();
 
         return Launcher.launchWithProcess(
                 versionManifestPath,
                 pm.getGamePath().toString(),
                 instanceDir,
-                sm.getUsername(),
+                account,
                 getJavaPath(minimumJREVersion),
                 minMemory,
                 maxMemory,
-                900, 600, false, options, customArgs);
+                900, 600, options, customArgs);
 
     }
 
