@@ -26,6 +26,10 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.input.MouseButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -97,11 +101,10 @@ public class BottomBar extends HBox {
         userName.setOnMouseClicked(event -> {
             if (isEditing)
                 return;
-            isEditing = true;
-            userNameField.setText(userName.getText());
-            editContainer.setVisible(true);
-            userName.setVisible(false);
-            userNameField.requestFocus();
+
+            if (event.getButton() == MouseButton.PRIMARY) {
+                showAccountMenu(event.getScreenX(), event.getScreenY());
+            }
         });
 
         cancelButton.setOnMouseClicked(event -> cancelEdit());
@@ -169,6 +172,54 @@ public class BottomBar extends HBox {
                 e -> refreshTranslations());
         // Subscribirse al cambio de idioma
         EventBus.get().subscribe(EventType.LANGUAGE_CHANGED, e -> refreshTranslations());
+    }
+
+    private void showAccountMenu(double screenX, double screenY) {
+        ContextMenu contextMenu = new ContextMenu();
+        contextMenu.getStyleClass().add("account-context-menu");
+
+        for (String account : sm.getUserAccounts()) {
+            MenuItem item = new MenuItem(account);
+            if (account.equals(sm.getUsername())) {
+                item.getStyleClass().add("active-account");
+                item.setDisable(true);
+            }
+            item.setOnAction(e -> {
+                sm.setUsername(account);
+                userName.setText(account);
+                updateAvatar(account);
+            });
+            contextMenu.getItems().add(item);
+        }
+
+        contextMenu.getItems().add(new SeparatorMenuItem());
+
+        MenuItem addAccount = new MenuItem(
+                lm.get("bottom_bar.add_account") != null ? lm.get("bottom_bar.add_account") : "Añadir cuenta");
+        addAccount.setOnAction(e -> {
+            isEditing = true;
+            userNameField.setText("");
+            editContainer.setVisible(true);
+            userName.setVisible(false);
+            userNameField.requestFocus();
+        });
+        contextMenu.getItems().add(addAccount);
+
+        if (sm.getUserAccounts().size() > 1) {
+            MenuItem removeAccount = new MenuItem(
+                    lm.get("bottom_bar.remove_account") != null ? lm.get("bottom_bar.remove_account")
+                            : "Eliminar cuenta actual");
+            removeAccount.getStyleClass().add("remove-account-item");
+            removeAccount.setOnAction(e -> {
+                sm.removeUserAccount(sm.getUsername());
+                String newSelected = sm.getUsername();
+                userName.setText(newSelected);
+                updateAvatar(newSelected);
+            });
+            contextMenu.getItems().add(removeAccount);
+        }
+
+        contextMenu.show(userName, screenX, screenY);
     }
 
     private void updateUsername() {

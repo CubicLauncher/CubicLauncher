@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.cubiclauncher"
-version = "2603a"
+version = "2604a"
 
 java {
     toolchain {
@@ -76,8 +76,8 @@ tasks.named<JavaExec>("run") {
     })
 
     jvmArgs = listOf(
-            "--module-path", configurations.runtimeClasspath.get().asPath,
-            "--add-modules", "javafx.controls,javafx.fxml,javafx.graphics",
+        "--module-path", configurations.runtimeClasspath.get().asPath,
+        "--add-modules", "javafx.controls,javafx.fxml,javafx.graphics",
             "--enable-native-access=ALL-UNNAMED"
     )
 }

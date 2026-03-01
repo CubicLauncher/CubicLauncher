@@ -20,6 +20,8 @@ package com.cubiclauncher.launcher.core;
 import com.cubiclauncher.launcher.util.GsonProvider;
 import com.google.gson.Gson;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SettingsManager {
     private static final String SETTINGS_FILE = "settings.cub";
@@ -49,6 +51,7 @@ public class SettingsManager {
 
     // Usuario
     public String username = "steve";
+    public List<String> userAccounts = new ArrayList<>();
     public boolean firstLaunch = true;
 
     private SettingsManager() {
@@ -163,7 +166,31 @@ public class SettingsManager {
 
     public void setUsername(String username) {
         this.username = username;
+        if (!getUserAccounts().contains(username)) {
+            userAccounts.add(username);
+        }
         save();
+    }
+
+    public List<String> getUserAccounts() {
+        if (userAccounts == null) {
+            userAccounts = new ArrayList<>();
+        }
+        if (userAccounts.isEmpty() && username != null) {
+            userAccounts.add(username);
+        }
+        return userAccounts;
+    }
+
+    public void removeUserAccount(String username) {
+        List<String> accounts = getUserAccounts();
+        if (accounts.size() > 1) {
+            accounts.remove(username);
+            if (this.username.equals(username)) {
+                this.username = accounts.get(0);
+            }
+            save();
+        }
     }
 
     public String getJava8Path() {

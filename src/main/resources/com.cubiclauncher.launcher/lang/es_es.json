@@ -1,6 +1,8 @@
 {
     "bottom_bar.ready": "Listo",
     "bottom_bar.editing_username": "Editando nombre de usuario...",
+    "bottom_bar.add_account": "Añadir cuenta",
+    "bottom_bar.remove_account": "Eliminar cuenta actual",
     "settings.title": "Ajustes",
     "settings.launcher": "Launcher",
     "settings.minecraft": "Minecraft",
