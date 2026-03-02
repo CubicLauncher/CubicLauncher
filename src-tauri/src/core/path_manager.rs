@@ -5,7 +5,7 @@ use std::sync::LazyLock;
 
 static PATH_MANAGER: LazyLock<PathManager> = LazyLock::new(PathManager::initialize);
 
-struct PathManager {
+pub struct PathManager {
     instances_dir: PathBuf,
     shared_dir: PathBuf,
     settings_dir: PathBuf,
@@ -30,15 +30,27 @@ impl PathManager {
     fn initialize() -> PathManager {
         let base_dir = resolve_base_dir();
 
+        let instances_dir = base_dir.join(".cubic/instances");
+        let shared_dir = base_dir.join(".cubic/shared");
+        let settings_dir = base_dir.join(".cubic/settings");
+
+        // Crear directorios si no existen
+        std::fs::create_dir_all(&instances_dir)
+            .unwrap_or_else(|e| panic!("No se pudo crear instances dir: {}", e));
+        std::fs::create_dir_all(&shared_dir)
+            .unwrap_or_else(|e| panic!("No se pudo crear shared dir: {}", e));
+        std::fs::create_dir_all(&settings_dir)
+            .unwrap_or_else(|e| panic!("No se pudo crear settings dir: {}", e));
+
         PathManager {
-            instances_dir: base_dir.join(".cubic/instances"),
-            shared_dir: base_dir.join(".cubic/shared"),
-            settings_dir: base_dir.join(".cubic/settings"),
+            instances_dir,
+            shared_dir,
+            settings_dir,
         }
     }
 }
 
-// utiliodades
+// utilidades
 fn resolve_base_dir() -> PathBuf {
     // con la lib normal
     if let Some(d) = UserDirs::new() {
