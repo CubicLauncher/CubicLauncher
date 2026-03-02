@@ -46,7 +46,7 @@ public class AccountManagerProvider {
 
     // Client ID (verificado para el flujo de autenticación de
     // Minecraft)
-    private static final String MICROSOFT_CLIENT_ID = "6aea8aa7-e635-4ab4-b07f-ce639e19b743";
+    private static final String MICROSOFT_CLIENT_ID = "cb4acffe-727f-4dd1-ad5e-fd3553d84a7f";
 
     private final AccountManager accountManager;
     private final MicrosoftAuthenticator microsoftAuthenticator;
@@ -105,7 +105,7 @@ public class AccountManagerProvider {
             // Seleccionar la cuenta que estaba activa
             List<Account> migrated = accountManager.findByUsername(selectedUsername);
             if (!migrated.isEmpty()) {
-                accountManager.selectAccount(migrated.get(0));
+                accountManager.selectAccount(migrated.getFirst());
                 log.info("Cuenta activa seleccionada: {}", selectedUsername);
             }
 
