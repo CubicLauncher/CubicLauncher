@@ -187,7 +187,7 @@ public class SettingsManager {
         if (accounts.size() > 1) {
             accounts.remove(username);
             if (this.username.equals(username)) {
-                this.username = accounts.get(0);
+                this.username = accounts.getFirst();
             }
             save();
         }
