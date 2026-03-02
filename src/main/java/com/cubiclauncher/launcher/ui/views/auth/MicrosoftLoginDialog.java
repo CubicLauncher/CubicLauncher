@@ -44,7 +44,7 @@ import java.net.URISyntaxException;
 
 /**
  * Dialogo para el inicio de sesión con Microsoft usando el flujo de código de
- * dispositivo..
+ * dispositivo
  */
 public class MicrosoftLoginDialog implements AuthCallback {
     private static final Logger log = LoggerFactory.getLogger(MicrosoftLoginDialog.class);

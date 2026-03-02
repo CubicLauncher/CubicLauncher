@@ -39,7 +39,7 @@ dependencies {
     // Aplicación
     implementation("org.kordamp.bootstrapfx:bootstrapfx-core:0.4.0")
     implementation("com.google.code.gson:gson:2.13.2")
-    implementation("com.cubiclauncher:claunch:1.0.0")
+    implementation("com.cubiclauncher:claunch:1.0.1")
     implementation("net.java.dev.jna:jna:5.18.1")
     implementation("net.java.dev.jna:jna-platform:5.18.1")
 
