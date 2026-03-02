@@ -44,9 +44,9 @@ public class AccountManagerProvider {
     private static final Logger log = LoggerFactory.getLogger(AccountManagerProvider.class);
     private static volatile AccountManagerProvider instance;
 
-    // Client ID de Prism Launcher (verificado para el flujo de autenticación de
+    // Client ID (verificado para el flujo de autenticación de
     // Minecraft)
-    private static final String MICROSOFT_CLIENT_ID = "c36a9fb6-4f2a-41ff-90bd-ae7cc92031eb";
+    private static final String MICROSOFT_CLIENT_ID = "6aea8aa7-e635-4ab4-b07f-ce639e19b743";
 
     private final AccountManager accountManager;
     private final MicrosoftAuthenticator microsoftAuthenticator;
