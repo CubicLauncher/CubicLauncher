@@ -1,6 +1,7 @@
 use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
 use serde::{Deserialize, Serialize};
 use serde_json;
+use std::sync::Arc;
 use std::{fs, sync::LazyLock};
 use std::{
     path::{Path, PathBuf},
@@ -24,9 +25,12 @@ pub struct Instance {
     #[serde(skip)]
     isdirty: bool,
 }
-
+pub struct InstanceEntry {
+    name: String,
+    data: Arc<Mutex<Instance>>,
+}
 pub struct InstanceManager {
-    instances: Vec<Instance>,
+    instances: Vec<InstanceEntry>,
 }
 
 /// Dto para tauri
@@ -41,7 +45,6 @@ pub struct InstanceDto {
 }
 
 impl Instance {
-    //getters
     pub fn get_is_running(&self) -> bool {
         self.process.is_some()
     }
@@ -83,6 +86,7 @@ impl Instance {
     pub fn get_name(&self) -> &str {
         &self.name
     }
+
     pub fn get_version(&self) -> &str {
         &self.version
     }
@@ -127,22 +131,26 @@ impl Instance {
 
     pub fn set_name(&mut self, name: String) {
         self.name = name;
+        self.isdirty = true
     }
 
     pub fn set_version(&mut self, version: String) {
         self.version = version;
+        self.isdirty = true
     }
 
     pub fn set_min_memory(&mut self, min_memory: Option<u32>) {
         self.min_memory = min_memory;
+        self.isdirty = true
     }
-
     pub fn set_max_memory(&mut self, max_memory: Option<u32>) {
         self.max_memory = max_memory;
+        self.isdirty = true
     }
 
     pub fn set_cover_image(&mut self, cover_image: Option<PathBuf>) {
         self.cover_image = cover_image;
+        self.isdirty = true
     }
 
     pub fn detach_process(&mut self) {
@@ -173,6 +181,31 @@ impl Instance {
         let content = std::fs::read_to_string(path).ok()?;
         serde_json::from_str(&content).ok()
     }
+    pub fn kill(&mut self) {
+        if let Some(ref mut process) = self.process {
+            let _ = process.kill();
+        }
+        self.process = None;
+    }
+    pub fn check_and_detach(&mut self) -> bool {
+        match self.process {
+            None => true, // ya terminó o fue killed
+            Some(ref mut process) => {
+                match process.try_wait() {
+                    Ok(Some(_)) => {
+                        self.process = None;
+                        true // terminó naturalmente
+                    }
+                    Ok(None) => false, // sigue corriendo
+                    Err(e) => {
+                        eprintln!("Error al verificar proceso: {:?}", e);
+                        self.process = None;
+                        true // asumimos muerto ante error
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl InstanceManager {
@@ -186,7 +219,10 @@ impl InstanceManager {
                 if entry.path().is_dir() {
                     let name = entry.file_name().to_string_lossy().to_string();
                     if let Some(instance) = Instance::load(&name) {
-                        instances.push(instance);
+                        instances.push(InstanceEntry {
+                            name,
+                            data: Arc::new(Mutex::new(instance)),
+                        });
                     }
                 }
             }
@@ -194,52 +230,63 @@ impl InstanceManager {
         InstanceManager { instances }
     }
 
-    pub fn get_all<'a, T: FromInstance<'a>>(&'a self) -> Vec<T> {
-        self.instances.iter().map(T::from_instance).collect()
+    pub async fn create_instance(&mut self, name: String, version: String) {
+        let instance = Arc::new(Mutex::new(Instance::new(name.clone(), version)));
+
+        let mut inst = instance.lock().await;
+        match inst.save() {
+            Ok(_) => println!("Instancia {} guardada", inst.get_name()),
+            Err(e) => println!("Error al guardar instancia: {:#?}", e.raw_os_error()),
+        }
+        drop(inst);
+        self.instances.push(InstanceEntry {
+            name,
+            data: instance,
+        });
     }
 
-    pub fn get_instance<'a, T: FromInstance<'a>>(&'a self, name: &str) -> Option<T> {
-        self.instances
-            .iter()
-            .find(|i| i.get_name() == name)
-            .map(T::from_instance)
-    }
-
-    pub fn create_instance(&mut self, name: String, version: String) {
-        let mut instance = Instance::new(name, version);
-
-        match instance.save() {
-            Ok(_) => {
-                println!("Instancia {} guardada", instance.get_name())
-            }
-            Err(e) => {
-                println!("Error al guardar instancia: {:#?}", e.raw_os_error())
+    pub async fn get_running_dtos(&self) -> Vec<InstanceDto> {
+        let mut dtos = Vec::new();
+        for arc in &self.instances {
+            let inst = arc.data.lock().await;
+            if inst.get_is_running() {
+                dtos.push(inst.to_dto());
             }
         }
-        self.instances.push(instance);
+        dtos
     }
 
-    pub fn exists(&self, name: String) -> bool {
-        self.instances.iter().any(|i| i.get_name() == name)
+    pub fn get_instance(&self, name: &str) -> Option<Arc<Mutex<Instance>>> {
+        self.instances
+            .iter()
+            .find(|i| i.name == name)
+            .map(|i| Arc::clone(&i.data))
+    }
+
+    pub fn get_all(&self) -> Vec<Arc<Mutex<Instance>>> {
+        self.instances.iter().map(|i| Arc::clone(&i.data)).collect()
+    }
+
+    pub async fn get_dto(&self, name: &str) -> Option<InstanceDto> {
+        let arc = self.get_instance(name)?;
+        let inst = arc.lock().await;
+        Some(inst.to_dto())
+    }
+
+    pub async fn get_all_dtos(&self) -> Vec<InstanceDto> {
+        let mut dtos = Vec::new();
+        for arc in &self.instances {
+            let inst = arc.data.lock().await;
+            dtos.push(inst.to_dto());
+        }
+        dtos
+    }
+
+    pub fn exists(&self, name: &str) -> bool {
+        self.instances.iter().any(|i| i.name == name)
     }
 
     pub fn count(&self) -> usize {
         self.instances.len()
-    }
-}
-
-pub trait FromInstance<'a> {
-    fn from_instance(instance: &'a Instance) -> Self;
-}
-
-impl<'a> FromInstance<'a> for InstanceDto {
-    fn from_instance(instance: &'a Instance) -> Self {
-        instance.to_dto()
-    }
-}
-
-impl<'a> FromInstance<'a> for &'a Instance {
-    fn from_instance(instance: &'a Instance) -> Self {
-        instance
     }
 }

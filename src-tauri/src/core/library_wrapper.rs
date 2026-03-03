@@ -4,6 +4,7 @@ use claunch_rs::{LaunchOptions, Launcher};
 use proton::{resolve_version_data, MinecraftDownloader};
 use std::collections::HashMap;
 use std::collections::VecDeque;
+use std::sync::Arc;
 use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
@@ -13,6 +14,7 @@ static LAUNCHER: LazyLock<Mutex<LauncherWrapper>> =
 pub struct LauncherWrapper {
     queue: VecDeque<String>,
     is_downloading: bool,
+    running_instances: Vec<Arc<Mutex<Instance>>>,
 }
 
 impl LauncherWrapper {
@@ -23,6 +25,7 @@ impl LauncherWrapper {
     fn new() -> LauncherWrapper {
         LauncherWrapper {
             queue: VecDeque::new(),
+            running_instances: Vec::new(),
             is_downloading: false,
         }
     }
@@ -63,7 +66,7 @@ impl LauncherWrapper {
         self.is_downloading = false;
     }
 
-    pub async fn launch(&mut self, instance: &Instance) {
+    pub async fn launch(&mut self, instance: Arc<Mutex<Instance>>) {
         println!("=== CLaunch ===\n");
 
         // Estructura esperada:
@@ -74,18 +77,26 @@ impl LauncherWrapper {
         // │   └── assets/       ← Aquí están los assets
         // └── instances/
         //     └── 1.20.1/       ← Directorio de la instancia
-
+        let (version, min_mem, max_mem, is_running) = {
+            let inst = instance.lock().await;
+            (
+                inst.get_version().to_string(),
+                inst.get_min_memory(),
+                inst.get_max_memory(),
+                inst.get_is_running(),
+            )
+        };
+        if is_running {
+            println!("No se puede lanzar una instancia que ya esta lanzada");
+            return;
+        }
         let shared_dir = PathManager::get().get_shared_dir();
         let instance_dir = PathManager::get().get_instance_dir();
         let java_path = "/usr/lib/jvm/java-17-openjdk/bin/java";
-        let version_json = shared_dir.join(format!(
-            "versions/{}/{}.json",
-            instance.get_version(),
-            instance.get_version()
-        ));
+        let version_json = shared_dir.join(format!("versions/{}/{}.json", version, version));
         if !version_json.exists() {
-            self.queue_download(instance.get_version().to_string())
-                .await;
+            println!("La instancia no se encuentra descargada. Descargando...");
+            self.queue_download(version).await;
         }
         println!("Configuration:");
         println!("  Shared dir:      {}", shared_dir.display());
@@ -98,27 +109,41 @@ impl LauncherWrapper {
         let options = LaunchOptions::new().with_demo(false);
         let mut custom_env = HashMap::new();
         custom_env.insert("DRI_PRIME".to_string(), "1".to_string());
+        let instance_clone = Arc::clone(&instance);
+        let child_result = tokio::task::spawn_blocking(move || {
+            Launcher::launch_with_options_and_child(
+                &version_json,
+                &shared_dir,
+                &instance_dir,
+                "Player",
+                &java_path,
+                "2G",
+                "4G",
+                854,
+                480,
+                true,
+                options,
+                custom_env,
+            )
+            .map_err(|e| e.to_string())
+        })
+        .await;
+        match child_result {
+            Ok(Ok(child)) => {
+                instance.lock().await.attach_process(child);
 
-        match Launcher::launch_with_options(
-            &version_json,
-            &shared_dir,
-            &instance_dir,
-            "Player",
-            &java_path,
-            "2G",
-            "4G",
-            854,
-            480,
-            true, // cracked mode
-            options,
-            custom_env,
-        ) {
-            Ok(_) => {
-                println!("\n✓ Game finished successfully!");
+                tokio::spawn(async move {
+                    loop {
+                        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                        let finished = instance_clone.lock().await.check_and_detach();
+                        if finished {
+                            break;
+                        }
+                    }
+                });
             }
-            Err(e) => {
-                eprintln!("\n❌ Launch failed: {}", e);
-            }
+            Ok(Err(e)) => eprintln!("\n❌ Launch failed: {}", e),
+            Err(e) => eprintln!("\n❌ spawn_blocking panicked: {}", e),
         }
     }
     // este es el verify del ejemplo de claunch, hay q rehacelo

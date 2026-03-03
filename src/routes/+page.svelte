@@ -1,17 +1,14 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
-    // Espejo del InstanceDto de Rust
-    interface InstanceDto {
-        name: string;
-        version: string;
-        loader: string;
-        last_played: number;
-        is_running: boolean;
-        cover_image: string | null;
-    }
+    import Drawer from "../lib/Drawer.svelte";
+    import QuickMenu from "../lib/QuickMenu.svelte";
+    import "../App.css";
+    import { type InstanceDto } from "$lib/types";
+
     let instances: InstanceDto[] = $state([]);
     let version = $state("");
+    let open = $state(false);
     let instanceName = $state("");
     onMount(async () => {
         instances = await invoke("get_instances");
@@ -48,3 +45,8 @@
     </label>
     <button onclick={() => createInstance(instanceName, version)}>crear</button>
 </div>
+<button onclick={() => (open = true)}>Open Drawer</button>
+
+<Drawer bind:open direction="right" onclose={() => (open = false)}>
+    <QuickMenu onclose={() => (open = false)} />
+</Drawer>

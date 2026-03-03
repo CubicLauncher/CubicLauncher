@@ -477,7 +477,7 @@ dependencies = [
 [[package]]
 name = "claunch-rs"
 version = "1.0.1"
-source = "git+https://github.com/CubicLauncher/claunch-rs.git?branch=main#e561d1881e9ca426a9ae7bfc7afd65c42e1337ec"
+source = "git+https://github.com/CubicLauncher/claunch-rs.git?branch=debugging#d4160d71bd42efc383f9dde71bc87927f506a23f"
 dependencies = [
  "log",
  "serde",

@@ -23,6 +23,6 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 proton = { git = "https://github.com/CubicLauncher/Proton.git" }
-claunch-rs = { git = "https://github.com/CubicLauncher/claunch-rs.git", branch ="main" }
+claunch-rs = { git = "https://github.com/CubicLauncher/claunch-rs.git", branch ="debugging" }
 directories = "6.0.0"
-tokio = {version = "1.49.0", features = ["sync"] }
+tokio = {version = "1.49.0", features = ["sync", "rt-multi-thread", "macros"] }
