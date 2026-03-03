@@ -63,7 +63,7 @@ impl LauncherWrapper {
         self.is_downloading = false;
     }
 
-    pub fn launch(instance: Instance) {
+    pub async fn launch(&mut self, instance: &Instance) {
         println!("=== CLaunch ===\n");
 
         // Estructura esperada:
@@ -83,7 +83,10 @@ impl LauncherWrapper {
             instance.get_version(),
             instance.get_version()
         ));
-
+        if !version_json.exists() {
+            self.queue_download(instance.get_version().to_string())
+                .await;
+        }
         println!("Configuration:");
         println!("  Shared dir:      {}", shared_dir.display());
         println!("  Version JSON:  {}", version_json.display());

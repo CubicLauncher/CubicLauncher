@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 static SETTINGS: LazyLock<Mutex<SettingsManager>> =
     LazyLock::new(|| Mutex::new(SettingsManager::load()));
+
 // puede ser que luego mueva todo a structs mas chicos
 // para tener metodos utiles a partir de lo que se guarde
 /// Struct CRUD para los settings
@@ -53,6 +54,10 @@ impl SettingsManager {
         self.dirty = true;
     }
     pub fn set_min_memory(&mut self, min_memory: u32) {
+        if min_memory > self.max_memory {
+            eprintln!("Min mem no puede ser mayor que max mem, ignorando cambios");
+            return;
+        }
         self.min_memory = min_memory;
         self.dirty = true;
     }
@@ -87,7 +92,7 @@ impl SettingsManager {
         if !path.exists() {
             return SettingsManager::default();
         }
-        let content = match std::fs::read_to_string(path) {
+        let content = match std::fs::read_to_string(&path) {
             Ok(c) => c,
             Err(_) => {
                 eprintln!("Error al cargar archivo de configuracion");
@@ -96,7 +101,11 @@ impl SettingsManager {
         };
         match serde_json::from_str(&content) {
             Ok(settings) => settings,
-            Err(_) => SettingsManager::default(),
+            Err(_) => {
+                eprintln!("Configuracion invalida, creando backup");
+                let _ = std::fs::copy(&path, path.with_extension("cub.bak"));
+                SettingsManager::default()
+            }
         }
     }
 }

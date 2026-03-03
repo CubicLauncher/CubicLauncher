@@ -1,5 +1,5 @@
 use directories::UserDirs;
-use std::env::{current_dir, current_exe, temp_dir};
+use std::env::temp_dir;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 

@@ -1,11 +1,15 @@
+use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
 use serde::{Deserialize, Serialize};
 use serde_json;
+use std::{fs, sync::LazyLock};
 use std::{
     path::{Path, PathBuf},
     process::Child,
 };
+use tokio::sync::Mutex;
 
-use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
+static INSTANCE_MANAGER: LazyLock<Mutex<InstanceManager>> =
+    LazyLock::new(|| Mutex::new(InstanceManager::load_all()));
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Instance {
@@ -17,6 +21,12 @@ pub struct Instance {
     cover_image: Option<PathBuf>, // puede existir o no
     #[serde(skip)]
     process: Option<Child>,
+    #[serde(skip)]
+    isdirty: bool,
+}
+
+pub struct InstanceManager {
+    instances: Vec<Instance>,
 }
 
 /// Dto para tauri
@@ -108,6 +118,7 @@ impl Instance {
             max_memory: None,
             cover_image: None,
             process: None,
+            isdirty: true,
         }
     }
     pub fn attach_process(&mut self, process: Child) {
@@ -138,7 +149,11 @@ impl Instance {
         self.process = None;
     }
 
-    pub fn save(&self) -> Result<(), std::io::Error> {
+    pub fn save(&mut self) -> Result<(), std::io::Error> {
+        if !self.isdirty {
+            return Ok(());
+        }
+
         let dir = self.get_instance_dir();
         std::fs::create_dir_all(&dir)?;
 
@@ -146,9 +161,9 @@ impl Instance {
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
         std::fs::write(self.get_config_path(), content)?;
+        self.isdirty = false;
         Ok(())
     }
-
     pub fn load(name: &str) -> Option<Instance> {
         let path = PathManager::get()
             .get_instance_dir()
@@ -157,5 +172,74 @@ impl Instance {
 
         let content = std::fs::read_to_string(path).ok()?;
         serde_json::from_str(&content).ok()
+    }
+}
+
+impl InstanceManager {
+    pub fn get() -> &'static Mutex<InstanceManager> {
+        return &INSTANCE_MANAGER;
+    }
+    fn load_all() -> InstanceManager {
+        let mut instances = Vec::new();
+        if let Ok(entries) = fs::read_dir(PathManager::get().get_instance_dir()) {
+            for entry in entries.flatten() {
+                if entry.path().is_dir() {
+                    let name = entry.file_name().to_string_lossy().to_string();
+                    if let Some(instance) = Instance::load(&name) {
+                        instances.push(instance);
+                    }
+                }
+            }
+        }
+        InstanceManager { instances }
+    }
+
+    pub fn get_all<'a, T: FromInstance<'a>>(&'a self) -> Vec<T> {
+        self.instances.iter().map(T::from_instance).collect()
+    }
+
+    pub fn get_instance<'a, T: FromInstance<'a>>(&'a self, name: &str) -> Option<T> {
+        self.instances
+            .iter()
+            .find(|i| i.get_name() == name)
+            .map(T::from_instance)
+    }
+
+    pub fn create_instance(&mut self, name: String, version: String) {
+        let mut instance = Instance::new(name, version);
+
+        match instance.save() {
+            Ok(_) => {
+                println!("Instancia {} guardada", instance.get_name())
+            }
+            Err(e) => {
+                println!("Error al guardar instancia: {:#?}", e.raw_os_error())
+            }
+        }
+        self.instances.push(instance);
+    }
+
+    pub fn exists(&self, name: String) -> bool {
+        self.instances.iter().any(|i| i.get_name() == name)
+    }
+
+    pub fn count(&self) -> usize {
+        self.instances.len()
+    }
+}
+
+pub trait FromInstance<'a> {
+    fn from_instance(instance: &'a Instance) -> Self;
+}
+
+impl<'a> FromInstance<'a> for InstanceDto {
+    fn from_instance(instance: &'a Instance) -> Self {
+        instance.to_dto()
+    }
+}
+
+impl<'a> FromInstance<'a> for &'a Instance {
+    fn from_instance(instance: &'a Instance) -> Self {
+        instance
     }
 }
