@@ -1,6 +1,8 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
     import { type InstanceDto } from "./types";
+    import { launcherStore } from "./state.svelte";
+    import { killInst } from "./launcherService";
     interface Asset {
         label: string;
         progress: number; // 0–100
@@ -104,26 +106,6 @@
         done: "Done",
         error: "Error",
     };
-    let runningInstances = $state<{ name: string; sub: string }[]>([]);
-
-    async function fetchRunning() {
-        const dtos = await invoke<InstanceDto[]>("get_running");
-        runningInstances = dtos.map((d) => ({
-            name: d.name,
-            sub: `Running · ${d.version}`,
-        }));
-    }
-
-    $effect(() => {
-        fetchRunning();
-        const interval = setInterval(fetchRunning, 3000); // polling cada 3s
-        return () => clearInterval(interval);
-    });
-
-    async function killInstance(name: string) {
-        await invoke("kill_instance", { instanceName: name });
-        runningInstances = runningInstances.filter((i) => i.name !== name);
-    }
 
     function overallProgress(assets: Asset[]): number {
         return Math.round(
@@ -143,17 +125,19 @@
         <!-- Running instance -->
         <section class="qm-section">
             <span class="qm-section-label">Running</span>
-            {#if runningInstances.length > 0}
-                {#each runningInstances as inst}
+            {#if launcherStore.runningInstances.length > 0}
+                {#each launcherStore.runningInstances as inst}
                     <div class="qm-active-card">
                         <div class="qm-status-dot running"></div>
                         <div class="qm-active-info">
                             <span class="qm-active-name">{inst.name}</span>
-                            <span class="qm-active-sub">{inst.sub}</span>
+                            <span class="qm-active-sub"
+                                >{inst.version} - {inst.loader}</span
+                            >
                         </div>
                         <button
                             class="qm-kill-btn"
-                            onclick={() => killInstance(inst.name)}>Kill</button
+                            onclick={() => killInst(inst.name)}>Kill</button
                         >
                     </div>
                 {/each}

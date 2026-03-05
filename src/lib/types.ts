@@ -6,3 +6,8 @@ export interface InstanceDto {
   is_running: boolean;
   cover_image: string | null;
 }
+export interface InstancesPollingPayload {
+  running: InstanceDto[];
+  all: InstanceDto[];
+  count: number;
+}

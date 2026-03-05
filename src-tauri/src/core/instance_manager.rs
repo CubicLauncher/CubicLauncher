@@ -11,6 +11,7 @@ use tokio::sync::Mutex;
 
 static INSTANCE_MANAGER: LazyLock<Mutex<InstanceManager>> =
     LazyLock::new(|| Mutex::new(InstanceManager::load_all()));
+const MAX_LEN: u8 = 16;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Instance {
@@ -25,6 +26,7 @@ pub struct Instance {
     #[serde(skip)]
     isdirty: bool,
 }
+#[derive(Clone)]
 pub struct InstanceEntry {
     name: String,
     data: Arc<Mutex<Instance>>,
@@ -32,9 +34,14 @@ pub struct InstanceEntry {
 pub struct InstanceManager {
     instances: Vec<InstanceEntry>,
 }
-
+#[derive(Serialize, Clone)]
+pub struct InstancesPollingPayload {
+    running: Vec<InstanceDto>,
+    all: Vec<InstanceDto>,
+    count: usize,
+}
 /// Dto para tauri
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct InstanceDto {
     name: String,
     version: String,
@@ -231,6 +238,12 @@ impl InstanceManager {
     }
 
     pub async fn create_instance(&mut self, name: String, version: String) {
+        match validate_instance_name(&name) {
+            Ok(_) => (),
+            Err(e) => {
+                eprintln!("Error al crear instancia {e}")
+            }
+        }
         let instance = Arc::new(Mutex::new(Instance::new(name.clone(), version)));
 
         let mut inst = instance.lock().await;
@@ -274,9 +287,12 @@ impl InstanceManager {
     }
 
     pub async fn get_all_dtos(&self) -> Vec<InstanceDto> {
-        let mut dtos = Vec::new();
-        for arc in &self.instances {
-            let inst = arc.data.lock().await;
+        // 1. Pre-reservamos memoria para evitar re-asignaciones en el loop
+        let mut dtos = Vec::with_capacity(self.instances.len());
+
+        for entry in &self.instances {
+            // 2. Bloqueamos solo el tiempo necesario para generar el DTO
+            let inst = entry.data.lock().await;
             dtos.push(inst.to_dto());
         }
         dtos
@@ -289,4 +305,37 @@ impl InstanceManager {
     pub fn count(&self) -> usize {
         self.instances.len()
     }
+}
+
+impl InstancesPollingPayload {
+    pub fn new(
+        running: Vec<InstanceDto>,
+        all: Vec<InstanceDto>,
+        count: usize,
+    ) -> InstancesPollingPayload {
+        InstancesPollingPayload {
+            running,
+            all,
+            count,
+        }
+    }
+}
+
+fn validate_instance_name(name: &str) -> Result<(), String> {
+    if name.is_empty() {
+        return Err("El nombre de la instancia no puede estar vacío.".into());
+    }
+
+    if !name.is_ascii() {
+        return Err("El nombre de la instancia debe contener solo caracteres ASCII.".into());
+    }
+
+    if name.len() > MAX_LEN.into() {
+        return Err(format!(
+            "El nombre de la instancia no puede superar {} caracteres.",
+            MAX_LEN
+        ));
+    }
+
+    Ok(())
 }

@@ -1,26 +1,27 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
+    import { createInstance } from "$lib/cubicApi";
     import { onMount } from "svelte";
     import Drawer from "../lib/Drawer.svelte";
     import QuickMenu from "../lib/QuickMenu.svelte";
     import "../App.css";
-    import { type InstanceDto } from "$lib/types";
-
-    let instances: InstanceDto[] = $state([]);
+    import { launcherStore } from "$lib/state.svelte";
+    import { initPolling } from "$lib/launcherService";
     let version = $state("");
     let open = $state(false);
     let instanceName = $state("");
-    onMount(async () => {
-        instances = await invoke("get_instances");
-    });
 
-    async function createInstance(name: string, version: string) {
-        await invoke("create_instance", { name, version });
-        instances = await invoke("get_instances");
-    }
+    onMount(() => {
+        invoke("start_polling");
+        const unlistenPromise = initPolling();
+
+        return () => {
+            unlistenPromise.then((unlisten) => unlisten());
+        };
+    });
 </script>
 
-{#each instances as instance}
+{#each launcherStore.loadedInstances as instance}
     <div>
         <h3>{instance.name}</h3>
         <p>{instance.version} — {instance.loader}</p>

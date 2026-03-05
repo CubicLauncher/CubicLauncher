@@ -1,5 +1,5 @@
-use crate::core::{Instance, InstanceDto, InstanceManager, LauncherWrapper};
-
+use crate::core::{InstanceDto, InstanceManager, InstancesPollingPayload, LauncherWrapper};
+use tauri::{AppHandle, Emitter};
 mod core;
 
 #[tauri::command]
@@ -50,6 +50,28 @@ async fn create_instance(name: String, version: String) {
         .await;
 }
 
+#[tauri::command]
+fn start_polling(app: AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+            println!("Eviando polling");
+            let payload = {
+                let manager = InstanceManager::get().lock().await;
+
+                InstancesPollingPayload::new(
+                    manager.get_running_dtos().await,
+                    manager.get_all_dtos().await,
+                    manager.count(),
+                )
+            };
+
+            // Emitimos un solo evento con toda la información
+            let _ = app.emit("instances-update", payload);
+        }
+    });
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -60,7 +82,8 @@ pub fn run() {
             get_instances,
             create_instance,
             get_running,
-            kill_instance
+            kill_instance,
+            start_polling
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
