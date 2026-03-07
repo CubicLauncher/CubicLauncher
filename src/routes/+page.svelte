@@ -1,12 +1,12 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
-    import { createInstance } from "$lib/cubicApi";
+    import { createInstance } from "$lib/api/cubicApi";
     import { onMount } from "svelte";
-    import Drawer from "../lib/Drawer.svelte";
-    import QuickMenu from "../lib/QuickMenu.svelte";
-    import "../App.css";
-    import { launcherStore } from "$lib/state.svelte";
-    import { initPolling } from "$lib/launcherService";
+    import Drawer from "$lib/components/Drawer.svelte";
+    import QuickMenu from "$lib/components/QuickMenu.svelte";
+    import "../styles/app.css";
+    import { launcherStore } from "$lib/state/state.svelte";
+    import { initPolling } from "$lib/api/launcherService";
     let version = $state("");
     let open = $state(false);
     let instanceName = $state("");
