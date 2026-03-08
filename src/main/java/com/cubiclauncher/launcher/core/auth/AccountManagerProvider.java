@@ -44,9 +44,9 @@ public class AccountManagerProvider {
     private static final Logger log = LoggerFactory.getLogger(AccountManagerProvider.class);
     private static volatile AccountManagerProvider instance;
 
-    // Client ID de Prism Launcher (verificado para el flujo de autenticación de
+    // Client ID (verificado para el flujo de autenticación de
     // Minecraft)
-    private static final String MICROSOFT_CLIENT_ID = "c36a9fb6-4f2a-41ff-90bd-ae7cc92031eb";
+    private static final String MICROSOFT_CLIENT_ID = "cb4acffe-727f-4dd1-ad5e-fd3553d84a7f";
 
     private final AccountManager accountManager;
     private final MicrosoftAuthenticator microsoftAuthenticator;
@@ -105,7 +105,7 @@ public class AccountManagerProvider {
             // Seleccionar la cuenta que estaba activa
             List<Account> migrated = accountManager.findByUsername(selectedUsername);
             if (!migrated.isEmpty()) {
-                accountManager.selectAccount(migrated.get(0));
+                accountManager.selectAccount(migrated.getFirst());
                 log.info("Cuenta activa seleccionada: {}", selectedUsername);
             }
 

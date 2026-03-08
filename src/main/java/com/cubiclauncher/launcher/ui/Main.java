@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import javafx.stage.Screen;
 import javafx.geometry.Rectangle2D;
-
+import javafx.scene.text.Font;
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
     private static final EventBus eventBus = EventBus.get();
@@ -76,6 +76,10 @@ public class Main extends Application {
         primaryStage.setMinWidth(1000);
         primaryStage.setMinHeight(700);
         root = new BorderPane();
+        Font.loadFont(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/fonts/Cantarell/Cantarell-Regular.ttf"), 14);
+        Font.loadFont(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/fonts/Cantarell/Cantarell-Bold.ttf"), 14);
+        Font.loadFont(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/fonts/0xProto/0xProto-Regular.ttf"), 14);
+        Font.loadFont(getClass().getResourceAsStream("/com.cubiclauncher.launcher/assets/fonts/0xProto/0xProto-Bold.ttf"), 14);
         root.getStyleClass().add("root");
 
         // --- Componentes principales estilo Steam ---
