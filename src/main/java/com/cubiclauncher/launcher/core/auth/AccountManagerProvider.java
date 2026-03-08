@@ -46,7 +46,7 @@ public class AccountManagerProvider {
 
     // Client ID (verificado para el flujo de autenticación de
     // Minecraft)
-    private static final String MICROSOFT_CLIENT_ID = "cb4acffe-727f-4dd1-ad5e-fd3553d84a7f";
+    private static final String MICROSOFT_CLIENT_ID = "c36a9fb6-4f2a-41ff-90bd-ae7cc92031eb";
 
     private final AccountManager accountManager;
     private final MicrosoftAuthenticator microsoftAuthenticator;
