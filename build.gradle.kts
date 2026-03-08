@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.cubiclauncher"
-version = "2603a"
+version = "2604a"
 
 java {
     toolchain {
@@ -39,7 +39,7 @@ dependencies {
     // Aplicación
     implementation("org.kordamp.bootstrapfx:bootstrapfx-core:0.4.0")
     implementation("com.google.code.gson:gson:2.13.2")
-    implementation("com.cubiclauncher:claunch:1.0.0")
+    implementation("com.cubiclauncher:claunch:1.0.1")
     implementation("net.java.dev.jna:jna:5.18.1")
     implementation("net.java.dev.jna:jna-platform:5.18.1")
 
@@ -76,8 +76,8 @@ tasks.named<JavaExec>("run") {
     })
 
     jvmArgs = listOf(
-            "--module-path", configurations.runtimeClasspath.get().asPath,
-            "--add-modules", "javafx.controls,javafx.fxml,javafx.graphics",
+        "--module-path", configurations.runtimeClasspath.get().asPath,
+        "--add-modules", "javafx.controls,javafx.fxml,javafx.graphics",
             "--enable-native-access=ALL-UNNAMED"
     )
 }

@@ -25,9 +25,7 @@ class EventBusTest {
     void testEmitAndReceive() {
         AtomicBoolean received = new AtomicBoolean(false);
 
-        eventBus.subscribe(EventType.INSTANCE_CREATED, data -> {
-            received.set(true);
-        });
+        eventBus.subscribe(EventType.INSTANCE_CREATED, data -> received.set(true));
 
         eventBus.emit(EventType.INSTANCE_CREATED, EventData.empty());
 

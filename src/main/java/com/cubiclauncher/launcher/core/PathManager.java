@@ -28,7 +28,6 @@ public class PathManager {
     private final Path instancePath;
     private final Path gamePath;
     private final Path langPath;
-
     private PathManager() {
         this.settingsPath = ensure(settingsDirectory());
         this.gamePath = ensure(gameDirectory());
@@ -43,12 +42,12 @@ public class PathManager {
     private static Path settingsDirectory() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            return Paths.get(System.getenv("APPDATA"), APP_NAME);
+            return Paths.get(System.getenv("APPDATA"), APP_NAME, "settings");
         } else if (os.contains("mac")) {
             return Paths.get(System.getProperty("user.home"),
-                    "Library", "Application Support", APP_NAME);
+                    "Library", "Application Support", APP_NAME, "settings");
         } else {
-            return Paths.get(System.getProperty("user.home"), ".cubic");
+            return Paths.get(System.getProperty("user.home"), ".cubic", "settings");
         }
     }
 
@@ -71,7 +70,15 @@ public class PathManager {
     }
 
     private static Path langDirectory() {
-        return settingsDirectory().resolve("lang");
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return Paths.get(System.getenv("APPDATA"), APP_NAME, "languages");
+        } else if (os.contains("mac")) {
+            return Paths.get(System.getProperty("user.home"),
+                    "Library", "Application Support", APP_NAME, "languages");
+        } else {
+            return Paths.get(System.getProperty("user.home"), ".cubic", "languages");
+        }
     }
 
     private static Path ensure(Path dir) {

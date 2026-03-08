@@ -57,9 +57,7 @@ class InstanceManagerTest {
         String name = "DuplicateTest";
         instanceManager.createInstance(name, "1.20.1");
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            instanceManager.createInstance(name, "1.19.4");
-        });
+        assertThrows(IllegalArgumentException.class, () -> instanceManager.createInstance(name, "1.19.4"));
     }
 
     @Test

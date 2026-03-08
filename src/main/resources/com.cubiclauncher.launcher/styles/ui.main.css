@@ -3,6 +3,7 @@
 /* Base Colors - Minimalista y discreto */
 .root {
   -fx-background-color: #0f0f0f;
+  -fx-font-family: 'Cantarell';
 }
 
 /* Sidebar - Más sutil */
@@ -344,6 +345,12 @@
   -fx-text-fill: #666666;
   -fx-font-size: 12px;
   -fx-font-weight: 500;
+}
+.status-error {
+  -fx-text-fill: #d08080;
+}
+.status-success {
+  -fx-text-fill: #90c090;
 }
 
 /* Botón principal - Discreto pero funcional */
@@ -1343,7 +1350,7 @@
 .console-area {
   -fx-background-color: #0f0f0f;
   -fx-text-fill: #b0b0b0;
-  -fx-font-family: "Consolas", "Monaco", "Courier New", monospace;
+  -fx-font-family: '0xProto';
   -fx-font-size: 13px;
   -fx-border-color: #252525;
   -fx-border-width: 1;
@@ -1867,4 +1874,47 @@
 
 .console-area .content {
   -fx-background-color: #000000;
+}
+
+/* Account Context Menu */
+.account-context-menu {
+  -fx-background-color: #1a1a1a;
+  -fx-border-color: #333333;
+  -fx-border-width: 1;
+  -fx-background-radius: 8;
+  -fx-border-radius: 8;
+  -fx-padding: 5;
+}
+
+.account-context-menu .menu-item {
+  -fx-padding: 8 15;
+  -fx-background-radius: 4;
+}
+
+.account-context-menu .menu-item .label {
+  -fx-text-fill: #b0b0b0;
+  -fx-font-size: 13px;
+}
+
+.account-context-menu .menu-item:hover,
+.account-context-menu .menu-item:focused {
+  -fx-background-color: #2a2a2a;
+}
+
+.account-context-menu .menu-item:hover .label,
+.account-context-menu .menu-item:focused .label {
+  -fx-text-fill: #e0e0e0;
+}
+
+.account-context-menu .active-account .label {
+  -fx-text-fill: #4a6bff;
+  -fx-font-weight: bold;
+}
+
+.account-context-menu .remove-account-item .label {
+  -fx-text-fill: #ff4a4a;
+}
+
+.account-context-menu .separator .line {
+  -fx-border-color: #333333;
 }

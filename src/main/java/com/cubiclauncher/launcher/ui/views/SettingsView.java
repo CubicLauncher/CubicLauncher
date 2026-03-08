@@ -121,12 +121,9 @@ public class SettingsView {
         CheckBox closeLaunchCheckbox = new CheckBox(lm.get("settings.close_launcher"));
         closeLaunchCheckbox.setSelected(controller.getSettings().isCloseLauncherOnGameStart());
         closeLaunchCheckbox.setOnAction(e -> controller.onCloseLauncherChanged(closeLaunchCheckbox.isSelected()));
-        CheckBox nativeStyles = new CheckBox(lm.get("settings.native_styles"));
-        nativeStyles.setSelected(controller.getSettings().isNative_styles());
-        nativeStyles.setOnAction(e -> controller.onNativeStylesChanged(nativeStyles.isSelected()));
         VBox infoSection = createLauncherInfo();
         pane.getChildren().addAll(languageBox, autoUpdateCheckbox, errorConsoleCheckbox, closeLaunchCheckbox,
-                nativeStyles, new Separator(), infoSection);
+                new Separator(), infoSection);
         return pane;
     }
 
@@ -151,7 +148,7 @@ public class SettingsView {
 
     private static VBox createLauncherInfo() {
         VBox infoBox = new VBox(5);
-        Label versionLabel = new Label(lm.get("settings.version", "2603a"));
+        Label versionLabel = new Label(lm.get("settings.version", "2604a"));
         Label devLabel = new Label(
                 lm.get("settings.developed_by", "Santiagolxx, Notstaff & CubicLauncher contributors"));
         HBox sourceCodeBox = new HBox(5);
@@ -229,6 +226,18 @@ public class SettingsView {
                 detectButton.setDisable(false);
                 if (success) {
                     updateJavaPathField();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle(lm.get("settings.detect_java"));
+                    alert.setHeaderText(null);
+                    alert.setContentText("Detección completada. Se han actualizado las rutas encontradas.");
+                    alert.show();
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle(lm.get("settings.detect_java"));
+                    alert.setHeaderText(null);
+                    alert.setContentText(
+                            "No se pudo encontrar ninguna instalación de Java compatible automáticamente.");
+                    alert.show();
                 }
             });
         });

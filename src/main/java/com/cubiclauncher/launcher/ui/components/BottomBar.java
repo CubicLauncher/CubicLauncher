@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Santiagolxx, Notstaff and CubicLauncher contributors
+ * Copyright (C) 2026 Santiagolxx, Notstaff and CubicLauncher contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,15 +17,23 @@
 
 package com.cubiclauncher.launcher.ui.components;
 
+import com.cubiclauncher.claunch.auth.Account;
+import com.cubiclauncher.launcher.core.PathManager;
+import com.cubiclauncher.launcher.core.auth.AccountManagerProvider;
 import com.cubiclauncher.launcher.core.LanguageManager;
-import com.cubiclauncher.launcher.core.SettingsManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
+import com.cubiclauncher.launcher.ui.views.auth.MicrosoftLoginDialog;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.input.MouseButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -37,7 +45,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 
 public class BottomBar extends HBox {
-    private static final SettingsManager sm = SettingsManager.getInstance();
+    private static final AccountManagerProvider amp = AccountManagerProvider.getInstance();
     private static final LanguageManager lm = LanguageManager.getInstance();
     private static BottomBar instance;
 
@@ -73,9 +81,11 @@ public class BottomBar extends HBox {
         StackPane avatarContainer = new StackPane(userAvatar);
         avatarContainer.setPrefSize(28, 28);
 
-        updateAvatar(sm.getUsername());
+        // Obtener nombre de la cuenta seleccionada
+        String currentUsername = getSelectedUsername();
+        updateAvatar(currentUsername);
 
-        userName = new Label(sm.getUsername());
+        userName = new Label(currentUsername);
         userName.getStyleClass().add("user-profile");
 
         // --- Editing components ---
@@ -97,25 +107,32 @@ public class BottomBar extends HBox {
         userName.setOnMouseClicked(event -> {
             if (isEditing)
                 return;
-            isEditing = true;
-            userNameField.setText(userName.getText());
-            editContainer.setVisible(true);
-            userName.setVisible(false);
-            userNameField.requestFocus();
+
+            if (event.getButton() == MouseButton.PRIMARY) {
+                showAccountMenu(event.getScreenX(), event.getScreenY());
+            }
         });
 
         cancelButton.setOnMouseClicked(event -> cancelEdit());
 
         userNameField.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal && isEditing) {
-                // Lost focus, treat as cancel
                 cancelEdit();
             }
         });
 
+        // Limit to 16 characters and only allow a-z, A-Z, 0-9, _
+        userNameField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.length() > 16 || !newVal.matches("[a-zA-Z0-9_]*")) {
+                userNameField.setText(oldVal);
+            }
+        });
+
+        userNameField.setPromptText("a-Z, 0-9, _ (3-16)");
+
         userNameField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
-                updateUsername();
+                addNewAccount();
             } else if (event.getCode() == KeyCode.ESCAPE) {
                 cancelEdit();
             }
@@ -158,22 +175,183 @@ public class BottomBar extends HBox {
         getChildren().addAll(userProfile, leftSpacer, progressCenter, rightSpacer, statusLabel);
         EventBus.get().subscribe(EventType.LANGUAGE_CHANGED,
                 e -> refreshTranslations());
-        // Subscribirse al cambio de idioma
-        EventBus.get().subscribe(EventType.LANGUAGE_CHANGED, e -> refreshTranslations());
+        // Subscribirse al cambio de cuenta para actualizar la UI
+        EventBus.get().subscribe(EventType.ACCOUNT_CHANGED, e -> {
+            String newUsername = e.getString("username");
+            javafx.application.Platform.runLater(() -> {
+                userName.setText(newUsername);
+                updateAvatar(newUsername);
+            });
+        });
+
+        // --- Suscripción a eventos de descarga ---
+        EventBus.get().subscribe(EventType.DOWNLOAD_PROGRESS, e -> {
+            Integer current = e.getInt("current");
+            Integer total = e.getInt("total");
+            String version = e.getString("version");
+
+            Platform.runLater(() -> {
+                if (!progressBar.isVisible()) {
+                    progressBar.setVisible(true);
+                    progressLabel.setVisible(true);
+                    progressText.setVisible(true);
+                    statusLabel.setVisible(false);
+                }
+
+                double progress = (total != null && total > 0) ? (double) current / total : 0;
+                progressBar.setProgress(progress);
+                progressLabel.setText(String.format("%.0f%%", progress * 100));
+
+                String downloadingTranslation = lm.get("bottom_bar.downloading");
+                if (downloadingTranslation != null && downloadingTranslation.contains("%s")) {
+                    progressText.setText(String.format(downloadingTranslation, version));
+                } else {
+                    progressText.setText(
+                            (downloadingTranslation != null ? downloadingTranslation : "Descargando") + " " + version);
+                }
+            });
+        });
+
+        EventBus.get().subscribe(EventType.DOWNLOAD_COMPLETED, e -> {
+            String version = e.getString("version");
+            String errorMessage = e.getString("message"); // Viene de EventData.error() si hubo fallo
+
+            Platform.runLater(() -> {
+                if (errorMessage != null) {
+                    statusLabel.setText(errorMessage);
+                    statusLabel.getStyleClass().add("status-error");
+                } else {
+                    String completedTranslation = lm.get("bottom_bar.download_completed");
+                    if (completedTranslation != null && completedTranslation.contains("%s")) {
+                        statusLabel.setText(String.format(completedTranslation, version));
+                    } else {
+                        statusLabel.setText((completedTranslation != null ? completedTranslation : "Descarga completa")
+                                + " " + version);
+                    }
+                    statusLabel.getStyleClass().add("status-success");
+                }
+
+                progressBar.setVisible(false);
+                progressLabel.setVisible(false);
+                progressText.setVisible(false);
+                statusLabel.setVisible(true);
+
+                // Volver al estado normal después de 5 segundos
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(5000);
+                        Platform.runLater(() -> {
+                            if (!progressBar.isVisible()) {
+                                statusLabel.setText(lm.get("bottom_bar.ready"));
+                                statusLabel.getStyleClass().remove("status-error");
+                                statusLabel.getStyleClass().remove("status-success");
+                            }
+                        });
+                    } catch (InterruptedException ignored) {
+                    }
+                }).start();
+            });
+        });
     }
 
-    private void updateUsername() {
+    /**
+     * Obtiene el nombre de usuario de la cuenta seleccionada.
+     * Si no hay cuentas, retorna "Steve" como fallback.
+     */
+    private String getSelectedUsername() {
+        Account selected = amp.getSelectedAccount();
+        return selected != null ? selected.getUsername() : "Steve";
+    }
+
+    private void showAccountMenu(double screenX, double screenY) {
+        ContextMenu contextMenu = new ContextMenu();
+        contextMenu.getStyleClass().add("account-context-menu");
+
+        Account selectedAccount = amp.getSelectedAccount();
+
+        for (Account account : amp.getAccounts()) {
+            String displayName = account.getUsername();
+            // Mostrar tipo de cuenta si es Microsoft
+            if (account.isMicrosoft()) {
+                displayName += " ★";
+            }
+            MenuItem item = new MenuItem(displayName);
+            if (selectedAccount != null && account.getUuid().equals(selectedAccount.getUuid())) {
+                item.getStyleClass().add("active-account");
+                item.setDisable(true);
+            }
+            item.setOnAction(e -> {
+                amp.selectAccount(account);
+                userName.setText(account.getUsername());
+                updateAvatar(account.getUsername());
+            });
+            contextMenu.getItems().add(item);
+        }
+
+        contextMenu.getItems().add(new SeparatorMenuItem());
+
+        MenuItem addAccount = new MenuItem(
+                lm.get("bottom_bar.add_account") != null ? lm.get("bottom_bar.add_account") : "Añadir cuenta");
+        addAccount.setOnAction(e -> {
+            isEditing = true;
+            userNameField.setText("");
+            editContainer.setVisible(true);
+            userName.setVisible(false);
+            userNameField.requestFocus();
+        });
+        contextMenu.getItems().add(addAccount);
+
+        MenuItem addMicrosoftAccount = new MenuItem(
+                lm.get("bottom_bar.add_microsoft_account") != null ? lm.get("bottom_bar.add_microsoft_account")
+                        : "Añadir cuenta Microsoft");
+        addMicrosoftAccount.setOnAction(e -> {
+            MicrosoftLoginDialog loginDialog = new MicrosoftLoginDialog(getScene().getWindow());
+            loginDialog.show();
+        });
+        contextMenu.getItems().add(addMicrosoftAccount);
+
+        if (amp.getAccountCount() > 1) {
+            MenuItem removeAccount = new MenuItem(
+                    lm.get("bottom_bar.remove_account") != null ? lm.get("bottom_bar.remove_account")
+                            : "Eliminar cuenta actual");
+            removeAccount.getStyleClass().add("remove-account-item");
+            removeAccount.setOnAction(e -> {
+                if (selectedAccount != null) {
+                    amp.removeAccount(selectedAccount);
+                    Account newSelected = amp.getSelectedAccount();
+                    if (newSelected != null) {
+                        userName.setText(newSelected.getUsername());
+                        updateAvatar(newSelected.getUsername());
+                    }
+                }
+            });
+            contextMenu.getItems().add(removeAccount);
+        }
+
+        contextMenu.show(userName, screenX, screenY);
+    }
+
+    /**
+     * Agrega una nueva cuenta offline usando el AccountManager.
+     * Cada nueva cuenta obtiene un UUID único y persistente.
+     */
+    private void addNewAccount() {
         if (!isEditing)
             return;
-        String newUsername = userNameField.getText();
-        if (newUsername != null && !newUsername.trim().isEmpty()) {
-            sm.setUsername(newUsername);
-            userName.setText(newUsername);
-            updateAvatar(newUsername);
+        String newUsername = userNameField.getText().trim();
+        if (newUsername.matches("[a-zA-Z0-9_]{3,16}")) {
+            Account newAccount = amp.addOfflineAccount(newUsername);
+            if (newAccount != null) {
+                amp.selectAccount(newAccount);
+                userName.setText(newUsername);
+                updateAvatar(newUsername);
+            }
+            editContainer.setVisible(false);
+            userName.setVisible(true);
+            isEditing = false;
         }
-        editContainer.setVisible(false);
-        userName.setVisible(true);
-        isEditing = false;
+        // If length or characters are not valid, we keep the editing state so the user
+        // can correct it
     }
 
     private void cancelEdit() {
@@ -213,7 +391,7 @@ public class BottomBar extends HBox {
      * Updates UI labels with current translations from LanguageManager.
      */
     public void refreshTranslations() {
-        if (statusLabel != null) {
+        if (statusLabel != null && !progressBar.isVisible()) {
             statusLabel.setText(lm.get("bottom_bar.ready"));
         }
     }

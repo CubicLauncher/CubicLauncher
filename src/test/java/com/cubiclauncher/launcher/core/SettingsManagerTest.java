@@ -64,16 +64,6 @@ class SettingsManagerTest {
         assertFalse(settings.isCloseLauncherOnGameStart());
     }
 
-    @Test
-    @DisplayName("Should set and get native styles")
-    void testNativeStyles() {
-        settings.setNativeStyles(false);
-        assertFalse(settings.isNative_styles());
-
-        settings.setNativeStyles(true);
-        assertTrue(settings.isNative_styles());
-    }
-
     // ==================== Minecraft Settings ====================
 
     @Test
