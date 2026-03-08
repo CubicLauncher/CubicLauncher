@@ -1,5 +1,7 @@
 {
     "bottom_bar.ready": "Ready",
+    "bottom_bar.downloading": "Downloading %s...",
+    "bottom_bar.download_completed": "Download of %s completed",
     "bottom_bar.editing_username": "Editing username...",
     "bottom_bar.add_account": "Add account",
     "bottom_bar.add_microsoft_account": "Add Microsoft account (Premium)",

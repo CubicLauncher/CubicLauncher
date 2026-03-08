@@ -346,6 +346,12 @@
   -fx-font-size: 12px;
   -fx-font-weight: 500;
 }
+.status-error {
+  -fx-text-fill: #d08080;
+}
+.status-success {
+  -fx-text-fill: #90c090;
+}
 
 /* Botón principal - Discreto pero funcional */
 .play-button {

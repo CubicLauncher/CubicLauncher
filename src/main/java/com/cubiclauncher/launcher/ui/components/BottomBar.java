@@ -24,6 +24,7 @@ import com.cubiclauncher.launcher.core.LanguageManager;
 import com.cubiclauncher.launcher.core.events.EventBus;
 import com.cubiclauncher.launcher.core.events.EventType;
 import com.cubiclauncher.launcher.ui.views.auth.MicrosoftLoginDialog;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -182,6 +183,75 @@ public class BottomBar extends HBox {
                 updateAvatar(newUsername);
             });
         });
+
+        // --- Suscripción a eventos de descarga ---
+        EventBus.get().subscribe(EventType.DOWNLOAD_PROGRESS, e -> {
+            Integer current = e.getInt("current");
+            Integer total = e.getInt("total");
+            String version = e.getString("version");
+
+            Platform.runLater(() -> {
+                if (!progressBar.isVisible()) {
+                    progressBar.setVisible(true);
+                    progressLabel.setVisible(true);
+                    progressText.setVisible(true);
+                    statusLabel.setVisible(false);
+                }
+
+                double progress = (total != null && total > 0) ? (double) current / total : 0;
+                progressBar.setProgress(progress);
+                progressLabel.setText(String.format("%.0f%%", progress * 100));
+
+                String downloadingTranslation = lm.get("bottom_bar.downloading");
+                if (downloadingTranslation != null && downloadingTranslation.contains("%s")) {
+                    progressText.setText(String.format(downloadingTranslation, version));
+                } else {
+                    progressText.setText(
+                            (downloadingTranslation != null ? downloadingTranslation : "Descargando") + " " + version);
+                }
+            });
+        });
+
+        EventBus.get().subscribe(EventType.DOWNLOAD_COMPLETED, e -> {
+            String version = e.getString("version");
+            String errorMessage = e.getString("message"); // Viene de EventData.error() si hubo fallo
+
+            Platform.runLater(() -> {
+                if (errorMessage != null) {
+                    statusLabel.setText(errorMessage);
+                    statusLabel.getStyleClass().add("status-error");
+                } else {
+                    String completedTranslation = lm.get("bottom_bar.download_completed");
+                    if (completedTranslation != null && completedTranslation.contains("%s")) {
+                        statusLabel.setText(String.format(completedTranslation, version));
+                    } else {
+                        statusLabel.setText((completedTranslation != null ? completedTranslation : "Descarga completa")
+                                + " " + version);
+                    }
+                    statusLabel.getStyleClass().add("status-success");
+                }
+
+                progressBar.setVisible(false);
+                progressLabel.setVisible(false);
+                progressText.setVisible(false);
+                statusLabel.setVisible(true);
+
+                // Volver al estado normal después de 5 segundos
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(5000);
+                        Platform.runLater(() -> {
+                            if (!progressBar.isVisible()) {
+                                statusLabel.setText(lm.get("bottom_bar.ready"));
+                                statusLabel.getStyleClass().remove("status-error");
+                                statusLabel.getStyleClass().remove("status-success");
+                            }
+                        });
+                    } catch (InterruptedException ignored) {
+                    }
+                }).start();
+            });
+        });
     }
 
     /**
@@ -321,7 +391,7 @@ public class BottomBar extends HBox {
      * Updates UI labels with current translations from LanguageManager.
      */
     public void refreshTranslations() {
-        if (statusLabel != null) {
+        if (statusLabel != null && !progressBar.isVisible()) {
             statusLabel.setText(lm.get("bottom_bar.ready"));
         }
     }
