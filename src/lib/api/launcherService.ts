@@ -1,6 +1,6 @@
-import { launcherStore } from "./state.svelte";
+import { launcherStore } from "../state/state.svelte";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { InstanceDto, InstancesPollingPayload } from "./types";
+import type { InstanceDto, InstancesPollingPayload } from "../types/types";
 import {
   killInstance,
   fetchRunning,

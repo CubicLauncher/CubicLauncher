@@ -1,8 +1,8 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
-    import { type InstanceDto } from "./types";
-    import { launcherStore } from "./state.svelte";
-    import { killInst } from "./launcherService";
+    import type { InstanceDto } from "../types/types";
+    import { launcherStore } from "../state/state.svelte";
+    import { killInst } from "../api/launcherService";
     interface Asset {
         label: string;
         progress: number; // 0–100

@@ -1,4 +1,4 @@
-import type { InstanceDto } from "./types";
+import type { InstanceDto } from "../types/types";
 
 export interface LauncherState {
   loadedInstances: InstanceDto[];

@@ -1,4 +1,4 @@
-import { type InstanceDto } from "./types";
+import { type InstanceDto } from "../types/types";
 import { invoke } from "@tauri-apps/api/core";
 
 export async function fetchRunning(
