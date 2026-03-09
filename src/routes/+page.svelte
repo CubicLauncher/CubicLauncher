@@ -1,19 +1,23 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
-    import { createInstance } from "$lib/api/cubicApi";
     import { onMount } from "svelte";
-    import Drawer from "$lib/components/Drawer.svelte";
-    import QuickMenu from "$lib/components/QuickMenu.svelte";
     import "../styles/App.css";
     import { launcherStore } from "$lib/state/state.svelte";
     import { initPolling } from "$lib/api/launcherService";
-    let version = $state("");
-    let open = $state(false);
-    let instanceName = $state("");
+    import type { InstanceDto } from "$lib/types/types";
+    import Sidebar from "$lib/components/Sidebar.svelte";
+    import InstanceView from "$lib/components/InstanceView.svelte";
+
+    let selectedInstance = $state<InstanceDto | null>(null);
 
     onMount(() => {
         invoke("start_polling");
         const unlistenPromise = initPolling();
+
+        // Auto-select first instance if available
+        if (launcherStore.loadedInstances.length > 0 && !selectedInstance) {
+            selectedInstance = launcherStore.loadedInstances[0];
+        }
 
         return () => {
             unlistenPromise.then((unlisten) => unlisten());
@@ -21,33 +25,27 @@
     });
 </script>
 
-{#each launcherStore.loadedInstances as instance}
-    <div>
-        <h3>{instance.name}</h3>
-        <p>{instance.version} — {instance.loader}</p>
-        <button
-            onclick={() =>
-                invoke("launch", {
-                    instanceName: instance.name,
-                })}
-        >
-            Jugar
-        </button>
-    </div>
-{/each}
-<div>
-    <label>
-        version
-        <input type="text" bind:value={version} />
-    </label>
-    <label>
-        nombre
-        <input type="text" bind:value={instanceName} />
-    </label>
-    <button onclick={() => createInstance(instanceName, version)}>crear</button>
-</div>
-<button onclick={() => (open = true)}>Open Drawer</button>
+<div class="app-container">
+    <Sidebar bind:selectedInstance />
 
-<Drawer bind:open direction="right" onclose={() => (open = false)}>
-    <QuickMenu onclose={() => (open = false)} />
-</Drawer>
+    <main class="main-content">
+        <div
+            class="background-overlay"
+            style="background-image: url('/images/bg.png');"
+        ></div>
+
+        {#if selectedInstance}
+            <InstanceView {selectedInstance} />
+        {:else}
+            <div class="empty-state">
+                <img
+                    src="/images/cubic.svg"
+                    alt="Cubic"
+                    style="width: 120px; opacity: 0.1; filter: grayscale(1);"
+                />
+                <h2>No se ha seleccionado ninguna instancia</h2>
+                <p>Elige una instancia de la barra lateral para comenzar</p>
+            </div>
+        {/if}
+    </main>
+</div>
