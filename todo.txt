@@ -1,0 +1,4 @@
+Remover cosas innecesarias en el backend (Mutex, Locks, etc...)
+Hacer settings
+Quitar consola
+poner banner
