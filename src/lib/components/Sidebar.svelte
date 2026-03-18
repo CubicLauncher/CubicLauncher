@@ -2,9 +2,8 @@
     import { launcherStore } from "$lib/state/state.svelte";
     import type { InstanceDto } from "$lib/types/types";
 
-    let { selectedInstance = $bindable(), onOpenQuickMenu } = $props<{
+    let { selectedInstance = $bindable() } = $props<{
         selectedInstance: InstanceDto | null;
-        onOpenQuickMenu?: () => void;
     }>();
 </script>
 
@@ -41,9 +40,6 @@
     </div>
 
     <div class="sidebar-footer">
-        <button class="footer-btn" onclick={onOpenQuickMenu}>
-            ⚡ Quick Menu
-        </button>
         <button class="footer-btn">Descargar Versiones</button>
         <button class="footer-btn">Ajustes</button>
 

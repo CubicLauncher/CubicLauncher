@@ -26,7 +26,16 @@
             unlistenPromise.then((unlisten) => unlisten());
         };
     });
+    function handleKeyup(e: KeyboardEvent) {
+        const isLeft = e.location === 1;
+        if (!isLeft) return;
+
+        if (e.key === "Alt") quickMenuOpen = !quickMenuOpen;
+        if (e.key === "Shift") quickMenuOpen = !quickMenuOpen;
+    }
 </script>
+
+<svelte:window on:keyup={handleKeyup} />
 
 <div class="app-container">
     <Sidebar
