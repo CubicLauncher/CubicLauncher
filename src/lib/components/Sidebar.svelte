@@ -2,8 +2,9 @@
     import { launcherStore } from "$lib/state/state.svelte";
     import type { InstanceDto } from "$lib/types/types";
 
-    let { selectedInstance = $bindable() } = $props<{
+    let { selectedInstance = $bindable(), onOpenQuickMenu } = $props<{
         selectedInstance: InstanceDto | null;
+        onOpenQuickMenu?: () => void;
     }>();
 </script>
 
@@ -31,17 +32,20 @@
             {#if launcherStore.loadedInstances.length === 0}
                 <div
                     class="instance-item"
-                    style="opacity: 0.5; cursor: default;"
+                    style="opacity: 0.4; cursor: default;"
                 >
-                    <span class="instance-name">No hay instancias</span>
+                    <span class="instance-name">Sin instancias</span>
                 </div>
             {/if}
         </div>
     </div>
 
     <div class="sidebar-footer">
-        <button class="footer-btn"> Descargar Versiones </button>
-        <button class="footer-btn"> Ajustes </button>
+        <button class="footer-btn" onclick={onOpenQuickMenu}>
+            ⚡ Quick Menu
+        </button>
+        <button class="footer-btn">Descargar Versiones</button>
+        <button class="footer-btn">Ajustes</button>
 
         <div class="user-profile">
             <img src="" alt="Avatar" class="user-avatar" />
