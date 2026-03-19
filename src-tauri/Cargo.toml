@@ -26,3 +26,5 @@ proton = { git = "https://github.com/CubicLauncher/Proton.git" }
 claunch-rs = { git = "https://github.com/CubicLauncher/claunch-rs.git", branch ="debugging" }
 directories = "6.0.0"
 tokio = {version = "1.49.0", features = ["sync", "rt-multi-thread", "macros"] }
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"

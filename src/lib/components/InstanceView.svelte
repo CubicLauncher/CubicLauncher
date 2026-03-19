@@ -11,6 +11,13 @@
             instanceName: selectedInstance.name,
         });
     }
+    const formatter = new Intl.DateTimeFormat("es-ES", {
+        year: "numeric",
+        month: "long",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
 </script>
 
 <div class="instance-view">
@@ -20,7 +27,11 @@
         </div>
         <div class="instance-title-area">
             <h2>{selectedInstance.name}</h2>
-            <div class="last-played">Última vez jugado: Nunca</div>
+            <div class="last-played">
+                Última vez jugado: {formatter.format(
+                    new Date(selectedInstance.last_played * 1000),
+                )}
+            </div>
             <button class="play-btn" onclick={handleLaunch}>Jugar</button>
         </div>
     </section>

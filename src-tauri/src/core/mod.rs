@@ -1,4 +1,5 @@
 mod instance_manager;
+mod launcher;
 mod library_wrapper;
 mod path_manager;
 mod settings_manager;

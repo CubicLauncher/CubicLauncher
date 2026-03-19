@@ -44,9 +44,13 @@
         <button class="footer-btn">Ajustes</button>
 
         <div class="user-profile">
-            <img src="" alt="Avatar" class="user-avatar" />
+            <img
+                src="https://media.0221.com.ar/adjuntos/357/migration/0221/032019/1553553111207.jpg"
+                alt="Avatar"
+                class="user-avatar"
+            />
             <div class="user-info">
-                <span class="user-name">modog</span>
+                <span class="user-name">Santiagolxx</span>
                 <span class="user-status">Online</span>
             </div>
         </div>
