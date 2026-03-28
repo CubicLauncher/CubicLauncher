@@ -1,21 +1,6 @@
 import { type InstanceDto } from "../types/types";
 import { invoke } from "@tauri-apps/api/core";
 
-export async function fetchRunning(
-  callback?: () => void,
-  onError?: (err: unknown) => void,
-): Promise<InstanceDto[]> {
-  try {
-    const dtos = await invoke<InstanceDto[]>("get_running");
-    callback?.();
-    return dtos;
-  } catch (err) {
-    console.error("Error en fetchRunning:", err);
-    onError?.(err);
-    return [];
-  }
-}
-
 export async function killInstance(
   name: string,
   callback?: () => void,
@@ -51,7 +36,7 @@ export async function launchInstance(
   onError?: (err: unknown) => void,
 ): Promise<void> {
   try {
-    await invoke("launch", { instanceName: instance.name });
+    await invoke("launch", { instanceId: instance.uuid });
     callback?.();
   } catch (err) {
     console.error(`Error al lanzar instancia ${instance.name}:`, err);

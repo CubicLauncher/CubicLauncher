@@ -7,7 +7,6 @@ use std::sync::Arc;
 use std::sync::OnceLock;
 use std::{fs, io};
 use tokio::fs as tokio_fs;
-use tokio::runtime::Handle;
 use tokio::sync::RwLock;
 use tokio::time::{self, Duration};
 use tracing::{error, info};
@@ -23,6 +22,7 @@ struct InstanceData {
     min_memory: Option<u32>, // None: usar SettingsManager
     max_memory: Option<u32>,
     cover_image: Option<PathBuf>,
+    uuid: String, // uuidv4
 }
 
 pub struct Instance {
@@ -41,6 +41,7 @@ impl Instance {
                 min_memory: None,
                 max_memory: None,
                 cover_image: None,
+                uuid: uuid::Uuid::new_v4().to_string(),
             },
             process: None,
             dirty: true,
@@ -85,7 +86,9 @@ impl Instance {
             .max_memory
             .unwrap_or_else(|| SettingsManager::get().lock().unwrap().get_max_memory())
     }
-
+    pub fn get_id(&self) -> &str {
+        &self.data.uuid
+    }
     pub fn get_min_memory(&self) -> u32 {
         self.data
             .min_memory
@@ -207,6 +210,7 @@ impl Instance {
             last_played: self.data.last_played,
             is_running: self.get_is_running(),
             cover_image: self.data.cover_image.clone(),
+            uuid: self.data.uuid.clone(),
         }
     }
 }
@@ -229,7 +233,10 @@ impl InstanceManager {
                 if entry.path().is_dir() {
                     let name = entry.file_name().to_string_lossy().to_string();
                     if let Some(instance) = Instance::load_from_disk(&name).await {
-                        guard.insert(name.clone(), Arc::new(RwLock::new(instance)));
+                        guard.insert(
+                            instance.get_id().to_string(),
+                            Arc::new(RwLock::new(instance)),
+                        );
                     }
                 }
             }
@@ -250,6 +257,7 @@ impl InstanceManager {
         let mut interval = time::interval(Duration::from_secs(SYNC_INTERVAL_SECS));
         loop {
             interval.tick().await;
+            info!("Ejecutando tarea de sincronizacion");
             let manager = match Self::get_opt() {
                 Some(m) => m.clone(),
                 None => continue,
@@ -278,6 +286,11 @@ impl InstanceManager {
         }
 
         let instance = Arc::new(RwLock::new(Instance::new(name.clone(), version)));
+
+        let uuid = {
+            let inst = instance.read().await;
+            inst.get_id().to_string()
+        };
         {
             let mut inst = instance.write().await;
             if let Err(e) = inst.save_to_disk().await {
@@ -286,12 +299,12 @@ impl InstanceManager {
         }
 
         let mut guard = self.instances.write().await;
-        guard.insert(name, instance);
+        guard.insert(uuid, instance);
     }
 
-    pub async fn get_instance(&self, name: &str) -> Option<Arc<RwLock<Instance>>> {
+    pub async fn get_instance(&self, uuid: &str) -> Option<Arc<RwLock<Instance>>> {
         let guard = self.instances.read().await;
-        guard.get(name).cloned()
+        guard.get(uuid).cloned()
     }
 
     pub async fn get_all_instances(&self) -> Vec<Arc<RwLock<Instance>>> {
@@ -299,9 +312,9 @@ impl InstanceManager {
         guard.values().cloned().collect()
     }
 
-    pub async fn exists(&self, name: &str) -> bool {
+    pub async fn exists(&self, uuid: &str) -> bool {
         let guard = self.instances.read().await;
-        guard.contains_key(name)
+        guard.contains_key(uuid)
     }
 
     pub async fn count(&self) -> usize {
@@ -325,13 +338,13 @@ impl InstanceManager {
         dtos
     }
 
-    pub async fn get_running_dtos(&self) -> Vec<InstanceDto> {
+    pub async fn get_running_dtos(&self) -> Vec<String> {
         let instances = self.get_all_instances().await;
         let mut dtos = Vec::new();
         for inst_arc in instances {
             let inst = inst_arc.read().await;
             if inst.get_is_running() {
-                dtos.push(inst.to_dto());
+                dtos.push(inst.to_dto().uuid);
             }
         }
         dtos
@@ -350,17 +363,19 @@ pub struct InstanceDto {
     last_played: u64,
     is_running: bool,
     cover_image: Option<PathBuf>,
+    uuid: String,
 }
 
 #[derive(Serialize, Clone)]
 pub struct InstancesPollingPayload {
-    running: Vec<InstanceDto>,
+    running: Vec<String>, // vec de uuidv4
     all: Vec<InstanceDto>,
     count: usize,
 }
 
 impl InstancesPollingPayload {
-    pub fn new(running: Vec<InstanceDto>, all: Vec<InstanceDto>, count: usize) -> Self {
+    /// El vector de Running guardaria los UUIDv4 de las instances
+    pub fn new(running: Vec<String>, all: Vec<InstanceDto>, count: usize) -> Self {
         Self {
             running,
             all,

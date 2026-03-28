@@ -8,7 +8,6 @@ use std::sync::Arc;
 use std::sync::LazyLock;
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
-use tokio::sync::RwLockWriteGuard;
 use tracing::error;
 use tracing::info;
 use tracing::trace;
@@ -20,7 +19,6 @@ static LAUNCHER: LazyLock<Mutex<LauncherWrapper>> =
 pub struct LauncherWrapper {
     queue: VecDeque<String>,
     is_downloading: bool,
-    running_instances: Vec<Arc<Mutex<Instance>>>,
 }
 
 impl LauncherWrapper {
@@ -31,13 +29,14 @@ impl LauncherWrapper {
     fn new() -> LauncherWrapper {
         LauncherWrapper {
             queue: VecDeque::new(),
-            running_instances: Vec::new(),
             is_downloading: false,
         }
     }
 
     pub async fn queue_download(&mut self, version: String) {
+        trace!("Agregando {} a la cola de descargas", &version);
         if self.queue.contains(&version) {
+            warn!("La version {} ya se encuentra en la cola", &version);
             return;
         }
         self.queue.push_back(version);
@@ -50,7 +49,7 @@ impl LauncherWrapper {
         while let Some(version) = self.queue.pop_front() {
             self.is_downloading = true;
 
-            let version_data = match resolve_version_data(version).await {
+            let version_data = match resolve_version_data(&version).await {
                 Ok(v) => v,
                 Err(_) => {
                     error!("La version solicitada no existe");
@@ -65,7 +64,7 @@ impl LauncherWrapper {
             );
 
             match downloader.download_all(None).await {
-                Ok(_) => info!("Version descargada correctamente"),
+                Ok(_) => info!("Version {} descargada correctamente", &version),
                 Err(e) => error!("No se pudo descargar: {:?}", e),
             }
         }

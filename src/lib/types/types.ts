@@ -5,9 +5,10 @@ export interface InstanceDto {
   last_played: number;
   is_running: boolean;
   cover_image: string | null;
+  uuid: string;
 }
 export interface InstancesPollingPayload {
-  running: InstanceDto[];
+  running: string[];
   all: InstanceDto[];
   count: number;
 }

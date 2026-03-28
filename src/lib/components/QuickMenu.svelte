@@ -126,20 +126,25 @@
         <section class="qm-section">
             <span class="qm-section-label">Running</span>
             {#if launcherStore.runningInstances.length > 0}
-                {#each launcherStore.runningInstances as inst}
-                    <div class="qm-active-card">
-                        <div class="qm-status-dot running"></div>
-                        <div class="qm-active-info">
-                            <span class="qm-active-name">{inst.name}</span>
-                            <span class="qm-active-sub"
-                                >{inst.version} - {inst.loader}</span
+                {#each launcherStore.runningInstances as uuid}
+                    {@const inst = launcherStore.loadedInstances.find(
+                        (i) => i.uuid === uuid,
+                    )}
+                    {#if inst}
+                        <div class="qm-active-card">
+                            <div class="qm-status-dot running"></div>
+                            <div class="qm-active-info">
+                                <span class="qm-active-name">{inst.name}</span>
+                                <span class="qm-active-sub"
+                                    >{inst.version} - {inst.loader}</span
+                                >
+                            </div>
+                            <button
+                                class="qm-kill-btn"
+                                onclick={() => killInst(inst.uuid)}>Kill</button
                             >
                         </div>
-                        <button
-                            class="qm-kill-btn"
-                            onclick={() => killInst(inst.name)}>Kill</button
-                        >
-                    </div>
+                    {/if}
                 {/each}
             {:else}
                 <span class="qm-section-label" style="color: #333"

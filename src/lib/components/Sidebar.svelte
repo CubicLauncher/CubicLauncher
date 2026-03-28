@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { createInstance, fetchAll } from "$lib/api/cubicApi";
     import { launcherStore } from "$lib/state/state.svelte";
     import type { InstanceDto } from "$lib/types/types";
 
@@ -41,6 +42,14 @@
 
     <div class="sidebar-footer">
         <button class="footer-btn">Descargar Versiones</button>
+        <button
+            class="footer-btn"
+            onclick={() => {
+                // createInstance("hola", "1.16.5");
+                let x = fetchAll();
+                console.log(x);
+            }}>asd</button
+        >
         <button class="footer-btn">Ajustes</button>
 
         <div class="user-profile">

@@ -1,9 +1,9 @@
 use crate::core::{InstanceDto, InstanceManager, LauncherWrapper};
 use tracing::error;
 #[tauri::command]
-pub async fn launch(instance_name: String) {
+pub async fn launch(instance_id: String) {
     let manager = InstanceManager::get();
-    let Some(arc) = manager.get_instance(&instance_name).await else {
+    let Some(arc) = manager.get_instance(&instance_id).await else {
         error!("Instancia no encontrada");
         return;
     };
@@ -29,5 +29,5 @@ pub async fn get_instances() -> Vec<InstanceDto> {
 }
 #[tauri::command]
 pub async fn create_instance(name: String, version: String) {
-    InstanceManager::get().create_instance(name, version);
+    InstanceManager::get().create_instance(name, version).await;
 }

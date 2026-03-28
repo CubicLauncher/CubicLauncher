@@ -3,7 +3,7 @@ import type { InstanceDto } from "../types/types";
 export interface LauncherState {
   loadedInstances: InstanceDto[];
   currentInstance: InstanceDto | null;
-  runningInstances: InstanceDto[];
+  runningInstances: string[];
 }
 
 export const launcherStore = $state<LauncherState>({

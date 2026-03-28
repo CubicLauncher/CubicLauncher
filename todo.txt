@@ -7,8 +7,8 @@ Sobre el backend:
 hacer refactor dentro
 
 Cosas a hacer:
-Que las instances se manejen con un actor que sincroniza el estado en la memoria ram con el fs
-Instances mejor estructuradas
+x - Que las instances se manejen con un actor que sincroniza el estado en la memoria ram con el fs
+x - Instances mejor estructuradas
 
 pub struct InstanceData {
     name: String,
@@ -27,4 +27,6 @@ pub struct Instance {
 
 remover doble locks Lazy y mutex
 remover arcs
-sincronizacion cada 30 segundos
+x - sincronizacion cada 30 segundos
+
+POSIBLE YIELD EN COMANDOS

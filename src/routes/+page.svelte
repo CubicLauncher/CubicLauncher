@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import "../styles/App.css";
     import { launcherStore } from "$lib/state/state.svelte";
-    import { initPolling } from "$lib/api/launcherService";
+    import { getVersions, initPolling } from "$lib/api/launcherService";
     import type { InstanceDto } from "$lib/types/types";
     import Sidebar from "$lib/components/Sidebar.svelte";
     import InstanceView from "$lib/components/InstanceView.svelte";
@@ -14,8 +14,9 @@
     let quickMenuOpen = $state(false);
 
     onMount(() => {
-        invoke("start_polling");
+        getVersions();
         const unlistenPromise = initPolling();
+        invoke("start_polling");
 
         // Auto-select first instance if available
         if (launcherStore.loadedInstances.length > 0 && !selectedInstance) {
