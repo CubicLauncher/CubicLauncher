@@ -17,7 +17,10 @@
         </div>
         <div class="detail-item">
             <div class="detail-label">Ubicación</div>
-            <div class="detail-value" style="font-size: 0.72rem; opacity: 0.8; word-break: break-all;">
+            <div
+                class="detail-value"
+                style="font-size: 0.72rem; opacity: 0.8; word-break: break-all;"
+            >
                 ~/.cubic/instances/{instance.name}
             </div>
         </div>
