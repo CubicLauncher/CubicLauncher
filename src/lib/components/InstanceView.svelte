@@ -2,8 +2,10 @@
     import { invoke } from "@tauri-apps/api/core";
     import type { InstanceDto } from "$lib/types/types";
     import InstanceDetails from "./InstanceDetails.svelte";
-    import Console from "./Console.svelte";
     import { launchInstance } from "$lib/api/cubicApi";
+    import ModsRow from "./ModsRow.svelte";
+    import ScreenshotsPanel from "./ScreenshotsPanel.svelte";
+    import QuickOptionsPanel from "./QuickOptionsPanel.svelte";
 
     let { selectedInstance } = $props<{ selectedInstance: InstanceDto }>();
 
@@ -44,6 +46,14 @@
 
     <div class="data-section">
         <InstanceDetails instance={selectedInstance} />
-        <Console />
+        
+        <div class="instance-dashboard">
+            <ModsRow />
+            
+            <div class="bottom-row">
+                <ScreenshotsPanel />
+                <QuickOptionsPanel />
+            </div>
+        </div>
     </div>
 </div>
