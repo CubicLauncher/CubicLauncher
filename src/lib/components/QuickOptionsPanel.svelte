@@ -4,22 +4,22 @@
     const options = [
         {
             label: "Abrir Carpeta",
-            icon: "📂",
+            icon: " ",
             action: () => console.log("Open folder"),
         },
         {
             label: "Recursos",
-            icon: "🎨",
+            icon: " ",
             action: () => console.log("Resource packs"),
         },
         {
             label: "Configurar",
-            icon: "🛠️",
+            icon: " ",
             action: () => console.log("Configure"),
         },
         {
             label: "Capturas",
-            icon: "🖼️",
+            icon: " ",
             action: () => console.log("Screenshots"),
         },
     ];

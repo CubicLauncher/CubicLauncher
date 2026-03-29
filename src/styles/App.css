@@ -8,7 +8,7 @@
    5. COMPONENTS: SIDEBAR
    6. COMPONENTS: MAIN VIEW & HERO
    7. COMPONENTS: DASHBOARD & PANELS
-   8. COMPONENTS: CONSOLE
+   8. COMPONENTS: MODS
    9. COMPONENTS: QUICK MENU
    10. COMPONENTS: OVERLAYS (DRAWER & MODAL)
    11. SHARED UI ELEMENTS
@@ -299,6 +299,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
 .hero-section {
@@ -403,31 +404,102 @@ body {
 
 /* ─── 7. COMPONENTS: DASHBOARD & PANELS ──────────────────── */
 
-.data-section {
+.tabs-nav {
+    display: flex;
+    gap: 12px;
+    padding: 0 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.01);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.tab-item {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 16px 4px;
+    margin-right: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.7;
+}
+
+.tab-item:hover {
+    color: var(--text-primary);
+    opacity: 1;
+}
+
+.tab-item.active {
+    color: var(--accent);
+    opacity: 1;
+}
+
+.tab-item::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 2px 2px 0 0;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.tab-item.active::after {
+    transform: scaleX(1);
+}
+
+.tab-content {
     flex: 1;
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    min-height: 0;
+    padding: 32px 40px;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+.tab-pane {
+    animation: slideUpFade 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    height: 100%;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .details-panel {
-    border-right: 1px solid var(--border);
-    padding: 24px 28px;
+    padding: 0;
     overflow-y: auto;
 }
 
 .instance-dashboard {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 24px 28px;
+    padding: 0;
+    display: block;
     overflow-y: auto;
     min-width: 0;
 }
 
 .bottom-row {
-    display: flex;
-    gap: 24px;
+    display: block;
     flex: 1;
     min-height: 250px;
 }
@@ -479,50 +551,63 @@ body {
     color: var(--text-primary);
 }
 
-/* ─── 8. COMPONENTS: CONSOLE ─────────────────────────────── */
+/* ─── 8. COMPONENTS: MODS ─────────────────────────────── */
 
-.console-header {
+.mods-section {
+    margin-bottom: 24px;
+
+}
+
+.mods-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.mod-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
-}
-
-.console-actions {
-    display: flex;
-    gap: 6px;
-}
-
-.console-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.72rem;
-    font-weight: 500;
+    transition: background 0.2s ease, transform 0.1s ease;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-    font-family: "Cantarell", system-ui, sans-serif;
 }
 
-.console-btn:hover {
-    background: var(--bg-item-active);
+.mod-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+}
+
+.mod-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mod-name {
+    font-size: 0.85rem;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
-.console-area {
-    flex: 1;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 6px;
-    padding: 16px 18px;
-    font-family: monospace;
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.35);
-    overflow-y: auto;
-    border: 1px solid var(--border);
-    line-height: 1.7;
+.mod-category {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
+
+.mod-status-dot {
+    width: 6px;
+    height: 6px;
+    background: #4caf50;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+}
+
 
 /* ─── 9. COMPONENTS: QUICK MENU ──────────────────────────── */
 
@@ -1120,23 +1205,13 @@ body {
         --sidebar-width: 240px;
     }
 
-    .data-section {
-        grid-template-columns: 280px 1fr;
-    }
-
     .hero-section {
         padding: 40px;
     }
 }
 
 @media (max-width: 850px) {
-    .data-section {
-        grid-template-columns: 1fr;
-    }
-
     .details-panel {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
         max-height: 300px;
     }
 }

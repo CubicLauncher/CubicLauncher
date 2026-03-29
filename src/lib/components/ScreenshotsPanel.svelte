@@ -9,7 +9,7 @@
     <div class="screenshots-grid">
         <div class="screenshot-card empty">
             <div class="empty-screenshot-content">
-                <span class="empty-icon">🖼️</span>
+                <span class="empty-icon"></span>
                 <span class="empty-text">No hay capturas aún</span>
             </div>
         </div>

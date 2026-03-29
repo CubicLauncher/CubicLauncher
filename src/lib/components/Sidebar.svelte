@@ -3,7 +3,11 @@
     import { launcherStore } from "$lib/state/state.svelte";
     import type { InstanceDto } from "$lib/types/types";
 
-    let { selectedInstance = $bindable(), openCreateModal = $bindable(), onOpenQuickMenu } = $props<{
+    let {
+        selectedInstance = $bindable(),
+        openCreateModal = $bindable(),
+        onOpenQuickMenu,
+    } = $props<{
         selectedInstance: InstanceDto | null;
         openCreateModal: boolean;
         onOpenQuickMenu?: () => void;
@@ -47,14 +51,6 @@
             <span style="margin-right: 8px;">+</span> Crear Instancia
         </button>
         <button class="footer-btn">Descargar Versiones</button>
-        <button
-            class="footer-btn"
-            onclick={() => {
-                // createInstance("hola", "1.16.5");
-                let x = fetchAll();
-                console.log(x);
-            }}>asd</button
-        >
         <button class="footer-btn">Ajustes</button>
 
         <div
@@ -67,12 +63,12 @@
             style="cursor: pointer;"
         >
             <img
-                src="https://media.0221.com.ar/adjuntos/357/migration/0221/032019/1553553111207.jpg"
+                src="https://minotar.net/avatar/{launcherStore.userName}"
                 alt="Avatar"
                 class="user-avatar"
             />
             <div class="user-info">
-                <span class="user-name">Santiagolxx</span>
+                <span class="user-name">{launcherStore.userName}</span>
                 <span class="user-status">Online</span>
             </div>
         </div>
