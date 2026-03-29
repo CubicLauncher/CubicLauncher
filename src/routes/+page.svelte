@@ -9,9 +9,11 @@
     import InstanceView from "$lib/components/InstanceView.svelte";
     import Drawer from "$lib/components/Drawer.svelte";
     import QuickMenu from "$lib/components/QuickMenu.svelte";
+    import CreateInstanceModal from "$lib/components/CreateInstanceModal.svelte";
 
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
+    let openCreateModal = $state(false);
 
     onMount(() => {
         getVersions();
@@ -41,6 +43,7 @@
 <div class="app-container">
     <Sidebar
         bind:selectedInstance
+        bind:openCreateModal
         onOpenQuickMenu={() => (quickMenuOpen = true)}
     />
 
@@ -69,3 +72,5 @@
 <Drawer bind:open={quickMenuOpen} direction="right">
     <QuickMenu onclose={() => (quickMenuOpen = false)} />
 </Drawer>
+
+<CreateInstanceModal bind:open={openCreateModal} />

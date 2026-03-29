@@ -3,8 +3,10 @@
     import { launcherStore } from "$lib/state/state.svelte";
     import type { InstanceDto } from "$lib/types/types";
 
-    let { selectedInstance = $bindable() } = $props<{
+    let { selectedInstance = $bindable(), openCreateModal = $bindable(), onOpenQuickMenu } = $props<{
         selectedInstance: InstanceDto | null;
+        openCreateModal: boolean;
+        onOpenQuickMenu?: () => void;
     }>();
 </script>
 
@@ -41,6 +43,9 @@
     </div>
 
     <div class="sidebar-footer">
+        <button class="footer-btn" onclick={() => (openCreateModal = true)}>
+            <span style="margin-right: 8px;">+</span> Crear Instancia
+        </button>
         <button class="footer-btn">Descargar Versiones</button>
         <button
             class="footer-btn"
@@ -52,7 +57,15 @@
         >
         <button class="footer-btn">Ajustes</button>
 
-        <div class="user-profile">
+        <div
+            class="user-profile"
+            onclick={onOpenQuickMenu}
+            role="button"
+            tabindex="0"
+            onkeydown={(e) =>
+                (e.key === "Enter" || e.key === " ") && onOpenQuickMenu?.()}
+            style="cursor: pointer;"
+        >
             <img
                 src="https://media.0221.com.ar/adjuntos/357/migration/0221/032019/1553553111207.jpg"
                 alt="Avatar"

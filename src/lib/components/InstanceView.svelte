@@ -34,7 +34,9 @@
             <div class="last-played">
                 Última vez jugado: {formatDate(selectedInstance.last_played)}
             </div>
-            <button class="play-btn" onclick={launchInstance(selectedInstance)}
+            <button
+                class="play-btn"
+                onclick={() => launchInstance(selectedInstance)}
                 >Jugar</button
             >
         </div>
