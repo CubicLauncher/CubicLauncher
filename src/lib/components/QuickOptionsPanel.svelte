@@ -2,10 +2,26 @@
     import { invoke } from "@tauri-apps/api/core";
 
     const options = [
-        { label: "Abrir Carpeta", icon: "📂", action: () => console.log("Open folder") },
-        { label: "Recursos", icon: "🎨", action: () => console.log("Resource packs") },
-        { label: "Configurar", icon: "🛠️", action: () => console.log("Configure") },
-        { label: "Capturas", icon: "🖼️", action: () => console.log("Screenshots") }
+        {
+            label: "Abrir Carpeta",
+            icon: "📂",
+            action: () => console.log("Open folder"),
+        },
+        {
+            label: "Recursos",
+            icon: "🎨",
+            action: () => console.log("Resource packs"),
+        },
+        {
+            label: "Configurar",
+            icon: "🛠️",
+            action: () => console.log("Configure"),
+        },
+        {
+            label: "Capturas",
+            icon: "🖼️",
+            action: () => console.log("Screenshots"),
+        },
     ];
 </script>
 
@@ -44,7 +60,9 @@
         justify-content: center;
         gap: 8px;
         cursor: pointer;
-        transition: background 0.2s ease, transform 0.1s ease;
+        transition:
+            background 0.2s ease,
+            transform 0.1s ease;
         color: var(--text-primary);
         font-family: inherit;
     }

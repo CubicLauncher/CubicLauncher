@@ -3,7 +3,7 @@
         { name: "OptiFine", category: "Performance" },
         { name: "Sodium", category: "Graphics" },
         { name: "Iris", category: "Shaders" },
-        { name: "Lithium", category: "Optimization" }
+        { name: "Lithium", category: "Optimization" },
     ];
 </script>
 
@@ -39,7 +39,9 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        transition: background 0.2s ease, transform 0.1s ease;
+        transition:
+            background 0.2s ease,
+            transform 0.1s ease;
         cursor: pointer;
     }
     .mod-card:hover {
