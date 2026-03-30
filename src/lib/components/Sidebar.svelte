@@ -51,7 +51,7 @@
             <span style="margin-right: 8px;">+</span> Crear Instancia
         </button>
         <button class="footer-btn">Descargar Versiones</button>
-        <button class="footer-btn">Ajustes</button>
+        <button class="footer-btn" onclick={onOpenQuickMenu}>Ajustes</button>
 
         <div
             class="user-profile"
@@ -63,12 +63,12 @@
             style="cursor: pointer;"
         >
             <img
-                src="https://minotar.net/avatar/{launcherStore.userName}"
+                src="https://minotar.net/avatar/{launcherStore.settings.username}"
                 alt="Avatar"
                 class="user-avatar"
             />
             <div class="user-info">
-                <span class="user-name">{launcherStore.userName}</span>
+                <span class="user-name">{launcherStore.settings.username}</span>
                 <span class="user-status">Online</span>
             </div>
         </div>

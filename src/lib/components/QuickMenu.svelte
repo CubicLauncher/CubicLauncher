@@ -2,26 +2,7 @@
     import { invoke } from "@tauri-apps/api/core";
     import type { InstanceDto } from "../types/types";
     import { launcherStore } from "../state/state.svelte";
-    import { killInst } from "../api/launcherService";
-    interface Asset {
-        label: string;
-        progress: number; // 0–100
-    }
-
-    interface DownloadItem {
-        id: number;
-        name: string;
-        assets: Asset[];
-        status: "downloading" | "queued" | "done" | "error";
-    }
-
-    interface RecentInstance {
-        id: number;
-        icon: string;
-        name: string;
-        version: string;
-        lastPlayed: string;
-    }
+    import { killInst, saveSettings } from "../api/launcherService";
 
     interface Props {
         onclose?: () => void;
@@ -29,102 +10,28 @@
 
     let { onclose }: Props = $props();
 
-    const downloads: DownloadItem[] = [
-        // {
-        //     id: 1,
-        //     name: "Minecraft 1.21.4",
-        //     status: "downloading",
-        //     assets: [
-        //         { label: "client", progress: 100 },
-        //         { label: "assets", progress: 100 },
-        //         { label: "libraries", progress: 0 },
-        //         { label: "natives", progress: 0 },
-        //     ],
-        // },
-        // {
-        //     id: 2,
-        //     name: "Java 21 (Temurin)",
-        //     status: "done",
-        //     assets: [
-        //         { label: "jdk", progress: 100 },
-        //         { label: "extras", progress: 100 },
-        //         { label: "tools", progress: 100 },
-        //         { label: "src", progress: 100 },
-        //     ],
-        // },
-        // {
-        //     id: 3,
-        //     name: "Fabric Loader 0.16",
-        //     status: "queued",
-        //     assets: [
-        //         { label: "loader", progress: 0 },
-        //         { label: "api", progress: 0 },
-        //         { label: "mixin", progress: 0 },
-        //         { label: "asm", progress: 0 },
-        //     ],
-        // },
-        // {
-        //     id: 4,
-        //     name: "Assets Index",
-        //     status: "error",
-        //     assets: [
-        //         { label: "index", progress: 18 },
-        //         { label: "objects", progress: 0 },
-        //         { label: "virtual", progress: 0 },
-        //         { label: "legacy", progress: 0 },
-        //     ],
-        // },
-    ];
+    let saving = $state(false);
 
-    const recents: RecentInstance[] = [
-        // {
-        //     id: 1,
-        //     icon: "⚔️",
-        //     name: "Survival 1.21.4",
-        //     version: "Vanilla · 1.21.4",
-        //     lastPlayed: "2h ago",
-        // },
-        // {
-        //     id: 2,
-        //     icon: "🧪",
-        //     name: "Modded Testing",
-        //     version: "Fabric 0.16 · 1.20.1",
-        //     lastPlayed: "Yesterday",
-        // },
-        // {
-        //     id: 3,
-        //     icon: "🏗️",
-        //     name: "Creative World",
-        //     version: "Vanilla · 1.21.1",
-        //     lastPlayed: "3 days ago",
-        // },
-    ];
-
-    const statusLabel: Record<DownloadItem["status"], string> = {
-        downloading: "Downloading",
-        queued: "Queued",
-        done: "Done",
-        error: "Error",
-    };
-
-    function overallProgress(assets: Asset[]): number {
-        return Math.round(
-            assets.reduce((sum, a) => sum + a.progress, 0) / assets.length,
-        );
+    async function handleSave() {
+        saving = true;
+        await saveSettings();
+        setTimeout(() => {
+            saving = false;
+        }, 1000);
     }
 </script>
 
 <div class="qm-root">
     <!-- Header -->
     <div class="qm-header">
-        <span class="qm-label">Quick Menu</span>
+        <span class="qm-label">Launcher Settings</span>
         <button class="qm-close-btn" onclick={onclose}>✕</button>
     </div>
 
     <div class="qm-scroll">
         <!-- Running instance -->
         <section class="qm-section">
-            <span class="qm-section-label">Running</span>
+            <span class="qm-section-label">Active Instances</span>
             {#if launcherStore.runningInstances.length > 0}
                 {#each launcherStore.runningInstances as uuid}
                     {@const inst = launcherStore.loadedInstances.find(
@@ -147,112 +54,295 @@
                     {/if}
                 {/each}
             {:else}
-                <span class="qm-section-label" style="color: #333"
-                    >No instances running</span
-                >
+                <div class="qm-empty-state">No instances running</div>
             {/if}
         </section>
 
-        <!-- Download queue -->
+        <!-- General Settings -->
         <section class="qm-section">
-            <span class="qm-section-label">Download Queue</span>
-            <div class="qm-dl-list">
-                {#each downloads as dl}
-                    <div class="qm-dl-item">
-                        <!-- Name + overall % + badge -->
-                        <div class="qm-dl-row">
-                            <span class="qm-dl-name">{dl.name}</span>
-                            <div class="qm-dl-row-right">
-                                {#if dl.status === "downloading"}
-                                    <span class="qm-dl-pct"
-                                        >{overallProgress(dl.assets)}%</span
-                                    >
-                                {/if}
-                                <span class="qm-badge qm-badge--{dl.status}"
-                                    >{statusLabel[dl.status]}</span
-                                >
-                            </div>
-                        </div>
-
-                        <!-- Segmented bar: one segment per asset -->
-                        <div class="qm-seg-bar">
-                            {#each dl.assets as asset}
-                                <div
-                                    class="qm-seg"
-                                    title="{asset.label}: {asset.progress}%"
-                                >
-                                    <div
-                                        class="qm-seg-fill qm-seg-fill--{dl.status}"
-                                        style="width: {asset.progress}%"
-                                    ></div>
-                                </div>
-                            {/each}
-                        </div>
-
-                        <!-- Per-asset labels aligned under each segment -->
-                        <div class="qm-asset-labels">
-                            {#each dl.assets as asset}
-                                <span
-                                    class="qm-asset-label"
-                                    class:done={asset.progress === 100}
-                                    class:active={asset.progress > 0 &&
-                                        asset.progress < 100}
-                                >
-                                    {asset.label}
-                                </span>
-                            {/each}
-                        </div>
-                    </div>
-                {/each}
+            <span class="qm-section-label">General</span>
+            <div class="qm-field">
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    bind:value={launcherStore.settings.username}
+                    placeholder="Steve"
+                />
             </div>
         </section>
 
-        <!-- Quick actions -->
+        <!-- Performance -->
         <section class="qm-section">
-            <span class="qm-section-label">Quick Actions</span>
-            <!-- <div class="qm-actions-grid">
-                <button class="qm-action-btn">
-                    <span class="qm-action-icon">＋</span>
-                    New Instance
-                </button>
-                <button class="qm-action-btn">
-                    <span class="qm-action-icon">📂</span>
-                    Open Folder
-                </button>
-                <button class="qm-action-btn">
-                    <span class="qm-action-icon">🔄</span>
-                    Check Updates
-                </button>
-                <button class="qm-action-btn">
-                    <span class="qm-action-icon">🗑</span>
-                    Clear Cache
-                </button>
-            </div> -->
-        </section>
-
-        <!-- Recent instances -->
-        <section class="qm-section">
-            <span class="qm-section-label">Recent</span>
-            <div class="qm-recent-list">
-                {#each recents as inst}
-                    <div class="qm-recent-row">
-                        <div class="qm-recent-icon">{inst.icon}</div>
-                        <div class="qm-recent-info">
-                            <span class="qm-recent-name">{inst.name}</span>
-                            <span class="qm-recent-sub"
-                                >{inst.version} · {inst.lastPlayed}</span
-                            >
-                        </div>
-                        <button class="qm-recent-play">▶</button>
-                    </div>
-                {/each}
+            <span class="qm-section-label">Performance (RAM)</span>
+            <div class="qm-field-group">
+                <div class="qm-field">
+                    <label for="min-mem">Minimum (MB)</label>
+                    <input
+                        type="number"
+                        id="min-mem"
+                        bind:value={launcherStore.settings.min_memory}
+                    />
+                </div>
+                <div class="qm-field">
+                    <label for="max-mem">Maximum (MB)</label>
+                    <input
+                        type="number"
+                        id="max-mem"
+                        bind:value={launcherStore.settings.max_memory}
+                    />
+                </div>
             </div>
         </section>
+
+        <!-- Java Paths -->
+        <section class="qm-section">
+            <span class="qm-section-label">Java Runtimes</span>
+            <div class="qm-field">
+                <label for="jre8">Java 8 Path</label>
+                <input
+                    type="text"
+                    id="jre8"
+                    bind:value={launcherStore.settings.jre8_path}
+                    placeholder="Path to javaw.exe"
+                />
+            </div>
+            <div class="qm-field">
+                <label for="jre17">Java 17 Path</label>
+                <input
+                    type="text"
+                    id="jre17"
+                    bind:value={launcherStore.settings.jre17_path}
+                    placeholder="Path to javaw.exe"
+                />
+            </div>
+            <div class="qm-field">
+                <label for="jre21">Java 21 Path</label>
+                <input
+                    type="text"
+                    id="jre21"
+                    bind:value={launcherStore.settings.jre21_path}
+                    placeholder="Path to javaw.exe"
+                />
+            </div>
+        </section>
+
+        <div style="padding: 10px 0 20px 0;">
+            <button 
+                class="qm-save-btn" 
+                onclick={handleSave}
+                disabled={saving}
+            >
+                {saving ? "Saving..." : "Save Settings"}
+            </button>
+        </div>
     </div>
 
     <!-- Footer -->
     <div class="qm-footer">
         <span class="qm-version">CubicLauncher 2604a</span>
-        <button class="qm-settings-btn">xd</button>
     </div>
 </div>
+
+<style>
+    .qm-root {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #0a0a0a;
+        color: #eee;
+        font-family: "Inter", sans-serif;
+    }
+
+    .qm-header {
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #222;
+        background: #0f0f0f;
+    }
+
+    .qm-label {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .qm-close-btn {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: color 0.2s;
+    }
+
+    .qm-close-btn:hover {
+        color: #fff;
+    }
+
+    .qm-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 20px;
+    }
+
+    .qm-section {
+        margin-top: 25px;
+    }
+
+    .qm-section-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #555;
+        margin-bottom: 12px;
+        letter-spacing: 0.05em;
+    }
+
+    .qm-active-card {
+        background: #151515;
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid #222;
+    }
+
+    .qm-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .qm-status-dot.running {
+        background: #4caf50;
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+    }
+
+    .qm-active-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .qm-active-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .qm-active-sub {
+        font-size: 0.75rem;
+        color: #888;
+    }
+
+    .qm-kill-btn {
+        background: rgba(255, 68, 68, 0.1);
+        color: #ff4444;
+        border: 1px solid rgba(255, 68, 68, 0.2);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .qm-kill-btn:hover {
+        background: #ff4444;
+        color: #fff;
+    }
+
+    .qm-empty-state {
+        color: #444;
+        font-size: 0.85rem;
+        padding: 10px 0;
+    }
+
+    .qm-field {
+        margin-bottom: 15px;
+    }
+
+    .qm-field label {
+        display: block;
+        font-size: 0.8rem;
+        color: #aaa;
+        margin-bottom: 6px;
+    }
+
+    .qm-field input {
+        width: 100%;
+        background: #111;
+        border: 1px solid #333;
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s, background 0.2s;
+        box-sizing: border-box;
+    }
+
+    .qm-field input:focus {
+        outline: none;
+        border-color: #555;
+        background: #151515;
+    }
+
+    .qm-field-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .qm-save-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #333, #222);
+        color: #fff;
+        border: 1px solid #444;
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .qm-save-btn:hover:not(:disabled) {
+        border-color: #666;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .qm-save-btn:disabled {
+        opacity: 0.5;
+        cursor: not_allowed;
+    }
+
+    .qm-footer {
+        padding: 15px 20px;
+        background: #070707;
+        border-top: 1px solid #111;
+        display: flex;
+        justify-content: center;
+    }
+
+    .qm-version {
+        font-size: 0.7rem;
+        color: #333;
+        font-weight: 500;
+    }
+
+    /* Scrollbar */
+    .qm-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+    .qm-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .qm-scroll::-webkit-scrollbar-thumb {
+        background: #222;
+        border-radius: 10px;
+    }
+</style>

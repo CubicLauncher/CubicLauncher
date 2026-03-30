@@ -12,3 +12,12 @@ export interface InstancesPollingPayload {
   all: InstanceDto[];
   count: number;
 }
+
+export interface Settings {
+  username: string;
+  min_memory: number;
+  max_memory: number;
+  jre8_path: string;
+  jre17_path: string;
+  jre21_path: string;
+}

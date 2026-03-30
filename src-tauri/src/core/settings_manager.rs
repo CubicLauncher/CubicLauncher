@@ -10,16 +10,16 @@ static SETTINGS: LazyLock<Mutex<SettingsManager>> =
 // para tener metodos utiles a partir de lo que se guarde
 /// Struct CRUD para los settings
 /// nota: la memoria se guarda en megabytes
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SettingsManager {
-    username: String,
-    min_memory: u32, // No se quien tenga tanta ram amigo xD
-    max_memory: u32,
-    jre8_path: PathBuf,
-    jre17_path: PathBuf,
-    jre21_path: PathBuf,
+    pub username: String,
+    pub min_memory: u32, // No se quien tenga tanta ram amigo xD
+    pub max_memory: u32,
+    pub jre8_path: PathBuf,
+    pub jre17_path: PathBuf,
+    pub jre21_path: PathBuf,
     #[serde(skip)]
-    dirty: bool, // sistema de dirtness para evitar escribir mucho
+    pub dirty: bool, // sistema de dirtness para evitar escribir mucho
 }
 impl SettingsManager {
     pub fn get() -> &'static Mutex<SettingsManager> {
