@@ -612,413 +612,229 @@ body {
 /* ─── 9. COMPONENTS: QUICK MENU ──────────────────────────── */
 
 .qm-root {
+    height: 100%;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    font-family: "Cantarell", system-ui, sans-serif;
-    color: var(--text-primary);
-    user-select: none;
+    background: #0a0a0a;
+    color: #eee;
+    font-family: "Inter", sans-serif;
 }
 
 .qm-header {
+    padding: 20px 20px 10px 20px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 18px 20px 14px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    align-items: center;
+    background: #0f0f0f;
+}
+
+.qm-tabs {
+    display: flex;
+    padding: 0 10px;
+    background: #0f0f0f;
+    border-bottom: 1px solid #222;
+    gap: 4px;
+}
+
+.qm-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #666;
+    padding: 8px 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.qm-tab-btn.active {
+    color: #fff;
+    border-bottom-color: #eee;
 }
 
 .qm-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
 }
 
 .qm-close-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    width: 26px;
-    height: 26px;
-    border-radius: 4px;
-    font-size: 0.7rem;
+    background: none;
+    border: none;
+    color: #666;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s ease, color 0.15s ease;
-    line-height: 1;
+    font-size: 1.2rem;
+    transition: color 0.2s;
 }
 
 .qm-close-btn:hover {
-    background: var(--bg-item-active);
-    color: var(--text-primary);
+    color: #fff;
 }
 
 .qm-scroll {
     flex: 1;
     overflow-y: auto;
-    padding: 6px 0;
+    padding: 0 20px;
 }
 
 .qm-section {
-    padding: 14px 20px 6px;
-}
-
-.qm-section+.qm-section {
-    border-top: 1px solid var(--border);
+    margin-top: 25px;
 }
 
 .qm-section-label {
     display: block;
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
+    color: #555;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
 }
 
 .qm-active-card {
+    background: #151515;
+    border-radius: 12px;
+    padding: 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
+    gap: 12px;
+    border: 1px solid #222;
 }
 
 .qm-status-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    flex-shrink: 0;
 }
 
 .qm-status-dot.running {
     background: #4caf50;
-    box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
 }
 
 .qm-active-info {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    flex: 1;
-    min-width: 0;
 }
 
 .qm-active-name {
-    font-size: 0.85rem;
     font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.9rem;
 }
 
 .qm-active-sub {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
+    font-size: 0.75rem;
+    color: #888;
 }
 
 .qm-kill-btn {
-    background: transparent;
-    border: 1px solid rgba(220, 60, 60, 0.35);
-    color: rgba(220, 100, 100, 0.85);
+    background: rgba(255, 68, 68, 0.1);
+    color: #ff4444;
+    border: 1px solid rgba(255, 68, 68, 0.2);
     padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.72rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-    flex-shrink: 0;
+    transition: all 0.2s;
 }
 
 .qm-kill-btn:hover {
-    background: rgba(220, 60, 60, 0.12);
-    border-color: rgba(220, 60, 60, 0.6);
-    color: #e06060;
+    background: #ff4444;
+    color: #fff;
 }
 
-.qm-dl-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+.qm-empty-state {
+    color: #444;
+    font-size: 0.85rem;
+    padding: 10px 0;
 }
 
-.qm-dl-item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.qm-field {
+    margin-bottom: 15px;
 }
 
-.qm-dl-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+.qm-field label {
+    display: block;
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 6px;
 }
 
-.qm-dl-name {
-    font-size: 0.82rem;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.qm-field input {
+    width: 100%;
+    background: #111;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, background 0.2s;
+    box-sizing: border-box;
 }
 
-.qm-dl-row-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
+.qm-field input:focus {
+    outline: none;
+    border-color: #555;
+    background: #151515;
 }
 
-.qm-dl-pct {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-}
-
-.qm-badge {
-    font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 3px;
-    border: 1px solid transparent;
-}
-
-.qm-badge--downloading {
-    color: #64b5f6;
-    border-color: rgba(100, 181, 246, 0.3);
-    background: rgba(100, 181, 246, 0.08);
-}
-
-.qm-badge--queued {
-    color: var(--text-secondary);
-    border-color: var(--border);
-    background: transparent;
-}
-
-.qm-badge--done {
-    color: #81c784;
-    border-color: rgba(129, 199, 132, 0.3);
-    background: rgba(129, 199, 132, 0.08);
-}
-
-.qm-badge--error {
-    color: #e57373;
-    border-color: rgba(229, 115, 115, 0.3);
-    background: rgba(229, 115, 115, 0.08);
-}
-
-.qm-seg-bar {
-    display: flex;
-    gap: 2px;
-    height: 4px;
-}
-
-.qm-seg {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.qm-seg-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.3s ease;
-}
-
-.qm-seg-fill--downloading {
-    background: #64b5f6;
-}
-
-.qm-seg-fill--done {
-    background: #81c784;
-}
-
-.qm-seg-fill--queued {
-    background: var(--border);
-}
-
-.qm-seg-fill--error {
-    background: #e57373;
-}
-
-.qm-asset-labels {
-    display: flex;
-    gap: 2px;
-}
-
-.qm-asset-label {
-    flex: 1;
-    font-size: 0.6rem;
-    color: rgba(255, 255, 255, 0.2);
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: color 0.2s ease;
-}
-
-.qm-asset-label.active {
-    color: #64b5f6;
-}
-
-.qm-asset-label.done {
-    color: rgba(129, 199, 132, 0.5);
-}
-
-.qm-actions-grid {
+.qm-field-group {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    gap: 15px;
 }
 
-.qm-action-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    padding: 8px 10px;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    font-weight: 500;
+.qm-save-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #333, #222);
+    color: #fff;
+    border: 1px solid #444;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s ease;
-    text-align: left;
+    transition: all 0.2s;
 }
 
-.qm-action-btn:hover {
-    background: var(--bg-item-active);
+.qm-save-btn:hover:not(:disabled) {
+    border-color: #666;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-.qm-action-icon {
-    font-size: 1rem;
-    line-height: 1;
-}
-
-.qm-recent-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.qm-recent-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 6px;
-    border-radius: 6px;
-    transition: background 0.15s ease;
-    cursor: default;
-}
-
-.qm-recent-row:hover {
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.qm-recent-icon {
-    font-size: 1.1rem;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    flex-shrink: 0;
-}
-
-.qm-recent-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1;
-    min-width: 0;
-}
-
-.qm-recent-name {
-    font-size: 0.82rem;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.qm-recent-sub {
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.qm-recent-play {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    width: 26px;
-    height: 26px;
-    border-radius: 4px;
-    font-size: 0.65rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background 0.15s ease, color 0.15s ease;
-}
-
-.qm-recent-play:hover {
-    background: var(--bg-item-active);
-    color: var(--text-primary);
+.qm-save-btn:disabled {
+    opacity: 0.5;
+    cursor: not_allowed;
 }
 
 .qm-footer {
+    padding: 15px 20px;
+    background: #070707;
+    border-top: 1px solid #111;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
+    justify-content: center;
 }
 
 .qm-version {
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.18);
-    letter-spacing: 0.5px;
+    font-size: 0.7rem;
+    color: #333;
+    font-weight: 500;
 }
 
-.qm-settings-btn {
+/* Scrollbar */
+.qm-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.qm-scroll::-webkit-scrollbar-track {
     background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    width: 26px;
-    height: 26px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s ease, color 0.15s ease;
 }
-
-.qm-settings-btn:hover {
-    background: var(--bg-item-active);
-    color: var(--text-primary);
+.qm-scroll::-webkit-scrollbar-thumb {
+    background: #222;
+    border-radius: 10px;
 }
 
 /* ─── 10. COMPONENTS: OVERLAYS (DRAWER & MODAL) ─────────── */

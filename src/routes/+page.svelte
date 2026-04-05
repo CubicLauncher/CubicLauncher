@@ -5,11 +5,11 @@
     import { launcherStore } from "$lib/state/state.svelte";
     import { getVersions, initPolling } from "$lib/api/launcherService";
     import type { InstanceDto } from "$lib/types/types";
-    import Sidebar from "$lib/components/Sidebar.svelte";
-    import InstanceView from "$lib/components/InstanceView.svelte";
-    import Drawer from "$lib/components/Drawer.svelte";
-    import QuickMenu from "$lib/components/QuickMenu.svelte";
-    import CreateInstanceModal from "$lib/components/CreateInstanceModal.svelte";
+    import Sidebar from "$lib/components/layout/Sidebar.svelte";
+    import InstanceView from "$lib/components/instances/InstanceView.svelte";
+    import Drawer from "$lib/components/layout/Drawer.svelte";
+    import Settings from "$lib/components/settings/Settings.svelte";
+    import CreateInstanceModal from "$lib/components/instances/CreateInstanceModal.svelte";
 
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
@@ -70,7 +70,7 @@
 </div>
 
 <Drawer bind:open={quickMenuOpen} direction="right">
-    <QuickMenu onclose={() => (quickMenuOpen = false)} />
+    <Settings onclose={() => (quickMenuOpen = false)} />
 </Drawer>
 
 <CreateInstanceModal bind:open={openCreateModal} />
