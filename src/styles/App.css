@@ -803,7 +803,7 @@ body {
 .qm-save-btn:hover:not(:disabled) {
     border-color: #666;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .qm-save-btn:disabled {
@@ -829,9 +829,11 @@ body {
 .qm-scroll::-webkit-scrollbar {
     width: 4px;
 }
+
 .qm-scroll::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .qm-scroll::-webkit-scrollbar-thumb {
     background: #222;
     border-radius: 10px;
@@ -1012,6 +1014,65 @@ body {
 .btn-secondary:hover {
     background: var(--bg-item-active);
     color: var(--text-primary);
+}
+
+/* ─── 11.2 USER MENU (PROFILE MODAL) ─────────────────────── */
+
+.user-profile-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.avatar-wrapper {
+    position: relative;
+}
+
+.large-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+}
+
+.status-dot {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 14px;
+    height: 14px;
+    background: #4caf50;
+    border: 2px solid var(--bg-sidebar);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+}
+
+.username-display-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    gap: 4px;
+}
+
+.username-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.offline-tag {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    font-weight: 600;
 }
 
 /* ─── 12. MEDIA QUERIES ──────────────────────────────────── */

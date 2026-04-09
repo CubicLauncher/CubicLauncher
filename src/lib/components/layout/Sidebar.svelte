@@ -2,6 +2,7 @@
     import { createInstance, fetchAll } from "$lib/api/cubicApi";
     import { launcherStore } from "$lib/state/state.svelte";
     import type { InstanceDto } from "$lib/types/types";
+    import UserMenu from "./UserMenu.svelte";
 
     let {
         selectedInstance = $bindable(),
@@ -12,6 +13,8 @@
         openCreateModal: boolean;
         onOpenQuickMenu?: () => void;
     }>();
+
+    let showUserMenu = $state(false);
 </script>
 
 <aside class="sidebar">
@@ -55,11 +58,11 @@
 
         <div
             class="user-profile"
-            onclick={onOpenQuickMenu}
+            onclick={() => (showUserMenu = true)}
             role="button"
             tabindex="0"
             onkeydown={(e) =>
-                (e.key === "Enter" || e.key === " ") && onOpenQuickMenu?.()}
+                (e.key === "Enter" || e.key === " ") && (showUserMenu = true)}
             style="cursor: pointer;"
         >
             <img
@@ -74,3 +77,7 @@
         </div>
     </div>
 </aside>
+
+{#if showUserMenu}
+    <UserMenu onclose={() => (showUserMenu = false)} />
+{/if}
