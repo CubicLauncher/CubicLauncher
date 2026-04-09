@@ -1,0 +1,21 @@
+para vos luis s significa semihecho o q esta a medias y x que esta listo
+
+// general
+s -Hacer settings
+x - Quitar consola
+x - Que las instances se manejen con un actor que sincroniza el estado en la memoria ram con el fs
+x - Instances mejor estructuradas
+x - sincronizacion cada 30 segundos
+
+// backend
+POSIBLE YIELD EN COMANDOS // o sea q se bloquea el backend y no recibe mas llamadas por alguna mala gestion de threads
+Remover cosas innecesarias en el backend (Mutex, Locks, etc...)
+
+// ui
+poner banner
+
+// importante
+-- Investigar proton
+debido a q los gordos de gayjang actualizaron a vulkan la libreria neurodivrgente de mierda
+ya no funciona
+chequear log1.log que esta en este mismo directorio.

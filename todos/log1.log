@@ -1,0 +1,28 @@
+2026-04-09T16:08:14.666150Z  INFO cubiclauncher_lib::core::library_wrapper: Version 26.2-snapshot-2 descargada correctamente
+2026-04-09T16:08:14.666320Z  INFO claunch_rs::launcher: ========== CUBICLAUNCHER CLAUNCH ==========
+2026-04-09T16:08:14.675695Z  INFO claunch_rs::resolvers::dependency_resolver: Library conflict resolved - Child priority: io.netty:netty-transport-native-epoll
+2026-04-09T16:08:14.675759Z  INFO claunch_rs::resolvers::dependency_resolver:   Replacing: /home/santiagolxx/.cubic/shared/libraries/io/netty/netty-transport-native-epoll/4.2.7.Final/netty-transport-native-epoll-4.2.7.Final-linux-aarch_64.jar
+2026-04-09T16:08:14.675778Z  INFO claunch_rs::resolvers::dependency_resolver:   With: /home/santiagolxx/.cubic/shared/libraries/io/netty/netty-transport-native-epoll/4.2.7.Final/netty-transport-native-epoll-4.2.7.Final-linux-x86_64.jar
+2026-04-09T16:08:14.677003Z  INFO claunch_rs::resolvers::dependency_resolver: Loader: vanilla
+2026-04-09T16:08:14.677097Z  INFO claunch_rs::resolvers::command_builder: Offline mode enabled
+2026-04-09T16:08:14.677500Z  INFO claunch_rs::resolvers::command_builder: Removing unresolved arg: ${resolution_height}
+2026-04-09T16:08:14.677510Z  INFO claunch_rs::resolvers::command_builder: Removing unresolved arg: --height
+2026-04-09T16:08:14.677517Z  INFO claunch_rs::resolvers::command_builder: Removing unresolved arg: ${resolution_width}
+2026-04-09T16:08:14.677525Z  INFO claunch_rs::resolvers::command_builder: Removing unresolved arg: --width
+2026-04-09T16:08:14.677536Z  INFO claunch_rs::resolvers::command_builder: Removing unresolved arg: ${auth_xuid}
+2026-04-09T16:08:14.677551Z  INFO claunch_rs::resolvers::command_builder: Removing unresolved arg: --xuid
+2026-04-09T16:08:14.677560Z  INFO claunch_rs::resolvers::command_builder: Removing unresolved arg: ${clientid}
+2026-04-09T16:08:14.677569Z  INFO claunch_rs::resolvers::command_builder: Removing unresolved arg: --clientId
+2026-04-09T16:08:14.677605Z  INFO claunch_rs::launcher: [8] Lanzando proceso del juego...
+[LWJGL] Failed to load a library. Possible solutions:
+	a) Add the directory that contains the shared library to -Djava.library.path or -Dorg.lwjgl.librarypath.
+	b) Add the JAR that contains the shared library to the classpath.
+[LWJGL] Enable debug mode with -Dorg.lwjgl.util.Debug=true for better diagnostics.
+Exception in thread "main" java.lang.IllegalStateException: Game version not set
+	at net.minecraft.SharedConstants.getCurrentVersion(SharedConstants.java:252)
+	at net.minecraft.SystemReport.<init>(SystemReport.java:41)
+	at net.minecraft.CrashReport.<init>(CrashReport.java:35)
+	at net.minecraft.CrashReport.forThrowable(CrashReport.java:225)
+	at net.minecraft.client.main.Main.main(Main.java:136)
+2026-04-09T16:08:24.438880Z  INFO cubiclauncher_lib::core::instance_manager: Ejecutando tarea de sincronizacion
+^C⏎
