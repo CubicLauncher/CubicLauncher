@@ -357,13 +357,13 @@ static INSTANCE_MANAGER: OnceLock<Arc<InstanceManager>> = OnceLock::new();
 // -------------------- DTOs --------------------
 #[derive(Serialize, Clone)]
 pub struct InstanceDto {
-    name: String,
-    version: String,
-    loader: String,
-    last_played: u64,
-    is_running: bool,
-    cover_image: Option<PathBuf>,
-    uuid: String,
+    pub name: String,
+    pub version: String,
+    pub loader: String,
+    pub last_played: u64,
+    pub is_running: bool,
+    pub cover_image: Option<PathBuf>,
+    pub uuid: String,
 }
 
 #[derive(Serialize, Clone)]
