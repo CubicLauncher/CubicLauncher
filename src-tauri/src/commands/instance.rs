@@ -103,6 +103,7 @@ pub async fn set_instance_cover_image(instance_id: String, path: String) {
     if let Some(arc) = manager.get_instance(&instance_id).await {
         let mut inst = arc.write().await;
         inst.set_cover_image(Some(PathBuf::from(path)));
+        let _ = inst.save_to_disk().await;
     }
 }
 
@@ -112,5 +113,22 @@ pub async fn reset_instance_cover_image(instance_id: String) {
     if let Some(arc) = manager.get_instance(&instance_id).await {
         let mut inst = arc.write().await;
         inst.set_cover_image(None);
+        let _ = inst.save_to_disk().await;
     }
+}
+
+#[tauri::command]
+pub async fn get_instance_banner(instance_id: String) -> Option<String> {
+    let manager = InstanceManager::get();
+    let arc = manager.get_instance(&instance_id).await?;
+    let (cover_image, name) = {
+        let inst = arc.read().await;
+        (inst.get_cover_image().map(|p| p.to_path_buf()), inst.get_name().to_string())
+    };
+
+    if let Some(path) = cover_image {
+        return Some(path.to_string_lossy().to_string());
+    }
+
+    get_instance_screenshot(name).await
 }

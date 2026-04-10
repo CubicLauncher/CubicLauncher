@@ -11,6 +11,7 @@ pub fn run() {
             commands::instance::launch,
             commands::instance::kill_instance,
             commands::instance::get_instance_screenshot,
+            commands::instance::get_instance_banner,
             commands::instance::get_all_instance_screenshots,
             commands::instance::set_instance_cover_image,
             commands::instance::reset_instance_cover_image,

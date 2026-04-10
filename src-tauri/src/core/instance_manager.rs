@@ -171,7 +171,7 @@ impl Instance {
         self.get_instance_dir().join("instance.cub")
     }
 
-    async fn save_to_disk(&mut self) -> Result<(), io::Error> {
+    pub async fn save_to_disk(&mut self) -> Result<(), io::Error> {
         if !self.dirty {
             return Ok(());
         }

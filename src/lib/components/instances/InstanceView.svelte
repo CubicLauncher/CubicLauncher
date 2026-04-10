@@ -12,24 +12,16 @@
     let screenshotUrl = $state<string | null>(null);
     let allScreenshots = $state<string[]>([]);
     let showPicker = $state(false);
+    let bannerVersion = $state(0);
 
     async function fetchScreenshot() {
         if (!selectedInstance) return;
 
-        if (selectedInstance.cover_image) {
-            screenshotUrl = convertFileSrc(selectedInstance.cover_image);
-            return;
-        }
-
-        const path = await invoke<string | null>("get_instance_screenshot", {
-            instanceName: selectedInstance.name,
+        const path = await invoke<string | null>("get_instance_banner", {
+            instanceId: selectedInstance.uuid,
         });
         
-        if (path) {
-            screenshotUrl = convertFileSrc(path);
-        } else {
-            screenshotUrl = null;
-        }
+        screenshotUrl = path ? convertFileSrc(path) : null;
     }
 
     async function pickBanner() {
@@ -45,17 +37,21 @@
             path: path,
         });
         showPicker = false;
-        fetchScreenshot();
+        bannerVersion++;
     }
 
     async function resetBanner() {
         await invoke("reset_instance_cover_image", {
             instanceId: selectedInstance.uuid,
         });
-        fetchScreenshot();
+        bannerVersion++;
     }
 
     $effect(() => {
+        // Tracking both selectedInstance.uuid and bannerVersion ensures we re-fetch
+        // whenever the instance changes OR when the banner is manually updated/reset.
+        selectedInstance.uuid;
+        bannerVersion;
         fetchScreenshot();
     });
 
