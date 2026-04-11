@@ -1,4 +1,4 @@
-import { type InstanceDto } from "../types/types";
+import { type InstanceDto, type ModDto } from "../types/types";
 import { invoke } from "@tauri-apps/api/core";
 
 export async function killInstance(
@@ -55,6 +55,40 @@ export async function renameInstance(
   } catch (err) {
     console.error(`Error al renombrar instancia ${id}:`, err);
     onError?.(err);
+  }
+}
+
+export async function updateInstance(
+  id: string,
+  newName?: string,
+  newVersion?: string,
+  callback?: () => void,
+  onError?: (err: unknown) => void,
+): Promise<void> {
+  try {
+    await invoke("update_instance", { id, newName, newVersion });
+    callback?.();
+  } catch (err) {
+    console.error(`Error al actualizar instancia ${id}:`, err);
+    onError?.(err);
+  }
+}
+
+export async function getInstalledVersions(): Promise<string[]> {
+  try {
+    return await invoke<string[]>("get_installed_versions");
+  } catch (err) {
+    console.error("Error al obtener versiones instaladas:", err);
+    return [];
+  }
+}
+
+export async function getInstanceMods(id: string): Promise<ModDto[]> {
+  try {
+    return await invoke<ModDto[]>("get_instance_mods", { id });
+  } catch (err) {
+    console.error(`Error al obtener mods de instancia ${id}:`, err);
+    return [];
   }
 }
 

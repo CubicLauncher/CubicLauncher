@@ -20,14 +20,19 @@
         error = null;
 
         try {
-            await createInstance(name, "1.8", () => {
-                open = false;
-                name = "";
-                oncreated?.();
-            }, (err) => {
-                error = "Error al crear la instancia";
-                console.error(err);
-            });
+            await createInstance(
+                name,
+                "1.14",
+                () => {
+                    open = false;
+                    name = "";
+                    oncreated?.();
+                },
+                (err) => {
+                    error = "Error al crear la instancia";
+                    console.error(err);
+                },
+            );
         } finally {
             loading = false;
         }
@@ -68,37 +73,49 @@
                         type="text"
                         class="text-input"
                         bind:value={name}
-                        placeholder="Ej. Mi mundo 1.8"
+                        placeholder="Ej. Mi mundo 1.14"
                         disabled={loading}
                         onkeydown={(e) => e.key === "Enter" && handleCreate()}
                     />
                 </div>
-                
+
                 <div class="input-group">
                     <span class="input-label">Versión</span>
                     <input
                         type="text"
                         class="text-input"
-                        value="1.8"
+                        value="1.14"
                         disabled
                     />
-                    <small style="font-size: 0.6rem; color: var(--text-secondary); margin-top: 4px;">
-                        Por ahora solo está disponible la versión 1.8
+                    <small
+                        style="font-size: 0.6rem; color: var(--text-secondary); margin-top: 4px;"
+                    >
+                        Por ahora solo está disponible la versión 1.14
                     </small>
                 </div>
 
                 {#if error}
-                    <div style="color: #e57373; font-size: 0.75rem; margin-top: 4px;">
+                    <div
+                        style="color: #e57373; font-size: 0.75rem; margin-top: 4px;"
+                    >
                         {error}
                     </div>
                 {/if}
             </div>
 
             <div class="modal-footer">
-                <button class="btn-secondary" onclick={close} disabled={loading}>
+                <button
+                    class="btn-secondary"
+                    onclick={close}
+                    disabled={loading}
+                >
                     Cancelar
                 </button>
-                <button class="btn-primary" onclick={handleCreate} disabled={loading}>
+                <button
+                    class="btn-primary"
+                    onclick={handleCreate}
+                    disabled={loading}
+                >
                     {loading ? "Creando..." : "Crear"}
                 </button>
             </div>

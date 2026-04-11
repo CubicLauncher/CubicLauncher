@@ -653,6 +653,11 @@ body {
     opacity: 1;
 }
 
+.tab-item:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 .tab-item::after {
     content: "";
     position: absolute;

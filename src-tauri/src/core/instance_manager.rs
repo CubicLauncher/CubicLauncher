@@ -163,7 +163,7 @@ impl Instance {
         }
     }
 
-    fn get_instance_dir(&self) -> PathBuf {
+    pub fn get_instance_dir(&self) -> PathBuf {
         PathManager::get().get_instance_dir().join(&self.data.name)
     }
 
@@ -367,8 +367,15 @@ impl InstanceManager {
     }
 
     pub async fn rename_instance(&self, uuid: &str, new_name: String) -> Result<(), String> {
-        validate_instance_name(&new_name)?;
+        self.update_instance(uuid, Some(new_name), None).await
+    }
 
+    pub async fn update_instance(
+        &self,
+        uuid: &str,
+        new_name: Option<String>,
+        new_version: Option<String>,
+    ) -> Result<(), String> {
         let instance_arc = self
             .get_instance(uuid)
             .await
@@ -377,25 +384,30 @@ impl InstanceManager {
         let mut inst = instance_arc.write().await;
         let old_name = inst.get_name().to_string();
 
-        if old_name == new_name {
-            return Ok(());
-        }
+        if let Some(name) = new_name {
+            validate_instance_name(&name)?;
+            if old_name != name {
+                let base_dir = PathManager::get().get_instance_dir();
+                let old_dir = base_dir.join(&old_name);
+                let new_dir = base_dir.join(&name);
 
-        let base_dir = PathManager::get().get_instance_dir();
-        let old_dir = base_dir.join(&old_name);
-        let new_dir = base_dir.join(&new_name);
+                if new_dir.exists() {
+                    return Err("Ya existe una instancia con ese nombre".to_string());
+                }
 
-        if new_dir.exists() {
-            return Err("Ya existe una instancia con ese nombre".to_string());
-        }
-
-        if old_dir.exists() {
-            if let Err(e) = tokio_fs::rename(&old_dir, &new_dir).await {
-                return Err(format!("Error al renombrar el directorio: {}", e));
+                if old_dir.exists() {
+                    if let Err(e) = tokio_fs::rename(&old_dir, &new_dir).await {
+                        return Err(format!("Error al renombrar el directorio: {}", e));
+                    }
+                }
+                inst.set_name(name);
             }
         }
 
-        inst.set_name(new_name);
+        if let Some(version) = new_version {
+            inst.set_version(version);
+        }
+
         if let Err(e) = inst.save_to_disk().await {
             return Err(format!("Error al guardar la instancia: {}", e));
         }

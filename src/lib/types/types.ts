@@ -7,6 +7,12 @@ export interface InstanceDto {
   cover_image: string | null;
   uuid: string;
 }
+
+export interface ModDto {
+  name: string;
+  filename: string;
+  version: string | null;
+}
 export interface InstancesPollingPayload {
   running: string[];
   all: InstanceDto[];

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { createInstance, fetchAll } from "$lib/api/cubicApi";
-    import { deleteInst, renameInst } from "$lib/api/launcherService";
+    import { createInstance, fetchAll, getInstalledVersions } from "$lib/api/cubicApi";
+    import { deleteInst, renameInst, updateInst } from "$lib/api/launcherService";
     import { launcherStore } from "$lib/state/state.svelte";
     import type { InstanceDto } from "$lib/types/types";
     import UserMenu from "./UserMenu.svelte";
@@ -21,10 +21,14 @@
     let showDeleteModal = $state(false);
     let instanceToActOn = $state<InstanceDto | null>(null);
     let renameInput = $state("");
+    let versionInput = $state("");
+    let installedVersions = $state<string[]>([]);
 
-    function openRenameModal(instance: InstanceDto) {
+    async function openRenameModal(instance: InstanceDto) {
         instanceToActOn = instance;
         renameInput = instance.name;
+        versionInput = instance.version;
+        installedVersions = await getInstalledVersions();
         showRenameModal = true;
     }
 
@@ -35,10 +39,19 @@
 
     async function handleRename() {
         if (!instanceToActOn) return;
-        if (renameInput && renameInput !== instanceToActOn.name) {
-            await renameInst(instanceToActOn.uuid, renameInput);
+        const nameChanged = renameInput && renameInput !== instanceToActOn.name;
+        const versionChanged = versionInput && versionInput !== instanceToActOn.version;
+
+        if (nameChanged || versionChanged) {
+            await updateInst(
+                instanceToActOn.uuid,
+                nameChanged ? renameInput : undefined,
+                versionChanged ? versionInput : undefined,
+            );
+
             if (selectedInstance?.uuid === instanceToActOn.uuid) {
-                selectedInstance.name = renameInput;
+                if (nameChanged) selectedInstance.name = renameInput;
+                if (versionChanged) selectedInstance.version = versionInput;
             }
         }
         showRenameModal = false;
@@ -141,19 +154,31 @@
     <UserMenu onclose={() => (showUserMenu = false)} />
 {/if}
 
-<ModalBase bind:open={showRenameModal} title="Renombrar Instancia">
+<ModalBase bind:open={showRenameModal} title="Editar Instancia">
     <div class="input-group">
-        <label class="input-label" for="rename-input">Nuevo Nombre</label>
-        <input 
+        <label class="input-label" for="rename-input">Nombre</label>
+        <input
             id="rename-input"
-            type="text" 
-            class="text-input" 
-            bind:value={renameInput} 
+            type="text"
+            class="text-input"
+            bind:value={renameInput}
             onkeydown={(e) => e.key === "Enter" && handleRename()}
         />
     </div>
+
+    <div class="input-group" style="margin-top: 12px;">
+        <label class="input-label" for="version-select">Versión</label>
+        <select id="version-select" class="text-input" bind:value={versionInput}>
+            {#each installedVersions as version}
+                <option value={version}>{version}</option>
+            {/each}
+        </select>
+    </div>
+
     {#snippet footer()}
-        <button class="btn-secondary" onclick={() => (showRenameModal = false)}>Cancelar</button>
+        <button class="btn-secondary" onclick={() => (showRenameModal = false)}
+            >Cancelar</button
+        >
         <button class="btn-primary" onclick={handleRename}>Guardar</button>
     {/snippet}
 </ModalBase>

@@ -140,5 +140,73 @@ pub async fn delete_instance(id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn rename_instance(id: String, new_name: String) -> Result<(), String> {
-    InstanceManager::get().rename_instance(&id, new_name).await
+    InstanceManager::get().update_instance(&id, Some(new_name), None).await
+}
+
+#[tauri::command]
+pub async fn update_instance(
+    id: String,
+    new_name: Option<String>,
+    new_version: Option<String>,
+) -> Result<(), String> {
+    InstanceManager::get()
+        .update_instance(&id, new_name, new_version)
+        .await
+}
+
+#[tauri::command]
+pub async fn get_installed_versions() -> Vec<String> {
+    let versions_dir = PathManager::get().get_shared_dir().join("versions");
+    let mut versions = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(versions_dir) {
+        for entry in entries.flatten() {
+            if entry.path().is_dir() {
+                if let Some(name) = entry.file_name().to_str() {
+                    versions.push(name.to_string());
+                }
+            }
+        }
+    }
+    versions.sort_by(|a, b| b.cmp(a));
+    versions
+}
+
+#[derive(serde::Serialize)]
+pub struct ModDto {
+    pub name: String,
+    pub filename: String,
+    pub version: Option<String>,
+}
+
+#[tauri::command]
+pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
+    let manager = InstanceManager::get();
+    let Some(instance_arc) = manager.get_instance(&id).await else {
+        return Vec::new();
+    };
+
+    let inst = instance_arc.read().await;
+    let mods_dir = inst.get_instance_dir().join("mods");
+
+    let mut mods = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(mods_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                if let Some(ext) = path.extension() {
+                    let ext_str = ext.to_string_lossy().to_lowercase();
+                    if ext_str == "jar" || ext_str == "zip" {
+                        let filename = path.file_name().unwrap().to_string_lossy().to_string();
+                        mods.push(ModDto {
+                            name: filename.clone(),
+                            filename,
+                            version: None,
+                        });
+                    }
+                }
+            }
+        }
+    }
+    mods.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    mods
 }

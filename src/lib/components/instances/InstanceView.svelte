@@ -12,6 +12,16 @@
     let allScreenshots = $state<string[]>([]);
     let showPicker = $state(false);
     let bannerVersion = $state(0);
+    
+    const supportsMods = $derived(
+        selectedInstance.loader !== "Vanilla"
+    );
+
+    $effect(() => {
+        if (!supportsMods && activeTab === "mods") {
+            activeTab = "detalles";
+        }
+    });
 
     async function fetchScreenshot() {
         if (!selectedInstance) return;
@@ -176,7 +186,8 @@
         </button>
         <button
             class="tab-item {activeTab === 'mods' ? 'active' : ''}"
-            onclick={() => (activeTab = "mods")}
+            onclick={() => supportsMods && (activeTab = "mods")}
+            disabled={!supportsMods}
         >
             Mods
         </button>
@@ -195,7 +206,7 @@
             </div>
         {:else if activeTab === "mods"}
             <div class="tab-pane">
-                <ModsRow />
+                <ModsRow instanceId={selectedInstance.uuid} />
             </div>
         {:else if activeTab === "opciones"}
             <div class="tab-pane">
