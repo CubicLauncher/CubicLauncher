@@ -349,6 +349,59 @@ impl InstanceManager {
         }
         dtos
     }
+
+    pub async fn delete_instance(&self, uuid: &str) -> Result<(), String> {
+        let instance_arc = {
+            let mut guard = self.instances.write().await;
+            guard.remove(uuid).ok_or_else(|| "Instancia no encontrada".to_string())?
+        };
+
+        let inst = instance_arc.read().await;
+        let dir = inst.get_instance_dir();
+        if dir.exists() {
+            if let Err(e) = fs::remove_dir_all(&dir) {
+                return Err(format!("Error al eliminar el directorio: {}", e));
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn rename_instance(&self, uuid: &str, new_name: String) -> Result<(), String> {
+        validate_instance_name(&new_name)?;
+
+        let instance_arc = self
+            .get_instance(uuid)
+            .await
+            .ok_or_else(|| "Instancia no encontrada".to_string())?;
+
+        let mut inst = instance_arc.write().await;
+        let old_name = inst.get_name().to_string();
+
+        if old_name == new_name {
+            return Ok(());
+        }
+
+        let base_dir = PathManager::get().get_instance_dir();
+        let old_dir = base_dir.join(&old_name);
+        let new_dir = base_dir.join(&new_name);
+
+        if new_dir.exists() {
+            return Err("Ya existe una instancia con ese nombre".to_string());
+        }
+
+        if old_dir.exists() {
+            if let Err(e) = tokio_fs::rename(&old_dir, &new_dir).await {
+                return Err(format!("Error al renombrar el directorio: {}", e));
+            }
+        }
+
+        inst.set_name(new_name);
+        if let Err(e) = inst.save_to_disk().await {
+            return Err(format!("Error al guardar la instancia: {}", e));
+        }
+
+        Ok(())
+    }
 }
 
 // Global manager (inicializado con init())

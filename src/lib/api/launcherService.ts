@@ -37,6 +37,27 @@ export async function killInst(uuid: string): Promise<void> {
     console.error("Error al matar instancia:", err);
   }
 }
+
+export async function deleteInst(uuid: string): Promise<void> {
+  try {
+    await invoke("delete_instance", { id: uuid });
+    // After deletion, refresh instances
+    await getVersions();
+  } catch (err) {
+    console.error("Error al eliminar instancia:", err);
+  }
+}
+
+export async function renameInst(uuid: string, newName: string): Promise<void> {
+  try {
+    await invoke("rename_instance", { id: uuid, newName });
+    // After rename, refresh instances
+    await getVersions();
+  } catch (err) {
+    console.error("Error al renombrar instancia:", err);
+  }
+}
+
 export async function getVersions(): Promise<void> {
   //  await listen<InstancesPollingPayload>("instances-update", (event) => {
   //   const { running, all } = event.payload;

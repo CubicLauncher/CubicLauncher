@@ -132,3 +132,13 @@ pub async fn get_instance_banner(instance_id: String) -> Option<String> {
 
     get_instance_screenshot(name).await
 }
+
+#[tauri::command]
+pub async fn delete_instance(id: String) -> Result<(), String> {
+    InstanceManager::get().delete_instance(&id).await
+}
+
+#[tauri::command]
+pub async fn rename_instance(id: String, new_name: String) -> Result<(), String> {
+    InstanceManager::get().rename_instance(&id, new_name).await
+}

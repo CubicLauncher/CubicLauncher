@@ -10,6 +10,8 @@ pub fn run() {
             commands::instance::create_instance,
             commands::instance::launch,
             commands::instance::kill_instance,
+            commands::instance::delete_instance,
+            commands::instance::rename_instance,
             commands::instance::get_instance_screenshot,
             commands::instance::get_instance_banner,
             commands::instance::get_all_instance_screenshots,

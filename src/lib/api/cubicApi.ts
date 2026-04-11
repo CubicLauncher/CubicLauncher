@@ -14,7 +14,6 @@ export async function killInstance(
     onError?.(err);
   }
 }
-
 export async function createInstance(
   name: string,
   version: string,
@@ -26,6 +25,35 @@ export async function createInstance(
     callback?.();
   } catch (err) {
     console.error(`Error al crear instancia ${name}:`, err);
+    onError?.(err);
+  }
+}
+
+export async function deleteInstance(
+  id: string,
+  callback?: () => void,
+  onError?: (err: unknown) => void,
+): Promise<void> {
+  try {
+    await invoke("delete_instance", { id });
+    callback?.();
+  } catch (err) {
+    console.error(`Error al eliminar instancia ${id}:`, err);
+    onError?.(err);
+  }
+}
+
+export async function renameInstance(
+  id: string,
+  newName: string,
+  callback?: () => void,
+  onError?: (err: unknown) => void,
+): Promise<void> {
+  try {
+    await invoke("rename_instance", { id, newName });
+    callback?.();
+  } catch (err) {
+    console.error(`Error al renombrar instancia ${id}:`, err);
     onError?.(err);
   }
 }

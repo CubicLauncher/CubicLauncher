@@ -4,7 +4,6 @@
     import InstanceDetails from "./InstanceDetails.svelte";
     import { launchInstance } from "$lib/api/cubicApi";
     import ModsRow from "./ModsRow.svelte";
-    import ScreenshotsPanel from "./ScreenshotsPanel.svelte";
     import QuickOptionsPanel from "./QuickOptionsPanel.svelte";
 
     let { selectedInstance } = $props<{ selectedInstance: InstanceDto }>();
@@ -20,14 +19,17 @@
         const path = await invoke<string | null>("get_instance_banner", {
             instanceId: selectedInstance.uuid,
         });
-        
+
         screenshotUrl = path ? convertFileSrc(path) : null;
     }
 
     async function pickBanner() {
-        allScreenshots = await invoke<string[]>("get_all_instance_screenshots", {
-            instanceName: selectedInstance.name,
-        });
+        allScreenshots = await invoke<string[]>(
+            "get_all_instance_screenshots",
+            {
+                instanceName: selectedInstance.name,
+            },
+        );
         showPicker = true;
     }
 
@@ -72,30 +74,54 @@
     }
 </script>
 
-    <div class="instance-view">
-        {#if showPicker}
-            <div class="screenshot-picker-overlay" role="button" tabindex="0" onclick={() => (showPicker = false)} onkeydown={(e) => e.key === 'Escape' && (showPicker = false)}>
-                <div class="screenshot-picker-modal" role="dialog" aria-modal="true" tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
-                    <div class="picker-header">
-                        <h3>Seleccionar Banner</h3>
-                        <button class="close-btn" onclick={() => (showPicker = false)}>✕</button>
-                    </div>
-                    <div class="picker-content">
-                        {#if allScreenshots.length === 0}
-                            <div class="empty-picker">No hay capturas disponibles</div>
-                        {:else}
-                            <div class="picker-grid">
-                                {#each allScreenshots as path}
-                                    <button class="picker-item" onclick={() => selectScreenshot(path)}>
-                                        <img src={convertFileSrc(path)} alt="Screenshot" />
-                                    </button>
-                                {/each}
-                            </div>
-                        {/if}
-                    </div>
+<div class="instance-view">
+    {#if showPicker}
+        <div
+            class="screenshot-picker-overlay"
+            role="button"
+            tabindex="0"
+            onclick={() => (showPicker = false)}
+            onkeydown={(e) => e.key === "Escape" && (showPicker = false)}
+        >
+            <div
+                class="screenshot-picker-modal"
+                role="dialog"
+                aria-modal="true"
+                tabindex="-1"
+                onclick={(e) => e.stopPropagation()}
+                onkeydown={(e) => e.stopPropagation()}
+            >
+                <div class="picker-header">
+                    <h3>Seleccionar Banner</h3>
+                    <button
+                        class="close-btn"
+                        onclick={() => (showPicker = false)}>✕</button
+                    >
+                </div>
+                <div class="picker-content">
+                    {#if allScreenshots.length === 0}
+                        <div class="empty-picker">
+                            No hay capturas disponibles
+                        </div>
+                    {:else}
+                        <div class="picker-grid">
+                            {#each allScreenshots as path}
+                                <button
+                                    class="picker-item"
+                                    onclick={() => selectScreenshot(path)}
+                                >
+                                    <img
+                                        src={convertFileSrc(path)}
+                                        alt="Screenshot"
+                                    />
+                                </button>
+                            {/each}
+                        </div>
+                    {/if}
                 </div>
             </div>
-        {/if}
+        </div>
+    {/if}
     <section
         class="hero-section"
         style={screenshotUrl
@@ -112,69 +138,69 @@
             </div>
             <button
                 class="play-btn"
-                onclick={() => launchInstance(selectedInstance)}
-                >Jugar</button
+                onclick={() => launchInstance(selectedInstance)}>Jugar</button
             >
         </div>
 
         <div class="banner-controls">
-            <button class="banner-btn" onclick={pickBanner} title="Cambiar Banner">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <button
+                class="banner-btn"
+                onclick={pickBanner}
+                title="Cambiar Banner"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    ><path
+                        d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                    /><circle cx="12" cy="13" r="4" /></svg
+                >
                 <span>Cambiar</span>
             </button>
-            {#if selectedInstance.cover_image}
-                <button class="banner-btn reset" onclick={resetBanner} title="Restablecer">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                </button>
-            {/if}
         </div>
     </section>
 
     <div class="tabs-nav">
-        <button 
-            class="tab-item {activeTab === 'detalles' ? 'active' : ''}" 
-            onclick={() => activeTab = 'detalles'}
+        <button
+            class="tab-item {activeTab === 'detalles' ? 'active' : ''}"
+            onclick={() => (activeTab = "detalles")}
         >
             Detalles
         </button>
-        <button 
-            class="tab-item {activeTab === 'mods' ? 'active' : ''}" 
-            onclick={() => activeTab = 'mods'}
+        <button
+            class="tab-item {activeTab === 'mods' ? 'active' : ''}"
+            onclick={() => (activeTab = "mods")}
         >
             Mods
         </button>
-        <button 
-            class="tab-item {activeTab === 'capturas' ? 'active' : ''}" 
-            onclick={() => activeTab = 'capturas'}
-        >
-            Capturas
-        </button>
-        <button 
-            class="tab-item {activeTab === 'opciones' ? 'active' : ''}" 
-            onclick={() => activeTab = 'opciones'}
+        <button
+            class="tab-item {activeTab === 'opciones' ? 'active' : ''}"
+            onclick={() => (activeTab = "opciones")}
         >
             Opciones
         </button>
     </div>
 
     <div class="tab-content">
-        {#if activeTab === 'detalles'}
+        {#if activeTab === "detalles"}
             <div class="tab-pane">
                 <InstanceDetails instance={selectedInstance} />
             </div>
-        {:else if activeTab === 'mods'}
+        {:else if activeTab === "mods"}
             <div class="tab-pane">
                 <ModsRow />
             </div>
-        {:else if activeTab === 'capturas'}
-            <div class="tab-pane">
-                <ScreenshotsPanel />
-            </div>
-        {:else if activeTab === 'opciones'}
+        {:else if activeTab === "opciones"}
             <div class="tab-pane">
                 <QuickOptionsPanel />
             </div>
         {/if}
     </div>
 </div>
-
