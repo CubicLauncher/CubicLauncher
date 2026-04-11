@@ -31,7 +31,7 @@
 <div class="qm-root">
     <!-- Header -->
     <div class="qm-header">
-        <span class="qm-label">Quick Menu</span>
+        <span class="qm-label">Ajustes</span>
         <button class="qm-close-btn" onclick={onclose}>✕</button>
     </div>
 
@@ -81,13 +81,43 @@
             <section class="qm-section">
                 <span class="qm-section-label">General</span>
                 <div class="qm-field">
-                    <label for="username">Username</label>
+                    <label for="language">Idioma</label>
+                    <select
+                        id="language"
+                        bind:value={launcherStore.settings.language}
+                    >
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="qm-field-checkbox">
                     <input
-                        type="text"
-                        id="username"
-                        bind:value={launcherStore.settings.username}
-                        placeholder="Steve"
+                        type="checkbox"
+                        id="auto-updates"
+                        bind:checked={launcherStore.settings.auto_updates}
                     />
+                    <label for="auto-updates">Actualizaciones Automáticas</label
+                    >
+                </div>
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="error-console"
+                        bind:checked={launcherStore.settings.show_error_console}
+                    />
+                    <label for="error-console">Consola de errores</label>
+                </div>
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="close-on-play"
+                        bind:checked={
+                            launcherStore.settings.close_launcher_on_play
+                        }
+                    />
+                    <label for="close-on-play"
+                        >Cerrar el launcher al abrir el juego</label
+                    >
                 </div>
             </section>
         {/if}
@@ -115,12 +145,54 @@
                     </div>
                 </div>
             </section>
+
+            <section class="qm-section">
+                <span class="qm-section-label">Opciones de Minecraft</span>
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="show-beta"
+                        bind:checked={launcherStore.settings.show_beta}
+                    />
+                    <label for="show-beta">Mostrar versiones Betas</label>
+                </div>
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="show-alpha"
+                        bind:checked={launcherStore.settings.show_alpha}
+                    />
+                    <label for="show-alpha">Mostrar versiones Alpha</label>
+                </div>
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="force-gpu"
+                        bind:checked={launcherStore.settings.force_gpu}
+                    />
+                    <label for="force-gpu">Forzar uso de la Gpu</label>
+                </div>
+            </section>
         {/if}
 
         {#if currentTab === "java"}
             <!-- Java Paths -->
             <section class="qm-section">
-                <span class="qm-section-label">Java Runtimes</span>
+                <span class="qm-section-label">Configuración de Java</span>
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="auto-detect-java"
+                        bind:checked={launcherStore.settings.auto_detect_java}
+                    />
+                    <label for="auto-detect-java"
+                        >Detectar automáticamente la versión de Java</label
+                    >
+                </div>
+
+                <span class="qm-section-label" style="margin-top: 20px;"
+                    >Java Runtimes</span
+                >
                 <div class="qm-field">
                     <label for="jre8">Java 8 Path</label>
                     <input
@@ -148,15 +220,20 @@
                         placeholder="Path to javaw.exe"
                     />
                 </div>
+                <div class="qm-field">
+                    <label for="jvm-args">Argumento JVM</label>
+                    <textarea
+                        id="jvm-args"
+                        bind:value={launcherStore.settings.jvm_args}
+                        placeholder="-Xmx2G -Xms1G ..."
+                        style="width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 60px;"
+                    ></textarea>
+                </div>
             </section>
         {/if}
 
         <div style="padding: 20px 0;">
-            <button 
-                class="qm-save-btn" 
-                onclick={handleSave}
-                disabled={saving}
-            >
+            <button class="qm-save-btn" onclick={handleSave} disabled={saving}>
                 {saving ? "Saving..." : "Save Settings"}
             </button>
         </div>
@@ -164,6 +241,6 @@
 
     <!-- Footer -->
     <div class="qm-footer">
-        <span class="qm-version">CubicLauncher 2604a</span>
+        <span class="qm-version">CubicLauncher 2604a-RS</span>
     </div>
 </div>

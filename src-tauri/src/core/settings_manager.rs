@@ -18,6 +18,15 @@ pub struct SettingsManager {
     pub jre8_path: PathBuf,
     pub jre17_path: PathBuf,
     pub jre21_path: PathBuf,
+    pub language: String,
+    pub auto_updates: bool,
+    pub show_error_console: bool,
+    pub close_launcher_on_play: bool,
+    pub show_beta: bool,
+    pub show_alpha: bool,
+    pub force_gpu: bool,
+    pub auto_detect_java: bool,
+    pub jvm_args: String,
     #[serde(skip)]
     pub dirty: bool, // sistema de dirtness para evitar escribir mucho
 }
@@ -118,6 +127,15 @@ impl Default for SettingsManager {
             jre8_path: PathBuf::new(),
             jre17_path: PathBuf::new(),
             jre21_path: PathBuf::new(),
+            language: String::from("es"),
+            auto_updates: true,
+            show_error_console: false,
+            close_launcher_on_play: true,
+            show_beta: false,
+            show_alpha: false,
+            force_gpu: false,
+            auto_detect_java: true,
+            jvm_args: String::new(),
             dirty: true,
         }
     }
