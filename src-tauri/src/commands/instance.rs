@@ -176,6 +176,7 @@ pub struct ModDto {
     pub name: String,
     pub filename: String,
     pub version: Option<String>,
+    pub enabled: bool,
 }
 
 #[tauri::command]
@@ -195,12 +196,24 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
             if path.is_file() {
                 if let Some(ext) = path.extension() {
                     let ext_str = ext.to_string_lossy().to_lowercase();
-                    if ext_str == "jar" || ext_str == "zip" {
+                    let file_name_str = path.file_name().unwrap().to_string_lossy().to_lowercase();
+                    
+                    let (is_mod, enabled) = if ext_str == "jar" || ext_str == "zip" {
+                        (true, true)
+                    } else if ext_str == "disabled" && (file_name_str.ends_with(".jar.disabled") || file_name_str.ends_with(".zip.disabled")) {
+                        (true, false)
+                    } else {
+                        (false, false)
+                    };
+
+                    if is_mod {
                         let filename = path.file_name().unwrap().to_string_lossy().to_string();
+                        let display_name = filename.strip_suffix(".disabled").unwrap_or(&filename).to_string();
                         mods.push(ModDto {
-                            name: filename.clone(),
+                            name: display_name,
                             filename,
                             version: None,
+                            enabled,
                         });
                     }
                 }
@@ -209,4 +222,34 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
     }
     mods.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
     mods
+}
+
+#[tauri::command]
+pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> Result<(), String> {
+    let manager = InstanceManager::get();
+    let Some(instance_arc) = manager.get_instance(&id).await else {
+        return Err("Instancia no encontrada".to_string());
+    };
+
+    let inst = instance_arc.read().await;
+    let mods_dir = inst.get_instance_dir().join("mods");
+    let file_path = mods_dir.join(&filename);
+
+    if !file_path.exists() {
+        return Err("Mod no encontrado".to_string());
+    }
+
+    let is_currently_disabled = filename.ends_with(".disabled");
+
+    if enable && is_currently_disabled {
+        let new_filename = filename.strip_suffix(".disabled").unwrap();
+        let new_path = mods_dir.join(new_filename);
+        std::fs::rename(file_path, new_path).map_err(|e| e.to_string())?;
+    } else if !enable && !is_currently_disabled {
+        let new_filename = format!("{}.disabled", filename);
+        let new_path = mods_dir.join(new_filename);
+        std::fs::rename(file_path, new_path).map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
 }

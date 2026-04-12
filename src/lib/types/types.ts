@@ -12,6 +12,7 @@ export interface ModDto {
   name: string;
   filename: string;
   version: string | null;
+  enabled: boolean;
 }
 export interface InstancesPollingPayload {
   running: string[];

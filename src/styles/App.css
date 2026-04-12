@@ -479,13 +479,25 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes scaleUp {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .banner-btn {
@@ -815,12 +827,59 @@ body {
     letter-spacing: 0.5px;
 }
 
-.mod-status-dot {
-    width: 6px;
-    height: 6px;
-    background: #4caf50;
+.mod-card.disabled {
+    opacity: 0.4;
+    filter: grayscale(100%);
+}
+
+.mod-status-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.mod-status-toggle input[type="checkbox"] {
+    appearance: none;
+    width: 32px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.3s;
+}
+
+.mod-status-toggle input[type="checkbox"]::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
+    transition: transform 0.3s;
+}
+
+.mod-status-toggle input[type="checkbox"]:checked {
+    background: #4caf50;
+}
+
+.mod-status-toggle input[type="checkbox"]:checked::after {
+    transform: translateX(14px);
+}
+
+.empty-mods {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 

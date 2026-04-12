@@ -15,6 +15,7 @@ pub fn run() {
             commands::instance::update_instance,
             commands::instance::get_installed_versions,
             commands::instance::get_instance_mods,
+            commands::instance::toggle_instance_mod,
             commands::instance::get_instance_screenshot,
             commands::instance::get_instance_banner,
             commands::instance::get_all_instance_screenshots,

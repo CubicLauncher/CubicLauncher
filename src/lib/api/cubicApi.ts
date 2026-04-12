@@ -92,6 +92,18 @@ export async function getInstanceMods(id: string): Promise<ModDto[]> {
   }
 }
 
+export async function toggleInstanceMod(
+  id: string,
+  filename: string,
+  enable: boolean
+): Promise<void> {
+  try {
+    await invoke("toggle_instance_mod", { id, filename, enable });
+  } catch (err) {
+    console.error(`Error al hacer toggle de mod ${filename}:`, err);
+  }
+}
+
 export async function launchInstance(
   instance: InstanceDto,
   callback?: () => void,
@@ -122,18 +134,18 @@ export async function fetchAll(
 }
 
 export async function getSettings(): Promise<any> {
-    try {
-        return await invoke("get_settings");
-    } catch (err) {
-        console.error("Error al obtener settings:", err);
-        return null;
-    }
+  try {
+    return await invoke("get_settings");
+  } catch (err) {
+    console.error("Error al obtener settings:", err);
+    return null;
+  }
 }
 
 export async function updateSettings(settings: any): Promise<void> {
-    try {
-        await invoke("update_settings", { newSettings: settings });
-    } catch (err) {
-        console.error("Error al actualizar settings:", err);
-    }
+  try {
+    await invoke("update_settings", { newSettings: settings });
+  } catch (err) {
+    console.error("Error al actualizar settings:", err);
+  }
 }
