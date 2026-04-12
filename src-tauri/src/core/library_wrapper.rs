@@ -82,7 +82,7 @@ impl LauncherWrapper {
         // │   └── assets/       ← Aquí están los assets
         // └── instances/
         //     └── 1.20.1/       ← Directorio de la instancia
-        let (version, min_mem, max_mem, is_running, name) = {
+        let (version, _min_mem, _max_mem, is_running, name) = {
             let inst = instance.read().await;
             (
                 inst.get_version().to_string(),

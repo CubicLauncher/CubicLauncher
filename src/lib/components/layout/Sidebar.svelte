@@ -1,6 +1,14 @@
 <script lang="ts">
-    import { createInstance, fetchAll, getInstalledVersions } from "$lib/api/cubicApi";
-    import { deleteInst, renameInst, updateInst } from "$lib/api/launcherService";
+    import {
+        createInstance,
+        fetchAll,
+        getInstalledVersions,
+    } from "$lib/api/cubicApi";
+    import {
+        deleteInst,
+        renameInst,
+        updateInst,
+    } from "$lib/api/launcherService";
     import { launcherStore } from "$lib/state/state.svelte";
     import type { InstanceDto } from "$lib/types/types";
     import UserMenu from "./UserMenu.svelte";
@@ -40,7 +48,8 @@
     async function handleRename() {
         if (!instanceToActOn) return;
         const nameChanged = renameInput && renameInput !== instanceToActOn.name;
-        const versionChanged = versionInput && versionInput !== instanceToActOn.version;
+        const versionChanged =
+            versionInput && versionInput !== instanceToActOn.version;
 
         if (nameChanged || versionChanged) {
             await updateInst(
@@ -80,7 +89,10 @@
                     class="instance-item"
                     class:active={selectedInstance?.uuid === instance.uuid}
                     onclick={() => (selectedInstance = instance)}
-                    onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") selectedInstance = instance; }}
+                    onkeydown={(e) => {
+                        if (e.key === "Enter" || e.key === " ")
+                            selectedInstance = instance;
+                    }}
                     role="button"
                     tabindex="0"
                     title={instance.name}
@@ -92,19 +104,37 @@
                         <span class="instance-name">{instance.name}</span>
                     </div>
                     <div class="instance-actions">
-                        <button 
-                            class="action-btn" 
-                            onclick={(e) => { e.stopPropagation(); openRenameModal(instance); }}
+                        <button
+                            class="action-btn"
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                openRenameModal(instance);
+                            }}
                             title="Renombrar"
                         >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            <img
+                                src="/images/icons/edit.svg"
+                                alt="Renombrar"
+                                width="12"
+                                height="12"
+                                style="filter: invert(1);"
+                            />
                         </button>
-                        <button 
-                            class="action-btn delete" 
-                            onclick={(e) => { e.stopPropagation(); openDeleteModal(instance); }}
+                        <button
+                            class="action-btn delete"
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                openDeleteModal(instance);
+                            }}
                             title="Eliminar"
                         >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <img
+                                src="/images/icons/trash.svg"
+                                alt="Eliminar"
+                                width="12"
+                                height="12"
+                                style="filter: invert(30%) sepia(80%) saturate(5000%) hue-rotate(0deg) brightness(100%) contrast(100%);"
+                            />
                         </button>
                     </div>
                 </div>
@@ -122,10 +152,35 @@
 
     <div class="sidebar-footer">
         <button class="footer-btn" onclick={() => (openCreateModal = true)}>
-            <span style="margin-right: 8px;">+</span> Crear Instancia
+            <img
+                src="/images/icons/create.svg"
+                alt=""
+                width="16"
+                height="16"
+                style="margin-right: 8px; filter: invert(1);"
+            />
+            Crear Instancia
         </button>
-        <button class="footer-btn">Descargar Versiones</button>
-        <button class="footer-btn" onclick={onOpenQuickMenu}>Ajustes</button>
+        <button class="footer-btn">
+            <img
+                src="/images/icons/download.svg"
+                alt=""
+                width="16"
+                height="16"
+                style="margin-right: 8px; filter: invert(1);"
+            />
+            Descargar Versiones
+        </button>
+        <button class="footer-btn" onclick={onOpenQuickMenu}>
+            <img
+                src="/images/icons/settings.svg"
+                alt=""
+                width="16"
+                height="16"
+                style="margin-right: 8px; filter: invert(1);"
+            />
+            Ajustes
+        </button>
 
         <div
             class="user-profile"
@@ -143,7 +198,16 @@
                 class="user-avatar"
             />
             <div class="user-info">
-                <span class="user-name">{launcherStore.settings.username}</span>
+                <div class="user-name-wrapper">
+                    <span class="user-name">{launcherStore.settings.username}</span>
+                    <img
+                        src="/images/icons/edit.svg"
+                        alt="Editar"
+                        class="user-edit-icon"
+                        width="12"
+                        height="12"
+                    />
+                </div>
                 <span class="user-status">Cracked</span>
             </div>
         </div>
@@ -168,7 +232,11 @@
 
     <div class="input-group" style="margin-top: 12px;">
         <label class="input-label" for="version-select">Versión</label>
-        <select id="version-select" class="text-input" bind:value={versionInput}>
+        <select
+            id="version-select"
+            class="text-input"
+            bind:value={versionInput}
+        >
             {#each installedVersions as version}
                 <option value={version}>{version}</option>
             {/each}
@@ -184,13 +252,22 @@
 </ModalBase>
 
 <ModalBase bind:open={showDeleteModal} title="Eliminar Instancia">
-    <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-        ¿Estás seguro de que deseas eliminar la instancia 
-        <strong style="color: var(--text-primary);">"{instanceToActOn?.name}"</strong>? 
-        Esta acción no se puede deshacer.
+    <p
+        style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;"
+    >
+        ¿Estás seguro de que deseas eliminar la instancia
+        <strong style="color: var(--text-primary);"
+            >"{instanceToActOn?.name}"</strong
+        >? Esta acción no se puede deshacer.
     </p>
     {#snippet footer()}
-        <button class="btn-secondary" onclick={() => (showDeleteModal = false)}>Cancelar</button>
-        <button class="btn-primary" style="background: #ff4444; color: white;" onclick={handleDelete}>Eliminar</button>
+        <button class="btn-secondary" onclick={() => (showDeleteModal = false)}
+            >Cancelar</button
+        >
+        <button
+            class="btn-primary"
+            style="background: #ff4444; color: white;"
+            onclick={handleDelete}>Eliminar</button
+        >
     {/snippet}
 </ModalBase>

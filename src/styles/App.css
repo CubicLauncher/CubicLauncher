@@ -327,6 +327,25 @@ body {
     text-overflow: ellipsis;
 }
 
+.user-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.user-edit-icon {
+    opacity: 0;
+    filter: invert(1);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform: translateX(-4px);
+    pointer-events: none;
+}
+
+.user-profile:hover .user-edit-icon {
+    opacity: 0.5;
+    transform: translateX(0);
+}
+
 .user-status {
     font-size: 0.68rem;
     color: var(--text-secondary);
