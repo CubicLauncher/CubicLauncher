@@ -13,6 +13,7 @@
     import type { InstanceDto } from "$lib/types/types";
     import UserMenu from "./UserMenu.svelte";
     import ModalBase from "./ModalBase.svelte";
+    import Select from "./Select.svelte";
 
     let {
         selectedInstance = $bindable(),
@@ -157,7 +158,7 @@
                 alt=""
                 width="16"
                 height="16"
-                style="margin-right: 8px; filter: invert(1);"
+                style="filter: invert(1);"
             />
             Crear Instancia
         </button>
@@ -167,7 +168,7 @@
                 alt=""
                 width="16"
                 height="16"
-                style="margin-right: 8px; filter: invert(1);"
+                style="filter: invert(1);"
             />
             Descargar Versiones
         </button>
@@ -177,7 +178,7 @@
                 alt=""
                 width="16"
                 height="16"
-                style="margin-right: 8px; filter: invert(1);"
+                style="filter: invert(1);"
             />
             Ajustes
         </button>
@@ -231,16 +232,12 @@
     </div>
 
     <div class="input-group" style="margin-top: 12px;">
-        <label class="input-label" for="version-select">Versión</label>
-        <select
+        <Select
             id="version-select"
-            class="text-input"
+            label="Versión"
+            options={installedVersions.map((v) => ({ value: v, label: v }))}
             bind:value={versionInput}
-        >
-            {#each installedVersions as version}
-                <option value={version}>{version}</option>
-            {/each}
-        </select>
+        />
     </div>
 
     {#snippet footer()}
