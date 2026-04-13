@@ -13,6 +13,8 @@
    10. COMPONENTS: OVERLAYS (DRAWER & MODAL)
    11. SHARED UI ELEMENTS
    12. MEDIA QUERIES
+   13. DOWNLOADS
+   13.1. VIRTUAL LIST
    ========================================================================== */
 
 /* ─── 1. FONTS ───────────────────────────────────────────── */
@@ -1653,4 +1655,31 @@ body {
     .play-btn {
         margin: 0 auto;
     }
+}
+
+/* ─── 13. DOWNLOADS ──────────────────────────────────── */
+
+.download-btn:hover {
+    background: #e0e0e0;
+    transform: translateY(-1px);
+}
+
+.download-btn:active {
+    transform: translateY(0);
+}
+
+/* ─── 13.1. VIRTUAL LIST ──────────────────────────────────── */
+
+.virtual-list-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.virtual-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.virtual-list-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
 }

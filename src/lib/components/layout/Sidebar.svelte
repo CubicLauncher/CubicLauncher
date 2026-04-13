@@ -15,15 +15,19 @@
     import ModalBase from "./ModalBase.svelte";
     import Select from "./Select.svelte";
 
+    interface Props {
+        selectedInstance: InstanceDto | null;
+        openCreateModal: boolean;
+        onopenquickmenu?: () => void;
+        onopenversiondownloader?: () => void;
+    }
+
     let {
         selectedInstance = $bindable(),
         openCreateModal = $bindable(),
-        onOpenQuickMenu,
-    } = $props<{
-        selectedInstance: InstanceDto | null;
-        openCreateModal: boolean;
-        onOpenQuickMenu?: () => void;
-    }>();
+        onopenquickmenu,
+        onopenversiondownloader,
+    }: Props = $props();
 
     let showUserMenu = $state(false);
     let showRenameModal = $state(false);
@@ -162,7 +166,7 @@
             />
             Crear Instancia
         </button>
-        <button class="footer-btn">
+        <button class="footer-btn" onclick={onopenversiondownloader}>
             <img
                 src="/images/icons/download.svg"
                 alt=""
@@ -172,7 +176,7 @@
             />
             Descargar Versiones
         </button>
-        <button class="footer-btn" onclick={onOpenQuickMenu}>
+        <button class="footer-btn" onclick={onopenquickmenu}>
             <img
                 src="/images/icons/settings.svg"
                 alt=""

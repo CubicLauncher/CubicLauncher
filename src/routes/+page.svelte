@@ -10,9 +10,11 @@
     import Drawer from "$lib/components/layout/Drawer.svelte";
     import Settings from "$lib/components/settings/Settings.svelte";
     import CreateInstanceModal from "$lib/components/instances/CreateInstanceModal.svelte";
+    import VersionDownloader from "$lib/components/layout/VersionDownloader.svelte";
 
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
+    let versionDownloaderOpen = $state(false);
     let openCreateModal = $state(false);
 
     onMount(() => {
@@ -44,7 +46,8 @@
     <Sidebar
         bind:selectedInstance
         bind:openCreateModal
-        onOpenQuickMenu={() => (quickMenuOpen = true)}
+        onopenquickmenu={() => (quickMenuOpen = true)}
+        onopenversiondownloader={() => (versionDownloaderOpen = true)}
     />
 
     <main class="main-content">
@@ -71,6 +74,10 @@
 
 <Drawer bind:open={quickMenuOpen} direction="right">
     <Settings onclose={() => (quickMenuOpen = false)} />
+</Drawer>
+
+<Drawer bind:open={versionDownloaderOpen} direction="right">
+    <VersionDownloader onclose={() => (versionDownloaderOpen = false)} />
 </Drawer>
 
 <CreateInstanceModal bind:open={openCreateModal} />

@@ -149,3 +149,19 @@ export async function updateSettings(settings: any): Promise<void> {
     console.error("Error al actualizar settings:", err);
   }
 }
+export async function getAvailableVersions(): Promise<any> {
+    try {
+        return await invoke("get_available_versions");
+    } catch (err) {
+        console.error("Error al obtener versiones disponibles:", err);
+        return null;
+    }
+}
+
+export async function addToQueue(version: string): Promise<void> {
+    try {
+        await invoke("add_to_queue", { version });
+    } catch (err) {
+        console.error(`Error al agregar ${version} a la cola:`, err);
+    }
+}
