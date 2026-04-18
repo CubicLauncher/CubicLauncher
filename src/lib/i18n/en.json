@@ -107,9 +107,9 @@
         "emptyNameErr": "Name cannot be empty",
         "createErr": "Error creating instance",
         "nameLabel": "Instance Name",
-        "namePlaceholder": "E.g. My World 1.14",
+        "namePlaceholder": "E.g. My Instance",
         "versionLabel": "Version",
-        "versionNotice": "Currently only version 1.14 is available",
+        "noVersionsErr": "No downloaded versions found",
         "cancel": "Cancel",
         "createBtn": "Create",
         "creatingBtn": "Creating..."

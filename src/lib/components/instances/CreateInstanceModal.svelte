@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { createInstance } from "$lib/api/cubicApi";
+    import { createInstance, getInstalledVersions } from "$lib/api/cubicApi";
+    import Select from "$lib/components/layout/Select.svelte";
     import { t } from "$lib/i18n";
 
     let { open = $bindable(), oncreated } = $props<{
@@ -8,12 +9,37 @@
     }>();
 
     let name = $state("");
+    let selectedVersion = $state("");
+    let versions = $state<string[]>([]);
     let loading = $state(false);
     let error = $state<string | null>(null);
+
+    $effect(() => {
+        if (open) {
+            fetchVersions();
+        }
+    });
+
+    async function fetchVersions() {
+        const rawVersions = await getInstalledVersions();
+        // Sort versions descending (newest first)
+        versions = rawVersions.sort((a, b) => 
+            b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' })
+        );
+        
+        if (versions.length > 0 && !selectedVersion) {
+            selectedVersion = versions[0];
+        }
+    }
 
     async function handleCreate() {
         if (!name.trim()) {
             error = t('createInstance.emptyNameErr');
+            return;
+        }
+
+        if (!selectedVersion) {
+            error = t('createInstance.noVersionsErr');
             return;
         }
 
@@ -23,7 +49,7 @@
         try {
             await createInstance(
                 name,
-                "1.14",
+                selectedVersion,
                 () => {
                     open = false;
                     name = "";
@@ -81,18 +107,13 @@
                 </div>
 
                 <div class="input-group">
-                    <span class="input-label">{t('createInstance.versionLabel')}</span>
-                    <input
-                        type="text"
-                        class="text-input"
-                        value="1.14"
-                        disabled
+                    <Select
+                        label={t('createInstance.versionLabel')}
+                        bind:value={selectedVersion}
+                        options={versions.map(v => ({ value: v, label: v }))}
+                        disabled={loading || versions.length === 0}
+                        placeholder={t('createInstance.noVersionsErr')}
                     />
-                    <small
-                        style="font-size: 0.6rem; color: var(--text-secondary); margin-top: 4px;"
-                    >
-                        {t('createInstance.versionNotice')}
-                    </small>
                 </div>
 
                 {#if error}

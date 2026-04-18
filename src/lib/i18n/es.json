@@ -107,9 +107,9 @@
         "emptyNameErr": "El nombre no puede estar vacío",
         "createErr": "Error al crear la instancia",
         "nameLabel": "Nombre de la Instancia",
-        "namePlaceholder": "Ej. Mi mundo 1.14",
+        "namePlaceholder": "Ej. Mi instancia",
         "versionLabel": "Versión",
-        "versionNotice": "Por ahora solo está disponible la versión 1.14",
+        "noVersionsErr": "No hay versiones descargadas",
         "cancel": "Cancelar",
         "createBtn": "Crear",
         "creatingBtn": "Creando..."

@@ -84,11 +84,11 @@
 
 <aside class="sidebar">
     <div class="sidebar-header">
-        <h1>CUBICLAUNCHER</h1>
+        <h1 style="font-size: 0.9rem; font-weight: bold;">CUBICLAUNCHER</h1>
     </div>
 
     <div class="sidebar-content">
-        <div class="section-label">{t('sidebar.yourInstances')}</div>
+        <div class="section-label">{t("sidebar.yourInstances")}</div>
         <div class="instance-list">
             {#each launcherStore.loadedInstances as instance}
                 <div
@@ -116,11 +116,11 @@
                                 e.stopPropagation();
                                 openRenameModal(instance);
                             }}
-                            title={t('sidebar.rename')}
+                            title={t("sidebar.rename")}
                         >
                             <img
                                 src="/images/icons/edit.svg"
-                                alt={t('sidebar.rename')}
+                                alt={t("sidebar.rename")}
                                 width="12"
                                 height="12"
                                 style="filter: invert(1);"
@@ -132,11 +132,11 @@
                                 e.stopPropagation();
                                 openDeleteModal(instance);
                             }}
-                            title={t('sidebar.delete')}
+                            title={t("sidebar.delete")}
                         >
                             <img
                                 src="/images/icons/trash.svg"
-                                alt={t('sidebar.delete')}
+                                alt={t("sidebar.delete")}
                                 width="12"
                                 height="12"
                                 style="filter: invert(30%) sepia(80%) saturate(5000%) hue-rotate(0deg) brightness(100%) contrast(100%);"
@@ -150,7 +150,8 @@
                     class="instance-item"
                     style="opacity: 0.4; cursor: default;"
                 >
-                    <span class="instance-name">{t('sidebar.noInstances')}</span>
+                    <span class="instance-name">{t("sidebar.noInstances")}</span
+                    >
                 </div>
             {/if}
         </div>
@@ -165,7 +166,7 @@
                 height="16"
                 style="filter: invert(1);"
             />
-            {t('sidebar.createInstance')}
+            {t("sidebar.createInstance")}
         </button>
         <button class="footer-btn" onclick={onopenversiondownloader}>
             <img
@@ -175,7 +176,7 @@
                 height="16"
                 style="filter: invert(1);"
             />
-            {t('sidebar.downloadVersions')}
+            {t("sidebar.downloadVersions")}
         </button>
         <button class="footer-btn" onclick={onopenquickmenu}>
             <img
@@ -185,7 +186,7 @@
                 height="16"
                 style="filter: invert(1);"
             />
-            {t('sidebar.settings')}
+            {t("sidebar.settings")}
         </button>
 
         <div
@@ -205,16 +206,18 @@
             />
             <div class="user-info">
                 <div class="user-name-wrapper">
-                    <span class="user-name">{launcherStore.settings.username}</span>
+                    <span class="user-name"
+                        >{launcherStore.settings.username}</span
+                    >
                     <img
                         src="/images/icons/edit.svg"
-                        alt={t('userMenu.edit')}
+                        alt={t("userMenu.edit")}
                         class="user-edit-icon"
                         width="12"
                         height="12"
                     />
                 </div>
-                <span class="user-status">{t('userMenu.offline')}</span>
+                <span class="user-status">{t("userMenu.offline")}</span>
             </div>
         </div>
     </div>
@@ -224,9 +227,11 @@
     <UserMenu onclose={() => (showUserMenu = false)} />
 {/if}
 
-<ModalBase bind:open={showRenameModal} title={t('sidebar.modals.editTitle')}>
+<ModalBase bind:open={showRenameModal} title={t("sidebar.modals.editTitle")}>
     <div class="input-group">
-        <label class="input-label" for="rename-input">{t('sidebar.modals.nameLabel')}</label>
+        <label class="input-label" for="rename-input"
+            >{t("sidebar.modals.nameLabel")}</label
+        >
         <input
             id="rename-input"
             type="text"
@@ -239,7 +244,7 @@
     <div class="input-group" style="margin-top: 12px;">
         <Select
             id="version-select"
-            label={t('sidebar.modals.versionLabel')}
+            label={t("sidebar.modals.versionLabel")}
             options={installedVersions.map((v) => ({ value: v, label: v }))}
             bind:value={versionInput}
         />
@@ -247,29 +252,31 @@
 
     {#snippet footer()}
         <button class="btn-secondary" onclick={() => (showRenameModal = false)}
-            >{t('sidebar.modals.cancel')}</button
+            >{t("sidebar.modals.cancel")}</button
         >
-        <button class="btn-primary" onclick={handleRename}>{t('sidebar.modals.save')}</button>
+        <button class="btn-primary" onclick={handleRename}
+            >{t("sidebar.modals.save")}</button
+        >
     {/snippet}
 </ModalBase>
 
-<ModalBase bind:open={showDeleteModal} title={t('sidebar.modals.deleteTitle')}>
+<ModalBase bind:open={showDeleteModal} title={t("sidebar.modals.deleteTitle")}>
     <p
         style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;"
     >
-        {t('sidebar.modals.deleteDesc1')}
+        {t("sidebar.modals.deleteDesc1")}
         <strong style="color: var(--text-primary);"
             >"{instanceToActOn?.name}"</strong
-        >{t('sidebar.modals.deleteDesc2')}
+        >{t("sidebar.modals.deleteDesc2")}
     </p>
     {#snippet footer()}
         <button class="btn-secondary" onclick={() => (showDeleteModal = false)}
-            >{t('sidebar.modals.cancel')}</button
+            >{t("sidebar.modals.cancel")}</button
         >
         <button
             class="btn-primary"
             style="background: #ff4444; color: white;"
-            onclick={handleDelete}>{t('sidebar.modals.deleteBtn')}</button
+            onclick={handleDelete}>{t("sidebar.modals.deleteBtn")}</button
         >
     {/snippet}
 </ModalBase>
