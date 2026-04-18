@@ -5,6 +5,7 @@
     import { launchInstance } from "$lib/api/cubicApi";
     import ModsRow from "./ModsRow.svelte";
     import QuickOptionsPanel from "./QuickOptionsPanel.svelte";
+    import { t } from "$lib/i18n";
 
     let { selectedInstance } = $props<{ selectedInstance: InstanceDto }>();
     let activeTab = $state("detalles");
@@ -77,7 +78,7 @@
 
     function formatDate(unix_date: number): string {
         if (unix_date < 1) {
-            return "Nunca jugado";
+            return t('instanceView.neverPlayed');
         }
         let date = new Date(unix_date * 1000);
         return formatter.format(date);
@@ -102,7 +103,7 @@
                 onkeydown={(e) => e.stopPropagation()}
             >
                 <div class="picker-header">
-                    <h3>Seleccionar Banner</h3>
+                    <h3>{t('instanceView.pickBannerTitle')}</h3>
                     <button
                         class="close-btn"
                         onclick={() => (showPicker = false)}>✕</button
@@ -111,7 +112,7 @@
                 <div class="picker-content">
                     {#if allScreenshots.length === 0}
                         <div class="empty-picker">
-                            No hay capturas disponibles
+                            {t('instanceView.noScreenshots')}
                         </div>
                     {:else}
                         <div class="picker-grid">
@@ -144,11 +145,11 @@
         <div class="instance-title-area">
             <h2>{selectedInstance.name}</h2>
             <div class="last-played">
-                Última vez jugado: {formatDate(selectedInstance.last_played)}
+                {t('instanceView.lastPlayed').replace('{date}', formatDate(selectedInstance.last_played))}
             </div>
             <button
                 class="play-btn"
-                onclick={() => launchInstance(selectedInstance)}>Jugar</button
+                onclick={() => launchInstance(selectedInstance)}>{t('instanceView.playBtn')}</button
             >
         </div>
 
@@ -156,7 +157,7 @@
             <button
                 class="banner-btn"
                 onclick={pickBanner}
-                title="Cambiar Banner"
+                title={t('instanceView.changeBannerTitle')}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -172,7 +173,7 @@
                         d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
                     /><circle cx="12" cy="13" r="4" /></svg
                 >
-                <span>Cambiar</span>
+                <span>{t('instanceView.changeBanner')}</span>
             </button>
         </div>
     </section>
@@ -182,20 +183,20 @@
             class="tab-item {activeTab === 'detalles' ? 'active' : ''}"
             onclick={() => (activeTab = "detalles")}
         >
-            Detalles
+            {t('instanceView.tabs.details')}
         </button>
         <button
             class="tab-item {activeTab === 'mods' ? 'active' : ''}"
             onclick={() => supportsMods && (activeTab = "mods")}
             disabled={!supportsMods}
         >
-            Mods
+            {t('instanceView.tabs.mods')}
         </button>
         <button
             class="tab-item {activeTab === 'opciones' ? 'active' : ''}"
             onclick={() => (activeTab = "opciones")}
         >
-            Opciones
+            {t('instanceView.tabs.options')}
         </button>
     </div>
 

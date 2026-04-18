@@ -1,5 +1,6 @@
 <script lang="ts">
     import { createInstance } from "$lib/api/cubicApi";
+    import { t } from "$lib/i18n";
 
     let { open = $bindable(), oncreated } = $props<{
         open: boolean;
@@ -12,7 +13,7 @@
 
     async function handleCreate() {
         if (!name.trim()) {
-            error = "El nombre no puede estar vacío";
+            error = t('createInstance.emptyNameErr');
             return;
         }
 
@@ -29,7 +30,7 @@
                     oncreated?.();
                 },
                 (err) => {
-                    error = "Error al crear la instancia";
+                    error = t('createInstance.createErr');
                     console.error(err);
                 },
             );
@@ -62,25 +63,25 @@
             tabindex="-1"
         >
             <div class="modal-header">
-                <span class="modal-title">Crear Nueva Instancia</span>
+                <span class="modal-title">{t('createInstance.title')}</span>
                 <button class="qm-close-btn" onclick={close}>&times;</button>
             </div>
 
             <div class="modal-body">
                 <div class="input-group">
-                    <span class="input-label">Nombre de la Instancia</span>
+                    <span class="input-label">{t('createInstance.nameLabel')}</span>
                     <input
                         type="text"
                         class="text-input"
                         bind:value={name}
-                        placeholder="Ej. Mi mundo 1.14"
+                        placeholder={t('createInstance.namePlaceholder')}
                         disabled={loading}
                         onkeydown={(e) => e.key === "Enter" && handleCreate()}
                     />
                 </div>
 
                 <div class="input-group">
-                    <span class="input-label">Versión</span>
+                    <span class="input-label">{t('createInstance.versionLabel')}</span>
                     <input
                         type="text"
                         class="text-input"
@@ -90,7 +91,7 @@
                     <small
                         style="font-size: 0.6rem; color: var(--text-secondary); margin-top: 4px;"
                     >
-                        Por ahora solo está disponible la versión 1.14
+                        {t('createInstance.versionNotice')}
                     </small>
                 </div>
 
@@ -109,14 +110,14 @@
                     onclick={close}
                     disabled={loading}
                 >
-                    Cancelar
+                    {t('createInstance.cancel')}
                 </button>
                 <button
                     class="btn-primary"
                     onclick={handleCreate}
                     disabled={loading}
                 >
-                    {loading ? "Creando..." : "Crear"}
+                    {loading ? t('createInstance.creatingBtn') : t('createInstance.createBtn')}
                 </button>
             </div>
         </div>

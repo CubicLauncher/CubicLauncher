@@ -11,6 +11,7 @@
     import Settings from "$lib/components/settings/Settings.svelte";
     import CreateInstanceModal from "$lib/components/instances/CreateInstanceModal.svelte";
     import VersionDownloader from "$lib/components/layout/VersionDownloader.svelte";
+    import { t } from "$lib/i18n";
 
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
@@ -65,8 +66,8 @@
                     alt="Cubic"
                     style="width: 120px; opacity: 0.1; filter: grayscale(1);"
                 />
-                <h2>No se ha seleccionado ninguna instancia</h2>
-                <p>Elige una instancia de la barra lateral para comenzar</p>
+                <h2>{t('main.noInstanceTitle')}</h2>
+                <p>{t('main.noInstanceDesc')}</p>
             </div>
         {/if}
     </main>

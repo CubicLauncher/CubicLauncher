@@ -7,6 +7,7 @@
     } from "$lib/api/cubicApi";
     import VirtualList from "./VirtualList.svelte";
     import { launcherStore } from "$lib/state/state.svelte";
+    import { t } from "$lib/i18n";
 
     interface Props {
         onclose?: () => void;
@@ -62,7 +63,7 @@
 
 <div class="qm-root">
     <div class="qm-header">
-        <span class="qm-label">Descargar Versiones</span>
+        <span class="qm-label">{t('versionDownloader.title')}</span>
         <button class="qm-close-btn" onclick={onclose}>✕</button>
     </div>
 
@@ -72,7 +73,7 @@
             class:active={filter === "release"}
             onclick={() => (filter = "release")}
         >
-            <span class="qm-tab-label">Releases</span>
+            <span class="qm-tab-label">{t('versionDownloader.tabs.releases')}</span>
         </button>
         {#if launcherStore.settings.show_snapshots}
             <button
@@ -80,7 +81,7 @@
                 class:active={filter === "snapshot"}
                 onclick={() => (filter = "snapshot")}
             >
-                <span class="qm-tab-label">Snapshots</span>
+                <span class="qm-tab-label">{t('versionDownloader.tabs.snapshots')}</span>
             </button>
         {/if}
         {#if launcherStore.settings.show_alpha}
@@ -89,7 +90,7 @@
                 class:active={filter === "alpha"}
                 onclick={() => (filter = "alpha")}
             >
-                <span class="qm-tab-label">Alphas</span>
+                <span class="qm-tab-label">{t('versionDownloader.tabs.alphas')}</span>
             </button>
         {/if}
     </div>
@@ -97,7 +98,7 @@
     <div class="qm-search-container" style="padding: 10px 20px;">
         <input
             type="text"
-            placeholder="Buscar versión..."
+            placeholder={t('versionDownloader.searchPlaceholder')}
             bind:value={search}
             style="width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;"
         />
@@ -105,9 +106,9 @@
 
     <div class="qm-scroll" style="overflow: hidden; padding: 0;">
         {#if loading}
-            <div class="qm-empty-state">Cargando versiones...</div>
+            <div class="qm-empty-state">{t('versionDownloader.loading')}</div>
         {:else if filteredVersions.length === 0}
-            <div class="qm-empty-state">No se encontraron versiones</div>
+            <div class="qm-empty-state">{t('versionDownloader.notFound')}</div>
         {:else}
             <VirtualList items={filteredVersions} itemHeight={66} padding={20}>
                 {#snippet children(version, index)}
@@ -134,7 +135,7 @@
                                     {#if isInstalled}
                                         <span
                                             style="font-size: 0.6rem; background: rgba(0, 255, 100, 0.1); color: #00ff64; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(0, 255, 100, 0.2);"
-                                            >Instalada</span
+                                            >{t('versionDownloader.installedTag')}</span
                                         >
                                     {/if}
                                 </div>
@@ -170,7 +171,7 @@
                                     onclick={() => handleDownload(version.id)}
                                     style="background: #fff; color: #000; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
                                 >
-                                    Descargar
+                                    {t('versionDownloader.downloadBtn')}
                                 </button>
                             {/if}
                         </div>

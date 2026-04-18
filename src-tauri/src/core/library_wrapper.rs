@@ -137,17 +137,24 @@ impl LauncherWrapper {
         // Launch options
         let options = LaunchOptions::new().with_demo(false);
         let mut custom_env = HashMap::new();
-        custom_env.insert("DRI_PRIME".to_string(), "1".to_string());
+        if settings.force_gpu {
+            custom_env.insert("DRI_PRIME".to_string(), "1".to_string());
+        }
         let instance_clone = Arc::clone(&instance);
+        
+        let username = settings.username.clone();
+        let min_mem = format!("{}G", settings.min_memory);
+        let max_mem = format!("{}G", settings.max_memory);
+        
         let child_result = tokio::task::spawn_blocking(move || {
             Launcher::launch_with_options_and_child(
                 &version_json,
                 &shared_dir,
                 &instance_dir,
-                "SantiagolxxEzz",
+                &username,
                 &java_path,
-                "2G",
-                "4G",
+                &min_mem,
+                &max_mem,
                 854,
                 480,
                 true,

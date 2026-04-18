@@ -107,8 +107,19 @@ impl SettingsManager {
                 return SettingsManager::default();
             }
         };
-        match serde_json::from_str(&content) {
-            Ok(settings) => settings,
+        match serde_json::from_str::<SettingsManager>(&content) {
+            Ok(mut settings) => {
+                // Migrate from MB to GB if it looks like MB (e.g. > 128)
+                if settings.min_memory > 128 {
+                    settings.min_memory = (settings.min_memory / 1024).max(1);
+                    settings.dirty = true;
+                }
+                if settings.max_memory > 128 {
+                    settings.max_memory = (settings.max_memory / 1024).max(1);
+                    settings.dirty = true;
+                }
+                settings
+            },
             Err(_) => {
                 eprintln!("Configuracion invalida, creando backup");
                 let _ = std::fs::copy(&path, path.with_extension("cub.bak"));
@@ -121,8 +132,8 @@ impl Default for SettingsManager {
     fn default() -> Self {
         SettingsManager {
             username: String::from("steve"),
-            min_memory: 512,
-            max_memory: 2048,
+            min_memory: 1,
+            max_memory: 2,
             jre8_path: PathBuf::new(),
             jre17_path: PathBuf::new(),
             jre21_path: PathBuf::new(),

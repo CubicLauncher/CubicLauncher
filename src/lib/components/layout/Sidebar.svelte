@@ -14,6 +14,7 @@
     import UserMenu from "./UserMenu.svelte";
     import ModalBase from "./ModalBase.svelte";
     import Select from "./Select.svelte";
+    import { t } from "$lib/i18n";
 
     interface Props {
         selectedInstance: InstanceDto | null;
@@ -87,7 +88,7 @@
     </div>
 
     <div class="sidebar-content">
-        <div class="section-label">Tus Instancias</div>
+        <div class="section-label">{t('sidebar.yourInstances')}</div>
         <div class="instance-list">
             {#each launcherStore.loadedInstances as instance}
                 <div
@@ -115,11 +116,11 @@
                                 e.stopPropagation();
                                 openRenameModal(instance);
                             }}
-                            title="Renombrar"
+                            title={t('sidebar.rename')}
                         >
                             <img
                                 src="/images/icons/edit.svg"
-                                alt="Renombrar"
+                                alt={t('sidebar.rename')}
                                 width="12"
                                 height="12"
                                 style="filter: invert(1);"
@@ -131,11 +132,11 @@
                                 e.stopPropagation();
                                 openDeleteModal(instance);
                             }}
-                            title="Eliminar"
+                            title={t('sidebar.delete')}
                         >
                             <img
                                 src="/images/icons/trash.svg"
-                                alt="Eliminar"
+                                alt={t('sidebar.delete')}
                                 width="12"
                                 height="12"
                                 style="filter: invert(30%) sepia(80%) saturate(5000%) hue-rotate(0deg) brightness(100%) contrast(100%);"
@@ -149,7 +150,7 @@
                     class="instance-item"
                     style="opacity: 0.4; cursor: default;"
                 >
-                    <span class="instance-name">Sin instancias</span>
+                    <span class="instance-name">{t('sidebar.noInstances')}</span>
                 </div>
             {/if}
         </div>
@@ -164,7 +165,7 @@
                 height="16"
                 style="filter: invert(1);"
             />
-            Crear Instancia
+            {t('sidebar.createInstance')}
         </button>
         <button class="footer-btn" onclick={onopenversiondownloader}>
             <img
@@ -174,7 +175,7 @@
                 height="16"
                 style="filter: invert(1);"
             />
-            Descargar Versiones
+            {t('sidebar.downloadVersions')}
         </button>
         <button class="footer-btn" onclick={onopenquickmenu}>
             <img
@@ -184,7 +185,7 @@
                 height="16"
                 style="filter: invert(1);"
             />
-            Ajustes
+            {t('sidebar.settings')}
         </button>
 
         <div
@@ -207,13 +208,13 @@
                     <span class="user-name">{launcherStore.settings.username}</span>
                     <img
                         src="/images/icons/edit.svg"
-                        alt="Editar"
+                        alt={t('userMenu.edit')}
                         class="user-edit-icon"
                         width="12"
                         height="12"
                     />
                 </div>
-                <span class="user-status">Cracked</span>
+                <span class="user-status">{t('userMenu.offline')}</span>
             </div>
         </div>
     </div>
@@ -223,9 +224,9 @@
     <UserMenu onclose={() => (showUserMenu = false)} />
 {/if}
 
-<ModalBase bind:open={showRenameModal} title="Editar Instancia">
+<ModalBase bind:open={showRenameModal} title={t('sidebar.modals.editTitle')}>
     <div class="input-group">
-        <label class="input-label" for="rename-input">Nombre</label>
+        <label class="input-label" for="rename-input">{t('sidebar.modals.nameLabel')}</label>
         <input
             id="rename-input"
             type="text"
@@ -238,7 +239,7 @@
     <div class="input-group" style="margin-top: 12px;">
         <Select
             id="version-select"
-            label="Versión"
+            label={t('sidebar.modals.versionLabel')}
             options={installedVersions.map((v) => ({ value: v, label: v }))}
             bind:value={versionInput}
         />
@@ -246,29 +247,29 @@
 
     {#snippet footer()}
         <button class="btn-secondary" onclick={() => (showRenameModal = false)}
-            >Cancelar</button
+            >{t('sidebar.modals.cancel')}</button
         >
-        <button class="btn-primary" onclick={handleRename}>Guardar</button>
+        <button class="btn-primary" onclick={handleRename}>{t('sidebar.modals.save')}</button>
     {/snippet}
 </ModalBase>
 
-<ModalBase bind:open={showDeleteModal} title="Eliminar Instancia">
+<ModalBase bind:open={showDeleteModal} title={t('sidebar.modals.deleteTitle')}>
     <p
         style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;"
     >
-        ¿Estás seguro de que deseas eliminar la instancia
+        {t('sidebar.modals.deleteDesc1')}
         <strong style="color: var(--text-primary);"
             >"{instanceToActOn?.name}"</strong
-        >? Esta acción no se puede deshacer.
+        >{t('sidebar.modals.deleteDesc2')}
     </p>
     {#snippet footer()}
         <button class="btn-secondary" onclick={() => (showDeleteModal = false)}
-            >Cancelar</button
+            >{t('sidebar.modals.cancel')}</button
         >
         <button
             class="btn-primary"
             style="background: #ff4444; color: white;"
-            onclick={handleDelete}>Eliminar</button
+            onclick={handleDelete}>{t('sidebar.modals.deleteBtn')}</button
         >
     {/snippet}
 </ModalBase>

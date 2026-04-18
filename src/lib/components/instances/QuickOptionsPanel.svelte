@@ -1,32 +1,33 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
+    import { t } from "$lib/i18n";
 
-    const options = [
+    const options = $derived([
         {
-            label: "Abrir Carpeta",
+            label: t('instanceView.options.folder'),
             icon: " ",
             action: () => console.log("Open folder"),
         },
         {
-            label: "Recursos",
+            label: t('instanceView.options.resources'),
             icon: " ",
             action: () => console.log("Resource packs"),
         },
         {
-            label: "Configurar",
+            label: t('instanceView.options.config'),
             icon: " ",
             action: () => console.log("Configure"),
         },
         {
-            label: "Capturas",
+            label: t('instanceView.options.screenshots'),
             icon: " ",
             action: () => console.log("Screenshots"),
         },
-    ];
+    ]);
 </script>
 
 <div class="quick-options-section">
-    <span class="section-title">Opciones rápidas</span>
+    <span class="section-title">{t('instanceView.options.title')}</span>
     <div class="options-grid">
         {#each options as option}
             <button class="option-button" onclick={option.action}>

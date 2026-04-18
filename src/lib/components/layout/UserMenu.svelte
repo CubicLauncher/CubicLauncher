@@ -2,6 +2,7 @@
     import { fly, fade } from "svelte/transition";
     import { launcherStore } from "$lib/state/state.svelte";
     import { saveSettings } from "$lib/api/launcherService";
+    import { t } from "$lib/i18n";
 
     let { onclose } = $props<{ onclose: () => void }>();
 
@@ -40,7 +41,7 @@
         transition:fly={{ y: 20, duration: 300, opacity: 0 }}
     >
         <div class="modal-header">
-            <h2 class="modal-title">Perfil de Usuario</h2>
+            <h2 class="modal-title">{t('userMenu.title')}</h2>
             <button
                 class="btn-secondary"
                 style="padding: 4px 8px; font-size: 0.7rem;"
@@ -62,7 +63,7 @@
 
                 <div class="input-group" style="width: 100%; margin-top: 10px;">
                     <label class="input-label" for="username-edit"
-                        >Nombre de Usuario</label
+                        >{t('userMenu.usernameLabel')}</label
                     >
                     <div style="display: flex; gap: 8px;">
                         {#if editing}
@@ -73,14 +74,14 @@
                                 onkeydown={handleKeydown}
                                 class="text-input"
                                 style="flex: 1;"
-                                placeholder="Username"
+                                placeholder={t('userMenu.usernamePlaceholder')}
                             />
                         {:else}
                             <div class="username-display-wrapper">
                                 <span class="username-text"
                                     >{launcherStore.settings.username}</span
                                 >
-                                <span class="offline-tag">Offline</span>
+                                <span class="offline-tag">{t('userMenu.offline')}</span>
                             </div>
                         {/if}
                     </div>
@@ -97,13 +98,13 @@
                         newUsername = launcherStore.settings.username;
                     }}>Cancelar</button
                 >
-                <button class="btn-primary" onclick={handleSave}>Guardar</button
+                <button class="btn-primary" onclick={handleSave}>{t('userMenu.save')}</button
                 >
             {:else}
                 <button
                     class="btn-secondary"
                     style="flex: 1;"
-                    onclick={() => (editing = true)}>Cambiar Nombre</button
+                    onclick={() => (editing = true)}>{t('userMenu.changeNameBtn')}</button
                 >
             {/if}
         </div>

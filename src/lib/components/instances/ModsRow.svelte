@@ -1,6 +1,7 @@
 <script lang="ts">
     import { getInstanceMods, toggleInstanceMod } from "$lib/api/cubicApi";
     import { type ModDto } from "$lib/types/types";
+    import { t } from "$lib/i18n";
 
     let { instanceId } = $props<{ instanceId: string }>();
     let mods = $state<ModDto[]>([]);
@@ -24,14 +25,14 @@
 </script>
 
 <div class="mods-section">
-    <span class="section-title">Mods Instalados ({mods.length})</span>
+    <span class="section-title">{t('instanceView.mods.title')} ({mods.length})</span>
     <div class="mods-grid">
         {#each mods as mod}
             <div class="mod-card" title={mod.filename} class:disabled={!mod.enabled}>
                 <div class="mod-info">
                     <span class="mod-name">{mod.name}</span>
                     <span class="mod-category"
-                        >{mod.version || "Archivo .JAR"}</span
+                        >{mod.version || t('instanceView.mods.jarFile')}</span
                     >
                 </div>
                 <div class="mod-status-toggle">
@@ -45,7 +46,7 @@
         {/each}
         {#if mods.length === 0}
             <div class="empty-mods">
-                No hay mods instalados en esta instancia
+                {t('instanceView.mods.empty')}
             </div>
         {/if}
     </div>
