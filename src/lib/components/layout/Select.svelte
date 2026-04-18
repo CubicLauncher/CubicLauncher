@@ -14,6 +14,7 @@
         disabled = false,
         label,
         id,
+        onchange,
     } = $props<{
         value: string;
         options: Option[];
@@ -21,6 +22,7 @@
         disabled?: boolean;
         label?: string;
         id?: string;
+        onchange?: (value: string) => void;
     }>();
 
     let isOpen = $state(false);
@@ -34,6 +36,7 @@
     function selectOption(option: Option) {
         value = option.value;
         isOpen = false;
+        onchange?.(value);
     }
 
     function handleClickOutside(event: MouseEvent) {

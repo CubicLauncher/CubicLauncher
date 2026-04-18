@@ -12,23 +12,43 @@ static SETTINGS: LazyLock<Mutex<SettingsManager>> =
 /// nota: la memoria se guarda en megabytes
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SettingsManager {
+    #[serde(default = "default_username")]
     pub username: String,
-    pub min_memory: u32, // No se quien tenga tanta ram amigo xD
+    #[serde(default = "default_min_mem")]
+    pub min_memory: u32,
+    #[serde(default = "default_max_mem")]
     pub max_memory: u32,
+    #[serde(default)]
     pub jre8_path: PathBuf,
+    #[serde(default)]
     pub jre17_path: PathBuf,
+    #[serde(default)]
     pub jre21_path: PathBuf,
+    #[serde(default = "default_lang")]
     pub language: String,
+    #[serde(default = "default_true")]
     pub auto_updates: bool,
+    #[serde(default)]
     pub show_error_console: bool,
+    #[serde(default = "default_true")]
     pub close_launcher_on_play: bool,
-    pub show_beta: bool,
+    #[serde(default)]
+    pub show_snapshots: bool,
+    #[serde(default)]
     pub show_alpha: bool,
+    #[serde(default)]
     pub force_gpu: bool,
+    #[serde(default)]
     pub jvm_args: String,
     #[serde(skip)]
-    pub dirty: bool, // sistema de dirtness para evitar escribir mucho
+    pub dirty: bool,
 }
+
+fn default_username() -> String { String::from("steve") }
+fn default_min_mem() -> u32 { 1 }
+fn default_max_mem() -> u32 { 2 }
+fn default_lang() -> String { String::from("es") }
+fn default_true() -> bool { true }
 impl SettingsManager {
     pub fn get() -> &'static Mutex<SettingsManager> {
         &SETTINGS
@@ -141,7 +161,7 @@ impl Default for SettingsManager {
             auto_updates: true,
             show_error_console: false,
             close_launcher_on_play: true,
-            show_beta: false,
+            show_snapshots: false,
             show_alpha: false,
             force_gpu: false,
             jvm_args: String::new(),

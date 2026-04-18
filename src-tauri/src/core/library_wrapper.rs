@@ -71,7 +71,7 @@ impl LauncherWrapper {
         self.is_downloading = false;
     }
 
-    pub async fn launch(&mut self, instance: Arc<RwLock<Instance>>) {
+    pub async fn launch(&mut self, instance: Arc<RwLock<Instance>>) -> Result<(), String> {
         trace!("=== CLaunch ===\n");
 
         // Estructura esperada:
@@ -93,8 +93,9 @@ impl LauncherWrapper {
             )
         };
         if is_running {
-            warn!("No se puede lanzar una instancia que ya esta lanzada");
-            return;
+            let msg = "No se puede lanzar una instancia que ya esta lanzada".to_string();
+            warn!("{}", msg);
+            return Err(msg);
         }
         let shared_dir = PathManager::get().get_shared_dir();
         let instance_dir = PathManager::get().get_instance_dir().join(name);
@@ -177,9 +178,18 @@ impl LauncherWrapper {
                         }
                     }
                 });
+                Ok(())
             }
-            Ok(Err(e)) => error!("\n❌ Launch failed: {}", e),
-            Err(e) => error!("\n❌ spawn_blocking panicked: {}", e),
+            Ok(Err(e)) => {
+                let msg = format!("Launch failed: {}", e);
+                error!("\n❌ {}", msg);
+                Err(msg)
+            }
+            Err(e) => {
+                let msg = format!("spawn_blocking panicked: {}", e);
+                error!("\n❌ {}", msg);
+                Err(msg)
+            }
         }
     }
     // este es el verify del ejemplo de claunch, hay q rehacelo

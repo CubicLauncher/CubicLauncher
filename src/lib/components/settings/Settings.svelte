@@ -112,6 +112,7 @@
                         label={t("settings.launcher.language")}
                         options={languageOptions}
                         bind:value={launcherStore.settings.language}
+                        onchange={handleSave}
                     />
                 </div>
                 <div class="qm-field-checkbox">
@@ -119,6 +120,7 @@
                         type="checkbox"
                         id="auto-updates"
                         bind:checked={launcherStore.settings.auto_updates}
+                        onchange={handleSave}
                     />
                     <label for="auto-updates"
                         >{t("settings.launcher.autoUpdates")}</label
@@ -131,6 +133,7 @@
                         bind:checked={
                             launcherStore.settings.close_launcher_on_play
                         }
+                        onchange={handleSave}
                     />
                     <label for="close-on-play"
                         >{t("settings.launcher.closeOnPlay")}</label
@@ -178,6 +181,7 @@
                         type="checkbox"
                         id="show-snapshots"
                         bind:checked={launcherStore.settings.show_snapshots}
+                        onchange={handleSave}
                     />
                     <label for="show-snapshots"
                         >{t("settings.minecraft.showSnapshots")}</label
@@ -188,6 +192,7 @@
                         type="checkbox"
                         id="show-alpha"
                         bind:checked={launcherStore.settings.show_alpha}
+                        onchange={handleSave}
                     />
                     <label for="show-alpha"
                         >{t("settings.minecraft.showAlpha")}</label
@@ -198,6 +203,7 @@
                         type="checkbox"
                         id="force-gpu"
                         bind:checked={launcherStore.settings.force_gpu}
+                        onchange={handleSave}
                     />
                     <label for="force-gpu"
                         >{t("settings.minecraft.forceGpu")}</label
