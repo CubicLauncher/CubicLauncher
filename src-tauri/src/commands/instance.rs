@@ -1,3 +1,4 @@
+use tauri::Manager;
 use crate::core::{InstanceDto, InstanceManager, LauncherWrapper, PathManager};
 use std::path::PathBuf;
 use tracing::error;
@@ -9,12 +10,33 @@ pub async fn launch(app: tauri::AppHandle, instance_id: String) -> Result<(), St
     };
     let inst = arc;
 
-    let result = LauncherWrapper::get().lock().await.launch(inst).await;
+    let result = LauncherWrapper::get().lock().await.launch(inst.clone()).await;
     
     if result.is_ok() {
         let settings = crate::core::SettingsManager::get().lock().unwrap();
         if settings.close_launcher_on_play {
-            app.exit(0);
+            // Get all windows (usually just one) and hide them
+            let windows = app.webview_windows();
+            for window in windows.values() {
+                let _ = window.hide();
+            }
+
+            // Spawn a task to monitor the instance and show windows back
+            let app_clone = app.clone();
+            tokio::spawn(async move {
+                loop {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+                    let finished = inst.write().await.check_and_detach();
+                    if finished {
+                        let windows = app_clone.webview_windows();
+                        for window in windows.values() {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                        break;
+                    }
+                }
+            });
         }
     }
     
