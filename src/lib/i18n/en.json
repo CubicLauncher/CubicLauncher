@@ -52,6 +52,7 @@
             "editTitle": "Edit Instance",
             "nameLabel": "Name",
             "versionLabel": "Version",
+            "iconLabel": "Instance Logo",
             "cancel": "Cancel",
             "save": "Save",
             "deleteTitle": "Delete Instance",

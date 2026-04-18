@@ -63,11 +63,12 @@ export async function updateInstance(
   id: string,
   newName?: string,
   newVersion?: string,
+  newIcon?: string | null,
   callback?: () => void,
   onError?: (err: unknown) => void,
 ): Promise<void> {
   try {
-    await invoke("update_instance", { id, newName, newVersion });
+    await invoke("update_instance", { id, newName, newVersion, newIcon });
     callback?.();
   } catch (err) {
     console.error(`Error al actualizar instancia ${id}:`, err);

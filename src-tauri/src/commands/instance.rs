@@ -170,7 +170,7 @@ pub async fn delete_instance(id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn rename_instance(id: String, new_name: String) -> Result<(), String> {
-    InstanceManager::get().update_instance(&id, Some(new_name), None).await
+    InstanceManager::get().update_instance(&id, Some(new_name), None, None).await
 }
 
 #[tauri::command]
@@ -178,9 +178,10 @@ pub async fn update_instance(
     id: String,
     new_name: Option<String>,
     new_version: Option<String>,
+    new_icon: Option<Option<String>>,
 ) -> Result<(), String> {
     InstanceManager::get()
-        .update_instance(&id, new_name, new_version)
+        .update_instance(&id, new_name, new_version, new_icon)
         .await
 }
 

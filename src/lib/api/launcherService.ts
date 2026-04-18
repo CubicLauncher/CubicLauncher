@@ -58,9 +58,9 @@ export async function renameInst(uuid: string, newName: string): Promise<void> {
   }
 }
 
-export async function updateInst(uuid: string, newName?: string, newVersion?: string): Promise<void> {
+export async function updateInst(uuid: string, newName?: string, newVersion?: string, newIcon?: string | null): Promise<void> {
   try {
-    await invoke("update_instance", { id: uuid, newName, newVersion });
+    await invoke("update_instance", { id: uuid, newName, newVersion, newIcon });
     // After update, refresh instances
     await getVersions();
   } catch (err) {

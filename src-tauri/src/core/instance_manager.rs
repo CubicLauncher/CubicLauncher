@@ -110,6 +110,11 @@ impl Instance {
         self.dirty = true;
     }
 
+    pub fn set_icon(&mut self, icon: Option<String>) {
+        self.data.icon = icon;
+        self.dirty = true;
+    }
+
     pub fn set_min_memory(&mut self, min_memory: Option<u32>) {
         self.data.min_memory = min_memory;
         self.dirty = true;
@@ -373,7 +378,7 @@ impl InstanceManager {
     }
 
     pub async fn rename_instance(&self, uuid: &str, new_name: String) -> Result<(), String> {
-        self.update_instance(uuid, Some(new_name), None).await
+        self.update_instance(uuid, Some(new_name), None, None).await
     }
 
     pub async fn update_instance(
@@ -381,6 +386,7 @@ impl InstanceManager {
         uuid: &str,
         new_name: Option<String>,
         new_version: Option<String>,
+        new_icon: Option<Option<String>>,
     ) -> Result<(), String> {
         let instance_arc = self
             .get_instance(uuid)
@@ -412,6 +418,10 @@ impl InstanceManager {
 
         if let Some(version) = new_version {
             inst.set_version(version);
+        }
+
+        if let Some(icon) = new_icon {
+            inst.set_icon(icon);
         }
 
         if let Err(e) = inst.save_to_disk().await {

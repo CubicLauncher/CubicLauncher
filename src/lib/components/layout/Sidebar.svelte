@@ -3,6 +3,7 @@
         createInstance,
         fetchAll,
         getInstalledVersions,
+        getAvailableLogos,
     } from "$lib/api/cubicApi";
     import {
         deleteInst,
@@ -36,13 +37,17 @@
     let instanceToActOn = $state<InstanceDto | null>(null);
     let renameInput = $state("");
     let versionInput = $state("");
+    let selectedIcon = $state<string | null>(null);
     let installedVersions = $state<string[]>([]);
+    let availableIcons = $state<string[]>([]);
 
     async function openRenameModal(instance: InstanceDto) {
         instanceToActOn = instance;
         renameInput = instance.name;
         versionInput = instance.version;
+        selectedIcon = instance.icon;
         installedVersions = await getInstalledVersions();
+        availableIcons = await getAvailableLogos();
         showRenameModal = true;
     }
 
@@ -57,16 +62,20 @@
         const versionChanged =
             versionInput && versionInput !== instanceToActOn.version;
 
-        if (nameChanged || versionChanged) {
+        const iconChanged = selectedIcon !== instanceToActOn.icon;
+
+        if (nameChanged || versionChanged || iconChanged) {
             await updateInst(
                 instanceToActOn.uuid,
                 nameChanged ? renameInput : undefined,
                 versionChanged ? versionInput : undefined,
+                iconChanged ? selectedIcon : undefined,
             );
 
             if (selectedInstance?.uuid === instanceToActOn.uuid) {
                 if (nameChanged) selectedInstance.name = renameInput;
                 if (versionChanged) selectedInstance.version = versionInput;
+                if (iconChanged) selectedInstance.icon = selectedIcon;
             }
         }
         showRenameModal = false;
@@ -106,7 +115,12 @@
                     <div class="instance-info-container">
                         <div class="instance-icon">
                             {#if instance.icon}
-                                <img src={instance.icon} alt={instance.name} width="16" height="16" />
+                                <img
+                                    src={instance.icon}
+                                    alt={instance.name}
+                                    width="16"
+                                    height="16"
+                                />
                             {:else}
                                 {instance.name.charAt(0).toUpperCase()}
                             {/if}
@@ -232,6 +246,28 @@
 {/if}
 
 <ModalBase bind:open={showRenameModal} title={t("sidebar.modals.editTitle")}>
+    <div class="input-group" style="margin-top: 12px;">
+        <label class="input-label" for="icon-selector"
+            >{t("createInstance.iconLabel") || "Logo de la Instancia"}</label
+        >
+        <div id="icon-selector" class="icon-selector" style="margin-top: 8px;">
+            {#each availableIcons as iconName}
+                {@const iconPath = `/images/instances/${iconName}`}
+                <button
+                    type="button"
+                    class="icon-option"
+                    class:selected={selectedIcon === iconPath}
+                    onclick={() =>
+                        (selectedIcon =
+                            selectedIcon === iconPath ? null : iconPath)}
+                    title={iconName}
+                >
+                    <img src={iconPath} alt={iconName} />
+                </button>
+            {/each}
+        </div>
+    </div>
+
     <div class="input-group">
         <label class="input-label" for="rename-input"
             >{t("sidebar.modals.nameLabel")}</label
