@@ -26,6 +26,7 @@ pub fn run() {
             commands::others::start_polling,
             commands::settings::get_settings,
             commands::settings::update_settings,
+            commands::settings::detect_java_paths,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

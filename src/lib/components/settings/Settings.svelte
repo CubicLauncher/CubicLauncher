@@ -21,6 +21,18 @@
         }, 1000);
     }
 
+    async function autoDetectJava() {
+        try {
+            const paths: { jre8: string; jre17: string; jre21: string } =
+                await invoke("detect_java_paths");
+            if (paths.jre8) launcherStore.settings.jre8_path = paths.jre8;
+            if (paths.jre17) launcherStore.settings.jre17_path = paths.jre17;
+            if (paths.jre21) launcherStore.settings.jre21_path = paths.jre21;
+        } catch (e) {
+            console.error("Failed to detect java paths", e);
+        }
+    }
+
     const tabs = [
         { id: "launcher", label: "Launcher" },
         { id: "minecraft", label: "Minecraft" },
@@ -181,20 +193,19 @@
             <!-- Java Paths -->
             <section class="qm-section">
                 <span class="qm-section-label">Configuración de Java</span>
-                <div class="qm-field-checkbox">
-                    <input
-                        type="checkbox"
-                        id="auto-detect-java"
-                        bind:checked={launcherStore.settings.auto_detect_java}
-                    />
-                    <label for="auto-detect-java"
-                        >Detectar automáticamente la versión de Java</label
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 10px;"
+                >
+                    <span class="qm-section-label" style="margin: 0;"
+                        >Java Runtimes</span
+                    >
+                    <button
+                        class="qm-save-btn"
+                        style="width: auto; padding: 6px 12px; margin: 0; font-size: 0.85rem;"
+                        onclick={autoDetectJava}>Detect Paths</button
                     >
                 </div>
-
-                <span class="qm-section-label" style="margin-top: 20px;"
-                    >Java Runtimes</span
-                >
                 <div class="qm-field">
                     <label for="jre8">Java 8 Path</label>
                     <input

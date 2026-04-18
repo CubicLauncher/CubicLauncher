@@ -25,7 +25,6 @@ pub struct SettingsManager {
     pub show_beta: bool,
     pub show_alpha: bool,
     pub force_gpu: bool,
-    pub auto_detect_java: bool,
     pub jvm_args: String,
     #[serde(skip)]
     pub dirty: bool, // sistema de dirtness para evitar escribir mucho
@@ -134,7 +133,6 @@ impl Default for SettingsManager {
             show_beta: false,
             show_alpha: false,
             force_gpu: false,
-            auto_detect_java: true,
             jvm_args: String::new(),
             dirty: true,
         }

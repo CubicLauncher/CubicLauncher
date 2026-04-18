@@ -22,10 +22,9 @@ export const launcherStore = $state<LauncherState>({
     auto_updates: true,
     show_error_console: false,
     close_launcher_on_play: true,
-    show_beta: false,
+    show_snapshots: false,
     show_alpha: false,
     force_gpu: false,
-    auto_detect_java: true,
     jvm_args: "",
   },
 });

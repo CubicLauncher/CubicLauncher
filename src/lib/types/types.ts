@@ -34,6 +34,5 @@ export interface Settings {
   show_snapshots: boolean;
   show_alpha: boolean;
   force_gpu: boolean;
-  auto_detect_java: boolean;
   jvm_args: string;
 }

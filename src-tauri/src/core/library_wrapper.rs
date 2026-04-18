@@ -98,7 +98,31 @@ impl LauncherWrapper {
         }
         let shared_dir = PathManager::get().get_shared_dir();
         let instance_dir = PathManager::get().get_instance_dir().join(name);
-        let java_path = "/usr/lib/jvm/java-17-openjdk/bin/java";
+        
+        let settings = crate::core::SettingsManager::get().lock().unwrap().clone();
+        
+        // Parse version to select java
+        let parts: Vec<&str> = version.split('.').collect();
+        let minor = parts.get(1).unwrap_or(&"0").parse::<u32>().unwrap_or(0);
+        let patch = parts.get(2).unwrap_or(&"0").parse::<u32>().unwrap_or(0);
+        
+        let mut java_path = settings.get_jre17_path().to_string_lossy().into_owned(); // Default to 17
+        
+        if minor <= 16 {
+            let p = settings.get_jre8_path().to_string_lossy().into_owned();
+            if !p.is_empty() { java_path = p; }
+        } else if minor >= 21 || (minor == 20 && patch >= 5) {
+            let p = settings.get_jre21_path().to_string_lossy().into_owned();
+            if !p.is_empty() { java_path = p; }
+        } else {
+            let p = settings.get_jre17_path().to_string_lossy().into_owned();
+            if !p.is_empty() { java_path = p; }
+        }
+        
+        if java_path.is_empty() {
+            java_path = "java".to_string(); // fallback to generic `java` if literally nothing
+        }
+
         let version_json = shared_dir.join(format!("versions/{}/{}.json", version, version));
         if !version_json.exists() {
             info!("La instancia no se encuentra descargada. Descargando...");
