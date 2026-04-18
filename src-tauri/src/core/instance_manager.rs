@@ -22,6 +22,7 @@ struct InstanceData {
     min_memory: Option<u32>, // None: usar SettingsManager
     max_memory: Option<u32>,
     cover_image: Option<PathBuf>,
+    icon: Option<String>,
     uuid: String, // uuidv4
 }
 
@@ -32,7 +33,7 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(name: String, version: String) -> Self {
+    pub fn new(name: String, version: String, icon: Option<String>) -> Self {
         Self {
             data: InstanceData {
                 name,
@@ -41,6 +42,7 @@ impl Instance {
                 min_memory: None,
                 max_memory: None,
                 cover_image: None,
+                icon,
                 uuid: uuid::Uuid::new_v4().to_string(),
             },
             process: None,
@@ -62,6 +64,9 @@ impl Instance {
 
     pub fn get_cover_image(&self) -> Option<&Path> {
         self.data.cover_image.as_deref()
+    }
+    pub fn get_icon(&self) -> Option<&str> {
+        self.data.icon.as_deref()
     }
 
     pub fn get_loader(&self) -> &str {
@@ -210,6 +215,7 @@ impl Instance {
             last_played: self.data.last_played,
             is_running: self.get_is_running(),
             cover_image: self.data.cover_image.clone(),
+            icon: self.data.icon.clone(),
             uuid: self.data.uuid.clone(),
         }
     }
@@ -279,13 +285,13 @@ impl InstanceManager {
         INSTANCE_MANAGER.get()
     }
 
-    pub async fn create_instance(&self, name: String, version: String) {
+    pub async fn create_instance(&self, name: String, version: String, icon: Option<String>) {
         if let Err(e) = validate_instance_name(&name) {
             error!("Error al crear instancia: {}", e);
             return;
         }
 
-        let instance = Arc::new(RwLock::new(Instance::new(name.clone(), version)));
+        let instance = Arc::new(RwLock::new(Instance::new(name.clone(), version, icon)));
 
         let uuid = {
             let inst = instance.read().await;
@@ -428,6 +434,7 @@ pub struct InstanceDto {
     pub last_played: u64,
     pub is_running: bool,
     pub cover_image: Option<PathBuf>,
+    pub icon: Option<String>,
     pub uuid: String,
 }
 

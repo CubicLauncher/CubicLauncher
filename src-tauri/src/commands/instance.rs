@@ -29,8 +29,8 @@ pub async fn get_instances() -> Vec<InstanceDto> {
     InstanceManager::get().get_all_dtos().await
 }
 #[tauri::command]
-pub async fn create_instance(name: String, version: String) {
-    InstanceManager::get().create_instance(name, version).await;
+pub async fn create_instance(name: String, version: String, icon: Option<String>) {
+    InstanceManager::get().create_instance(name, version, icon).await;
 }
 #[tauri::command]
 pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
@@ -152,6 +152,26 @@ pub async fn update_instance(
     InstanceManager::get()
         .update_instance(&id, new_name, new_version)
         .await
+}
+
+#[tauri::command]
+pub async fn get_available_logos() -> Vec<String> {
+    let mut logos = Vec::new();
+    let paths = ["static/images/instances", "../static/images/instances"];
+    
+    for path in paths {
+        if let Ok(entries) = std::fs::read_dir(path) {
+            for entry in entries.flatten() {
+                if let Some(name) = entry.file_name().to_str() {
+                    if name.ends_with(".ico") || name.ends_with(".png") || name.ends_with(".svg") {
+                        logos.push(name.to_string());
+                    }
+                }
+            }
+            break;
+        }
+    }
+    logos
 }
 
 #[tauri::command]

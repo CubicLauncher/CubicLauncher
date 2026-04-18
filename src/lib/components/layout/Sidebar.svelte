@@ -105,7 +105,11 @@
                 >
                     <div class="instance-info-container">
                         <div class="instance-icon">
-                            {instance.name.charAt(0).toUpperCase()}
+                            {#if instance.icon}
+                                <img src={instance.icon} alt={instance.name} width="16" height="16" />
+                            {:else}
+                                {instance.name.charAt(0).toUpperCase()}
+                            {/if}
                         </div>
                         <span class="instance-name">{instance.name}</span>
                     </div>

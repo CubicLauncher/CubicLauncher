@@ -239,6 +239,41 @@ body {
     opacity: 1;
 }
 
+.icon-selector {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.icon-option {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.icon-option.selected {
+    border-color: var(--accent-primary, #646cff);
+    background: rgba(100, 108, 255, 0.1);
+}
+
+.icon-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 .action-btn {
     background: transparent;
     border: none;

@@ -17,11 +17,12 @@ export async function killInstance(
 export async function createInstance(
   name: string,
   version: string,
+  icon: string | null,
   callback?: () => void,
   onError?: (err: unknown) => void,
 ): Promise<void> {
   try {
-    await invoke("create_instance", { name, version });
+    await invoke("create_instance", { name, version, icon });
     callback?.();
   } catch (err) {
     console.error(`Error al crear instancia ${name}:`, err);
@@ -163,5 +164,14 @@ export async function addToQueue(version: string): Promise<void> {
         await invoke("add_to_queue", { version });
     } catch (err) {
         console.error(`Error al agregar ${version} a la cola:`, err);
+    }
+}
+
+export async function getAvailableLogos(): Promise<string[]> {
+    try {
+        return await invoke<string[]>("get_available_logos");
+    } catch (err) {
+        console.error("Error al obtener logos disponibles:", err);
+        return [];
     }
 }

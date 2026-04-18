@@ -140,7 +140,7 @@
             : "background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0) 100%);"}
     >
         <div class="instance-big-icon">
-            <img src="/images/cubic.svg" alt="Icon" />
+            <img src={selectedInstance.icon || "/images/cubic.svg"} alt="Icon" />
         </div>
         <div class="instance-title-area">
             <h2>{selectedInstance.name}</h2>

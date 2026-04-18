@@ -5,6 +5,7 @@ export interface InstanceDto {
   last_played: number;
   is_running: boolean;
   cover_image: string | null;
+  icon: string | null;
   uuid: string;
 }
 
