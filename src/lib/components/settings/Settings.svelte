@@ -4,6 +4,7 @@
     import { launcherStore } from "$lib/state/state.svelte";
     import { killInst, saveSettings } from "$lib/api/launcherService";
     import { t } from "$lib/i18n";
+    import Select from "$lib/components/layout/Select.svelte";
 
     interface Props {
         onclose?: () => void;
@@ -35,16 +36,21 @@
     }
 
     let tabs = $derived([
-        { id: "launcher", label: t('settings.tabs.launcher') },
-        { id: "minecraft", label: t('settings.tabs.minecraft') },
-        { id: "java", label: t('settings.tabs.java') },
+        { id: "launcher", label: t("settings.tabs.launcher") },
+        { id: "minecraft", label: t("settings.tabs.minecraft") },
+        { id: "java", label: t("settings.tabs.java") },
     ]);
+
+    let languageOptions = [
+        { value: "es", label: "Español" },
+        { value: "en", label: "English" },
+    ];
 </script>
 
 <div class="qm-root">
     <!-- Header -->
     <div class="qm-header">
-        <span class="qm-label">{t('settings.title')}</span>
+        <span class="qm-label">{t("settings.title")}</span>
         <button class="qm-close-btn" onclick={onclose}>✕</button>
     </div>
 
@@ -65,7 +71,9 @@
         {#if currentTab === "launcher"}
             <!-- Running instance -->
             <section class="qm-section">
-                <span class="qm-section-label">{t('settings.launcher.activeInstancesTitle')}</span>
+                <span class="qm-section-label"
+                    >{t("settings.launcher.activeInstancesTitle")}</span
+                >
                 {#each launcherStore.runningInstances as uuid}
                     {@const inst = launcherStore.loadedInstances.find(
                         (i) => i.uuid === uuid,
@@ -81,27 +89,30 @@
                             </div>
                             <button
                                 class="qm-kill-btn"
-                                onclick={() => killInst(inst.uuid)}>{t('settings.launcher.killInstance')}</button
+                                onclick={() => killInst(inst.uuid)}
+                                >{t("settings.launcher.killInstance")}</button
                             >
                         </div>
                     {/if}
                 {:else}
-                    <div class="qm-empty-state">{t('settings.launcher.noInstances')}</div>
+                    <div class="qm-empty-state">
+                        {t("settings.launcher.noInstances")}
+                    </div>
                 {/each}
             </section>
 
             <!-- General Settings -->
             <section class="qm-section">
-                <span class="qm-section-label">{t('settings.launcher.generalTitle')}</span>
+                <span class="qm-section-label"
+                    >{t("settings.launcher.generalTitle")}</span
+                >
                 <div class="qm-field">
-                    <label for="language">{t('settings.launcher.language')}</label>
-                    <select
+                    <Select
                         id="language"
+                        label={t("settings.launcher.language")}
+                        options={languageOptions}
                         bind:value={launcherStore.settings.language}
-                    >
-                        <option value="es">Español</option>
-                        <option value="en">English</option>
-                    </select>
+                    />
                 </div>
                 <div class="qm-field-checkbox">
                     <input
@@ -109,7 +120,8 @@
                         id="auto-updates"
                         bind:checked={launcherStore.settings.auto_updates}
                     />
-                    <label for="auto-updates">{t('settings.launcher.autoUpdates')}</label
+                    <label for="auto-updates"
+                        >{t("settings.launcher.autoUpdates")}</label
                     >
                 </div>
                 <div class="qm-field-checkbox">
@@ -118,7 +130,9 @@
                         id="error-console"
                         bind:checked={launcherStore.settings.show_error_console}
                     />
-                    <label for="error-console">{t('settings.launcher.errorConsole')}</label>
+                    <label for="error-console"
+                        >{t("settings.launcher.errorConsole")}</label
+                    >
                 </div>
                 <div class="qm-field-checkbox">
                     <input
@@ -129,7 +143,7 @@
                         }
                     />
                     <label for="close-on-play"
-                        >{t('settings.launcher.closeOnPlay')}</label
+                        >{t("settings.launcher.closeOnPlay")}</label
                     >
                 </div>
             </section>
@@ -138,10 +152,14 @@
         {#if currentTab === "minecraft"}
             <!-- Performance -->
             <section class="qm-section">
-                <span class="qm-section-label">{t('settings.minecraft.perfTitle')}</span>
+                <span class="qm-section-label"
+                    >{t("settings.minecraft.perfTitle")}</span
+                >
                 <div class="qm-field-group">
                     <div class="qm-field">
-                        <label for="min-mem">{t('settings.minecraft.minRam')}</label>
+                        <label for="min-mem"
+                            >{t("settings.minecraft.minRam")}</label
+                        >
                         <input
                             type="number"
                             id="min-mem"
@@ -149,7 +167,9 @@
                         />
                     </div>
                     <div class="qm-field">
-                        <label for="max-mem">{t('settings.minecraft.maxRam')}</label>
+                        <label for="max-mem"
+                            >{t("settings.minecraft.maxRam")}</label
+                        >
                         <input
                             type="number"
                             id="max-mem"
@@ -160,7 +180,9 @@
             </section>
 
             <section class="qm-section">
-                <span class="qm-section-label">{t('settings.minecraft.optionsTitle')}</span>
+                <span class="qm-section-label"
+                    >{t("settings.minecraft.optionsTitle")}</span
+                >
                 <div class="qm-field-checkbox">
                     <input
                         type="checkbox"
@@ -168,7 +190,7 @@
                         bind:checked={launcherStore.settings.show_snapshots}
                     />
                     <label for="show-snapshots"
-                        >{t('settings.minecraft.showSnapshots')}</label
+                        >{t("settings.minecraft.showSnapshots")}</label
                     >
                 </div>
                 <div class="qm-field-checkbox">
@@ -177,7 +199,9 @@
                         id="show-alpha"
                         bind:checked={launcherStore.settings.show_alpha}
                     />
-                    <label for="show-alpha">{t('settings.minecraft.showAlpha')}</label>
+                    <label for="show-alpha"
+                        >{t("settings.minecraft.showAlpha")}</label
+                    >
                 </div>
                 <div class="qm-field-checkbox">
                     <input
@@ -185,7 +209,9 @@
                         id="force-gpu"
                         bind:checked={launcherStore.settings.force_gpu}
                     />
-                    <label for="force-gpu">{t('settings.minecraft.forceGpu')}</label>
+                    <label for="force-gpu"
+                        >{t("settings.minecraft.forceGpu")}</label
+                    >
                 </div>
             </section>
         {/if}
@@ -193,22 +219,21 @@
         {#if currentTab === "java"}
             <!-- Java Paths -->
             <section class="qm-section">
-                <span class="qm-section-label">{t('settings.java.configTitle')}</span>
-
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 10px;"
                 >
                     <span class="qm-section-label" style="margin: 0;"
-                        >{t('settings.java.runtimesTitle')}</span
+                        >{t("settings.java.runtimesTitle")}</span
                     >
                     <button
                         class="qm-save-btn"
                         style="width: auto; padding: 6px 12px; margin: 0; font-size: 0.85rem;"
-                        onclick={autoDetectJava}>{t('settings.java.detectPathsBtn')}</button
+                        onclick={autoDetectJava}
+                        >{t("settings.java.detectPathsBtn")}</button
                     >
                 </div>
                 <div class="qm-field">
-                    <label for="jre8">{t('settings.java.java8Path')}</label>
+                    <label for="jre8">{t("settings.java.java8Path")}</label>
                     <input
                         type="text"
                         id="jre8"
@@ -217,7 +242,7 @@
                     />
                 </div>
                 <div class="qm-field">
-                    <label for="jre17">{t('settings.java.java17Path')}</label>
+                    <label for="jre17">{t("settings.java.java17Path")}</label>
                     <input
                         type="text"
                         id="jre17"
@@ -226,7 +251,7 @@
                     />
                 </div>
                 <div class="qm-field">
-                    <label for="jre21">{t('settings.java.java21Path')}</label>
+                    <label for="jre21">{t("settings.java.java21Path")}</label>
                     <input
                         type="text"
                         id="jre21"
@@ -235,7 +260,7 @@
                     />
                 </div>
                 <div class="qm-field">
-                    <label for="jvm-args">{t('settings.java.jvmArgs')}</label>
+                    <label for="jvm-args">{t("settings.java.jvmArgs")}</label>
                     <textarea
                         id="jvm-args"
                         bind:value={launcherStore.settings.jvm_args}
@@ -248,7 +273,9 @@
 
         <div style="padding: 20px 0;">
             <button class="qm-save-btn" onclick={handleSave} disabled={saving}>
-                {saving ? t('settings.java.saving') : t('settings.java.saveBtn')}
+                {saving
+                    ? t("settings.java.saving")
+                    : t("settings.java.saveBtn")}
             </button>
         </div>
     </div>
