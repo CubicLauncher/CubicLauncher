@@ -127,16 +127,6 @@
                 <div class="qm-field-checkbox">
                     <input
                         type="checkbox"
-                        id="error-console"
-                        bind:checked={launcherStore.settings.show_error_console}
-                    />
-                    <label for="error-console"
-                        >{t("settings.launcher.errorConsole")}</label
-                    >
-                </div>
-                <div class="qm-field-checkbox">
-                    <input
-                        type="checkbox"
                         id="close-on-play"
                         bind:checked={
                             launcherStore.settings.close_launcher_on_play

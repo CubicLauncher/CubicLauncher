@@ -13,7 +13,6 @@
             "generalTitle": "General",
             "language": "Idioma",
             "autoUpdates": "Actualizaciones Automáticas",
-            "errorConsole": "Consola de errores",
             "closeOnPlay": "Cerrar el launcher al abrir el juego"
         },
         "minecraft": {

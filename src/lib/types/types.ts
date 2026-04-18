@@ -30,7 +30,6 @@ export interface Settings {
   jre21_path: string;
   language: string;
   auto_updates: boolean;
-  show_error_console: boolean;
   close_launcher_on_play: boolean;
   show_snapshots: boolean;
   show_alpha: boolean;
