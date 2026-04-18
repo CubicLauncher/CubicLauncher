@@ -1,20 +1,22 @@
 /* ==========================================================================
    TABLA DE CONTENIDO
    ==========================================================================
-   1. FONTS
-   2. VARIABLES & ROOT
-   3. BASE STYLES
-   4. LAYOUT & SCROLLBARS
-   5. COMPONENTS: SIDEBAR
-   6. COMPONENTS: MAIN VIEW & HERO
-   7. COMPONENTS: DASHBOARD & PANELS
-   8. COMPONENTS: MODS
-   9. COMPONENTS: QUICK MENU
-   10. COMPONENTS: OVERLAYS (DRAWER & MODAL)
-   11. SHARED UI ELEMENTS
-   12. MEDIA QUERIES
-   13. DOWNLOADS
-   13.1. VIRTUAL LIST
+   1.    FONTS
+   2.    VARIABLES & ROOT
+   3.    BASE STYLES
+   4.    LAYOUT & SCROLLBARS
+   5.    COMPONENTS: SIDEBAR
+   6.    COMPONENTS: MAIN VIEW & HERO
+   7.    COMPONENTS: DASHBOARD & PANELS
+   8.    COMPONENTS: MODS
+   9.    COMPONENTS: QUICK MENU (SETTINGS)
+   10.   COMPONENTS: OVERLAYS (DRAWER & MODAL)
+   11.   SHARED UI ELEMENTS
+   11.1. CUSTOM SELECT — Dropdown de versiones accesible y animado
+   11.2. USER MENU — Modal de perfil del jugador
+   12.   MEDIA QUERIES
+   13.   DOWNLOADS — Botón de descarga en el VersionDownloader
+   13.1. VIRTUAL LIST — Contenedor de scroll virtualizado
    ========================================================================== */
 
 /* ─── 1. FONTS ───────────────────────────────────────────── */
@@ -638,7 +640,7 @@ body {
     font-weight: 800;
     cursor: pointer;
     width: fit-content;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
     font-family: "Inter", system-ui, sans-serif;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -647,7 +649,6 @@ body {
 
 .play-btn:hover {
     background: #f0f0f0;
-    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -1460,7 +1461,11 @@ body {
     color: var(--text-primary);
 }
 
-/* ─── 11.1 CUSTOM SELECT ─────────────────────────────────── */
+/* ─── 11.1 CUSTOM SELECT ─────────────────────────────────────
+   Componente Select.svelte: reemplaza el <select> nativo con un
+   dropdown animado, accesible mediante teclado, usado para elegir
+   la versión de Minecraft al crear una instancia.
+   ─────────────────────────────────────────────────────────── */
 
 .custom-select-container {
     position: relative;
@@ -1584,7 +1589,11 @@ body {
     border-radius: 10px;
 }
 
-/* ─── 11.2 USER MENU (PROFILE MODAL) ─────────────────────── */
+/* ─── 11.2 USER MENU (PROFILE MODAL) ─────────────────────────
+   Modal de perfil del jugador (UserMenu.svelte): muestra el avatar,
+   nombre de usuario y el badge "offline". Se abre desde el footer
+   del sidebar al hacer click en el perfil.
+   ─────────────────────────────────────────────────────────── */
 
 .user-profile-center {
     display: flex;
@@ -1692,7 +1701,9 @@ body {
     }
 }
 
-/* ─── 13. DOWNLOADS ──────────────────────────────────── */
+/* ─── 13. DOWNLOADS ──────────────────────────────────────────
+   Estilos del botón de descarga usado en VersionDownloader.svelte.
+   ─────────────────────────────────────────────────────────── */
 
 .download-btn:hover {
     background: #e0e0e0;
@@ -1703,7 +1714,10 @@ body {
     transform: translateY(0);
 }
 
-/* ─── 13.1. VIRTUAL LIST ──────────────────────────────────── */
+/* ─── 13.1. VIRTUAL LIST ─────────────────────────────────────
+   Contenedor de scroll virtualizado (VirtualList.svelte): renderiza
+   únicamente las filas visibles para listas largas de versiones.
+   ─────────────────────────────────────────────────────────── */
 
 .virtual-list-container {
     scrollbar-width: thin;

@@ -1,7 +1,7 @@
 # TODO / Notas
 
 ## General
-- [ ] Hacer settings  
+- [x] Hacer settings  
 - [x] Quitar consola  
 - [x] Que las instances se manejen con un actor que sincroniza el estado en la memoria RAM con el FS  
 - [x] Instances mejor estructuradas  
@@ -13,7 +13,7 @@
 - [ ] Remover cosas innecesarias en el backend (Mutex, Locks, etc.)  
 
 ## UI
-- [ ] Poner banner  
+- [x] Poner banner  
 
 ## Importante
 - [ ] Investigar Proton  
