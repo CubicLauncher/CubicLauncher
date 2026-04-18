@@ -31,7 +31,7 @@ export interface Settings {
   auto_updates: boolean;
   show_error_console: boolean;
   close_launcher_on_play: boolean;
-  show_beta: boolean;
+  show_snapshots: boolean;
   show_alpha: boolean;
   force_gpu: boolean;
   auto_detect_java: boolean;

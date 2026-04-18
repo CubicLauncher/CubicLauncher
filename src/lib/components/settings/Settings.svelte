@@ -151,10 +151,12 @@
                 <div class="qm-field-checkbox">
                     <input
                         type="checkbox"
-                        id="show-beta"
-                        bind:checked={launcherStore.settings.show_beta}
+                        id="show-snapshots"
+                        bind:checked={launcherStore.settings.show_snapshots}
                     />
-                    <label for="show-beta">Mostrar versiones Betas</label>
+                    <label for="show-snapshots"
+                        >Mostrar versiones Snapshots</label
+                    >
                 </div>
                 <div class="qm-field-checkbox">
                     <input

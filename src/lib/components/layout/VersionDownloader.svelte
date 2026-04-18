@@ -6,6 +6,7 @@
         getInstalledVersions,
     } from "$lib/api/cubicApi";
     import VirtualList from "./VirtualList.svelte";
+    import { launcherStore } from "$lib/state/state.svelte";
 
     interface Props {
         onclose?: () => void;
@@ -31,13 +32,28 @@
 
     const filteredVersions = $derived(
         manifest?.filter((v: any) => {
-            const matchesFilter = filter === "all" || v.type === filter;
+            if (!launcherStore.settings.show_snapshots && v.type === "snapshot") return false;
+            if (!launcherStore.settings.show_alpha && (v.type === "old_alpha" || v.type === "old_beta")) return false;
+            
+            const matchesFilter = 
+                v.type === filter || 
+                (filter === "alpha" && (v.type === "old_alpha" || v.type === "old_beta"));
+                
             const matchesSearch = v.id
                 .toLowerCase()
                 .includes(search.toLowerCase());
             return matchesFilter && matchesSearch;
         }) || [],
     );
+
+    $effect(() => {
+        if (!launcherStore.settings.show_snapshots && filter === "snapshot") {
+            filter = "release";
+        }
+        if (!launcherStore.settings.show_alpha && filter === "alpha") {
+            filter = "release";
+        }
+    });
 
     async function handleDownload(versionId: string) {
         await addToQueue(versionId);
@@ -58,20 +74,24 @@
         >
             <span class="qm-tab-label">Releases</span>
         </button>
-        <button
-            class="qm-tab-btn"
-            class:active={filter === "snapshot"}
-            onclick={() => (filter = "snapshot")}
-        >
-            <span class="qm-tab-label">Snapshots</span>
-        </button>
-        <button
-            class="qm-tab-btn"
-            class:active={filter === "all"}
-            onclick={() => (filter = "all")}
-        >
-            <span class="qm-tab-label">Todas</span>
-        </button>
+        {#if launcherStore.settings.show_snapshots}
+            <button
+                class="qm-tab-btn"
+                class:active={filter === "snapshot"}
+                onclick={() => (filter = "snapshot")}
+            >
+                <span class="qm-tab-label">Snapshots</span>
+            </button>
+        {/if}
+        {#if launcherStore.settings.show_alpha}
+            <button
+                class="qm-tab-btn"
+                class:active={filter === "alpha"}
+                onclick={() => (filter = "alpha")}
+            >
+                <span class="qm-tab-label">Alphas</span>
+            </button>
+        {/if}
     </div>
 
     <div class="qm-search-container" style="padding: 10px 20px;">
