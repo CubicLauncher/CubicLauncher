@@ -24,17 +24,39 @@
     let filter = $state("release");
     let search = $state("");
 
+    let loadingMojang = $state(false);
+    let loadingFabric = $state(false);
+
+    async function loadMojang() {
+        if (manifest || loadingMojang) return;
+        loadingMojang = true;
+        manifest = await getAvailableVersions();
+        loadingMojang = false;
+    }
+
+    async function loadFabric() {
+        if (fabricManifest.length > 0 || loadingFabric) return;
+        loadingFabric = true;
+        fabricManifest = await getFabricVersions();
+        loadingFabric = false;
+    }
+
     onMount(async () => {
-        const [manifestRes, installedRes, fabricRes] = await Promise.all([
-            getAvailableVersions(),
-            getInstalledVersions(),
-            getFabricVersions(),
-        ]);
-        manifest = manifestRes;
-        installedVersions = installedRes;
-        fabricManifest = fabricRes;
+        installedVersions = await getInstalledVersions();
         loading = false;
     });
+
+    $effect(() => {
+        if (filter === "fabric") {
+            loadFabric();
+        } else {
+            loadMojang();
+        }
+    });
+
+    const isCurrentManifestLoading = $derived(
+        filter === "fabric" ? loadingFabric : loadingMojang
+    );
 
     const filteredVersions = $derived(
         (filter === "fabric" ? fabricManifest : manifest)?.filter((v: any) => {
@@ -130,7 +152,7 @@
     </div>
 
     <div class="qm-scroll" style="overflow: hidden; padding: 0;">
-        {#if loading}
+        {#if loading || isCurrentManifestLoading}
             <div class="qm-empty-state">{t('versionDownloader.loading')}</div>
         {:else if filteredVersions.length === 0}
             <div class="qm-empty-state">{t('versionDownloader.notFound')}</div>
