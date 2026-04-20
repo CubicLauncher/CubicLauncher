@@ -52,9 +52,27 @@ impl LauncherWrapper {
             let version_data = match resolve_version_data(&version).await {
                 Ok(v) => v,
                 Err(_) => {
-                    error!("La version solicitada no existe");
-                    self.is_downloading = false;
-                    continue; // siguiente en la cola
+                    if version.starts_with("fabric-loader-") {
+                        let parts: Vec<&str> = version.split('-').collect();
+                        if let Some(game_version) = parts.last() {
+                            match resolve_version_data(game_version).await {
+                                Ok(v) => v,
+                                Err(_) => {
+                                    error!("No se pudo resolver la versión base {} para Fabric", game_version);
+                                    self.is_downloading = false;
+                                    continue;
+                                }
+                            }
+                        } else {
+                            error!("Formato de versión de Fabric inválido: {}", version);
+                            self.is_downloading = false;
+                            continue;
+                        }
+                    } else {
+                        error!("La version solicitada no existe: {}", version);
+                        self.is_downloading = false;
+                        continue;
+                    }
                 }
             };
 

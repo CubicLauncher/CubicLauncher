@@ -4,6 +4,8 @@
         getAvailableVersions,
         addToQueue,
         getInstalledVersions,
+        getFabricVersions,
+        downloadFabric,
     } from "$lib/api/cubicApi";
     import VirtualList from "./VirtualList.svelte";
     import { launcherStore } from "$lib/state/state.svelte";
@@ -17,30 +19,39 @@
 
     let loading = $state(true);
     let manifest = $state<any>(null);
+    let fabricManifest = $state<any[]>([]);
     let installedVersions = $state<string[]>([]);
     let filter = $state("release");
     let search = $state("");
 
     onMount(async () => {
-        const [manifestRes, installedRes] = await Promise.all([
+        const [manifestRes, installedRes, fabricRes] = await Promise.all([
             getAvailableVersions(),
             getInstalledVersions(),
+            getFabricVersions(),
         ]);
         manifest = manifestRes;
         installedVersions = installedRes;
+        fabricManifest = fabricRes;
         loading = false;
     });
 
     const filteredVersions = $derived(
-        manifest?.filter((v: any) => {
-            if (!launcherStore.settings.show_snapshots && v.type === "snapshot") return false;
-            if (!launcherStore.settings.show_alpha && (v.type === "old_alpha" || v.type === "old_beta")) return false;
+        (filter === "fabric" ? fabricManifest : manifest)?.filter((v: any) => {
+            if (filter === "fabric") {
+                if (!v.stable) return false;
+            } else {
+                if (!launcherStore.settings.show_snapshots && v.type === "snapshot") return false;
+                if (!launcherStore.settings.show_alpha && (v.type === "old_alpha" || v.type === "old_beta")) return false;
+            }
             
+            const versionId = filter === "fabric" ? v.version : v.id;
             const matchesFilter = 
+                filter === "fabric" ||
                 v.type === filter || 
                 (filter === "alpha" && (v.type === "old_alpha" || v.type === "old_beta"));
                 
-            const matchesSearch = v.id
+            const matchesSearch = versionId
                 .toLowerCase()
                 .includes(search.toLowerCase());
             return matchesFilter && matchesSearch;
@@ -57,7 +68,14 @@
     });
 
     async function handleDownload(versionId: string) {
-        await addToQueue(versionId);
+        if (filter === "fabric") {
+            await downloadFabric(versionId);
+        } else {
+            await addToQueue(versionId);
+        }
+        
+        // Refetch installed versions
+        installedVersions = await getInstalledVersions();
     }
 </script>
 
@@ -93,6 +111,13 @@
                 <span class="qm-tab-label">{t('versionDownloader.tabs.alphas')}</span>
             </button>
         {/if}
+        <button
+            class="qm-tab-btn"
+            class:active={filter === "fabric"}
+            onclick={() => (filter = "fabric")}
+        >
+            <span class="qm-tab-label">{t('versionDownloader.tabs.fabric')}</span>
+        </button>
     </div>
 
     <div class="qm-search-container" style="padding: 10px 20px;">
@@ -130,9 +155,9 @@
                                     <div
                                         style="font-weight: 600; font-size: 0.9rem;"
                                     >
-                                        {version.id}
+                                        {filter === 'fabric' ? version.version : version.id}
                                     </div>
-                                    {#if isInstalled}
+                                    {#if isInstalled || (filter === 'fabric' && installedVersions.some(iv => iv.startsWith('fabric-loader-') && iv.endsWith(version.version)))}
                                         <span
                                             style="font-size: 0.6rem; background: rgba(0, 255, 100, 0.1); color: #00ff64; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(0, 255, 100, 0.2);"
                                             >{t('versionDownloader.installedTag')}</span
@@ -142,9 +167,13 @@
                                 <div
                                     style="font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px;"
                                 >
-                                    {version.type} • {new Date(
-                                        version.releaseTime,
-                                    ).toLocaleDateString()}
+                                    {#if filter === 'fabric'}
+                                        Fabric Meta • {version.stable ? 'STABLE' : 'UNSTABLE'}
+                                    {:else}
+                                        {version.type} • {new Date(
+                                            version.releaseTime,
+                                        ).toLocaleDateString()}
+                                    {/if}
                                 </div>
                             </div>
 
@@ -168,7 +197,7 @@
                             {:else}
                                 <button
                                     class="download-btn"
-                                    onclick={() => handleDownload(version.id)}
+                                    onclick={() => handleDownload(filter === 'fabric' ? version.version : version.id)}
                                     style="background: #fff; color: #000; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
                                 >
                                     {t('versionDownloader.downloadBtn')}
@@ -182,6 +211,6 @@
     </div>
 
     <div class="qm-footer">
-        <span class="qm-version">Source: Mojang Manifest</span>
+        <span class="qm-version">Source: {filter === 'fabric' ? 'Fabric Meta' : 'Mojang Manifest'}</span>
     </div>
 </div>

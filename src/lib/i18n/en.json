@@ -124,7 +124,8 @@
         "tabs": {
             "releases": "Releases",
             "snapshots": "Snapshots",
-            "alphas": "Alphas"
+            "alphas": "Alphas",
+            "fabric": "Fabric"
         }
     }
 }

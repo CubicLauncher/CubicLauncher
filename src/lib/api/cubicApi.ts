@@ -176,3 +176,20 @@ export async function getAvailableLogos(): Promise<string[]> {
         return [];
     }
 }
+
+export async function getFabricVersions(): Promise<any[]> {
+    try {
+        return await invoke<any[]>("get_fabric_versions");
+    } catch (err) {
+        console.error("Error al obtener versiones de Fabric:", err);
+        return [];
+    }
+}
+
+export async function downloadFabric(gameVersion: string): Promise<void> {
+    try {
+        await invoke("download_fabric", { gameVersion });
+    } catch (err) {
+        console.error(`Error al descargar Fabric para ${gameVersion}:`, err);
+    }
+}
