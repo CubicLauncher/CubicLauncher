@@ -1,4 +1,5 @@
-import { launcherStore } from "../state/state.svelte";
+import { launcherStore, showError } from "../state/state.svelte";
+
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type { InstanceDto, InstancesPollingPayload } from "../types/types";
 import { killInstance, fetchAll, launchInstance, getSettings, updateSettings } from "./cubicApi";
@@ -45,6 +46,7 @@ export async function deleteInst(uuid: string): Promise<void> {
     await getVersions();
   } catch (err) {
     console.error("Error al eliminar instancia:", err);
+    showError("Error", "No se pudo eliminar la instancia");
   }
 }
 
@@ -55,6 +57,7 @@ export async function renameInst(uuid: string, newName: string): Promise<void> {
     await getVersions();
   } catch (err) {
     console.error("Error al renombrar instancia:", err);
+    showError("Error", "No se pudo renombrar la instancia");
   }
 }
 
@@ -65,6 +68,7 @@ export async function updateInst(uuid: string, newName?: string, newVersion?: st
     await getVersions();
   } catch (err) {
     console.error("Error al actualizar instancia:", err);
+    showError("Error", "No se pudo actualizar la instancia");
   }
 }
 

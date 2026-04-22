@@ -1,5 +1,7 @@
 import { type InstanceDto, type ModDto } from "../types/types";
 import { invoke } from "@tauri-apps/api/core";
+import { showError } from "../state/state.svelte";
+
 
 export async function killInstance(
   name: string,
@@ -11,6 +13,7 @@ export async function killInstance(
     callback?.();
   } catch (err) {
     console.error(`Error al matar instancia ${name}:`, err);
+    showError("Error", `No se pudo detener la instancia ${name}`);
     onError?.(err);
   }
 }
@@ -26,6 +29,7 @@ export async function createInstance(
     callback?.();
   } catch (err) {
     console.error(`Error al crear instancia ${name}:`, err);
+    showError("Error", `No se pudo crear la instancia ${name}: ${err}`);
     onError?.(err);
   }
 }
@@ -116,6 +120,7 @@ export async function launchInstance(
     callback?.();
   } catch (err) {
     console.error(`Error al lanzar instancia ${instance.name}:`, err);
+    showError("Error de lanzamiento", `No se pudo iniciar ${instance.name}: ${err}`);
     onError?.(err);
   }
 }

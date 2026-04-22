@@ -12,6 +12,8 @@
     import CreateInstanceModal from "$lib/components/instances/CreateInstanceModal.svelte";
     import VersionDownloader from "$lib/components/layout/VersionDownloader.svelte";
     import { t } from "$lib/i18n";
+    import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
+
 
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
@@ -82,3 +84,6 @@
 </Drawer>
 
 <CreateInstanceModal bind:open={openCreateModal} />
+
+<NotificationContainer />
+

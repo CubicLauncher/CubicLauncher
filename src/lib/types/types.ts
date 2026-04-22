@@ -36,3 +36,13 @@ export interface Settings {
   force_gpu: boolean;
   jvm_args: string;
 }
+
+export type NotificationType = "error" | "info" | "success" | "warning";
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  timeout?: number;
+}

@@ -3,6 +3,8 @@
     import { launcherStore } from "$lib/state/state.svelte";
     import { saveSettings } from "$lib/api/launcherService";
     import { t } from "$lib/i18n";
+    import { showError } from "$lib/state/state.svelte";
+
 
     let { onclose } = $props<{ onclose: () => void }>();
 
@@ -10,10 +12,21 @@
     let newUsername = $state(launcherStore.settings.username);
 
     async function handleSave() {
+        const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/;
+        
+        if (!usernameRegex.test(newUsername)) {
+            showError(
+                "Nombre Inválido",
+                "El nombre debe tener entre 3 y 16 caracteres y solo contener letras, números y guiones bajos (_)."
+            );
+            return;
+        }
+
         launcherStore.settings.username = newUsername;
         await saveSettings();
         editing = false;
     }
+
 
     function handleKeydown(e: KeyboardEvent) {
         if (e.key === "Enter") handleSave();
@@ -75,6 +88,7 @@
                                 class="text-input"
                                 style="flex: 1;"
                                 placeholder={t('userMenu.usernamePlaceholder')}
+                                maxlength="16"
                             />
                         {:else}
                             <div class="username-display-wrapper">
