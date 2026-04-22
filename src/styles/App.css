@@ -17,6 +17,7 @@
    12.   MEDIA QUERIES
    13.   DOWNLOADS — Botón de descarga en el VersionDownloader
    13.1. VIRTUAL LIST — Contenedor de scroll virtualizado
+   14.   NOTIFICATIONS — Sistema de notificaciones globales
    ========================================================================== */
 
 /* ─── 1. FONTS ───────────────────────────────────────────── */
@@ -1731,4 +1732,114 @@ body {
 .virtual-list-container::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 10px;
+}
+/* ─── 14. NOTIFICATIONS ────────────────────────────────── */
+
+.notification-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    pointer-events: none;
+}
+
+.notification-container .notification-toast {
+    pointer-events: auto;
+}
+
+.notification-toast {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: 340px;
+    max-width: 480px;
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(22, 22, 28, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    margin-bottom: 12px;
+    overflow: hidden;
+    color: white;
+}
+
+.notification-toast.error { border-left: 4px solid #ff4d4d; }
+.notification-toast.warning { border-left: 4px solid #ffcc00; }
+.notification-toast.info { border-left: 4px solid #00aaff; }
+.notification-toast.success { border-left: 4px solid #00ff88; }
+
+.notification-toast .icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+.notification-toast .svg-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.notification-toast .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 2px;
+}
+
+.notification-toast .title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: #fff;
+}
+
+.notification-toast .message {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.85;
+    line-height: 1.5;
+    color: #e0e0e0;
+}
+
+.notification-toast .close-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.notification-toast .close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.notification-toast .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.notification-toast .progress-fill {
+    height: 100%;
+    transition: width 0.016s linear;
 }
