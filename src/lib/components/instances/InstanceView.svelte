@@ -211,7 +211,7 @@
             </div>
         {:else if activeTab === "opciones"}
             <div class="tab-pane">
-                <QuickOptionsPanel />
+                <QuickOptionsPanel instance={selectedInstance} />
             </div>
         {/if}
     </div>

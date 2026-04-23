@@ -22,7 +22,7 @@
                 class="detail-value"
                 style="font-size: 0.72rem; opacity: 0.8; word-break: break-all;"
             >
-                ~/.cubic/instances/{instance.name}
+                {instance.path}
             </div>
         </div>
     </div>

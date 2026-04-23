@@ -93,8 +93,8 @@
             "title": "Quick Options",
             "folder": "Open Folder",
             "resources": "Resources",
-            "config": "Configure",
-            "screenshots": "Screenshots"
+            "screenshots": "Screenshots",
+            "logs": "Logs"
         },
         "mods": {
             "title": "Installed Mods",

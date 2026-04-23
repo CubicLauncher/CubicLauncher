@@ -7,6 +7,7 @@ export interface InstanceDto {
   cover_image: string | null;
   icon: string | null;
   uuid: string;
+  path: string;
 }
 
 export interface ModDto {

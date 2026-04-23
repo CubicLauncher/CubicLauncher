@@ -93,8 +93,8 @@
             "title": "Opciones rápidas",
             "folder": "Abrir Carpeta",
             "resources": "Recursos",
-            "config": "Configurar",
-            "screenshots": "Capturas"
+            "screenshots": "Capturas",
+            "logs": "Registros"
         },
         "mods": {
             "title": "Mods Instalados",

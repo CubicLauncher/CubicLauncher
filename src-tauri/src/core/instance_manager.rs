@@ -222,6 +222,7 @@ impl Instance {
             cover_image: self.data.cover_image.clone(),
             icon: self.data.icon.clone(),
             uuid: self.data.uuid.clone(),
+            path: self.get_instance_dir(),
         }
     }
 }
@@ -446,6 +447,7 @@ pub struct InstanceDto {
     pub cover_image: Option<PathBuf>,
     pub icon: Option<String>,
     pub uuid: String,
+    pub path: PathBuf,
 }
 
 #[derive(Serialize, Clone)]

@@ -169,6 +169,56 @@ pub async fn delete_instance(id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<(), String> {
+    let manager = InstanceManager::get();
+    let Some(instance_arc) = manager.get_instance(&id).await else {
+        return Err("Instancia no encontrada".to_string());
+    };
+
+    let inst = instance_arc.read().await;
+    let mut path = inst.get_instance_dir();
+    
+    if let Some(sub) = sub_dir {
+        path = path.join(sub);
+    }
+
+    if !path.exists() {
+        if let Err(e) = std::fs::create_dir_all(&path) {
+            return Err(format!("No se pudo crear el directorio: {}", e));
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        Command::new("explorer")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use std::process::Command;
+        Command::new("xdg-open")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        Command::new("open")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn rename_instance(id: String, new_name: String) -> Result<(), String> {
     InstanceManager::get().update_instance(&id, Some(new_name), None, None).await
 }
