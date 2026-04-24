@@ -268,8 +268,8 @@ body {
 }
 
 .icon-option.selected {
-    border-color: var(--accent-primary, #646cff);
-    background: rgba(100, 108, 255, 0.1);
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .icon-option img {

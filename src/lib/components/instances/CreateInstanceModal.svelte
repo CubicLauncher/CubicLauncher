@@ -106,66 +106,88 @@
         >
             <div class="modal-header">
                 <span class="modal-title">{t("createInstance.title")}</span>
-                <button class="qm-close-btn" onclick={close}>&times;</button>
+                <button class="action-btn" onclick={close} title="Cerrar" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
             </div>
 
-            <div class="input-group">
-                <span class="input-label">Logo de la Instancia</span>
-                <div class="icon-selector">
-                    {#each availableIcons as iconName}
-                        {@const iconPath = `/images/instances/${iconName}`}
-                        <button
-                            type="button"
-                            class="icon-option"
-                            class:selected={selectedIcon === iconPath}
-                            onclick={() =>
-                                (selectedIcon =
-                                    selectedIcon === iconPath
-                                        ? null
-                                        : iconPath)}
-                            title={iconName}
-                        >
-                            <img src={iconPath} alt={iconName} />
-                        </button>
-                    {/each}
-                </div>
-            </div>
+            <div class="modal-body" style="padding: 4px 0;">
+                <div style="display: flex; gap: 20px;">
+                    <!-- Left: Logo Selection -->
+                    <div style="display: flex; flex-direction: column; gap: 12px; width: 100px; align-items: center; flex-shrink: 0;">
+                        <span class="input-label" style="margin: 0; text-align: center;">Logo</span>
+                        <!-- Large Logo Preview -->
+                        <div style="width: 80px; height: 80px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; padding: 12px; transition: all 0.2s; position: relative; overflow: hidden;">
+                            {#if selectedIcon}
+                                <img src={selectedIcon} alt="Logo" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));" />
+                                <button type="button" style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); border: none; color: white; opacity: 0; cursor: pointer; transition: opacity 0.2s; font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; justify-content: center;" onmouseenter={(e) => e.currentTarget.style.opacity = '1'} onmouseleave={(e) => e.currentTarget.style.opacity = '0'} onclick={() => selectedIcon = null}>Limpiar</button>
+                            {:else}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary); opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            {/if}
+                        </div>
+                    </div>
 
-            <div class="modal-body">
-                <div class="input-group">
-                    <span class="input-label"
-                        >{t("createInstance.nameLabel")}</span
-                    >
-                    <input
-                        type="text"
-                        class="text-input"
-                        bind:value={name}
-                        placeholder={t("createInstance.namePlaceholder")}
-                        disabled={loading}
-                        onkeydown={(e) => e.key === "Enter" && handleCreate()}
-                    />
+                    <!-- Right: Details -->
+                    <div style="display: flex; flex-direction: column; gap: 16px; flex: 1;">
+                        <div class="input-group">
+                            <span class="input-label">{t("createInstance.nameLabel")}</span>
+                            <input
+                                type="text"
+                                class="text-input"
+                                bind:value={name}
+                                placeholder={t("createInstance.namePlaceholder")}
+                                disabled={loading}
+                                onkeydown={(e) => e.key === "Enter" && handleCreate()}
+                                style="font-size: 1rem; padding: 12px;"
+                            />
+                        </div>
+
+                        <div class="input-group">
+                            <Select
+                                label={t("createInstance.versionLabel")}
+                                bind:value={selectedVersion}
+                                options={versions.map((v) => ({ value: v, label: v }))}
+                                disabled={loading || versions.length === 0}
+                                placeholder={t("createInstance.noVersionsErr")}
+                            />
+                        </div>
+                    </div>
                 </div>
 
+                <div class="divider" style="height: 1px; background: var(--border); margin: 16px 0 12px;"></div>
+
+                <!-- Logo Picker Grid -->
                 <div class="input-group">
-                    <Select
-                        label={t("createInstance.versionLabel")}
-                        bind:value={selectedVersion}
-                        options={versions.map((v) => ({ value: v, label: v }))}
-                        disabled={loading || versions.length === 0}
-                        placeholder={t("createInstance.noVersionsErr")}
-                    />
+                    <span class="input-label">Seleccionar Icono</span>
+                    <div class="icon-selector" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; margin-top: 4px; max-height: 110px; overflow-y: auto; padding-right: 4px; padding-bottom: 4px;">
+                        {#each availableIcons as iconName}
+                            {@const iconPath = `/images/instances/${iconName}`}
+                            <button
+                                type="button"
+                                class="icon-option"
+                                class:selected={selectedIcon === iconPath}
+                                onclick={() =>
+                                    (selectedIcon =
+                                        selectedIcon === iconPath
+                                            ? null
+                                            : iconPath)}
+                                title={iconName}
+                                style="width: 100%; height: auto; aspect-ratio: 1/1; padding: 6px;"
+                            >
+                                <img src={iconPath} alt={iconName} />
+                            </button>
+                        {/each}
+                    </div>
                 </div>
 
                 {#if error}
                     <div
-                        style="color: #e57373; font-size: 0.75rem; margin-top: 4px;"
+                        style="color: #ff5252; font-size: 0.8rem; background: rgba(255, 82, 82, 0.1); border: 1px solid rgba(255, 82, 82, 0.2); border-radius: 6px; padding: 10px; text-align: center; font-weight: 500; margin-top: 8px;"
                     >
                         {error}
                     </div>
                 {/if}
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-footer" style="margin-top: 8px; border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: flex-end; gap: 12px;">
                 <button
                     class="btn-secondary"
                     onclick={close}
