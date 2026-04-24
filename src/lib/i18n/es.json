@@ -122,6 +122,16 @@
         "notFound": "No se encontraron versiones",
         "installedTag": "Instalada",
         "downloadBtn": "Descargar",
+        "filters": {
+            "all": "Todos",
+            "installedOnly": "Solo Instalados",
+            "notInstalledOnly": "No Instalados",
+            "stableOnly": "Solo Estables",
+            "unstableOnly": "Solo Inestables",
+            "installStatus": "Estado",
+            "majorVersion": "Versión Mayor",
+            "fabricStability": "Estabilidad"
+        },
         "tabs": {
             "releases": "Releases",
             "snapshots": "Snapshots",

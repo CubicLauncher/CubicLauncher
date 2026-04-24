@@ -8,6 +8,7 @@
         downloadFabric,
     } from "$lib/api/cubicApi";
     import VirtualList from "./VirtualList.svelte";
+    import Select from "./Select.svelte";
     import { launcherStore } from "$lib/state/state.svelte";
     import { t } from "$lib/i18n";
 
@@ -23,6 +24,9 @@
     let installedVersions = $state<string[]>([]);
     let filter = $state("release");
     let search = $state("");
+    let installStatusFilter = $state("all");
+    let majorVersionFilter = $state("all");
+    let fabricStabilityFilter = $state("stable");
 
     let loadingMojang = $state(false);
     let loadingFabric = $state(false);
@@ -58,16 +62,51 @@
         filter === "fabric" ? loadingFabric : loadingMojang
     );
 
+    const availableMajorVersions = $derived.by(() => {
+        const source = filter === "fabric" ? fabricManifest : manifest;
+        if (!source) return [];
+        const versions = new Set<string>();
+        source.forEach((v: any) => {
+            const vid = filter === "fabric" ? v.version : v.id;
+            const match = vid.match(/^1\.\d+/);
+            if (match) {
+                versions.add(match[0]);
+            }
+        });
+        return Array.from(versions).sort((a, b) => {
+            const aNum = parseInt(a.split('.')[1] || "0");
+            const bNum = parseInt(b.split('.')[1] || "0");
+            return bNum - aNum;
+        });
+    });
+
+    const majorVersionOptions = $derived([
+        { value: "all", label: t('versionDownloader.filters.all') },
+        ...availableMajorVersions.map(v => ({ value: v, label: v }))
+    ]);
+
     const filteredVersions = $derived(
         (filter === "fabric" ? fabricManifest : manifest)?.filter((v: any) => {
+            const versionId = filter === "fabric" ? v.version : v.id;
+            
+            // Installed filter
+            const isInstalled = installedVersions.includes(versionId) || 
+                (filter === 'fabric' && installedVersions.some(iv => iv.startsWith('fabric-loader-') && iv.endsWith(versionId)));
+            
+            if (installStatusFilter === "installed" && !isInstalled) return false;
+            if (installStatusFilter === "not_installed" && isInstalled) return false;
+
+            // Major Version Filter
+            if (majorVersionFilter !== "all" && !versionId.startsWith(majorVersionFilter)) return false;
+
             if (filter === "fabric") {
-                if (!v.stable) return false;
+                if (fabricStabilityFilter === "stable" && !v.stable) return false;
+                if (fabricStabilityFilter === "unstable" && v.stable) return false;
             } else {
                 if (!launcherStore.settings.show_snapshots && v.type === "snapshot") return false;
                 if (!launcherStore.settings.show_alpha && (v.type === "old_alpha" || v.type === "old_beta")) return false;
             }
             
-            const versionId = filter === "fabric" ? v.version : v.id;
             const matchesFilter = 
                 filter === "fabric" ||
                 v.type === filter || 
@@ -142,13 +181,42 @@
         </button>
     </div>
 
-    <div class="qm-search-container" style="padding: 10px 20px;">
+    <div class="qm-search-container" style="padding: 10px 20px; display: flex; flex-direction: column; gap: 10px;">
         <input
             type="text"
             placeholder={t('versionDownloader.searchPlaceholder')}
             bind:value={search}
             style="width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;"
         />
+        <div class="qm-filters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 4px; padding-bottom: 8px;">
+            <Select 
+                label={t('versionDownloader.filters.installStatus')}
+                options={[
+                    { value: "all", label: t('versionDownloader.filters.all') },
+                    { value: "installed", label: t('versionDownloader.filters.installedOnly') },
+                    { value: "not_installed", label: t('versionDownloader.filters.notInstalledOnly') }
+                ]}
+                bind:value={installStatusFilter}
+            />
+            
+            <Select 
+                label={t('versionDownloader.filters.majorVersion')}
+                options={majorVersionOptions}
+                bind:value={majorVersionFilter}
+            />
+
+            {#if filter === "fabric"}
+                <Select 
+                    label={t('versionDownloader.filters.fabricStability')}
+                    options={[
+                        { value: "all", label: t('versionDownloader.filters.all') },
+                        { value: "stable", label: t('versionDownloader.filters.stableOnly') },
+                        { value: "unstable", label: t('versionDownloader.filters.unstableOnly') }
+                    ]}
+                    bind:value={fabricStabilityFilter}
+                />
+            {/if}
+        </div>
     </div>
 
     <div class="qm-scroll" style="overflow: hidden; padding: 0;">
