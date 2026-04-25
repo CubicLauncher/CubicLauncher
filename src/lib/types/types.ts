@@ -24,6 +24,7 @@ export interface InstancesPollingPayload {
 
 export interface Settings {
   username: string;
+  user: MinecraftUser | null;
   min_memory: number;
   max_memory: number;
   jre8_path: string;
@@ -36,6 +37,24 @@ export interface Settings {
   show_alpha: boolean;
   force_gpu: boolean;
   jvm_args: string;
+}
+
+export type AccountType = "Cracked" | "Microsoft";
+
+export interface MinecraftUser {
+  username: string;
+  uuid: string;
+  access_token: string;
+  refresh_token: string | null;
+  user_type: AccountType;
+}
+
+export interface DeviceCode {
+  user_code: string;
+  device_code: string;
+  verification_uri: string;
+  expires_in: number;
+  interval: number;
 }
 
 export type NotificationType = "error" | "info" | "success" | "warning";

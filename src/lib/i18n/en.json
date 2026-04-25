@@ -68,7 +68,19 @@
         "offline": "Offline",
         "cancel": "Cancel",
         "save": "Save",
-        "changeNameBtn": "Change Name"
+        "changeNameBtn": "Change Name",
+        "loginMicrosoft": "Login with Microsoft",
+        "logout": "Logout",
+        "premium": "Premium Account",
+        "authModal": {
+            "title": "Microsoft Login",
+            "instruction": "To login with your Microsoft account, copy the following link and enter the code shown below:",
+            "copyLink": "Copy link",
+            "linkCopied": "Link copied!",
+            "waiting": "Waiting for authentication...",
+            "success": "Logged in successfully!",
+            "error": "Failed to login: {error}"
+        }
     },
     "instanceView": {
         "neverPlayed": "Never played",
@@ -109,6 +121,7 @@
         "nameLabel": "Instance Name",
         "namePlaceholder": "E.g. My Instance",
         "versionLabel": "Version",
+        "iconLabel": "Instance Logo",
         "noVersionsErr": "No downloaded versions found",
         "cancel": "Cancel",
         "createBtn": "Create",

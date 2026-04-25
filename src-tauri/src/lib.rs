@@ -27,9 +27,14 @@ pub fn run() {
             commands::download::get_fabric_versions,
             commands::download::download_fabric,
             commands::others::start_polling,
+            commands::others::open_url,
             commands::settings::get_settings,
             commands::settings::update_settings,
             commands::settings::detect_java_paths,
+            commands::auth::get_device_code,
+            commands::auth::authenticate_with_device_code,
+            commands::auth::get_current_user,
+            commands::auth::logout,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

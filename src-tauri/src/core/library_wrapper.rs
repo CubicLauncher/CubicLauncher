@@ -1,6 +1,9 @@
 use crate::core::instance_manager::Instance;
 use crate::core::path_manager::PathManager;
-use claunch_rs::{LaunchOptions, Launcher};
+use crate::core::SettingsManager;
+use claunch_rs::auth::microsoft::MicrosoftAuth;
+use claunch_rs::resolvers::{CommandBuilder, DependencyResolver};
+use claunch_rs::{AccountType, LaunchOptions, VersionInfo};
 use proton::{resolve_version_data, MinecraftDownloader};
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -92,14 +95,6 @@ impl LauncherWrapper {
     pub async fn launch(&mut self, instance: Arc<RwLock<Instance>>) -> Result<(), String> {
         trace!("=== CLaunch ===\n");
 
-        // Estructura esperada:
-        // game_dir/
-        // ├── shared/
-        // │   ├── libraries/    ← Aquí están las libs
-        // │   ├── versions/     ← Aquí están los JARs
-        // │   └── assets/       ← Aquí están los assets
-        // └── instances/
-        //     └── 1.20.1/       ← Directorio de la instancia
         let (version, _min_mem, _max_mem, is_running, name) = {
             let inst = instance.read().await;
             (
@@ -118,23 +113,23 @@ impl LauncherWrapper {
         let shared_dir = PathManager::get().get_shared_dir();
         let instance_dir = PathManager::get().get_instance_dir().join(name);
         
-        let settings = crate::core::SettingsManager::get().lock().unwrap().clone();
+        let settings_raw = SettingsManager::get().lock().unwrap().clone();
         
         // Parse version to select java
         let parts: Vec<&str> = version.split('.').collect();
         let minor = parts.get(1).unwrap_or(&"0").parse::<u32>().unwrap_or(0);
         let patch = parts.get(2).unwrap_or(&"0").parse::<u32>().unwrap_or(0);
         
-        let mut java_path = settings.get_jre17_path().to_string_lossy().into_owned(); // Default to 17
+        let mut java_path = settings_raw.get_jre17_path().to_string_lossy().into_owned(); // Default to 17
         
         if minor <= 16 {
-            let p = settings.get_jre8_path().to_string_lossy().into_owned();
+            let p = settings_raw.get_jre8_path().to_string_lossy().into_owned();
             if !p.is_empty() { java_path = p; }
         } else if minor >= 21 || (minor == 20 && patch >= 5) {
-            let p = settings.get_jre21_path().to_string_lossy().into_owned();
+            let p = settings_raw.get_jre21_path().to_string_lossy().into_owned();
             if !p.is_empty() { java_path = p; }
         } else {
-            let p = settings.get_jre17_path().to_string_lossy().into_owned();
+            let p = settings_raw.get_jre17_path().to_string_lossy().into_owned();
             if !p.is_empty() { java_path = p; }
         }
         
@@ -147,42 +142,119 @@ impl LauncherWrapper {
             info!("La instancia no se encuentra descargada. Descargando...");
             self.queue_download(version).await;
         }
+        
+        let mut user = settings_raw.get_minecraft_user();
+        
+        // Auto-refresh token if it's a Microsoft account
+        if user.user_type == AccountType::Microsoft {
+            if let Some(refresh_token) = &user.refresh_token {
+                info!("Refrescando token de Microsoft...");
+                let rt = refresh_token.clone();
+                let refresh_result = tokio::task::spawn_blocking(move || {
+                    MicrosoftAuth::refresh_token(&rt).map_err(|e| e.to_string())
+                }).await.map_err(|e| e.to_string())?;
+
+                match refresh_result {
+                    Ok(new_user) => {
+                        info!("Token refrescado correctamente para {}", new_user.username);
+                        user = new_user;
+                        let _ = user.save_tokens(); // Securely store new tokens
+                        let mut settings = SettingsManager::get().lock().unwrap();
+                        settings.set_user(Some(user.clone()));
+                        settings.save();
+                    }
+                    Err(e) => {
+                        warn!("No se pudo refrescar el token: {}. Intentando con el token actual...", e);
+                    }
+                }
+            }
+        }
+
         trace!("Configuration:");
         trace!("  Shared dir:      {}", shared_dir.display());
         trace!("  Version JSON:  {}", version_json.display());
         trace!("  Instance dir:  {}", instance_dir.display());
         trace!("  Java:          {}", java_path);
+        trace!("  User:          {} (Type: {:?})", user.username, user.user_type);
+        trace!("  Access Token:  {}", user.access_token);
 
-        // Launch options
+        let min_mem = format!("{}G", settings_raw.min_memory);
+        let max_mem = format!("{}G", settings_raw.max_memory);
         let options = LaunchOptions::new().with_demo(false);
         let mut custom_env = HashMap::new();
-        if settings.force_gpu {
+        if settings_raw.force_gpu {
             custom_env.insert("DRI_PRIME".to_string(), "1".to_string());
         }
+
         let instance_clone = Arc::clone(&instance);
         
-        let username = settings.username.clone();
-        let min_mem = format!("{}G", settings.min_memory);
-        let max_mem = format!("{}G", settings.max_memory);
-        
         let child_result = tokio::task::spawn_blocking(move || {
-            Launcher::launch_with_options_and_child(
-                &version_json,
-                &shared_dir,
-                &instance_dir,
-                &username,
-                &java_path,
-                &min_mem,
-                &max_mem,
-                854,
-                480,
-                true,
-                options,
-                custom_env,
-            )
-            .map_err(|e| e.to_string())
+            // 1. Resolve dependencies and build classpath
+            let info = VersionInfo::new(&version_json, &shared_dir, &instance_dir)
+                .map_err(|e| e.to_string())?;
+            
+            let mut resolver = DependencyResolver::new(info.lib_dir.clone(), info.natives_dir.clone());
+            if info.has_inheritance() {
+                if let Some(base_data) = &info.base_version_data {
+                    resolver.process_version(base_data, false);
+                }
+            }
+            resolver.process_version(&info.version_data, true);
+            let classpath = resolver.build_classpath(&info);
+
+            // 2. Build variables
+            let mut vars = HashMap::new();
+            let user_type_str = match user.user_type {
+                AccountType::Cracked => "mojang",
+                AccountType::Microsoft => "msa",
+            };
+            vars.insert("auth_player_name".to_string(), user.username.clone());
+            vars.insert("version_name".to_string(), info.version_id.clone());
+            vars.insert("game_directory".to_string(), instance_dir.display().to_string());
+            vars.insert("assets_root".to_string(), info.assets_dir.display().to_string());
+            vars.insert("assets_index_name".to_string(), info.get_assets_index_name());
+            vars.insert("auth_uuid".to_string(), user.uuid.clone());
+            vars.insert("auth_access_token".to_string(), user.access_token.clone());
+            vars.insert("user_type".to_string(), user_type_str.to_string());
+            vars.insert("user_properties".to_string(), "{}".to_string());
+            vars.insert("version_type".to_string(), info.get_property("type").unwrap_or("release").to_string());
+            
+            #[cfg(windows)]
+            vars.insert("classpath_separator".to_string(), ";".to_string());
+            #[cfg(not(windows))]
+            vars.insert("classpath_separator".to_string(), ":".to_string());
+            
+            vars.insert("library_directory".to_string(), info.lib_dir.display().to_string());
+            vars.insert("natives_directory".to_string(), info.natives_dir.display().to_string());
+
+            // 3. Build command
+            let main_class = info.get_property("mainClass").ok_or("Main class not found")?;
+            let mut builder = CommandBuilder::new(&info, vars, options);
+            builder
+                .add_java(&java_path)
+                .add_jvm_args(&min_mem, &max_mem, user.user_type == AccountType::Cracked)
+                .add_classpath(&classpath)
+                .add_main_class(main_class)
+                .add_game_args(854, 480);
+
+            let args = builder.build();
+            
+            // 4. Spawn process
+            let mut cmd = std::process::Command::new(&args[0]);
+            cmd.args(&args[1..])
+                .current_dir(&instance_dir)
+                .stdin(std::process::Stdio::inherit())
+                .stdout(std::process::Stdio::inherit())
+                .stderr(std::process::Stdio::inherit());
+            
+            for (key, value) in custom_env {
+                cmd.env(key, value);
+            }
+
+            cmd.spawn().map_err(|e| e.to_string())
         })
         .await;
+
         match child_result {
             Ok(Ok(child)) => {
                 let mut instance = instance.write().await;

@@ -1,4 +1,4 @@
-import { type InstanceDto, type ModDto } from "../types/types";
+import { type InstanceDto, type ModDto, type DeviceCode, type MinecraftUser, type Settings } from "../types/types";
 import { invoke } from "@tauri-apps/api/core";
 import { showError } from "../state/state.svelte";
 
@@ -140,16 +140,16 @@ export async function fetchAll(
   }
 }
 
-export async function getSettings(): Promise<any> {
+export async function getSettings(): Promise<Settings | null> {
   try {
-    return await invoke("get_settings");
+    return await invoke<Settings>("get_settings");
   } catch (err) {
     console.error("Error al obtener settings:", err);
     return null;
   }
 }
 
-export async function updateSettings(settings: any): Promise<void> {
+export async function updateSettings(settings: Settings): Promise<void> {
   try {
     await invoke("update_settings", { newSettings: settings });
   } catch (err) {
@@ -197,4 +197,33 @@ export async function downloadFabric(gameVersion: string): Promise<void> {
     } catch (err) {
         console.error(`Error al descargar Fabric para ${gameVersion}:`, err);
     }
+}
+
+// Auth Commands
+export async function getDeviceCode(): Promise<DeviceCode> {
+    return await invoke<DeviceCode>("get_device_code");
+}
+
+export async function authenticateWithDeviceCode(
+    deviceCode: string,
+    interval: number,
+    expiresIn: number
+): Promise<MinecraftUser> {
+    return await invoke<MinecraftUser>("authenticate_with_device_code", {
+        deviceCode,
+        interval,
+        expiresIn
+    });
+}
+
+export async function getCurrentUser(): Promise<MinecraftUser | null> {
+    return await invoke<MinecraftUser | null>("get_current_user");
+}
+
+export async function logout(): Promise<void> {
+    await invoke("logout");
+}
+
+export async function openUrl(url: string): Promise<void> {
+    await invoke("open_url", { url });
 }

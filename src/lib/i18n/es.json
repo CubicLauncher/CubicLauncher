@@ -68,7 +68,19 @@
         "offline": "Desconectado",
         "cancel": "Cancelar",
         "save": "Guardar",
-        "changeNameBtn": "Cambiar Nombre"
+        "changeNameBtn": "Cambiar Nombre",
+        "loginMicrosoft": "Iniciar sesión con Microsoft",
+        "logout": "Cerrar sesión",
+        "premium": "Cuenta Premium",
+        "authModal": {
+            "title": "Inicio de Sesión Microsoft",
+            "instruction": "Para iniciar sesión con tu cuenta de Microsoft, copia el siguiente enlace e introduce el código que aparece a continuación:",
+            "copyLink": "Copiar enlace",
+            "linkCopied": "¡Enlace copiado!",
+            "waiting": "Esperando autenticación...",
+            "success": "¡Sesión iniciada correctamente!",
+            "error": "Error al iniciar sesión: {error}"
+        }
     },
     "instanceView": {
         "neverPlayed": "Nunca jugado",

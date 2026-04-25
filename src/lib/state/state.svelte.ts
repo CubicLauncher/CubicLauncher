@@ -15,6 +15,7 @@ export const launcherStore = $state<LauncherState>({
   notifications: [],
   settings: {
     username: "Steve",
+    user: null,
     min_memory: 1,
     max_memory: 2,
     jre8_path: "",
@@ -38,9 +39,9 @@ export function addNotification(
 ) {
   const id = Math.random().toString(36).substring(2, 9);
   const notification: Notification = { id, title, message, type, timeout };
-  
+
   launcherStore.notifications = [...launcherStore.notifications, notification];
-  
+
   return id;
 }
 

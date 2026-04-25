@@ -1,4 +1,5 @@
 use crate::core::path_manager::PathManager;
+use claunch_rs::MinecraftUser;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::path::{Path, PathBuf};
@@ -14,6 +15,8 @@ static SETTINGS: LazyLock<Mutex<SettingsManager>> =
 pub struct SettingsManager {
     #[serde(default = "default_username")]
     pub username: String,
+    #[serde(default)]
+    pub user: Option<MinecraftUser>,
     #[serde(default = "default_min_mem")]
     pub min_memory: u32,
     #[serde(default = "default_max_mem")]
@@ -73,9 +76,25 @@ impl SettingsManager {
     pub fn get_jre21_path(&self) -> &Path {
         &self.jre21_path
     }
+    pub fn get_minecraft_user(&self) -> MinecraftUser {
+        if let Some(user) = &self.user {
+            let mut u = user.clone();
+            let _ = u.load_tokens();
+            u
+        } else {
+            MinecraftUser::cracked(&self.username)
+        }
+    }
     // setters
     pub fn set_username(&mut self, username: String) {
         self.username = username;
+        self.dirty = true;
+    }
+    pub fn set_user(&mut self, user: Option<MinecraftUser>) {
+        if let Some(ref u) = user {
+            self.username = u.username.clone();
+        }
+        self.user = user;
         self.dirty = true;
     }
     pub fn set_max_memory(&mut self, max_memory: u32) {
@@ -153,6 +172,7 @@ impl Default for SettingsManager {
     fn default() -> Self {
         SettingsManager {
             username: String::from("steve"),
+            user: None,
             min_memory: 1,
             max_memory: 2,
             jre8_path: PathBuf::new(),
