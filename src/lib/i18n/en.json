@@ -1,154 +1,160 @@
 {
-    "settings": {
-        "title": "Settings",
-        "tabs": {
-            "launcher": "Launcher",
-            "minecraft": "Minecraft",
-            "java": "Java"
-        },
-        "launcher": {
-            "activeInstancesTitle": "Active Instances",
-            "killInstance": "Kill",
-            "noInstances": "No instances running",
-            "generalTitle": "General",
-            "language": "Language",
-            "autoUpdates": "Automatic Updates",
-            "closeOnPlay": "Close launcher when starting game"
-        },
-        "minecraft": {
-            "perfTitle": "Performance (RAM)",
-            "minRam": "Minimum (GB)",
-            "maxRam": "Maximum (GB)",
-            "optionsTitle": "Minecraft Options",
-            "showSnapshots": "Show Snapshot versions",
-            "showAlpha": "Show Alpha versions",
-            "forceGpu": "Force GPU usage"
-        },
-        "java": {
-            "configTitle": "Java Configuration",
-            "runtimesTitle": "Java Runtimes",
-            "detectPathsBtn": "Detect Paths",
-            "java8Path": "Java 8 Path",
-            "java17Path": "Java 17 Path",
-            "java21Path": "Java 21 Path",
-            "jvmArgs": "JVM Arguments",
-            "saveBtn": "Save Settings",
-            "saving": "Saving..."
-        }
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "launcher": "Launcher",
+      "minecraft": "Minecraft",
+      "java": "Java"
     },
-    "main": {
-        "noInstanceTitle": "No instance selected",
-        "noInstanceDesc": "Choose an instance from the sidebar to begin"
+    "launcher": {
+      "activeInstancesTitle": "Active Instances",
+      "killInstance": "Kill",
+      "noInstances": "No instances running",
+      "generalTitle": "General",
+      "language": "Language",
+      "autoUpdates": "Automatic Updates",
+      "closeOnPlay": "Close launcher when starting game"
     },
-    "sidebar": {
-        "yourInstances": "Your Instances",
-        "rename": "Rename",
-        "delete": "Delete",
-        "noInstances": "No instances",
-        "createInstance": "Create Instance",
-        "downloadVersions": "Download Versions",
-        "settings": "Settings",
-        "modals": {
-            "editTitle": "Edit Instance",
-            "nameLabel": "Name",
-            "versionLabel": "Version",
-            "iconLabel": "Instance Logo",
-            "cancel": "Cancel",
-            "save": "Save",
-            "deleteTitle": "Delete Instance",
-            "deleteDesc1": "Are you sure you want to delete the instance",
-            "deleteDesc2": "? This action cannot be undone.",
-            "deleteBtn": "Delete"
-        }
+    "minecraft": {
+      "perfTitle": "Performance (RAM)",
+      "minRam": "Minimum (GB)",
+      "maxRam": "Maximum (GB)",
+      "optionsTitle": "Minecraft Options",
+      "showSnapshots": "Show Snapshot versions",
+      "showAlpha": "Show Alpha versions",
+      "forceGpu": "Force GPU usage"
     },
-    "userMenu": {
-        "title": "User Profile",
-        "usernameLabel": "Username",
-        "usernamePlaceholder": "Username",
-        "offline": "Offline",
-        "cancel": "Cancel",
-        "save": "Save",
-        "changeNameBtn": "Change Name",
-        "loginMicrosoft": "Login with Microsoft",
-        "logout": "Logout",
-        "premium": "Premium Account",
-        "authModal": {
-            "title": "Microsoft Login",
-            "instruction": "To login with your Microsoft account, copy the following link and enter the code shown below:",
-            "copyLink": "Copy link",
-            "linkCopied": "Link copied!",
-            "waiting": "Waiting for authentication...",
-            "success": "Logged in successfully!",
-            "error": "Failed to login: {error}"
-        }
-    },
-    "instanceView": {
-        "neverPlayed": "Never played",
-        "lastPlayed": "Last played: {date}",
-        "playBtn": "Play",
-        "pickBannerTitle": "Select Banner",
-        "noScreenshots": "No screenshots available",
-        "changeBanner": "Change",
-        "changeBannerTitle": "Change Banner",
-        "tabs": {
-            "details": "Details",
-            "mods": "Mods",
-            "options": "Options"
-        },
-        "details": {
-            "title": "Details",
-            "version": "Version",
-            "loader": "Loader",
-            "location": "Location"
-        },
-        "options": {
-            "title": "Quick Options",
-            "folder": "Open Folder",
-            "resources": "Resources",
-            "screenshots": "Screenshots",
-            "logs": "Logs"
-        },
-        "mods": {
-            "title": "Installed Mods",
-            "jarFile": ".JAR File",
-            "empty": "No mods installed in this instance"
-        }
-    },
-    "createInstance": {
-        "title": "Create New Instance",
-        "emptyNameErr": "Name cannot be empty",
-        "createErr": "Error creating instance",
-        "nameLabel": "Instance Name",
-        "namePlaceholder": "E.g. My Instance",
-        "versionLabel": "Version",
-        "iconLabel": "Instance Logo",
-        "noVersionsErr": "No downloaded versions found",
-        "cancel": "Cancel",
-        "createBtn": "Create",
-        "creatingBtn": "Creating..."
-    },
-    "versionDownloader": {
-        "title": "Download Versions",
-        "searchPlaceholder": "Search version...",
-        "loading": "Loading versions...",
-        "notFound": "No versions found",
-        "installedTag": "Installed",
-        "downloadBtn": "Download",
-        "filters": {
-            "all": "All",
-            "installedOnly": "Installed Only",
-            "notInstalledOnly": "Not Installed",
-            "stableOnly": "Stable Only",
-            "unstableOnly": "Unstable Only",
-            "installStatus": "Status",
-            "majorVersion": "Major Version",
-            "fabricStability": "Stability"
-        },
-        "tabs": {
-            "releases": "Releases",
-            "snapshots": "Snapshots",
-            "alphas": "Alphas",
-            "fabric": "Fabric"
-        }
+    "java": {
+      "configTitle": "Java Configuration",
+      "runtimesTitle": "Java Runtimes",
+      "detectPathsBtn": "Detect Paths",
+      "java8Path": "Java 8 Path",
+      "java17Path": "Java 17 Path",
+      "java21Path": "Java 21 Path",
+      "jvmArgs": "JVM Arguments",
+      "saveBtn": "Save Settings",
+      "saving": "Saving..."
     }
+  },
+  "main": {
+    "noInstanceTitle": "No instance selected",
+    "noInstanceDesc": "Choose an instance from the sidebar to begin"
+  },
+  "sidebar": {
+    "yourInstances": "Your Instances",
+    "rename": "Rename",
+    "delete": "Delete",
+    "noInstances": "No instances",
+    "createInstance": "Create Instance",
+    "downloadVersions": "Download Versions",
+    "settings": "Settings",
+    "modals": {
+      "editTitle": "Edit Instance",
+      "nameLabel": "Name",
+      "versionLabel": "Version",
+      "iconLabel": "Instance Logo",
+      "cancel": "Cancel",
+      "save": "Save",
+      "deleteTitle": "Delete Instance",
+      "deleteDesc1": "Are you sure you want to delete the instance",
+      "deleteDesc2": "? This action cannot be undone.",
+      "deleteBtn": "Delete"
+    }
+  },
+  "userMenu": {
+    "title": "User Profile",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Username",
+    "offline": "Offline",
+    "cancel": "Cancel",
+    "save": "Save",
+    "changeNameBtn": "Change Name",
+    "loginMicrosoft": "Login with Microsoft",
+    "logout": "Logout",
+    "premium": "Premium Account",
+    "authModal": {
+      "title": "Microsoft Login",
+      "instruction": "To login with your Microsoft account, copy the following link and enter the code shown below:",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied!",
+      "waiting": "Waiting for authentication...",
+      "success": "Logged in successfully!",
+      "error": "Failed to login: {error}"
+    }
+  },
+  "instanceView": {
+    "neverPlayed": "Never played",
+    "lastPlayed": "Last played: {date}",
+    "playBtn": "Play",
+    "close": "Kill",
+    "pickBannerTitle": "Select Banner",
+    "noScreenshots": "No screenshots available",
+    "changeBanner": "Change",
+    "changeBannerTitle": "Change Banner",
+    "status": {
+      "starting": "Starting",
+      "started": "The version has been started",
+      "idle": "Puto el que lo lea"
+    },
+    "tabs": {
+      "details": "Details",
+      "mods": "Mods",
+      "options": "Options"
+    },
+    "details": {
+      "title": "Details",
+      "version": "Version",
+      "loader": "Loader",
+      "location": "Location"
+    },
+    "options": {
+      "title": "Quick Options",
+      "folder": "Open Folder",
+      "resources": "Resources",
+      "screenshots": "Screenshots",
+      "logs": "Logs"
+    },
+    "mods": {
+      "title": "Installed Mods",
+      "jarFile": ".JAR File",
+      "empty": "No mods installed in this instance"
+    }
+  },
+  "createInstance": {
+    "title": "Create New Instance",
+    "emptyNameErr": "Name cannot be empty",
+    "createErr": "Error creating instance",
+    "nameLabel": "Instance Name",
+    "namePlaceholder": "E.g. My Instance",
+    "versionLabel": "Version",
+    "iconLabel": "Instance Logo",
+    "noVersionsErr": "No downloaded versions found",
+    "cancel": "Cancel",
+    "createBtn": "Create",
+    "creatingBtn": "Creating..."
+  },
+  "versionDownloader": {
+    "title": "Download Versions",
+    "searchPlaceholder": "Search version...",
+    "loading": "Loading versions...",
+    "notFound": "No versions found",
+    "installedTag": "Installed",
+    "downloadBtn": "Download",
+    "filters": {
+      "all": "All",
+      "installedOnly": "Installed Only",
+      "notInstalledOnly": "Not Installed",
+      "stableOnly": "Stable Only",
+      "unstableOnly": "Unstable Only",
+      "installStatus": "Status",
+      "majorVersion": "Major Version",
+      "fabricStability": "Stability"
+    },
+    "tabs": {
+      "releases": "Releases",
+      "snapshots": "Snapshots",
+      "alphas": "Alphas",
+      "fabric": "Fabric"
+    }
+  }
 }

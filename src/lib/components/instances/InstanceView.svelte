@@ -8,6 +8,7 @@
     import Loading from "../../icons/Loading.svelte";
     import Check from "../../icons/Check.svelte";
     import { t } from "$lib/i18n";
+    import { killInst } from "$lib/api/launcherService";
 
     let { selectedInstance } = $props<{ selectedInstance: InstanceDto }>();
     let activeTab = $state("detalles");
@@ -149,12 +150,11 @@
             ? `background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.8)), url(${screenshotUrl})`
             : "background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0) 100%);"}
     >
-        <div class="instance-big-icon">
-            <img
-                src={selectedInstance.icon || "/images/cubic.svg"}
-                alt="Icon"
-            />
-        </div>
+        <img
+            class="instance-big-icon"
+            src={selectedInstance.icon || "/images/cubic.svg"}
+            alt="Icon"
+        />
         <div class="instance-title-area">
             <h2>{selectedInstance.name}</h2>
             <div class="last-played">
@@ -163,11 +163,23 @@
                     formatDate(selectedInstance.last_played),
                 )}
             </div>
-            <button
-                class="play-btn"
-                onclick={() => launchInstance(selectedInstance)}
-                >{t("instanceView.playBtn")}</button
-            >
+            {#if bannerState == "Started"}
+                <button
+                    class="play-btn"
+                    onclick={() => killInst(selectedInstance.uuid)}
+                    >{t("instanceView.close")}</button
+                >
+            {:else if bannerState == "Starting"}
+                <button class="play-btn" disabled
+                    >{t("instanceView.playBtn")}</button
+                >
+            {:else}
+                <button
+                    class="play-btn"
+                    onclick={() => launchInstance(selectedInstance)}
+                    >{t("instanceView.playBtn")}</button
+                >
+            {/if}
         </div>
 
         <div class="banner-controls">
@@ -196,19 +208,21 @@
     </section>
     {#if bannerState}
         {#if bannerState === "Idle"}
-            <div class="banner-status">puto el que lo lea</div>
+            <div class="banner-status">
+                <span>{t("instanceView.status.idle")}</span>
+            </div>
         {:else if bannerState === "Started"}
             <div class="banner-status-started">
                 <div class="banner-status-row">
                     <Check class="banner-status-icon" />
-                    <span>Started</span>
+                    <span>{t("instanceView.status.started")}</span>
                 </div>
             </div>
         {:else if bannerState === "Starting"}
             <div class="banner-status-starting">
                 <div class="banner-status-row">
                     <Loading class="banner-status-icon-rotate" />
-                    <span>Starting</span>
+                    <span>{t("instanceView.status.starting")}</span>
                 </div>
             </div>
         {/if}

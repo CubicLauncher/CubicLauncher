@@ -651,15 +651,14 @@ body {
     }
 }
 .instance-big-icon {
-    width: 96px;
-    height: 96px;
-    background: #1a1a1a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 64px;
+    height: 64px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
 }
 
 .instance-big-icon img {
@@ -710,9 +709,21 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.play-btn:hover {
+.play-btn:hover:not(:disabled) {
     background: #f0f0f0;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.play-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.play-btn:disabled {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.35);
+    cursor: not-allowed;
+    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .play-btn:active {
@@ -2065,7 +2076,7 @@ body {
     max-width: 480px;
     padding: 14px;
     border-radius: 5px;
-    background: rgba(22, 22, 28, 0.1);
+    background: rgba(22, 22, 28, 0.7);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
