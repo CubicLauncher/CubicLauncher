@@ -1,7 +1,90 @@
-# Tauri + SvelteKit + TypeScript
+<div align="center">
+  <img src="static/images/cubic.svg" width="120" alt="CubicLauncher" />
+  <h1>CubicLauncher</h1>
+  <p>Lanzador de Minecraft rápido, ligero y de código abierto.</p>
 
-This template should help get you started developing with Tauri, SvelteKit and TypeScript in Vite.
+  ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue)
+  ![Versión](https://img.shields.io/badge/versión-0.1.0-informational)
+  ![Plataforma](https://img.shields.io/badge/plataforma-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
+  ![Estado](https://img.shields.io/badge/estado-en%20desarrollo-yellow)
+  ![Tauri](https://img.shields.io/badge/hecho%20con-Tauri%202-orange)
+  ![Rust](https://img.shields.io/badge/backend-Rust-b7410e)
+</div>
 
-## Recommended IDE Setup
+---
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+CubicLauncher es un lanzador de Minecraft de escritorio multiplataforma pensado para ser rápido y sencillo de usar. Permite administrar varias instancias de juego de forma independiente, cada una con su propia versión, loader de mods y configuración.
+
+## Funcionalidades
+
+### Gestión de instancias
+
+- Crea instancias de Minecraft con Vanilla, Fabric u otros loaders.
+- Renombra, actualiza o elimina instancias cuando quieras.
+- Cada instancia tiene su propio directorio aislado de juego.
+- Personaliza el ícono y la imagen de portada de cada instancia usando tus propias capturas de pantalla.
+- Consulta la fecha y hora de la última vez que jugaste en cada instancia.
+
+### Mods
+
+- Activa o desactiva mods individualmente por instancia sin tener que borrarlos.
+- El soporte de mods está disponible en instancias con Fabric u otros loaders compatibles.
+
+### Capturas de pantalla
+
+- Visualiza las capturas de pantalla de cada instancia directamente desde el lanzador.
+- Selecciona cualquier captura para usarla como imagen de portada de la instancia.
+
+### Autenticación
+
+- Inicia sesión con tu cuenta de Microsoft mediante el flujo de código de dispositivo.
+- El lanzador guarda la sesión de forma segura para que no tengas que autenticarte en cada inicio.
+
+### Configuración
+
+**Lanzador**
+- Selección de idioma (Español / English).
+- Opción para cerrar el lanzador automáticamente al iniciar el juego.
+- Actualizaciones automáticas.
+
+**Minecraft**
+- Ajuste de memoria RAM mínima y máxima asignada al juego.
+- Opción para mostrar versiones snapshot y alpha en el selector de versiones.
+- Forzado de GPU discreta.
+
+**Java**
+- Rutas configurables para Java 8, 17 y 21.
+- Detección automática de instalaciones de Java en el sistema.
+- Argumentos personalizados de la JVM.
+
+### Descarga de versiones
+
+- Descarga versiones de Minecraft desde los repositorios oficiales de Mojang.
+- Soporte para instalar Fabric en instancias existentes.
+
+## Instalación
+
+Descarga el instalador correspondiente a tu sistema operativo desde la sección de [Releases](https://github.com/CubicLauncher/CubicLauncher/releases).
+
+| Sistema operativo | Formato        |
+|-------------------|----------------|
+| Windows           | `.msi` / `.exe`|
+| Linux             | `.deb` / `.AppImage` |
+| macOS             | `.dmg`         |
+
+## Compilar desde el código fuente
+
+Si prefieres compilar el lanzador manualmente, consulta la [guía de compilación](BUILDING.md).
+
+Requisitos mínimos: [Bun](https://bun.sh/), [Rust](https://www.rust-lang.org/tools/install) 2021+ y [Tauri CLI v2](https://tauri.app/start/prerequisites/).
+
+```bash
+git clone https://github.com/CubicLauncher/CubicLauncher.git
+cd CubicLauncher
+bun install
+bun run tauri build
+```
+
+## Licencia
+
+Este proyecto se distribuye bajo los términos de la [Licencia Pública General GNU v3.0](LICENSE).
