@@ -207,11 +207,7 @@
         </div>
     </section>
     {#if bannerState}
-        {#if bannerState === "Idle"}
-            <div class="banner-status">
-                <span>{t("instanceView.status.idle")}</span>
-            </div>
-        {:else if bannerState === "Started"}
+        {#if bannerState === "Started"}
             <div class="banner-status-started">
                 <div class="banner-status-row">
                     <Check class="banner-status-icon" />
