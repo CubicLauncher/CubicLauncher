@@ -8,7 +8,7 @@ Antes de comenzar, asegúrate de tener instalado lo siguiente:
 
 ### 1. Rust
 
-CubicLauncher requiere Rust edición 2021 o superior. Instálalo con `rustup`:
+CubicLauncher requiere Rust edición 2024 o superior. Instálalo con `rustup`:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
