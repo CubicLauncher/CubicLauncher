@@ -3,10 +3,8 @@ on:
   push:
     tags:
       - "v*"
-
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   release:
     permissions:
@@ -63,4 +61,6 @@ jobs:
             Ver los commits para más detalles.
           releaseDraft: false
           prerelease: false
+          updaterJsonPath: latest.json
+          updaterJsonPreferNsis: true
           args: ${{ matrix.args }}
