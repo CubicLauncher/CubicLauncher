@@ -61,7 +61,10 @@ impl LauncherWrapper {
                             match resolve_version_data(game_version).await {
                                 Ok(v) => v,
                                 Err(_) => {
-                                    error!("No se pudo resolver la versión base {} para Fabric", game_version);
+                                    error!(
+                                        "No se pudo resolver la versión base {} para Fabric",
+                                        game_version
+                                    );
                                     self.is_downloading = false;
                                     continue;
                                 }
@@ -112,39 +115,20 @@ impl LauncherWrapper {
         }
         let shared_dir = PathManager::get().get_shared_dir();
         let instance_dir = PathManager::get().get_instance_dir().join(name);
-        
+
         let settings_raw = SettingsManager::get().lock().unwrap().clone();
-        
-        // Parse version to select java
-        let parts: Vec<&str> = version.split('.').collect();
-        let minor = parts.get(1).unwrap_or(&"0").parse::<u32>().unwrap_or(0);
-        let patch = parts.get(2).unwrap_or(&"0").parse::<u32>().unwrap_or(0);
-        
-        let mut java_path = settings_raw.get_jre17_path().to_string_lossy().into_owned(); // Default to 17
-        
-        if minor <= 16 {
-            let p = settings_raw.get_jre8_path().to_string_lossy().into_owned();
-            if !p.is_empty() { java_path = p; }
-        } else if minor >= 21 || (minor == 20 && patch >= 5) {
-            let p = settings_raw.get_jre21_path().to_string_lossy().into_owned();
-            if !p.is_empty() { java_path = p; }
-        } else {
-            let p = settings_raw.get_jre17_path().to_string_lossy().into_owned();
-            if !p.is_empty() { java_path = p; }
-        }
-        
-        if java_path.is_empty() {
-            java_path = "java".to_string(); // fallback to generic `java` if literally nothing
-        }
+        // esto se arregla haciendo que claunch lea la version de java en el manifesto
+
+        let java_path = settings_raw.get_jre21_path().to_string_lossy().into_owned(); // Default to 17
 
         let version_json = shared_dir.join(format!("versions/{}/{}.json", version, version));
         if !version_json.exists() {
             info!("La instancia no se encuentra descargada. Descargando...");
             self.queue_download(version).await;
         }
-        
+
         let mut user = settings_raw.get_minecraft_user();
-        
+
         // Auto-refresh token if it's a Microsoft account
         if user.user_type == AccountType::Microsoft {
             if let Some(refresh_token) = &user.refresh_token {
@@ -152,7 +136,9 @@ impl LauncherWrapper {
                 let rt = refresh_token.clone();
                 let refresh_result = tokio::task::spawn_blocking(move || {
                     MicrosoftAuth::refresh_token(&rt).map_err(|e| e.to_string())
-                }).await.map_err(|e| e.to_string())?;
+                })
+                .await
+                .map_err(|e| e.to_string())?;
 
                 match refresh_result {
                     Ok(new_user) => {
@@ -164,7 +150,10 @@ impl LauncherWrapper {
                         settings.save();
                     }
                     Err(e) => {
-                        warn!("No se pudo refrescar el token: {}. Intentando con el token actual...", e);
+                        warn!(
+                            "No se pudo refrescar el token: {}. Intentando con el token actual...",
+                            e
+                        );
                     }
                 }
             }
@@ -175,7 +164,11 @@ impl LauncherWrapper {
         trace!("  Version JSON:  {}", version_json.display());
         trace!("  Instance dir:  {}", instance_dir.display());
         trace!("  Java:          {}", java_path);
-        trace!("  User:          {} (Type: {:?})", user.username, user.user_type);
+        trace!(
+            "  User:          {} (Type: {:?})",
+            user.username,
+            user.user_type
+        );
         trace!("  Access Token:  {}", user.access_token);
 
         let min_mem = format!("{}G", settings_raw.min_memory);
@@ -187,13 +180,14 @@ impl LauncherWrapper {
         }
 
         let instance_clone = Arc::clone(&instance);
-        
+
         let child_result = tokio::task::spawn_blocking(move || {
             // 1. Resolve dependencies and build classpath
             let info = VersionInfo::new(&version_json, &shared_dir, &instance_dir)
                 .map_err(|e| e.to_string())?;
-            
-            let mut resolver = DependencyResolver::new(info.lib_dir.clone(), info.natives_dir.clone());
+
+            let mut resolver =
+                DependencyResolver::new(info.lib_dir.clone(), info.natives_dir.clone());
             if info.has_inheritance() {
                 if let Some(base_data) = &info.base_version_data {
                     resolver.process_version(base_data, false);
@@ -210,25 +204,45 @@ impl LauncherWrapper {
             };
             vars.insert("auth_player_name".to_string(), user.username.clone());
             vars.insert("version_name".to_string(), info.version_id.clone());
-            vars.insert("game_directory".to_string(), instance_dir.display().to_string());
-            vars.insert("assets_root".to_string(), info.assets_dir.display().to_string());
-            vars.insert("assets_index_name".to_string(), info.get_assets_index_name());
+            vars.insert(
+                "game_directory".to_string(),
+                instance_dir.display().to_string(),
+            );
+            vars.insert(
+                "assets_root".to_string(),
+                info.assets_dir.display().to_string(),
+            );
+            vars.insert(
+                "assets_index_name".to_string(),
+                info.get_assets_index_name(),
+            );
             vars.insert("auth_uuid".to_string(), user.uuid.clone());
             vars.insert("auth_access_token".to_string(), user.access_token.clone());
             vars.insert("user_type".to_string(), user_type_str.to_string());
             vars.insert("user_properties".to_string(), "{}".to_string());
-            vars.insert("version_type".to_string(), info.get_property("type").unwrap_or("release").to_string());
-            
+            vars.insert(
+                "version_type".to_string(),
+                info.get_property("type").unwrap_or("release").to_string(),
+            );
+
             #[cfg(windows)]
             vars.insert("classpath_separator".to_string(), ";".to_string());
             #[cfg(not(windows))]
             vars.insert("classpath_separator".to_string(), ":".to_string());
-            
-            vars.insert("library_directory".to_string(), info.lib_dir.display().to_string());
-            vars.insert("natives_directory".to_string(), info.natives_dir.display().to_string());
+
+            vars.insert(
+                "library_directory".to_string(),
+                info.lib_dir.display().to_string(),
+            );
+            vars.insert(
+                "natives_directory".to_string(),
+                info.natives_dir.display().to_string(),
+            );
 
             // 3. Build command
-            let main_class = info.get_property("mainClass").ok_or("Main class not found")?;
+            let main_class = info
+                .get_property("mainClass")
+                .ok_or("Main class not found")?;
             let mut builder = CommandBuilder::new(&info, vars, options);
             builder
                 .add_java(&java_path)
@@ -238,7 +252,7 @@ impl LauncherWrapper {
                 .add_game_args(854, 480);
 
             let args = builder.build();
-            
+
             // 4. Spawn process
             let mut cmd = std::process::Command::new(&args[0]);
             cmd.args(&args[1..])
@@ -246,7 +260,7 @@ impl LauncherWrapper {
                 .stdin(std::process::Stdio::inherit())
                 .stdout(std::process::Stdio::inherit())
                 .stderr(std::process::Stdio::inherit());
-            
+
             for (key, value) in custom_env {
                 cmd.env(key, value);
             }

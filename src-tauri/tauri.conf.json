@@ -20,7 +20,11 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' https://minotar.net data: blob:; connect-src 'self' https://minotar.net"
+      "csp": "default-src 'self' tauri: http://localhost; img-src 'self' asset: https://asset.localhost https://minotar.net; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://minotar.net",
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$HOME/.cubic/"]
+      }
     }
   },
   "bundle": {
