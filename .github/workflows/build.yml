@@ -48,6 +48,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNIGN_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          NO_STRIP: true
         run: bun tauri build ${{ matrix.args }}
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
