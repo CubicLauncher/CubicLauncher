@@ -147,11 +147,13 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
     // 3. Guardar el JSON en shared/versions/ID/ID.json
     let shared_dir = crate::core::PathManager::get().get_shared_dir();
     let version_dir = shared_dir.join("versions").join(&fabric_version_id);
-    std::fs::create_dir_all(&version_dir)
+    tokio::fs::create_dir_all(&version_dir)
+        .await
         .map_err(|e| format!("Error al crear el directorio de la versión: {}", e))?;
     
     let json_path = version_dir.join(format!("{}.json", fabric_version_id));
-    std::fs::write(json_path, &profile_json)
+    tokio::fs::write(json_path, &profile_json)
+        .await
         .map_err(|e| format!("Error al guardar el JSON: {}", e))?;
     
     // 4. Descargar librerías de Fabric
@@ -167,15 +169,15 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         let rel_path = format!("{}/{}/{}/{}-{}.jar", group, artifact, version, artifact, version);
         let dest_path = lib_base_dir.join(&rel_path);
         
-        if !dest_path.exists() {
+        if !tokio::fs::try_exists(&dest_path).await.unwrap_or(false) {
             if let Some(parent) = dest_path.parent() {
-                std::fs::create_dir_all(parent).ok();
+                let _ = tokio::fs::create_dir_all(parent).await;
             }
             
             let download_url = format!("{}{}", lib.url, rel_path);
             if let Ok(res) = reqwest::get(&download_url).await {
                 if let Ok(bytes) = res.bytes().await {
-                    std::fs::write(dest_path, bytes).ok();
+                    let _ = tokio::fs::write(dest_path, bytes).await;
                 }
             }
         }
