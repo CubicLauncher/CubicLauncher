@@ -4,11 +4,9 @@
   <p>Lanzador de Minecraft rápido, ligero y de código abierto.</p>
 
   ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue)
-  ![Versión](https://img.shields.io/badge/versión-0.1.0-informational)
-  ![Plataforma](https://img.shields.io/badge/plataforma-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
-  ![Estado](https://img.shields.io/badge/estado-en%20desarrollo-yellow)
-  ![Tauri](https://img.shields.io/badge/hecho%20con-Tauri%202-orange)
-  ![Rust](https://img.shields.io/badge/backend-Rust-b7410e)
+  ![Versión](https://img.shields.io/badge/versión-null-informational)
+  ![Discord](https://img.shields.io/discord/1366945511273398342)
+  ![Website](https://img.shields.io/website/https/www.cubiclauncher.com)
 </div>
 
 ---
