@@ -185,7 +185,9 @@ body {
     padding: 8px 10px;
     border-radius: 6px;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
     border: 1px solid transparent;
     background: transparent;
     color: var(--text-primary);
@@ -288,7 +290,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .action-btn:hover {
@@ -329,7 +333,9 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
     font-family: "Cantarell", system-ui, sans-serif;
 }
 
@@ -379,7 +385,9 @@ body {
 .user-edit-icon {
     opacity: 0;
     filter: invert(1);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
     transform: translateX(-4px);
     pointer-events: none;
 }
@@ -403,11 +411,15 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 100%);
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.2) 0%,
+        rgba(0, 0, 0, 0) 100%
+    );
 }
 
 .hero-section {
-    padding: 36px 40px;
+    padding: 50px 40px;
     display: flex;
     align-items: center;
     gap: 28px;
@@ -591,6 +603,33 @@ body {
     background: rgba(255, 68, 68, 0.1);
 }
 
+/* asd */
+.banner-status {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.banner-status-icon {
+    color: var(--accent);
+    animation: rotate 1.2s linear infinite;
+    height: 32px;
+    width: 32px;
+}
+
+.banner-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(-360deg);
+    }
+}
 .instance-big-icon {
     width: 96px;
     height: 96px;
@@ -637,12 +676,14 @@ body {
     color: black;
     border: none;
     padding: 10px 28px;
-    border-radius: 8px;
+    border-radius: 5px;
     font-size: 0.8rem;
     font-weight: 800;
     cursor: pointer;
     width: fit-content;
-    transition: background 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
     font-family: "Inter", system-ui, sans-serif;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -839,7 +880,6 @@ body {
     color: var(--text-primary);
 }
 
-
 /* ─── 7.1 QUICK OPTIONS PANEL ─────────────────────────────── */
 
 .quick-options-section {
@@ -914,7 +954,6 @@ body {
 
 .mods-section {
     margin-bottom: 24px;
-
 }
 
 .mods-grid {
@@ -931,7 +970,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background 0.2s ease, transform 0.1s ease;
+    transition:
+        background 0.2s ease,
+        transform 0.1s ease;
     cursor: pointer;
 }
 
@@ -982,7 +1023,7 @@ body {
 }
 
 .mod-status-toggle input[type="checkbox"]::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 2px;
     left: 2px;
@@ -1013,7 +1054,6 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
 }
-
 
 /* ─── 9. COMPONENTS: QUICK MENU ──────────────────────────── */
 
@@ -1178,7 +1218,9 @@ body {
     padding: 10px 12px;
     border-radius: 8px;
     font-size: 0.9rem;
-    transition: border-color 0.2s, background 0.2s;
+    transition:
+        border-color 0.2s,
+        background 0.2s;
     box-sizing: border-box;
 }
 
@@ -1233,7 +1275,9 @@ body {
     padding: 10px 12px;
     border-radius: 8px;
     font-size: 0.9rem;
-    transition: border-color 0.2s, background 0.2s;
+    transition:
+        border-color 0.2s,
+        background 0.2s;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -1334,11 +1378,17 @@ body {
     position: fixed;
     z-index: 101;
     background: var(--bg-sidebar);
-    border: 1px solid var(--border);
+    /*
+    en mi opinion es mas bonito
+    asi
+    */
+    border-left: 1px dotted var(--border);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     will-change: transform;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .drawer--right {
@@ -1346,7 +1396,7 @@ body {
     right: 0;
     height: 100%;
     width: min(340px, 90vw);
-    border-radius: 12px 0 0 12px;
+    border-radius: 5px 0 0 5px;
     border-right: none;
     box-shadow: -8px 0 32px rgba(0, 0, 0, 0.6);
 }
@@ -1526,7 +1576,9 @@ body {
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .btn-secondary:hover {
@@ -1991,9 +2043,9 @@ body {
     gap: 14px;
     min-width: 340px;
     max-width: 480px;
-    padding: 18px;
-    border-radius: 14px;
-    background: rgba(22, 22, 28, 0.9);
+    padding: 14px;
+    border-radius: 5px;
+    background: rgba(22, 22, 28, 0.1);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2003,10 +2055,18 @@ body {
     color: white;
 }
 
-.notification-toast.error { border-left: 4px solid #ff4d4d; }
-.notification-toast.warning { border-left: 4px solid #ffcc00; }
-.notification-toast.info { border-left: 4px solid #00aaff; }
-.notification-toast.success { border-left: 4px solid #00ff88; }
+/*.notification-toast.error {
+    border-left: 4px solid #ff4d4d;
+}
+.notification-toast.warning {
+    border-left: 4px solid #ffcc00;
+}
+.notification-toast.info {
+    border-left: 4px solid #00aaff;
+}
+.notification-toast.success {
+    border-left: 4px solid #00ff88;
+}*/
 
 .notification-toast .icon-container {
     display: flex;

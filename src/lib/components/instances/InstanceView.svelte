@@ -5,6 +5,7 @@
     import { launchInstance } from "$lib/api/cubicApi";
     import ModsRow from "./ModsRow.svelte";
     import QuickOptionsPanel from "./QuickOptionsPanel.svelte";
+    import Loading from "../../icons/loading.svelte";
     import { t } from "$lib/i18n";
 
     let { selectedInstance } = $props<{ selectedInstance: InstanceDto }>();
@@ -13,10 +14,10 @@
     let allScreenshots = $state<string[]>([]);
     let showPicker = $state(false);
     let bannerVersion = $state(0);
-    
-    const supportsMods = $derived(
-        selectedInstance.loader !== "Vanilla"
-    );
+    let bannerState = $derived.by(() => {
+        if (selectedInstance.is_running) return "started";
+    });
+    const supportsMods = $derived(selectedInstance.loader !== "Vanilla");
 
     $effect(() => {
         if (!supportsMods && activeTab === "mods") {
@@ -30,8 +31,14 @@
         const path = await invoke<string | null>("get_instance_banner", {
             instanceId: selectedInstance.uuid,
         });
-
-        screenshotUrl = path ? convertFileSrc(path) : null;
+        if (path) {
+            const clean = decodeURIComponent(path);
+            screenshotUrl = convertFileSrc(clean);
+            console.log(screenshotUrl);
+        } else {
+            screenshotUrl = null;
+        }
+        console.log(screenshotUrl);
     }
 
     async function pickBanner() {
@@ -78,7 +85,7 @@
 
     function formatDate(unix_date: number): string {
         if (unix_date < 1) {
-            return t('instanceView.neverPlayed');
+            return t("instanceView.neverPlayed");
         }
         let date = new Date(unix_date * 1000);
         return formatter.format(date);
@@ -103,7 +110,7 @@
                 onkeydown={(e) => e.stopPropagation()}
             >
                 <div class="picker-header">
-                    <h3>{t('instanceView.pickBannerTitle')}</h3>
+                    <h3>{t("instanceView.pickBannerTitle")}</h3>
                     <button
                         class="close-btn"
                         onclick={() => (showPicker = false)}>✕</button
@@ -112,7 +119,7 @@
                 <div class="picker-content">
                     {#if allScreenshots.length === 0}
                         <div class="empty-picker">
-                            {t('instanceView.noScreenshots')}
+                            {t("instanceView.noScreenshots")}
                         </div>
                     {:else}
                         <div class="picker-grid">
@@ -140,16 +147,23 @@
             : "background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0) 100%);"}
     >
         <div class="instance-big-icon">
-            <img src={selectedInstance.icon || "/images/cubic.svg"} alt="Icon" />
+            <img
+                src={selectedInstance.icon || "/images/cubic.svg"}
+                alt="Icon"
+            />
         </div>
         <div class="instance-title-area">
             <h2>{selectedInstance.name}</h2>
             <div class="last-played">
-                {t('instanceView.lastPlayed').replace('{date}', formatDate(selectedInstance.last_played))}
+                {t("instanceView.lastPlayed").replace(
+                    "{date}",
+                    formatDate(selectedInstance.last_played),
+                )}
             </div>
             <button
                 class="play-btn"
-                onclick={() => launchInstance(selectedInstance)}>{t('instanceView.playBtn')}</button
+                onclick={() => launchInstance(selectedInstance)}
+                >{t("instanceView.playBtn")}</button
             >
         </div>
 
@@ -157,7 +171,7 @@
             <button
                 class="banner-btn"
                 onclick={pickBanner}
-                title={t('instanceView.changeBannerTitle')}
+                title={t("instanceView.changeBannerTitle")}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -173,30 +187,44 @@
                         d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
                     /><circle cx="12" cy="13" r="4" /></svg
                 >
-                <span>{t('instanceView.changeBanner')}</span>
+                <span>{t("instanceView.changeBanner")}</span>
             </button>
         </div>
     </section>
+    {#if bannerState}
+        <div class="banner-status">
+            {#if bannerState === "idle"}
+                idle
+            {:else if bannerState === "started"}
+                started
+            {:else if bannerState === "starting"}
+                <div class="banner-status-row">
+                    <Loading class="banner-status-icon" />
+                    <span></span>
+                </div>
+            {/if}
+        </div>
+    {/if}
 
     <div class="tabs-nav">
         <button
             class="tab-item {activeTab === 'detalles' ? 'active' : ''}"
             onclick={() => (activeTab = "detalles")}
         >
-            {t('instanceView.tabs.details')}
+            {t("instanceView.tabs.details")}
         </button>
         <button
             class="tab-item {activeTab === 'mods' ? 'active' : ''}"
             onclick={() => supportsMods && (activeTab = "mods")}
             disabled={!supportsMods}
         >
-            {t('instanceView.tabs.mods')}
+            {t("instanceView.tabs.mods")}
         </button>
         <button
             class="tab-item {activeTab === 'opciones' ? 'active' : ''}"
             onclick={() => (activeTab = "opciones")}
         >
-            {t('instanceView.tabs.options')}
+            {t("instanceView.tabs.options")}
         </button>
     </div>
 
