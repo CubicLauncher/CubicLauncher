@@ -609,9 +609,29 @@ body {
     border-bottom: 1px solid var(--border);
 }
 
-.banner-status-icon {
+.banner-status-started {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.banner-status-starting {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    background: #5e81ac;
+}
+.banner-status-started {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    background: #8fbc8f;
+}
+.banner-status-icon-rotate {
     color: var(--accent);
     animation: rotate 1.2s linear infinite;
+    height: 32px;
+    width: 32px;
+}
+.banner-status-icon {
+    color: var(--accent);
     height: 32px;
     width: 32px;
 }

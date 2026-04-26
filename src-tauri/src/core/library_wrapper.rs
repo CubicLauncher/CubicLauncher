@@ -1,4 +1,4 @@
-use crate::core::instance_manager::Instance;
+use crate::core::instance_manager::{InstanceHandle, InstanceStatus};
 use crate::core::path_manager::PathManager;
 use crate::core::SettingsManager;
 use claunch_rs::auth::microsoft::MicrosoftAuth;
@@ -7,14 +7,9 @@ use claunch_rs::{AccountType, LaunchOptions, VersionInfo};
 use proton::{resolve_version_data, MinecraftDownloader};
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use std::sync::Arc;
 use std::sync::LazyLock;
 use tokio::sync::Mutex;
-use tokio::sync::RwLock;
-use tracing::error;
-use tracing::info;
-use tracing::trace;
-use tracing::warn;
+use tracing::{error, info, trace, warn};
 
 static LAUNCHER: LazyLock<Mutex<LauncherWrapper>> =
     LazyLock::new(|| Mutex::new(LauncherWrapper::new()));
@@ -29,8 +24,8 @@ impl LauncherWrapper {
         &LAUNCHER
     }
 
-    fn new() -> LauncherWrapper {
-        LauncherWrapper {
+    fn new() -> Self {
+        Self {
             queue: VecDeque::new(),
             is_downloading: false,
         }
@@ -44,7 +39,7 @@ impl LauncherWrapper {
         }
         self.queue.push_back(version);
         if !self.is_downloading {
-            self.start_new_download().await
+            self.start_new_download().await;
         }
     }
 
@@ -95,41 +90,36 @@ impl LauncherWrapper {
         self.is_downloading = false;
     }
 
-    pub async fn launch(&mut self, instance: Arc<RwLock<Instance>>) -> Result<(), String> {
+    pub async fn launch(&mut self, handle: InstanceHandle) -> Result<(), String> {
         trace!("=== CLaunch ===\n");
 
-        let (version, _min_mem, _max_mem, is_running, name) = {
-            let inst = instance.read().await;
-            (
-                inst.get_version().to_string(),
-                inst.get_min_memory(),
-                inst.get_max_memory(),
-                inst.get_is_running(),
-                inst.get_name().to_string(),
-            )
-        };
-        if is_running {
-            let msg = "No se puede lanzar una instancia que ya esta lanzada".to_string();
+        // ── Guardia: no lanzar si ya está corriendo o iniciando ──────────
+        if handle.is_busy() {
+            let msg = "La instancia ya está corriendo o iniciando".to_string();
             warn!("{}", msg);
             return Err(msg);
         }
-        let shared_dir = PathManager::get().get_shared_dir();
-        let instance_dir = PathManager::get().get_instance_dir().join(name);
+        handle.set_status(InstanceStatus::Starting);
+
+        // ── Leer lo que necesitamos antes del spawn_blocking ─────────────
+        let version = handle.get_version().await;
+        let name = handle.get_name().await;
+
+        let shared_dir = PathManager::get().get_shared_dir().to_path_buf();
+        let instance_dir = PathManager::get().get_instance_dir().join(&name);
 
         let settings_raw = SettingsManager::get().lock().unwrap().clone();
-        // esto se arregla haciendo que claunch lea la version de java en el manifesto
-
-        let java_path = settings_raw.get_jre21_path().to_string_lossy().into_owned(); // Default to 17
+        let java_path = settings_raw.get_jre21_path().to_string_lossy().into_owned();
 
         let version_json = shared_dir.join(format!("versions/{}/{}.json", version, version));
         if !version_json.exists() {
             info!("La instancia no se encuentra descargada. Descargando...");
-            self.queue_download(version).await;
+            self.queue_download(version.clone()).await;
         }
 
         let mut user = settings_raw.get_minecraft_user();
 
-        // Auto-refresh token if it's a Microsoft account
+        // ── Auto-refresh del token Microsoft ─────────────────────────────
         if user.user_type == AccountType::Microsoft {
             if let Some(refresh_token) = &user.refresh_token {
                 info!("Refrescando token de Microsoft...");
@@ -142,34 +132,22 @@ impl LauncherWrapper {
 
                 match refresh_result {
                     Ok(new_user) => {
-                        info!("Token refrescado correctamente para {}", new_user.username);
+                        info!("Token refrescado para {}", new_user.username);
                         user = new_user;
-                        let _ = user.save_tokens(); // Securely store new tokens
+                        let _ = user.save_tokens();
                         let mut settings = SettingsManager::get().lock().unwrap();
                         settings.set_user(Some(user.clone()));
                         settings.save();
                     }
                     Err(e) => {
                         warn!(
-                            "No se pudo refrescar el token: {}. Intentando con el token actual...",
+                            "No se pudo refrescar el token: {}. Continuando con el actual...",
                             e
                         );
                     }
                 }
             }
         }
-
-        trace!("Configuration:");
-        trace!("  Shared dir:      {}", shared_dir.display());
-        trace!("  Version JSON:  {}", version_json.display());
-        trace!("  Instance dir:  {}", instance_dir.display());
-        trace!("  Java:          {}", java_path);
-        trace!(
-            "  User:          {} (Type: {:?})",
-            user.username,
-            user.user_type
-        );
-        trace!("  Access Token:  {}", user.access_token);
 
         let min_mem = format!("{}G", settings_raw.min_memory);
         let max_mem = format!("{}G", settings_raw.max_memory);
@@ -179,10 +157,8 @@ impl LauncherWrapper {
             custom_env.insert("DRI_PRIME".to_string(), "1".to_string());
         }
 
-        let instance_clone = Arc::clone(&instance);
-
+        let handle_for_monitor = handle.clone();
         let child_result = tokio::task::spawn_blocking(move || {
-            // 1. Resolve dependencies and build classpath
             let info = VersionInfo::new(&version_json, &shared_dir, &instance_dir)
                 .map_err(|e| e.to_string())?;
 
@@ -196,7 +172,6 @@ impl LauncherWrapper {
             resolver.process_version(&info.version_data, true);
             let classpath = resolver.build_classpath(&info);
 
-            // 2. Build variables
             let mut vars = HashMap::new();
             let user_type_str = match user.user_type {
                 AccountType::Cracked => "mojang",
@@ -224,12 +199,10 @@ impl LauncherWrapper {
                 "version_type".to_string(),
                 info.get_property("type").unwrap_or("release").to_string(),
             );
-
             #[cfg(windows)]
             vars.insert("classpath_separator".to_string(), ";".to_string());
             #[cfg(not(windows))]
             vars.insert("classpath_separator".to_string(), ":".to_string());
-
             vars.insert(
                 "library_directory".to_string(),
                 info.lib_dir.display().to_string(),
@@ -239,7 +212,6 @@ impl LauncherWrapper {
                 info.natives_dir.display().to_string(),
             );
 
-            // 3. Build command
             let main_class = info
                 .get_property("mainClass")
                 .ok_or("Main class not found")?;
@@ -252,8 +224,6 @@ impl LauncherWrapper {
                 .add_game_args(854, 480);
 
             let args = builder.build();
-
-            // 4. Spawn process
             let mut cmd = std::process::Command::new(&args[0]);
             cmd.args(&args[1..])
                 .current_dir(&instance_dir)
@@ -271,13 +241,15 @@ impl LauncherWrapper {
 
         match child_result {
             Ok(Ok(child)) => {
-                let mut instance = instance.write().await;
-                instance.attach_process(child);
+                handle.attach_process(child);
+                handle.set_status(InstanceStatus::Started);
+                handle.update_last_played().await;
+
+                // ── Monitor: detecta cuando el proceso termina ────────────
                 tokio::spawn(async move {
                     loop {
                         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-                        let finished = instance_clone.write().await.check_and_detach();
-                        if finished {
+                        if handle_for_monitor.check_and_detach() {
                             break;
                         }
                     }
@@ -287,11 +259,13 @@ impl LauncherWrapper {
             Ok(Err(e)) => {
                 let msg = format!("Launch failed: {}", e);
                 error!("\n❌ {}", msg);
+                handle.set_status(InstanceStatus::Error(msg.clone()));
                 Err(msg)
             }
             Err(e) => {
                 let msg = format!("spawn_blocking panicked: {}", e);
                 error!("\n❌ {}", msg);
+                handle.set_status(InstanceStatus::Error(msg.clone()));
                 Err(msg)
             }
         }

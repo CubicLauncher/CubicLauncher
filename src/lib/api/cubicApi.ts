@@ -1,7 +1,12 @@
-import { type InstanceDto, type ModDto, type DeviceCode, type MinecraftUser, type Settings } from "../types/types";
+import {
+  type InstanceDto,
+  type ModDto,
+  type DeviceCode,
+  type MinecraftUser,
+  type Settings,
+} from "../types/types";
 import { invoke } from "@tauri-apps/api/core";
 import { showError } from "../state/state.svelte";
-
 
 export async function killInstance(
   name: string,
@@ -101,7 +106,7 @@ export async function getInstanceMods(id: string): Promise<ModDto[]> {
 export async function toggleInstanceMod(
   id: string,
   filename: string,
-  enable: boolean
+  enable: boolean,
 ): Promise<void> {
   try {
     await invoke("toggle_instance_mod", { id, filename, enable });
@@ -120,7 +125,10 @@ export async function launchInstance(
     callback?.();
   } catch (err) {
     console.error(`Error al lanzar instancia ${instance.name}:`, err);
-    showError("Error de lanzamiento", `No se pudo iniciar ${instance.name}: ${err}`);
+    showError(
+      "Error de lanzamiento",
+      `No se pudo iniciar ${instance.name}: ${err}`,
+    );
     onError?.(err);
   }
 }
@@ -131,6 +139,7 @@ export async function fetchAll(
 ): Promise<InstanceDto[]> {
   try {
     const dtos = await invoke<InstanceDto[]>("get_instances");
+    console.log(dtos);
     callback?.();
     return dtos;
   } catch (err) {
@@ -157,73 +166,73 @@ export async function updateSettings(settings: Settings): Promise<void> {
   }
 }
 export async function getAvailableVersions(): Promise<any> {
-    try {
-        return await invoke("get_available_versions");
-    } catch (err) {
-        console.error("Error al obtener versiones disponibles:", err);
-        return null;
-    }
+  try {
+    return await invoke("get_available_versions");
+  } catch (err) {
+    console.error("Error al obtener versiones disponibles:", err);
+    return null;
+  }
 }
 
 export async function addToQueue(version: string): Promise<void> {
-    try {
-        await invoke("add_to_queue", { version });
-    } catch (err) {
-        console.error(`Error al agregar ${version} a la cola:`, err);
-    }
+  try {
+    await invoke("add_to_queue", { version });
+  } catch (err) {
+    console.error(`Error al agregar ${version} a la cola:`, err);
+  }
 }
 
 export async function getAvailableLogos(): Promise<string[]> {
-    try {
-        return await invoke<string[]>("get_available_logos");
-    } catch (err) {
-        console.error("Error al obtener logos disponibles:", err);
-        return [];
-    }
+  try {
+    return await invoke<string[]>("get_available_logos");
+  } catch (err) {
+    console.error("Error al obtener logos disponibles:", err);
+    return [];
+  }
 }
 
 export async function getFabricVersions(): Promise<any[]> {
-    try {
-        return await invoke<any[]>("get_fabric_versions");
-    } catch (err) {
-        console.error("Error al obtener versiones de Fabric:", err);
-        return [];
-    }
+  try {
+    return await invoke<any[]>("get_fabric_versions");
+  } catch (err) {
+    console.error("Error al obtener versiones de Fabric:", err);
+    return [];
+  }
 }
 
 export async function downloadFabric(gameVersion: string): Promise<void> {
-    try {
-        await invoke("download_fabric", { gameVersion });
-    } catch (err) {
-        console.error(`Error al descargar Fabric para ${gameVersion}:`, err);
-    }
+  try {
+    await invoke("download_fabric", { gameVersion });
+  } catch (err) {
+    console.error(`Error al descargar Fabric para ${gameVersion}:`, err);
+  }
 }
 
 // Auth Commands
 export async function getDeviceCode(): Promise<DeviceCode> {
-    return await invoke<DeviceCode>("get_device_code");
+  return await invoke<DeviceCode>("get_device_code");
 }
 
 export async function authenticateWithDeviceCode(
-    deviceCode: string,
-    interval: number,
-    expiresIn: number
+  deviceCode: string,
+  interval: number,
+  expiresIn: number,
 ): Promise<MinecraftUser> {
-    return await invoke<MinecraftUser>("authenticate_with_device_code", {
-        deviceCode,
-        interval,
-        expiresIn
-    });
+  return await invoke<MinecraftUser>("authenticate_with_device_code", {
+    deviceCode,
+    interval,
+    expiresIn,
+  });
 }
 
 export async function getCurrentUser(): Promise<MinecraftUser | null> {
-    return await invoke<MinecraftUser | null>("get_current_user");
+  return await invoke<MinecraftUser | null>("get_current_user");
 }
 
 export async function logout(): Promise<void> {
-    await invoke("logout");
+  await invoke("logout");
 }
 
 export async function openUrl(url: string): Promise<void> {
-    await invoke("open_url", { url });
+  await invoke("open_url", { url });
 }

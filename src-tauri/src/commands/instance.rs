@@ -1,33 +1,34 @@
-use tauri::Manager;
 use crate::core::{InstanceDto, InstanceManager, LauncherWrapper, PathManager};
 use std::path::PathBuf;
+use tauri::Manager;
 use tracing::error;
+
 #[tauri::command]
 pub async fn launch(app: tauri::AppHandle, instance_id: String) -> Result<(), String> {
     let manager = InstanceManager::get();
-    let Some(arc) = manager.get_instance(&instance_id).await else {
+    let Some(handle) = manager.get_handle(&instance_id).await else {
         return Err("Instancia no encontrada".to_string());
     };
-    let inst = arc;
 
-    let result = LauncherWrapper::get().lock().await.launch(inst.clone()).await;
-    
+    let result = LauncherWrapper::get()
+        .lock()
+        .await
+        .launch(handle.clone())
+        .await;
+
     if result.is_ok() {
         let settings = crate::core::SettingsManager::get().lock().unwrap();
         if settings.close_launcher_on_play {
-            // Get all windows (usually just one) and hide them
             let windows = app.webview_windows();
             for window in windows.values() {
                 let _ = window.hide();
             }
 
-            // Spawn a task to monitor the instance and show windows back
             let app_clone = app.clone();
             tokio::spawn(async move {
                 loop {
                     tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
-                    let finished = inst.write().await.check_and_detach();
-                    if finished {
+                    if handle.check_and_detach() {
                         let windows = app_clone.webview_windows();
                         for window in windows.values() {
                             let _ = window.show();
@@ -39,39 +40,41 @@ pub async fn launch(app: tauri::AppHandle, instance_id: String) -> Result<(), St
             });
         }
     }
-    
+
     result
 }
 
 #[tauri::command]
-pub async fn kill_instance(instance_name: String) {
+pub async fn kill_instance(uuid: String) {
     let manager = InstanceManager::get();
-    let Some(arc) = manager.get_instance(&instance_name).await else {
+    let Some(handle) = manager.get_handle(&uuid).await else {
         error!("Instancia no encontrada");
         return;
     };
-    let mut inst = arc.write().await;
-    inst.kill();
+    handle.kill();
 }
 
 #[tauri::command]
 pub async fn get_instances() -> Vec<InstanceDto> {
     InstanceManager::get().get_all_dtos().await
 }
+
 #[tauri::command]
 pub async fn create_instance(name: String, version: String, icon: Option<String>) {
-    InstanceManager::get().create_instance(name, version, icon).await;
+    InstanceManager::get()
+        .create_instance(name, version, icon)
+        .await;
 }
+
 #[tauri::command]
 pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
-    let instances_dir = InstanceManager::get()
-        .get_all_dtos()
-        .await
-        .into_iter()
-        .find(|i| i.name == instance_name)
-        .map(|_| PathManager::get().get_instance_dir().join(&instance_name))?;
+    let all = InstanceManager::get().get_all_dtos().await;
+    all.into_iter().find(|i| i.name == instance_name)?;
 
-    let screenshots_dir = instances_dir.join("screenshots");
+    let screenshots_dir = PathManager::get()
+        .get_instance_dir()
+        .join(&instance_name)
+        .join("screenshots");
 
     if let Ok(entries) = std::fs::read_dir(screenshots_dir) {
         let mut screenshots: Vec<_> = entries
@@ -98,8 +101,10 @@ pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
 
 #[tauri::command]
 pub async fn get_all_instance_screenshots(instance_name: String) -> Vec<String> {
-    let instances_dir = PathManager::get().get_instance_dir().join(&instance_name);
-    let screenshots_dir = instances_dir.join("screenshots");
+    let screenshots_dir = PathManager::get()
+        .get_instance_dir()
+        .join(&instance_name)
+        .join("screenshots");
 
     let mut result = Vec::new();
     if let Ok(entries) = std::fs::read_dir(screenshots_dir) {
@@ -130,37 +135,31 @@ pub async fn get_all_instance_screenshots(instance_name: String) -> Vec<String> 
 #[tauri::command]
 pub async fn set_instance_cover_image(instance_id: String, path: String) {
     let manager = InstanceManager::get();
-    if let Some(arc) = manager.get_instance(&instance_id).await {
-        let mut inst = arc.write().await;
-        inst.set_cover_image(Some(PathBuf::from(path)));
-        let _ = inst.save_to_disk().await;
+    if let Some(handle) = manager.get_handle(&instance_id).await {
+        handle.set_cover_image(Some(PathBuf::from(path))).await;
+        let _ = handle.save_if_dirty().await;
     }
 }
 
 #[tauri::command]
 pub async fn reset_instance_cover_image(instance_id: String) {
     let manager = InstanceManager::get();
-    if let Some(arc) = manager.get_instance(&instance_id).await {
-        let mut inst = arc.write().await;
-        inst.set_cover_image(None);
-        let _ = inst.save_to_disk().await;
+    if let Some(handle) = manager.get_handle(&instance_id).await {
+        handle.set_cover_image(None).await;
+        let _ = handle.save_if_dirty().await;
     }
 }
 
 #[tauri::command]
 pub async fn get_instance_banner(instance_id: String) -> Option<String> {
     let manager = InstanceManager::get();
-    let arc = manager.get_instance(&instance_id).await?;
-    let (cover_image, name) = {
-        let inst = arc.read().await;
-        (inst.get_cover_image().map(|p| p.to_path_buf()), inst.get_name().to_string())
-    };
+    let handle = manager.get_handle(&instance_id).await?;
 
-    if let Some(path) = cover_image {
+    if let Some(path) = handle.get_cover_image().await {
         return Some(path.to_string_lossy().to_string());
     }
 
-    get_instance_screenshot(name).await
+    get_instance_screenshot(handle.get_name().await).await
 }
 
 #[tauri::command]
@@ -171,13 +170,12 @@ pub async fn delete_instance(id: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<(), String> {
     let manager = InstanceManager::get();
-    let Some(instance_arc) = manager.get_instance(&id).await else {
+    let Some(handle) = manager.get_handle(&id).await else {
         return Err("Instancia no encontrada".to_string());
     };
 
-    let inst = instance_arc.read().await;
-    let mut path = inst.get_instance_dir();
-    
+    let mut path = handle.get_instance_dir().await;
+
     if let Some(sub) = sub_dir {
         path = path.join(sub);
     }
@@ -220,7 +218,9 @@ pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<()
 
 #[tauri::command]
 pub async fn rename_instance(id: String, new_name: String) -> Result<(), String> {
-    InstanceManager::get().update_instance(&id, Some(new_name), None, None).await
+    InstanceManager::get()
+        .update_instance(&id, Some(new_name), None, None)
+        .await
 }
 
 #[tauri::command]
@@ -239,7 +239,7 @@ pub async fn update_instance(
 pub async fn get_available_logos() -> Vec<String> {
     let mut logos = Vec::new();
     let paths = ["static/images/instances", "../static/images/instances"];
-    
+
     for path in paths {
         if let Ok(entries) = std::fs::read_dir(path) {
             for entry in entries.flatten() {
@@ -283,12 +283,11 @@ pub struct ModDto {
 #[tauri::command]
 pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
     let manager = InstanceManager::get();
-    let Some(instance_arc) = manager.get_instance(&id).await else {
+    let Some(handle) = manager.get_handle(&id).await else {
         return Vec::new();
     };
 
-    let inst = instance_arc.read().await;
-    let mods_dir = inst.get_instance_dir().join("mods");
+    let mods_dir = handle.get_instance_dir().await.join("mods");
 
     let mut mods = Vec::new();
     if let Ok(entries) = std::fs::read_dir(mods_dir) {
@@ -298,10 +297,13 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
                 if let Some(ext) = path.extension() {
                     let ext_str = ext.to_string_lossy().to_lowercase();
                     let file_name_str = path.file_name().unwrap().to_string_lossy().to_lowercase();
-                    
+
                     let (is_mod, enabled) = if ext_str == "jar" || ext_str == "zip" {
                         (true, true)
-                    } else if ext_str == "disabled" && (file_name_str.ends_with(".jar.disabled") || file_name_str.ends_with(".zip.disabled")) {
+                    } else if ext_str == "disabled"
+                        && (file_name_str.ends_with(".jar.disabled")
+                            || file_name_str.ends_with(".zip.disabled"))
+                    {
                         (true, false)
                     } else {
                         (false, false)
@@ -309,7 +311,10 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
 
                     if is_mod {
                         let filename = path.file_name().unwrap().to_string_lossy().to_string();
-                        let display_name = filename.strip_suffix(".disabled").unwrap_or(&filename).to_string();
+                        let display_name = filename
+                            .strip_suffix(".disabled")
+                            .unwrap_or(&filename)
+                            .to_string();
                         mods.push(ModDto {
                             name: display_name,
                             filename,
@@ -328,12 +333,11 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
 #[tauri::command]
 pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> Result<(), String> {
     let manager = InstanceManager::get();
-    let Some(instance_arc) = manager.get_instance(&id).await else {
+    let Some(handle) = manager.get_handle(&id).await else {
         return Err("Instancia no encontrada".to_string());
     };
 
-    let inst = instance_arc.read().await;
-    let mods_dir = inst.get_instance_dir().join("mods");
+    let mods_dir = handle.get_instance_dir().await.join("mods");
     let file_path = mods_dir.join(&filename);
 
     if !file_path.exists() {

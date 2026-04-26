@@ -206,7 +206,6 @@
             />
             {t("sidebar.settings")}
         </button>
-
         <div
             class="user-profile"
             onclick={() => (showUserMenu = true)}

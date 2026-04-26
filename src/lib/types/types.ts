@@ -3,11 +3,18 @@ export interface InstanceDto {
   version: string;
   loader: string;
   last_played: number;
-  is_running: boolean;
+  status: InstState;
   cover_image: string | null;
   icon: string | null;
   uuid: string;
   path: string;
+}
+
+export enum InstState {
+  Started = "started",
+  Error = "error",
+  Starting = "starting",
+  Off = "off",
 }
 
 export interface ModDto {

@@ -14,7 +14,6 @@
     import { t } from "$lib/i18n";
     import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
 
-
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
     let versionDownloaderOpen = $state(false);
@@ -34,16 +33,18 @@
             unlistenPromise.then((unlisten) => unlisten());
         };
     });
-    function handleKeyup(e: KeyboardEvent) {
-        const isLeft = e.location === 1;
-        if (!isLeft) return;
+    $effect(() => {
+        if (selectedInstance && launcherStore.loadedInstances.length > 0) {
+            const updated = launcherStore.loadedInstances.find(
+                (i) => i.uuid === selectedInstance.uuid,
+            );
 
-        if (e.key === "Alt") quickMenuOpen = !quickMenuOpen;
-        if (e.key === "Shift") quickMenuOpen = !quickMenuOpen;
-    }
+            if (updated && updated !== selectedInstance) {
+                selectedInstance = updated;
+            }
+        }
+    });
 </script>
-
-<svelte:window on:keyup={handleKeyup} />
 
 <div class="app-container">
     <Sidebar
@@ -68,8 +69,8 @@
                     alt="Cubic"
                     style="width: 120px; opacity: 0.1; filter: grayscale(1);"
                 />
-                <h2>{t('main.noInstanceTitle')}</h2>
-                <p>{t('main.noInstanceDesc')}</p>
+                <h2>{t("main.noInstanceTitle")}</h2>
+                <p>{t("main.noInstanceDesc")}</p>
             </div>
         {/if}
     </main>
@@ -86,4 +87,3 @@
 <CreateInstanceModal bind:open={openCreateModal} />
 
 <NotificationContainer />
-

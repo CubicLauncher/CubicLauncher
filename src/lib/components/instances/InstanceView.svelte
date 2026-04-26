@@ -1,11 +1,12 @@
 <script lang="ts">
     import { invoke, convertFileSrc } from "@tauri-apps/api/core";
-    import type { InstanceDto } from "$lib/types/types";
+    import { InstState, type InstanceDto } from "$lib/types/types";
     import InstanceDetails from "./InstanceDetails.svelte";
     import { launchInstance } from "$lib/api/cubicApi";
     import ModsRow from "./ModsRow.svelte";
     import QuickOptionsPanel from "./QuickOptionsPanel.svelte";
-    import Loading from "../../icons/loading.svelte";
+    import Loading from "../../icons/Loading.svelte";
+    import Check from "../../icons/Check.svelte";
     import { t } from "$lib/i18n";
 
     let { selectedInstance } = $props<{ selectedInstance: InstanceDto }>();
@@ -15,7 +16,11 @@
     let showPicker = $state(false);
     let bannerVersion = $state(0);
     let bannerState = $derived.by(() => {
-        if (selectedInstance.is_running) return "started";
+        if (selectedInstance.status === InstState.Started) return "Started";
+        if (selectedInstance.status === InstState.Off) return "Idle";
+        if (selectedInstance.status === InstState.Error) return "Error";
+        if (selectedInstance.status === InstState.Starting) return "Starting";
+        return "Idle";
     });
     const supportsMods = $derived(selectedInstance.loader !== "Vanilla");
 
@@ -34,11 +39,9 @@
         if (path) {
             const clean = decodeURIComponent(path);
             screenshotUrl = convertFileSrc(clean);
-            console.log(screenshotUrl);
         } else {
             screenshotUrl = null;
         }
-        console.log(screenshotUrl);
     }
 
     async function pickBanner() {
@@ -192,18 +195,23 @@
         </div>
     </section>
     {#if bannerState}
-        <div class="banner-status">
-            {#if bannerState === "idle"}
-                idle
-            {:else if bannerState === "started"}
-                started
-            {:else if bannerState === "starting"}
+        {#if bannerState === "Idle"}
+            <div class="banner-status">puto el que lo lea</div>
+        {:else if bannerState === "Started"}
+            <div class="banner-status-started">
                 <div class="banner-status-row">
-                    <Loading class="banner-status-icon" />
-                    <span></span>
+                    <Check class="banner-status-icon" />
+                    <span>Started</span>
                 </div>
-            {/if}
-        </div>
+            </div>
+        {:else if bannerState === "Starting"}
+            <div class="banner-status-starting">
+                <div class="banner-status-row">
+                    <Loading class="banner-status-icon-rotate" />
+                    <span>Starting</span>
+                </div>
+            </div>
+        {/if}
     {/if}
 
     <div class="tabs-nav">

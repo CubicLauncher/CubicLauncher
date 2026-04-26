@@ -12,7 +12,7 @@ pub fn start_polling(app: AppHandle) {
                 let manager = InstanceManager::get();
 
                 InstancesPollingPayload::new(
-                    manager.get_running_dtos().await,
+                    manager.get_running_ids().await,
                     manager.get_all_dtos().await,
                     manager.count().await,
                 )

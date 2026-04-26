@@ -1,10 +1,10 @@
 use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Child;
-use std::sync::Arc;
-use std::sync::OnceLock;
+use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::{fs, io};
 use tokio::fs as tokio_fs;
 use tokio::sync::RwLock;
@@ -14,221 +14,328 @@ use tracing::{error, info};
 const MAX_LEN: u8 = 16;
 const SYNC_INTERVAL_SECS: u64 = 30;
 
+// ── Status ───────────────────────────────────────────────────────────────────
+
+const STATUS_OFF: u8 = 0;
+const STATUS_STARTING: u8 = 1;
+const STATUS_STARTED: u8 = 2;
+const STATUS_ERROR: u8 = 3;
+
+#[derive(Serialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum InstanceStatus {
+    Off,
+    Starting,
+    Started,
+    Error(String),
+}
+
+/// Status sin lock para lecturas frecuentes (polling).
+/// Escribe el mensaje de error ANTES de cambiar el AtomicU8
+/// para garantizar consistencia con el ordering Release/Acquire.
+struct AtomicStatus {
+    state: AtomicU8,
+    error: Mutex<String>,
+}
+
+impl AtomicStatus {
+    fn new() -> Self {
+        Self {
+            state: AtomicU8::new(STATUS_OFF),
+            error: Mutex::new(String::new()),
+        }
+    }
+
+    fn get(&self) -> InstanceStatus {
+        match self.state.load(Ordering::Acquire) {
+            STATUS_STARTING => InstanceStatus::Starting,
+            STATUS_STARTED => InstanceStatus::Started,
+            STATUS_ERROR => InstanceStatus::Error(self.error.lock().unwrap().clone()),
+            _ => InstanceStatus::Off,
+        }
+    }
+
+    fn set(&self, status: InstanceStatus) {
+        match &status {
+            InstanceStatus::Off => self.state.store(STATUS_OFF, Ordering::Release),
+            InstanceStatus::Starting => self.state.store(STATUS_STARTING, Ordering::Release),
+            InstanceStatus::Started => self.state.store(STATUS_STARTED, Ordering::Release),
+            InstanceStatus::Error(e) => {
+                // Escribe el mensaje antes de cambiar el state
+                *self.error.lock().unwrap() = e.clone();
+                self.state.store(STATUS_ERROR, Ordering::Release);
+            }
+        }
+    }
+}
+
+// ── InstanceData (persistido en disco) ───────────────────────────────────────
+
 #[derive(Debug, Serialize, Deserialize)]
 struct InstanceData {
     name: String,
     version: String,
-    last_played: u64,        // unix timestamp
-    min_memory: Option<u32>, // None: usar SettingsManager
+    last_played: u64,
+    min_memory: Option<u32>,
     max_memory: Option<u32>,
     cover_image: Option<PathBuf>,
     icon: Option<String>,
-    uuid: String, // uuidv4
-}
-
-pub struct Instance {
-    data: InstanceData,
-    process: Option<Child>,
+    uuid: String,
+    #[serde(skip)]
     dirty: bool,
 }
 
-impl Instance {
-    pub fn new(name: String, version: String, icon: Option<String>) -> Self {
+impl InstanceData {
+    fn new(name: String, version: String, icon: Option<String>) -> Self {
         Self {
-            data: InstanceData {
-                name,
-                version,
-                last_played: 0,
-                min_memory: None,
-                max_memory: None,
-                cover_image: None,
-                icon,
-                uuid: uuid::Uuid::new_v4().to_string(),
-            },
-            process: None,
+            name,
+            version,
+            last_played: 0,
+            min_memory: None,
+            max_memory: None,
+            cover_image: None,
+            icon,
+            uuid: uuid::Uuid::new_v4().to_string(),
             dirty: true,
         }
     }
 
-    pub fn get_name(&self) -> &str {
-        &self.data.name
-    }
-
-    pub fn get_version(&self) -> &str {
-        &self.data.version
-    }
-
-    pub fn get_last_played(&self) -> u64 {
-        self.data.last_played
-    }
-
-    pub fn get_cover_image(&self) -> Option<&Path> {
-        self.data.cover_image.as_deref()
-    }
-    pub fn get_icon(&self) -> Option<&str> {
-        self.data.icon.as_deref()
-    }
-
-    pub fn get_loader(&self) -> &str {
-        if self.data.version.contains("fabric") {
+    fn get_loader(&self) -> &str {
+        if self.version.contains("fabric") {
             return "Fabric";
         }
-        if self.data.version.contains("forge") {
+        if self.version.contains("forge") {
             return "Forge";
         }
-        if self.data.version.contains("quilt") {
+        if self.version.contains("quilt") {
             return "Quilt";
         }
         "Vanilla"
     }
 
-    pub fn get_is_running(&self) -> bool {
-        self.process.is_some()
+    fn get_instance_dir(&self) -> PathBuf {
+        PathManager::get().get_instance_dir().join(&self.name)
     }
 
-    pub fn get_max_memory(&self) -> u32 {
-        self.data
-            .max_memory
-            .unwrap_or_else(|| SettingsManager::get().lock().unwrap().get_max_memory())
-    }
-    pub fn get_id(&self) -> &str {
-        &self.data.uuid
-    }
-    pub fn get_min_memory(&self) -> u32 {
-        self.data
-            .min_memory
-            .unwrap_or_else(|| SettingsManager::get().lock().unwrap().get_min_memory())
-    }
-
-    pub fn set_name(&mut self, name: String) {
-        self.data.name = name;
-        self.dirty = true;
-    }
-
-    pub fn set_version(&mut self, version: String) {
-        self.data.version = version;
-        self.dirty = true;
-    }
-
-    pub fn set_icon(&mut self, icon: Option<String>) {
-        self.data.icon = icon;
-        self.dirty = true;
-    }
-
-    pub fn set_min_memory(&mut self, min_memory: Option<u32>) {
-        self.data.min_memory = min_memory;
-        self.dirty = true;
-    }
-
-    pub fn set_max_memory(&mut self, max_memory: Option<u32>) {
-        self.data.max_memory = max_memory;
-        self.dirty = true;
-    }
-
-    pub fn set_cover_image(&mut self, cover_image: Option<PathBuf>) {
-        self.data.cover_image = cover_image;
-        self.dirty = true;
-    }
-
-    pub fn update_last_played(&mut self) {
-        self.data.last_played = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        self.dirty = true;
-    }
-
-    pub fn attach_process(&mut self, process: Child) {
-        self.process = Some(process);
-
-        self.update_last_played();
-    }
-
-    pub fn detach_process(&mut self) {
-        self.process = None;
-    }
-
-    pub fn kill(&mut self) {
-        if let Some(ref mut process) = self.process {
-            let _ = process.kill();
+    async fn save(&mut self) -> Result<(), io::Error> {
+        if !self.dirty {
+            return Ok(());
         }
-        self.process = None;
+        let dir = self.get_instance_dir();
+        tokio_fs::create_dir_all(&dir).await?;
+        let content = serde_json::to_string_pretty(self)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        tokio_fs::write(dir.join("instance.cub"), content).await?;
+        self.dirty = false;
+        Ok(())
     }
 
-    pub fn check_and_detach(&mut self) -> bool {
-        match self.process {
+    async fn load(name: &str) -> Option<Self> {
+        let path = PathManager::get()
+            .get_instance_dir()
+            .join(name)
+            .join("instance.cub");
+        let content = tokio_fs::read_to_string(path).await.ok()?;
+        let mut data: InstanceData = serde_json::from_str(&content).ok()?;
+        data.dirty = false;
+        Some(data)
+    }
+}
+
+// ── InstanceHandle ────────────────────────────────────────────────────────────
+//
+// Clone es O(1) — solo incrementa reference counts.
+// El uuid está fuera del RwLock para poder leerlo sin await.
+
+#[derive(Clone)]
+pub struct InstanceHandle {
+    pub uuid: String,
+    data: Arc<RwLock<InstanceData>>,
+    status: Arc<AtomicStatus>,
+    process: Arc<Mutex<Option<Child>>>,
+}
+
+impl InstanceHandle {
+    fn new(data: InstanceData) -> Self {
+        Self {
+            uuid: data.uuid.clone(),
+            data: Arc::new(RwLock::new(data)),
+            status: Arc::new(AtomicStatus::new()),
+            process: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    async fn load(name: &str) -> Option<Self> {
+        let data = InstanceData::load(name).await?;
+        Some(Self::new(data))
+    }
+
+    // ── Status — sin await ────────────────────────────────────────────────
+
+    pub fn get_status(&self) -> InstanceStatus {
+        self.status.get()
+    }
+
+    pub fn set_status(&self, status: InstanceStatus) {
+        self.status.set(status);
+    }
+
+    pub fn is_busy(&self) -> bool {
+        matches!(
+            self.get_status(),
+            InstanceStatus::Starting | InstanceStatus::Started
+        )
+    }
+
+    // ── Proceso ───────────────────────────────────────────────────────────
+
+    pub fn attach_process(&self, child: Child) {
+        *self.process.lock().unwrap() = Some(child);
+    }
+
+    pub fn kill(&self) {
+        let mut guard = self.process.lock().unwrap();
+        if let Some(ref mut child) = *guard {
+            let _ = child.kill();
+        }
+        *guard = None;
+        drop(guard);
+        self.set_status(InstanceStatus::Off);
+    }
+
+    /// Retorna true cuando el proceso terminó.
+    /// Actualiza el status a Off o Error según el exit code.
+    pub fn check_and_detach(&self) -> bool {
+        let mut guard = self.process.lock().unwrap();
+        match *guard {
             None => true,
-            Some(ref mut process) => match process.try_wait() {
-                Ok(Some(_)) => {
-                    self.process = None;
+            Some(ref mut child) => match child.try_wait() {
+                Ok(Some(exit)) => {
+                    *guard = None;
+                    drop(guard);
+                    if exit.success() {
+                        self.set_status(InstanceStatus::Off);
+                    } else {
+                        self.set_status(InstanceStatus::Error(format!(
+                            "Proceso terminó con código {:?}",
+                            exit.code()
+                        )));
+                    }
                     true
                 }
                 Ok(None) => false,
                 Err(e) => {
-                    error!("Error al verificar proceso: {:?}", e);
-                    self.process = None;
+                    *guard = None;
+                    drop(guard);
+                    self.set_status(InstanceStatus::Error(e.to_string()));
                     true
                 }
             },
         }
     }
 
-    pub fn get_instance_dir(&self) -> PathBuf {
-        PathManager::get().get_instance_dir().join(&self.data.name)
+    // ── Lecturas de data ──────────────────────────────────────────────────
+
+    pub async fn get_name(&self) -> String {
+        self.data.read().await.name.clone()
     }
 
-    fn get_config_path(&self) -> PathBuf {
-        self.get_instance_dir().join("instance.cub")
+    pub async fn get_version(&self) -> String {
+        self.data.read().await.version.clone()
     }
 
-    pub async fn save_to_disk(&mut self) -> Result<(), io::Error> {
-        if !self.dirty {
+    pub async fn get_min_memory(&self) -> u32 {
+        self.data
+            .read()
+            .await
+            .min_memory
+            .unwrap_or_else(|| SettingsManager::get().lock().unwrap().get_min_memory())
+    }
+
+    pub async fn get_max_memory(&self) -> u32 {
+        self.data
+            .read()
+            .await
+            .max_memory
+            .unwrap_or_else(|| SettingsManager::get().lock().unwrap().get_max_memory())
+    }
+
+    pub async fn get_instance_dir(&self) -> PathBuf {
+        self.data.read().await.get_instance_dir()
+    }
+
+    pub async fn get_cover_image(&self) -> Option<PathBuf> {
+        self.data.read().await.cover_image.clone()
+    }
+
+    pub async fn get_icon(&self) -> Option<String> {
+        self.data.read().await.icon.clone()
+    }
+
+    pub async fn to_dto(&self) -> InstanceDto {
+        let data = self.data.read().await;
+        InstanceDto {
+            name: data.name.clone(),
+            version: data.version.clone(),
+            loader: data.get_loader().to_string(),
+            last_played: data.last_played,
+            status: self.get_status(), // sin await — AtomicU8
+            cover_image: data.cover_image.clone(),
+            icon: data.icon.clone(),
+            uuid: self.uuid.clone(), // sin await — campo directo
+            path: data.get_instance_dir(),
+        }
+    }
+
+    // ── Escrituras de data ────────────────────────────────────────────────
+
+    pub async fn set_name(&self, name: String) {
+        let mut data = self.data.write().await;
+        data.name = name;
+        data.dirty = true;
+    }
+
+    pub async fn set_version(&self, version: String) {
+        let mut data = self.data.write().await;
+        data.version = version;
+        data.dirty = true;
+    }
+
+    pub async fn set_icon(&self, icon: Option<String>) {
+        let mut data = self.data.write().await;
+        data.icon = icon;
+        data.dirty = true;
+    }
+
+    pub async fn set_cover_image(&self, cover_image: Option<PathBuf>) {
+        let mut data = self.data.write().await;
+        data.cover_image = cover_image;
+        data.dirty = true;
+    }
+
+    pub async fn update_last_played(&self) {
+        let mut data = self.data.write().await;
+        data.last_played = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        data.dirty = true;
+    }
+
+    pub async fn save_if_dirty(&self) -> Result<(), io::Error> {
+        // Primero chequeamos con read lock — ruta rápida si no hay cambios
+        if !self.data.read().await.dirty {
             return Ok(());
         }
-
-        let dir = self.get_instance_dir();
-        tokio_fs::create_dir_all(&dir).await?;
-
-        let content = serde_json::to_string_pretty(&self.data)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-
-        tokio_fs::write(self.get_config_path(), content).await?;
-        self.dirty = false;
-        Ok(())
-    }
-
-    async fn load_from_disk(name: &str) -> Option<Self> {
-        let path = PathManager::get()
-            .get_instance_dir()
-            .join(name)
-            .join("instance.cub");
-
-        let content = tokio_fs::read_to_string(path).await.ok()?;
-        let data: InstanceData = serde_json::from_str(&content).ok()?;
-        Some(Self {
-            data,
-            process: None,
-            dirty: false,
-        })
-    }
-
-    pub fn to_dto(&self) -> InstanceDto {
-        InstanceDto {
-            name: self.data.name.clone(),
-            version: self.data.version.clone(),
-            loader: self.get_loader().to_string(),
-            last_played: self.data.last_played,
-            is_running: self.get_is_running(),
-            cover_image: self.data.cover_image.clone(),
-            icon: self.data.icon.clone(),
-            uuid: self.data.uuid.clone(),
-            path: self.get_instance_dir(),
-        }
+        // Re-check tras adquirir write lock
+        self.data.write().await.save().await
     }
 }
 
+// ── InstanceManager ───────────────────────────────────────────────────────────
+
 pub struct InstanceManager {
-    instances: RwLock<HashMap<String, Arc<RwLock<Instance>>>>,
+    instances: RwLock<HashMap<String, InstanceHandle>>,
     _sync_handle: tokio::task::JoinHandle<()>,
 }
 
@@ -244,11 +351,8 @@ impl InstanceManager {
             for entry in entries.flatten() {
                 if entry.path().is_dir() {
                     let name = entry.file_name().to_string_lossy().to_string();
-                    if let Some(instance) = Instance::load_from_disk(&name).await {
-                        guard.insert(
-                            instance.get_id().to_string(),
-                            Arc::new(RwLock::new(instance)),
-                        );
+                    if let Some(handle) = InstanceHandle::load(&name).await {
+                        guard.insert(handle.uuid.clone(), handle);
                     }
                 }
             }
@@ -270,25 +374,22 @@ impl InstanceManager {
         loop {
             interval.tick().await;
             info!("Ejecutando tarea de sincronizacion");
-            let manager = match Self::get_opt() {
+
+            let manager = match INSTANCE_MANAGER.get() {
                 Some(m) => m.clone(),
                 None => continue,
             };
 
-            let instances = manager.instances.read().await;
-            for (name, instance_arc) in instances.iter() {
-                let mut inst = instance_arc.write().await;
-                if inst.dirty {
-                    if let Err(e) = inst.save_to_disk().await {
-                        error!("Error guardando instancia {}: {:?}", name, e);
-                    }
+            let handles: Vec<InstanceHandle> =
+                { manager.instances.read().await.values().cloned().collect() };
+
+            // Guardamos fuera del lock del HashMap
+            for handle in handles {
+                if let Err(e) = handle.save_if_dirty().await {
+                    error!("Error guardando instancia {}: {:?}", handle.uuid, e);
                 }
             }
         }
-    }
-
-    fn get_opt() -> Option<&'static Arc<InstanceManager>> {
-        INSTANCE_MANAGER.get()
     }
 
     pub async fn create_instance(&self, name: String, version: String, icon: Option<String>) {
@@ -297,89 +398,66 @@ impl InstanceManager {
             return;
         }
 
-        let instance = Arc::new(RwLock::new(Instance::new(name.clone(), version, icon)));
-
-        let uuid = {
-            let inst = instance.read().await;
-            inst.get_id().to_string()
-        };
-        {
-            let mut inst = instance.write().await;
-            if let Err(e) = inst.save_to_disk().await {
-                error!("Error al guardar instancia nueva: {:?}", e);
-            }
+        let mut data = InstanceData::new(name, version, icon);
+        if let Err(e) = data.save().await {
+            error!("Error al guardar instancia nueva: {:?}", e);
+            return;
         }
 
-        let mut guard = self.instances.write().await;
-        guard.insert(uuid, instance);
+        let handle = InstanceHandle::new(data);
+        self.instances
+            .write()
+            .await
+            .insert(handle.uuid.clone(), handle);
     }
 
-    pub async fn get_instance(&self, uuid: &str) -> Option<Arc<RwLock<Instance>>> {
-        let guard = self.instances.read().await;
-        guard.get(uuid).cloned()
+    pub async fn get_handle(&self, uuid: &str) -> Option<InstanceHandle> {
+        self.instances.read().await.get(uuid).cloned()
     }
 
-    pub async fn get_all_instances(&self) -> Vec<Arc<RwLock<Instance>>> {
-        let guard = self.instances.read().await;
-        guard.values().cloned().collect()
-    }
-
-    pub async fn exists(&self, uuid: &str) -> bool {
-        let guard = self.instances.read().await;
-        guard.contains_key(uuid)
+    pub async fn get_all_handles(&self) -> Vec<InstanceHandle> {
+        self.instances.read().await.values().cloned().collect()
     }
 
     pub async fn count(&self) -> usize {
-        let guard = self.instances.read().await;
-        guard.len()
-    }
-
-    pub async fn get_dto(&self, name: &str) -> Option<InstanceDto> {
-        let instance = self.get_instance(name).await?;
-        let inst = instance.read().await;
-        Some(inst.to_dto())
+        self.instances.read().await.len()
     }
 
     pub async fn get_all_dtos(&self) -> Vec<InstanceDto> {
-        let instances = self.get_all_instances().await;
-        let mut dtos = Vec::with_capacity(instances.len());
-        for inst_arc in instances {
-            let inst = inst_arc.read().await;
-            dtos.push(inst.to_dto());
+        let handles = self.get_all_handles().await;
+        let mut dtos = Vec::with_capacity(handles.len());
+        for handle in &handles {
+            dtos.push(handle.to_dto().await);
         }
         dtos
     }
 
-    pub async fn get_running_dtos(&self) -> Vec<String> {
-        let instances = self.get_all_instances().await;
-        let mut dtos = Vec::new();
-        for inst_arc in instances {
-            let inst = inst_arc.read().await;
-            if inst.get_is_running() {
-                dtos.push(inst.to_dto().uuid);
-            }
-        }
-        dtos
+    /// Sin await — lee el AtomicU8 directamente por cada handle
+    pub async fn get_running_ids(&self) -> Vec<String> {
+        self.instances
+            .read()
+            .await
+            .values()
+            .filter(|h| h.is_busy())
+            .map(|h| h.uuid.clone())
+            .collect()
     }
 
     pub async fn delete_instance(&self, uuid: &str) -> Result<(), String> {
-        let instance_arc = {
-            let mut guard = self.instances.write().await;
-            guard.remove(uuid).ok_or_else(|| "Instancia no encontrada".to_string())?
+        let handle = {
+            self.instances
+                .write()
+                .await
+                .remove(uuid)
+                .ok_or_else(|| "Instancia no encontrada".to_string())?
         };
 
-        let inst = instance_arc.read().await;
-        let dir = inst.get_instance_dir();
+        let dir = handle.get_instance_dir().await;
         if dir.exists() {
-            if let Err(e) = fs::remove_dir_all(&dir) {
-                return Err(format!("Error al eliminar el directorio: {}", e));
-            }
+            fs::remove_dir_all(&dir)
+                .map_err(|e| format!("Error al eliminar el directorio: {}", e))?;
         }
         Ok(())
-    }
-
-    pub async fn rename_instance(&self, uuid: &str, new_name: String) -> Result<(), String> {
-        self.update_instance(uuid, Some(new_name), None, None).await
     }
 
     pub async fn update_instance(
@@ -389,16 +467,15 @@ impl InstanceManager {
         new_version: Option<String>,
         new_icon: Option<Option<String>>,
     ) -> Result<(), String> {
-        let instance_arc = self
-            .get_instance(uuid)
+        let handle = self
+            .get_handle(uuid)
             .await
             .ok_or_else(|| "Instancia no encontrada".to_string())?;
 
-        let mut inst = instance_arc.write().await;
-        let old_name = inst.get_name().to_string();
-
         if let Some(name) = new_name {
             validate_instance_name(&name)?;
+
+            let old_name = handle.get_name().await;
             if old_name != name {
                 let base_dir = PathManager::get().get_instance_dir();
                 let old_dir = base_dir.join(&old_name);
@@ -407,43 +484,43 @@ impl InstanceManager {
                 if new_dir.exists() {
                     return Err("Ya existe una instancia con ese nombre".to_string());
                 }
-
                 if old_dir.exists() {
-                    if let Err(e) = tokio_fs::rename(&old_dir, &new_dir).await {
-                        return Err(format!("Error al renombrar el directorio: {}", e));
-                    }
+                    tokio_fs::rename(&old_dir, &new_dir)
+                        .await
+                        .map_err(|e| format!("Error al renombrar el directorio: {}", e))?;
                 }
-                inst.set_name(name);
+                handle.set_name(name).await;
             }
         }
 
         if let Some(version) = new_version {
-            inst.set_version(version);
+            handle.set_version(version).await;
         }
 
         if let Some(icon) = new_icon {
-            inst.set_icon(icon);
+            handle.set_icon(icon).await;
         }
 
-        if let Err(e) = inst.save_to_disk().await {
-            return Err(format!("Error al guardar la instancia: {}", e));
-        }
+        handle
+            .save_if_dirty()
+            .await
+            .map_err(|e| format!("Error al guardar la instancia: {}", e))?;
 
         Ok(())
     }
 }
 
-// Global manager (inicializado con init())
 static INSTANCE_MANAGER: OnceLock<Arc<InstanceManager>> = OnceLock::new();
 
-// -------------------- DTOs --------------------
+// ── DTOs ──────────────────────────────────────────────────────────────────────
+
 #[derive(Serialize, Clone)]
 pub struct InstanceDto {
     pub name: String,
     pub version: String,
     pub loader: String,
     pub last_played: u64,
-    pub is_running: bool,
+    pub status: InstanceStatus,
     pub cover_image: Option<PathBuf>,
     pub icon: Option<String>,
     pub uuid: String,
@@ -452,13 +529,12 @@ pub struct InstanceDto {
 
 #[derive(Serialize, Clone)]
 pub struct InstancesPollingPayload {
-    running: Vec<String>, // vec de uuidv4
+    running: Vec<String>,
     all: Vec<InstanceDto>,
     count: usize,
 }
 
 impl InstancesPollingPayload {
-    /// El vector de Running guardaria los UUIDv4 de las instances
     pub fn new(running: Vec<String>, all: Vec<InstanceDto>, count: usize) -> Self {
         Self {
             running,
@@ -468,7 +544,8 @@ impl InstancesPollingPayload {
     }
 }
 
-// -------------------- Validación --------------------
+// ── Validación ────────────────────────────────────────────────────────────────
+
 fn validate_instance_name(name: &str) -> Result<(), String> {
     if name.is_empty() {
         return Err("El nombre de la instancia no puede estar vacío.".into());
