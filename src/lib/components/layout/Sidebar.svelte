@@ -241,9 +241,7 @@
     </div>
 </aside>
 
-{#if showUserMenu}
-    <UserMenu onclose={() => (showUserMenu = false)} />
-{/if}
+<UserMenu bind:open={showUserMenu} />
 
 <ModalBase bind:open={showRenameModal} title={t("sidebar.modals.editTitle")}>
     <div class="input-group" style="margin-top: 12px;">

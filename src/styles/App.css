@@ -1725,6 +1725,168 @@ body {
     font-weight: 600;
 }
 
+.premium-tag {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.auth-actions {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.microsoft-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #2f2f2f;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.microsoft-btn:hover {
+    background: #3f3f3f;
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* ─── 11.3 AUTH MODAL ──────────────────────────────────────
+   Modal de inicio de sesión de Microsoft (AuthModal.svelte).
+   ─────────────────────────────────────────────────────────── */
+
+.auth-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+    min-height: 250px;
+    justify-content: center;
+    width: 100%;
+}
+
+.code-display {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 5px;
+    margin: 20px 0;
+    color: var(--accent);
+    border: 2px solid var(--border);
+}
+
+.auth-instructions p {
+    margin-bottom: 15px;
+    opacity: 0.9;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+.copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    margin: 0 auto;
+}
+
+.copy-btn.copied {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.waiting-indicator {
+    margin-top: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--text-secondary);
+}
+
+.waiting-indicator p {
+    margin-bottom: 0;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--text-secondary);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.2);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+.loader {
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.success-icon {
+    font-size: 3rem;
+    color: #10b981;
+    margin-bottom: 15px;
+}
+
+.error-text {
+    color: #ef4444;
+    margin-bottom: 15px;
+}
+
 /* ─── 12. MEDIA QUERIES ──────────────────────────────────── */
 
 @media (max-width: 1024px) {
