@@ -38,6 +38,13 @@ pub fn run() {
             commands::auth::logout,
         ])
         .plugin(tauri_plugin_process::init())
+        .setup(|app| {
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                core::LauncherWrapper::get().lock().await.set_handle(handle);
+            });
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

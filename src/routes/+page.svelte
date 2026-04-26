@@ -13,6 +13,7 @@
     import VersionDownloader from "$lib/components/layout/VersionDownloader.svelte";
     import { t } from "$lib/i18n";
     import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
+    import DownloadProgressBar from "$lib/components/ui/DownloadProgressBar.svelte";
     import { checkForUpdates } from "$lib/api/updaterServices";
 
     let selectedInstance = $state<InstanceDto | null>(null);
@@ -37,12 +38,13 @@
         };
     });
     $effect(() => {
-        if (selectedInstance && launcherStore.loadedInstances.length > 0) {
+        const current = selectedInstance;
+        if (current && launcherStore.loadedInstances.length > 0) {
             const updated = launcherStore.loadedInstances.find(
-                (i) => i.uuid === selectedInstance.uuid,
+                (i) => i.uuid === current.uuid,
             );
 
-            if (updated && updated !== selectedInstance) {
+            if (updated && updated !== current) {
                 selectedInstance = updated;
             }
         }
@@ -90,3 +92,4 @@
 <CreateInstanceModal bind:open={openCreateModal} />
 
 <NotificationContainer />
+<DownloadProgressBar />

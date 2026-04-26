@@ -156,5 +156,8 @@
       "alphas": "Alphas",
       "fabric": "Fabric"
     }
+  },
+  "downloadProgress": {
+    "items": "objetos"
   }
 }

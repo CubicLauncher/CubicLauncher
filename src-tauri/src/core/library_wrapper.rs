@@ -4,7 +4,7 @@ use crate::core::SettingsManager;
 use claunch_rs::auth::microsoft::MicrosoftAuth;
 use claunch_rs::resolvers::{CommandBuilder, DependencyResolver};
 use claunch_rs::{AccountType, LaunchOptions, VersionInfo};
-use proton::{resolve_version_data, MinecraftDownloader};
+use proton::{resolve_version_data, DownloadProgress, MinecraftDownloader};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::sync::LazyLock;
@@ -17,6 +17,7 @@ static LAUNCHER: LazyLock<Mutex<LauncherWrapper>> =
 pub struct LauncherWrapper {
     queue: VecDeque<String>,
     is_downloading: bool,
+    app_handle: Option<tauri::AppHandle>,
 }
 
 impl LauncherWrapper {
@@ -28,7 +29,12 @@ impl LauncherWrapper {
         Self {
             queue: VecDeque::new(),
             is_downloading: false,
+            app_handle: None,
         }
+    }
+
+    pub fn set_handle(&mut self, handle: tauri::AppHandle) {
+        self.app_handle = Some(handle);
     }
 
     pub async fn queue_download(&mut self, version: String) {
@@ -82,10 +88,31 @@ impl LauncherWrapper {
                 version_data,
             );
 
-            match downloader.download_all(None).await {
+            let (tx, mut rx) = tokio::sync::mpsc::channel::<DownloadProgress>(100);
+            let handle_clone = self.app_handle.clone();
+            let version_clone = version.clone();
+
+            let monitor_task = tokio::spawn(async move {
+                if let Some(handle) = handle_clone {
+                    use tauri::Emitter;
+                    while let Some(progress) = rx.recv().await {
+                        let _ = handle.emit("download-progress", serde_json::json!({
+                            "version": version_clone,
+                            "current": progress.current,
+                            "total": progress.total,
+                            "type": format!("{:?}", progress.download_type)
+                        }));
+                    }
+                    // Emit final event
+                    let _ = handle.emit("download-finished", &version_clone);
+                }
+            });
+
+            match downloader.download_all(Some(tx)).await {
                 Ok(_) => info!("Version {} descargada correctamente", &version),
                 Err(e) => error!("No se pudo descargar: {:?}", e),
             }
+            let _ = monitor_task.await;
         }
         self.is_downloading = false;
     }
