@@ -47,11 +47,21 @@ pub struct SettingsManager {
     pub dirty: bool,
 }
 
-fn default_username() -> String { String::from("steve") }
-fn default_min_mem() -> u32 { 1 }
-fn default_max_mem() -> u32 { 2 }
-fn default_lang() -> String { String::from("es") }
-fn default_true() -> bool { true }
+fn default_username() -> String {
+    String::from("steve")
+}
+fn default_min_mem() -> u32 {
+    1
+}
+fn default_max_mem() -> u32 {
+    2
+}
+fn default_lang() -> String {
+    String::from("es")
+}
+fn default_true() -> bool {
+    true
+}
 #[allow(dead_code)]
 impl SettingsManager {
     pub fn get() -> &'static Mutex<SettingsManager> {
@@ -159,7 +169,7 @@ impl SettingsManager {
                     settings.dirty = true;
                 }
                 settings
-            },
+            }
             Err(_) => {
                 eprintln!("Configuracion invalida, creando backup");
                 let _ = std::fs::copy(&path, path.with_extension("cub.bak"));

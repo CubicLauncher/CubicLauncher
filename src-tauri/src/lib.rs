@@ -4,6 +4,7 @@ pub use core::InstanceManager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             commands::instance::get_instances,
             commands::instance::create_instance,
@@ -36,6 +37,7 @@ pub fn run() {
             commands::auth::get_current_user,
             commands::auth::logout,
         ])
+        .plugin(tauri_plugin_process::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

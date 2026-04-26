@@ -1,9 +1,15 @@
-import type { InstanceDto, Settings, Notification, NotificationType } from "../types/types";
+import type {
+  InstanceDto,
+  Settings,
+  Notification,
+  NotificationType,
+} from "../types/types";
 
 export interface LauncherState {
   loadedInstances: InstanceDto[];
   currentInstance: InstanceDto | null;
   runningInstances: string[];
+  updateProgress: number;
   settings: Settings;
   notifications: Notification[];
 }
@@ -13,6 +19,7 @@ export const launcherStore = $state<LauncherState>({
   currentInstance: null,
   runningInstances: [],
   notifications: [],
+  updateProgress: 0, // 0 = sin update, 1-100 = descargando
   settings: {
     username: "Steve",
     user: null,
@@ -35,7 +42,7 @@ export function addNotification(
   title: string,
   message: string,
   type: NotificationType = "info",
-  timeout = 5000
+  timeout = 5000,
 ) {
   const id = Math.random().toString(36).substring(2, 9);
   const notification: Notification = { id, title, message, type, timeout };
@@ -46,7 +53,9 @@ export function addNotification(
 }
 
 export function removeNotification(id: string) {
-  launcherStore.notifications = launcherStore.notifications.filter((n) => n.id !== id);
+  launcherStore.notifications = launcherStore.notifications.filter(
+    (n) => n.id !== id,
+  );
 }
 
 export function showError(title: string, message: string) {

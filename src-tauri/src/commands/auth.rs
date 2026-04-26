@@ -1,8 +1,8 @@
 use crate::core::SettingsManager;
 use claunch_rs::auth::microsoft::MicrosoftAuth;
 use claunch_rs::MinecraftUser;
-use tauri::command;
 use serde::Serialize;
+use tauri::command;
 
 #[derive(Serialize)]
 pub struct DeviceCode {
@@ -15,11 +15,10 @@ pub struct DeviceCode {
 
 #[command]
 pub async fn get_device_code() -> Result<DeviceCode, String> {
-    let res = tokio::task::spawn_blocking(|| {
-        MicrosoftAuth::get_device_code().map_err(|e| e.to_string())
-    })
-    .await
-    .map_err(|e| e.to_string())??;
+    let res =
+        tokio::task::spawn_blocking(|| MicrosoftAuth::get_device_code().map_err(|e| e.to_string()))
+            .await
+            .map_err(|e| e.to_string())??;
 
     Ok(DeviceCode {
         user_code: res.user_code,
@@ -69,12 +68,12 @@ pub fn get_current_user() -> Option<MinecraftUser> {
 #[command]
 pub fn logout() {
     let mut settings = SettingsManager::get().lock().unwrap();
-    
+
     // Securely delete tokens before clearing the user
     if let Some(user) = settings.user.as_ref() {
         let _ = user.delete_tokens();
     }
-    
+
     settings.set_user(None);
     settings.save();
 }

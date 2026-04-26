@@ -13,6 +13,7 @@
     import VersionDownloader from "$lib/components/layout/VersionDownloader.svelte";
     import { t } from "$lib/i18n";
     import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
+    import { checkForUpdates } from "$lib/api/updaterServices";
 
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
@@ -28,7 +29,9 @@
         if (launcherStore.loadedInstances.length > 0 && !selectedInstance) {
             selectedInstance = launcherStore.loadedInstances[0];
         }
-
+        if (launcherStore.settings.auto_updates) {
+            checkForUpdates(false);
+        }
         return () => {
             unlistenPromise.then((unlisten) => unlisten());
         };
