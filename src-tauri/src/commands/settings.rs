@@ -1,5 +1,6 @@
 use crate::core::SettingsManager;
 use serde::Serialize;
+use std::path::Path;
 use tauri::command;
 
 #[command]
