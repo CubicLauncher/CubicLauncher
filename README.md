@@ -72,7 +72,7 @@ Descarga el instalador correspondiente a tu sistema operativo desde la sección 
 
 ## Compilar desde el código fuente
 
-Si prefieres compilar el lanzador manualmente, consulta la [guía de compilación](BUILDING.md).
+Si prefieres compilar el lanzador manualmente, consulta la [guía de compilación]([text](https://www.cubiclauncher.com/docs/main.html#desarrollo/compilacion)).
 
 Requisitos mínimos: [Bun](https://bun.sh/), [Rust](https://www.rust-lang.org/tools/install) 2021+ y [Tauri CLI v2](https://tauri.app/start/prerequisites/).
 
