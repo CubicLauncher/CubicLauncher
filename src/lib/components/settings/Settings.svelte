@@ -278,6 +278,6 @@
 
     <!-- Footer -->
     <div class="qm-footer">
-        <span class="qm-version">CubicLauncher 2604b</span>
+        <span class="qm-version">CubicLauncher 2604c</span>
     </div>
 </div>
