@@ -201,20 +201,6 @@
 
                     {#if launcherStore.pendingUpdate}
                         {#if !launcherStore.updateDownloaded}
-                            <!-- Download only -->
-                            <button
-                                class="update-btn secondary"
-                                onclick={handleDownload}
-                                disabled={checking || downloading || installing}
-                            >
-                                {#if downloading}
-                                    <span class="update-btn-spinner"></span>
-                                    Descargando...
-                                {:else}
-                                    Solo descargar
-                                {/if}
-                            </button>
-
                             <!-- Download + Install -->
                             <button
                                 class="update-btn primary"
@@ -360,7 +346,7 @@
                         onchange={handleSave}
                     />
                     <label for="force-gpu"
-                        >{t("settings.minecraft.forceGpu")}</label
+                        >{t("settings.minecraft.forceGpu")} (Linux)</label
                     >
                 </div>
             </section>
