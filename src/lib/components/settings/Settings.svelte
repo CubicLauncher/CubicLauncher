@@ -132,28 +132,36 @@
 
             <!-- Updates section -->
             <section class="qm-section">
-                <span class="qm-section-label">Actualizaciones</span>
+                <span class="qm-section-label"
+                    >{t("settings.launcher.updatesTitle")}</span
+                >
 
                 <!-- Version info row -->
                 <div class="update-version-row">
                     <div class="update-version-info">
-                        <span class="update-version-label">Versión actual</span>
+                        <span class="update-version-label"
+                            >{t("settings.launcher.currentVersion")}</span
+                        >
                         <span class="update-version-value"
                             >v{currentVersion}</span
                         >
                     </div>
                     {#if launcherStore.pendingUpdate}
                         <div class="update-version-info">
-                            <span class="update-version-label">Disponible</span>
+                            <span class="update-version-label"
+                                >{t("settings.launcher.available")}</span
+                            >
                             <span class="update-version-value update-available"
                                 >v{launcherStore.pendingUpdate.version}</span
                             >
                         </div>
                     {:else}
                         <div class="update-version-info">
-                            <span class="update-version-label">Estado</span>
+                            <span class="update-version-label"
+                                >{t("settings.launcher.status")}</span
+                            >
                             <span class="update-version-value update-ok"
-                                >Al día ✓</span
+                                >{t("settings.launcher.updateOk")}</span
                             >
                         </div>
                     {/if}
@@ -161,7 +169,9 @@
 
                 {#if launcherStore.pendingUpdate?.body}
                     <div class="update-notes">
-                        <span class="update-notes-label">Novedades</span>
+                        <span class="update-notes-label"
+                            >{t("settings.launcher.notes")}</span
+                        >
                         <p class="update-notes-text">
                             {launcherStore.pendingUpdate.body}
                         </p>
@@ -193,9 +203,9 @@
                     >
                         {#if checking}
                             <span class="update-btn-spinner"></span>
-                            Buscando...
+                            {t("settings.launcher.checking")}
                         {:else}
-                            Buscar updates
+                            {t("settings.launcher.searchBtn")}
                         {/if}
                     </button>
 
@@ -209,9 +219,9 @@
                             >
                                 {#if downloading}
                                     <span class="update-btn-spinner"></span>
-                                    Descargando...
+                                    {t("settings.launcher.downloading")}
                                 {:else}
-                                    Solo descargar
+                                    {t("settings.launcher.downloadOnly")}
                                 {/if}
                             </button>
 
@@ -229,10 +239,10 @@
                                     <span class="update-btn-spinner light"
                                     ></span>
                                     {downloading
-                                        ? "Descargando..."
-                                        : "Instalando..."}
+                                        ? t("settings.launcher.downloading")
+                                        : t("settings.launcher.installing")}
                                 {:else}
-                                    Descargar e instalar
+                                    {t("settings.launcher.downloadInstallBtn")}
                                 {/if}
                             </button>
                         {:else}
@@ -245,9 +255,9 @@
                                 {#if installing}
                                     <span class="update-btn-spinner light"
                                     ></span>
-                                    Instalando...
+                                    {t("settings.launcher.installing")}
                                 {:else}
-                                    Instalar y reiniciar
+                                    {t("settings.launcher.installUpdateBtn")}
                                 {/if}
                             </button>
                         {/if}

@@ -13,7 +13,20 @@
       "generalTitle": "General",
       "language": "Language",
       "autoUpdates": "Automatic Updates",
-      "closeOnPlay": "Close launcher when starting game"
+      "closeOnPlay": "Close launcher when starting game",
+      "updatesTitle": "Launcher Updates",
+      "currentVersion": "Current Version",
+      "available": "Update Available",
+      "status": "Status",
+      "updateOk": "Up to date",
+      "notes": "Release Notes",
+      "checking": "Checking...",
+      "searchBtn": "Check for Updates",
+      "downloading": "Downloading...",
+      "downloadOnly": "Download Only",
+      "downloadInstallBtn": "Download and Install",
+      "installing": "Installing...",
+      "installUpdateBtn": "Install Update"
     },
     "minecraft": {
       "perfTitle": "Performance (RAM)",
@@ -77,6 +90,7 @@
       "instruction": "To login with your Microsoft account, copy the following link and enter the code shown below:",
       "copyLink": "Copy link",
       "linkCopied": "Link copied!",
+      "loading": "Connecting to Microsoft...",
       "waiting": "Waiting for authentication...",
       "success": "Logged in successfully!",
       "error": "Failed to login: {error}"

@@ -13,7 +13,20 @@
       "generalTitle": "General",
       "language": "Idioma",
       "autoUpdates": "Actualizaciones Automáticas",
-      "closeOnPlay": "Cerrar el launcher al abrir el juego"
+      "closeOnPlay": "Cerrar el launcher al abrir el juego",
+      "updatesTitle": "Actualizaciones",
+      "currentVersion": "Versión Actual",
+      "available": "Actualización Disponible",
+      "status": "Estado",
+      "updateOk": "Actualizado",
+      "notes": "Notas de la versión",
+      "checking": "Comprobando...",
+      "searchBtn": "Buscar Actualizaciones",
+      "downloading": "Descargando...",
+      "downloadOnly": "Solo Descargar",
+      "downloadInstallBtn": "Descargar e Instalar",
+      "installing": "Instalando...",
+      "installUpdateBtn": "Instalar Actualización"
     },
     "minecraft": {
       "perfTitle": "Rendimiento (RAM)",
@@ -77,6 +90,7 @@
       "instruction": "Para iniciar sesión con tu cuenta de Microsoft, copia el siguiente enlace e introduce el código que aparece a continuación:",
       "copyLink": "Copiar enlace",
       "linkCopied": "¡Enlace copiado!",
+      "loading": "Conectando con Microsoft...",
       "waiting": "Esperando autenticación...",
       "success": "¡Sesión iniciada correctamente!",
       "error": "Error al iniciar sesión: {error}"
