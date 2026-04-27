@@ -5,6 +5,11 @@
     import { killInst, saveSettings } from "$lib/api/launcherService";
     import { t } from "$lib/i18n";
     import Select from "$lib/components/layout/Select.svelte";
+    import {
+        checkForUpdates,
+        downloadUpdate,
+        installUpdate,
+    } from "$lib/api/updaterServices";
 
     interface Props {
         onclose?: () => void;
@@ -14,6 +19,9 @@
 
     let saving = $state(false);
     let currentTab = $state("launcher");
+    let checking = $state(false);
+    let downloading = $state(false);
+    let installing = $state(false);
 
     async function handleSave() {
         saving = true;
@@ -35,6 +43,25 @@
         }
     }
 
+    async function handleCheckForUpdates() {
+        checking = true;
+        await checkForUpdates(false);
+        checking = false;
+    }
+
+    async function handleDownload() {
+        downloading = true;
+        await downloadUpdate();
+        downloading = false;
+    }
+
+    async function handleInstall() {
+        installing = true;
+        await installUpdate();
+        // If we get here, install failed (relaunch would have fired)
+        installing = false;
+    }
+
     let tabs = $derived([
         { id: "launcher", label: t("settings.tabs.launcher") },
         { id: "minecraft", label: t("settings.tabs.minecraft") },
@@ -45,6 +72,8 @@
         { value: "es", label: "Español" },
         { value: "en", label: "English" },
     ];
+
+    const currentVersion = "2604c (26.4.2)";
 </script>
 
 <div class="qm-root">
@@ -69,7 +98,7 @@
 
     <div class="qm-scroll">
         {#if currentTab === "launcher"}
-            <!-- Running instance -->
+            <!-- Running instances -->
             <section class="qm-section">
                 <span class="qm-section-label"
                     >{t("settings.launcher.activeInstancesTitle")}</span
@@ -99,6 +128,131 @@
                         {t("settings.launcher.noInstances")}
                     </div>
                 {/each}
+            </section>
+
+            <!-- Updates section -->
+            <section class="qm-section">
+                <span class="qm-section-label">Actualizaciones</span>
+
+                <!-- Version info row -->
+                <div class="update-version-row">
+                    <div class="update-version-info">
+                        <span class="update-version-label">Versión actual</span>
+                        <span class="update-version-value"
+                            >v{currentVersion}</span
+                        >
+                    </div>
+                    {#if launcherStore.pendingUpdate}
+                        <div class="update-version-info">
+                            <span class="update-version-label">Disponible</span>
+                            <span class="update-version-value update-available"
+                                >v{launcherStore.pendingUpdate.version}</span
+                            >
+                        </div>
+                    {:else}
+                        <div class="update-version-info">
+                            <span class="update-version-label">Estado</span>
+                            <span class="update-version-value update-ok"
+                                >Al día ✓</span
+                            >
+                        </div>
+                    {/if}
+                </div>
+
+                {#if launcherStore.pendingUpdate?.body}
+                    <div class="update-notes">
+                        <span class="update-notes-label">Novedades</span>
+                        <p class="update-notes-text">
+                            {launcherStore.pendingUpdate.body}
+                        </p>
+                    </div>
+                {/if}
+
+                <!-- Progress bar (visible while downloading) -->
+                {#if launcherStore.updateProgress > 0 && launcherStore.updateProgress < 100}
+                    <div class="update-progress-wrap">
+                        <div class="update-progress-track">
+                            <div
+                                class="update-progress-fill"
+                                style="width: {launcherStore.updateProgress}%"
+                            ></div>
+                        </div>
+                        <span class="update-progress-pct"
+                            >{launcherStore.updateProgress}%</span
+                        >
+                    </div>
+                {/if}
+
+                <!-- Action buttons -->
+                <div class="update-actions">
+                    <!-- Check for updates -->
+                    <button
+                        class="update-btn secondary"
+                        onclick={handleCheckForUpdates}
+                        disabled={checking || downloading || installing}
+                    >
+                        {#if checking}
+                            <span class="update-btn-spinner"></span>
+                            Buscando...
+                        {:else}
+                            Buscar updates
+                        {/if}
+                    </button>
+
+                    {#if launcherStore.pendingUpdate}
+                        {#if !launcherStore.updateDownloaded}
+                            <!-- Download only -->
+                            <button
+                                class="update-btn secondary"
+                                onclick={handleDownload}
+                                disabled={checking || downloading || installing}
+                            >
+                                {#if downloading}
+                                    <span class="update-btn-spinner"></span>
+                                    Descargando...
+                                {:else}
+                                    Solo descargar
+                                {/if}
+                            </button>
+
+                            <!-- Download + Install -->
+                            <button
+                                class="update-btn primary"
+                                onclick={async () => {
+                                    await handleDownload();
+                                    if (launcherStore.updateDownloaded)
+                                        await handleInstall();
+                                }}
+                                disabled={checking || downloading || installing}
+                            >
+                                {#if downloading || installing}
+                                    <span class="update-btn-spinner light"
+                                    ></span>
+                                    {downloading
+                                        ? "Descargando..."
+                                        : "Instalando..."}
+                                {:else}
+                                    Descargar e instalar
+                                {/if}
+                            </button>
+                        {:else}
+                            <!-- Already downloaded, just install -->
+                            <button
+                                class="update-btn primary"
+                                onclick={handleInstall}
+                                disabled={installing}
+                            >
+                                {#if installing}
+                                    <span class="update-btn-spinner light"
+                                    ></span>
+                                    Instalando...
+                                {:else}
+                                    Instalar y reiniciar
+                                {/if}
+                            </button>
+                        {/if}
+                    {/if}
+                </div>
             </section>
 
             <!-- General Settings -->
@@ -278,6 +432,6 @@
 
     <!-- Footer -->
     <div class="qm-footer">
-        <span class="qm-version">CubicLauncher 2604c</span>
+        <span class="qm-version">CubicLauncher v{currentVersion}</span>
     </div>
 </div>

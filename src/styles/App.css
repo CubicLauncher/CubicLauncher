@@ -1093,14 +1093,195 @@ body {
 }
 
 /* ─── 9. COMPONENTS: QUICK MENU ──────────────────────────── */
+/* ─── UPDATE BADGE ────────────────────────────────────────── */
 
+.update-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    background: #ffd54f;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(255, 213, 79, 0.7);
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+.update-version-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 12px;
+    background: #151515;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.update-version-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.update-version-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #555;
+    font-weight: 600;
+}
+
+.update-version-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #eee;
+}
+
+.update-available {
+    color: #ffd54f;
+}
+
+.update-ok {
+    color: #69db7c;
+}
+
+.update-notes {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+}
+
+.update-notes-label {
+    display: block;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.update-notes-text {
+    font-size: 0.78rem;
+    color: #888;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.update-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.update-progress-track {
+    flex: 1;
+    height: 5px;
+    background: #222;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.update-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #fff, #aaa);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.update-progress-pct {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #eee;
+    min-width: 32px;
+    text-align: right;
+}
+
+.update-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.update-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: "Cantarell", system-ui, sans-serif;
+    border: none;
+}
+
+.update-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.update-btn.secondary {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    color: #ccc;
+}
+
+.update-btn.secondary:hover:not(:disabled) {
+    background: #282828;
+    border-color: #444;
+    color: #fff;
+}
+
+.update-btn.primary {
+    background: #fff;
+    color: #000;
+}
+
+.update-btn.primary:hover:not(:disabled) {
+    background: #e8e8e8;
+    transform: translateY(-1px);
+}
+
+.update-btn-spinner {
+    width: 11px;
+    height: 11px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #aaa;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+
+.update-btn-spinner.light {
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    border-top-color: #333;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+@keyframes badge-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 6px rgba(255, 213, 79, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 12px rgba(255, 213, 79, 1);
+    }
+}
 .qm-root {
     height: 100%;
     display: flex;
     flex-direction: column;
     background: #0a0a0a;
     color: #eee;
-    font-family: "Inter", sans-serif;
+    font-family: "Cantarell", sans-serif;
 }
 
 .qm-header {

@@ -31,7 +31,7 @@
             selectedInstance = launcherStore.loadedInstances[0];
         }
         if (launcherStore.settings.auto_updates) {
-            checkForUpdates(false);
+            checkForUpdates(true);
         }
         return () => {
             unlistenPromise.then((unlisten) => unlisten());

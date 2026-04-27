@@ -5,6 +5,11 @@ import type {
   NotificationType,
 } from "../types/types";
 
+export interface PendingUpdate {
+  version: string;
+  body: string | null;
+}
+
 export interface LauncherState {
   loadedInstances: InstanceDto[];
   currentInstance: InstanceDto | null;
@@ -12,6 +17,8 @@ export interface LauncherState {
   updateProgress: number;
   settings: Settings;
   notifications: Notification[];
+  pendingUpdate: PendingUpdate | null;
+  updateDownloaded: boolean;
 }
 
 export const launcherStore = $state<LauncherState>({
@@ -19,7 +26,9 @@ export const launcherStore = $state<LauncherState>({
   currentInstance: null,
   runningInstances: [],
   notifications: [],
-  updateProgress: 0, // 0 = sin update, 1-100 = descargando
+  updateProgress: 0,
+  pendingUpdate: null,
+  updateDownloaded: false,
   settings: {
     username: "Steve",
     user: null,
