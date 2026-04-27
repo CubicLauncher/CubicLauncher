@@ -1,4 +1,4 @@
-use crate::core::{InstanceDto, InstanceManager, LauncherWrapper, PathManager};
+use crate::core::{InstanceDto, InstanceManager, Launcher, PathManager};
 use std::path::PathBuf;
 use tauri::Manager;
 use tracing::error;
@@ -10,11 +10,7 @@ pub async fn launch(app: tauri::AppHandle, instance_id: String) -> Result<(), St
         return Err("Instancia no encontrada".to_string());
     };
 
-    let result = LauncherWrapper::get()
-        .lock()
-        .await
-        .launch(handle.clone())
-        .await;
+    let result = Launcher::get().launch(handle.clone()).await;
 
     if result.is_ok() {
         let settings = crate::core::SettingsManager::get().lock().unwrap();

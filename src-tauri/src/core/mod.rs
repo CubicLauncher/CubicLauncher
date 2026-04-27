@@ -1,9 +1,9 @@
 mod instance_manager;
-mod library_wrapper;
+mod launcher;
 mod path_manager;
 mod settings_manager;
 
 pub use instance_manager::{InstanceDto, InstanceManager, InstancesPollingPayload};
-pub use library_wrapper::LauncherWrapper;
+pub use launcher::{DownloadQueue, Launcher};
 pub use path_manager::PathManager;
 pub use settings_manager::SettingsManager;

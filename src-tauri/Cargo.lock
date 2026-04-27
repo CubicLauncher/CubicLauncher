@@ -634,7 +634,7 @@ dependencies = [
 
 [[package]]
 name = "cubiclauncher"
-version = "26.4.1"
+version = "26.4.2"
 dependencies = [
  "claunch-rs",
  "directories",
