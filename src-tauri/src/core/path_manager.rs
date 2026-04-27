@@ -30,9 +30,9 @@ impl PathManager {
     fn initialize() -> PathManager {
         let base_dir = resolve_base_dir();
 
-        let instances_dir = base_dir.join(".cubic/instances");
-        let shared_dir = base_dir.join(".cubic/shared");
-        let settings_dir = base_dir.join(".cubic/settings");
+        let instances_dir = base_dir.join(".cubic").join("instances");
+        let shared_dir = base_dir.join(".cubic").join("shared");
+        let settings_dir = base_dir.join(".cubic").join("settings");
 
         // Crear directorios si no existen
         std::fs::create_dir_all(&instances_dir)

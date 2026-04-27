@@ -219,9 +219,9 @@
                             >
                                 {#if downloading}
                                     <span class="update-btn-spinner"></span>
-                                    {t("settings.launcher.downloading")}
+                                    Descargando...
                                 {:else}
-                                    {t("settings.launcher.downloadOnly")}
+                                    Solo descargar
                                 {/if}
                             </button>
 
@@ -370,7 +370,7 @@
                         onchange={handleSave}
                     />
                     <label for="force-gpu"
-                        >{t("settings.minecraft.forceGpu")}</label
+                        >{t("settings.minecraft.forceGpu")} (Linux)</label
                     >
                 </div>
             </section>

@@ -78,8 +78,7 @@
         bannerVersion;
         fetchScreenshot();
     });
-
-    const formatter = new Intl.DateTimeFormat("es-ES", {
+    const formatter = new Intl.DateTimeFormat(t("id"), {
         year: "numeric",
         month: "long",
         day: "2-digit",
