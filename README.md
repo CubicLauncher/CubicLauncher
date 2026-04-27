@@ -3,8 +3,8 @@
   <h1>CubicLauncher</h1>
   <p>Lanzador de Minecraft rápido, ligero y de código abierto.</p>
 
-  ![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue)
-  ![Versión](https://img.shields.io/badge/versión-null-informational)
+  ![License](https://img.shields.io/badge/Licence-GPL--3.0-blue)
+  [![dependency status](https://deps.rs/repo/github/cubiclauncher/cubiclauncher/status.svg?path=src-tauri)](https://deps.rs/repo/github/cubiclauncher/cubiclauncher?path=src-tauri)
   ![Discord](https://img.shields.io/discord/1366945511273398342)
   ![Website](https://img.shields.io/website/https/www.cubiclauncher.com)
 </div>
