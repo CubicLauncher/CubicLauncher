@@ -13,6 +13,12 @@
 
 CubicLauncher es un lanzador de Minecraft de escritorio multiplataforma pensado para ser rápido y sencillo de usar. Permite administrar varias instancias de juego de forma independiente, cada una con su propia versión, loader de mods y configuración.
 
+## Comunidad/Soporte
+
+| Servidor | URL |
+|----------|-----|
+| CubicLauncher | [https://discord.com/invite/WQ5KtQYj](https://discord.com/invite/WQ5KtQYj) |
+
 ## Funcionalidades
 
 ### Gestión de instancias
