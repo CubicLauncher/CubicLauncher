@@ -1,13 +1,28 @@
 <script lang="ts">
     import { launcherStore } from "$lib/state/state.svelte";
     import NotificationToast from "./NotificationToast.svelte";
-    import { flip } from "svelte/animate";
 </script>
 
 <div class="notification-container">
     {#each launcherStore.notifications as notification (notification.id)}
-        <div animate:flip={{ duration: 300 }}>
-            <NotificationToast {notification} />
-        </div>
+        <NotificationToast {notification} />
     {/each}
 </div>
+
+<style>
+    .notification-container {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 15px;
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    .notification-container :global(.xmb-toast) {
+        pointer-events: all;
+    }
+</style>
