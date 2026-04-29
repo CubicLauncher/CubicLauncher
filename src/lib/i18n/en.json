@@ -114,6 +114,9 @@
     "tabs": {
       "details": "Details",
       "mods": "Mods",
+      "resources": "Resources",
+      "screenshots": "Screenshots",
+      "logs": "Logs",
       "options": "Options"
     },
     "details": {
@@ -133,6 +136,20 @@
       "title": "Installed Mods",
       "jarFile": ".JAR File",
       "empty": "No mods installed in this instance"
+    },
+    "resources": {
+      "title": "Resource Packs",
+      "addBtn": "Add Pack",
+      "empty": "No resource packs installed"
+    },
+    "logs": {
+      "title": "Instance Logs",
+      "empty": "No log files found",
+      "selectLog": "Select a log file to view its content"
+    },
+    "screenshots": {
+      "title": "Screenshots",
+      "empty": "No screenshots found"
     }
   },
   "createInstance": {

@@ -1,6 +1,6 @@
 use crate::core::SettingsManager;
-use claunch_rs::auth::microsoft::MicrosoftAuth;
 use claunch_rs::MinecraftUser;
+use claunch_rs::auth::microsoft::MicrosoftAuth;
 use serde::Serialize;
 use tauri::command;
 

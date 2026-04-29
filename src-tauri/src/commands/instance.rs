@@ -354,3 +354,110 @@ pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> 
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
+    let manager = InstanceManager::get();
+    let Some(handle) = manager.get_handle(&id).await else {
+        return Vec::new();
+    };
+
+    let resourcepacks_dir = handle.get_instance_dir().await.join("resourcepacks");
+
+    let mut resourcepacks = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(resourcepacks_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                let filename = path.file_name().unwrap().to_string_lossy().to_string();
+                resourcepacks.push(ModDto {
+                    name: filename.clone(),
+                    filename,
+                    version: None,
+                    enabled: true,
+                });
+            }
+        }
+    }
+    resourcepacks.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    resourcepacks
+}
+
+#[tauri::command]
+pub async fn get_instance_logs(id: String) -> Vec<String> {
+    let manager = InstanceManager::get();
+    let Some(handle) = manager.get_handle(&id).await else {
+        return Vec::new();
+    };
+
+    let logs_dir = handle.get_instance_dir().await.join("logs");
+
+    let mut logs = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(logs_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                logs.push(path.file_name().unwrap().to_string_lossy().to_string());
+            }
+        }
+    }
+    logs.sort_by(|a, b| b.cmp(a));
+    logs
+}
+
+#[tauri::command]
+pub async fn read_instance_log(id: String, filename: String) -> Result<String, String> {
+    let manager = InstanceManager::get();
+    let Some(handle) = manager.get_handle(&id).await else {
+        return Err("Instancia no encontrada".to_string());
+    };
+
+    let log_path = handle.get_instance_dir().await.join("logs").join(filename);
+    if !log_path.exists() {
+        return Err("Archivo de registro no encontrado".to_string());
+    }
+
+    std::fs::read_to_string(log_path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn delete_instance_file(
+    id: String,
+    sub_dir: String,
+    filename: String,
+) -> Result<(), String> {
+    let manager = InstanceManager::get();
+    let Some(handle) = manager.get_handle(&id).await else {
+        return Err("Instancia no encontrada".to_string());
+    };
+
+    let file_path = handle.get_instance_dir().await.join(sub_dir).join(filename);
+    if file_path.exists() {
+        std::fs::remove_file(file_path).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn add_instance_file(
+    id: String,
+    sub_dir: String,
+    source_path: String,
+) -> Result<(), String> {
+    let manager = InstanceManager::get();
+    let Some(handle) = manager.get_handle(&id).await else {
+        return Err("Instancia no encontrada".to_string());
+    };
+
+    let dest_dir = handle.get_instance_dir().await.join(sub_dir);
+    if !dest_dir.exists() {
+        std::fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
+    }
+
+    let src = PathBuf::from(source_path);
+    let filename = src.file_name().ok_or("Ruta de origen inválida")?;
+    let dest_path = dest_dir.join(filename);
+
+    std::fs::copy(src, dest_path).map_err(|e| e.to_string())?;
+    Ok(())
+}

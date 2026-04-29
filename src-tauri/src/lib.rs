@@ -4,6 +4,7 @@ pub use core::InstanceManager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             commands::instance::get_instances,
@@ -23,6 +24,11 @@ pub fn run() {
             commands::instance::get_all_instance_screenshots,
             commands::instance::set_instance_cover_image,
             commands::instance::reset_instance_cover_image,
+            commands::instance::get_instance_resourcepacks,
+            commands::instance::get_instance_logs,
+            commands::instance::read_instance_log,
+            commands::instance::delete_instance_file,
+            commands::instance::add_instance_file,
             commands::download::add_to_queue,
             commands::download::get_available_versions,
             commands::download::get_fabric_versions,

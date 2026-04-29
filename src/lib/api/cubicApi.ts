@@ -236,3 +236,47 @@ export async function logout(): Promise<void> {
 export async function openUrl(url: string): Promise<void> {
   await invoke("open_url", { url });
 }
+
+export async function getInstanceResourcePacks(id: string): Promise<ModDto[]> {
+  try {
+    return await invoke<ModDto[]>("get_instance_resourcepacks", { id });
+  } catch (err) {
+    console.error(`Error al obtener resource packs de instancia ${id}:`, err);
+    return [];
+  }
+}
+
+export async function getInstanceLogs(id: string): Promise<string[]> {
+  try {
+    return await invoke<string[]>("get_instance_logs", { id });
+  } catch (err) {
+    console.error(`Error al obtener logs de instancia ${id}:`, err);
+    return [];
+  }
+}
+
+export async function readInstanceLog(id: string, filename: string): Promise<string> {
+  try {
+    return await invoke<string>("read_instance_log", { id, filename });
+  } catch (err) {
+    console.error(`Error al leer log ${filename}:`, err);
+    return "";
+  }
+}
+
+export async function deleteInstanceFile(id: string, subDir: string, filename: string): Promise<void> {
+  try {
+    await invoke("delete_instance_file", { id, subDir, filename });
+  } catch (err) {
+    console.error(`Error al eliminar archivo ${filename}:`, err);
+  }
+}
+
+export async function addInstanceFile(id: string, subDir: string, sourcePath: string): Promise<void> {
+  try {
+    await invoke("add_instance_file", { id, subDir, sourcePath });
+  } catch (err) {
+    console.error(`Error al añadir archivo ${sourcePath}:`, err);
+    throw err;
+  }
+}

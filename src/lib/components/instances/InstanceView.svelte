@@ -4,7 +4,9 @@
     import InstanceDetails from "./InstanceDetails.svelte";
     import { launchInstance } from "$lib/api/cubicApi";
     import ModsRow from "./ModsRow.svelte";
-    import QuickOptionsPanel from "./QuickOptionsPanel.svelte";
+    import ResourcePacksTab from "./ResourcePacksTab.svelte";
+    import ScreenshotsTab from "./ScreenshotsTab.svelte";
+    import LogsTab from "./LogsTab.svelte";
     import Loading from "../../icons/Loading.svelte";
     import Check from "../../icons/Check.svelte";
     import { t } from "$lib/i18n";
@@ -238,10 +240,22 @@
             {t("instanceView.tabs.mods")}
         </button>
         <button
-            class="tab-item {activeTab === 'opciones' ? 'active' : ''}"
-            onclick={() => (activeTab = "opciones")}
+            class="tab-item {activeTab === 'resources' ? 'active' : ''}"
+            onclick={() => (activeTab = "resources")}
         >
-            {t("instanceView.tabs.options")}
+            {t("instanceView.tabs.resources")}
+        </button>
+        <button
+            class="tab-item {activeTab === 'screenshots' ? 'active' : ''}"
+            onclick={() => (activeTab = "screenshots")}
+        >
+            {t("instanceView.tabs.screenshots")}
+        </button>
+        <button
+            class="tab-item {activeTab === 'logs' ? 'active' : ''}"
+            onclick={() => (activeTab = "logs")}
+        >
+            {t("instanceView.tabs.logs")}
         </button>
     </div>
 
@@ -254,9 +268,17 @@
             <div class="tab-pane">
                 <ModsRow instanceId={selectedInstance.uuid} />
             </div>
-        {:else if activeTab === "opciones"}
+        {:else if activeTab === "resources"}
             <div class="tab-pane">
-                <QuickOptionsPanel instance={selectedInstance} />
+                <ResourcePacksTab instanceId={selectedInstance.uuid} />
+            </div>
+        {:else if activeTab === "screenshots"}
+            <div class="tab-pane">
+                <ScreenshotsTab instance={selectedInstance} />
+            </div>
+        {:else if activeTab === "logs"}
+            <div class="tab-pane">
+                <LogsTab instanceId={selectedInstance.uuid} />
             </div>
         {/if}
     </div>

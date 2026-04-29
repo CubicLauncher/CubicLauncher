@@ -114,6 +114,9 @@
     "tabs": {
       "details": "Detalles",
       "mods": "Mods",
+      "resources": "Recursos",
+      "screenshots": "Capturas",
+      "logs": "Logs",
       "options": "Opciones"
     },
     "details": {
@@ -133,6 +136,20 @@
       "title": "Mods Instalados",
       "jarFile": "Archivo .JAR",
       "empty": "No hay mods instalados en esta instancia"
+    },
+    "resources": {
+      "title": "Paquetes de Recursos",
+      "addBtn": "Añadir Pack",
+      "empty": "No hay paquetes de recursos instalados"
+    },
+    "logs": {
+      "title": "Registros de la Instancia",
+      "empty": "No hay archivos de registro",
+      "selectLog": "Selecciona un archivo para ver su contenido"
+    },
+    "screenshots": {
+      "title": "Capturas de Pantalla",
+      "empty": "No hay capturas de pantalla"
     }
   },
   "createInstance": {
