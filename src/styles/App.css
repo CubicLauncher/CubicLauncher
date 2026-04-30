@@ -415,7 +415,6 @@ body {
 
 .instance-view {
     position: relative;
-    z-index: 1;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -463,7 +462,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
     animation: fadeIn 0.2s ease-out;
 }
 
@@ -3076,7 +3075,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
     backdrop-filter: blur(5px);
 }
 
