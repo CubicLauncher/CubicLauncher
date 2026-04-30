@@ -89,8 +89,6 @@
     });
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="notification-toast" class:removing role="alert" onclick={dismiss}>
     <!-- gloss superior -->
     <div class="notification-gloss" aria-hidden="true"></div>

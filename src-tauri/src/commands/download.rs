@@ -178,7 +178,12 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         );
         let dest_path = lib_base_dir.join(&rel_path);
 
-        if !tokio::fs::try_exists(&dest_path).await.unwrap_or(false) {
+        let exists = match tokio::fs::try_exists(&dest_path).await {
+            Ok(e) => e,
+            Err(_) => false,
+        };
+
+        if !exists {
             if let Some(parent) = dest_path.parent() {
                 let _ = tokio::fs::create_dir_all(parent).await;
             }

@@ -48,7 +48,9 @@ pub async fn authenticate_with_device_code(
         .map_err(|e| format!("Failed to save tokens securely: {}", e))?;
 
     // 3. Update the global launcher settings
-    let mut settings = SettingsManager::get().lock().unwrap();
+    let mut settings = SettingsManager::get()
+        .lock()
+        .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
     settings.set_user(Some(user.clone()));
     settings.save();
 
@@ -56,18 +58,22 @@ pub async fn authenticate_with_device_code(
 }
 
 #[command]
-pub fn get_current_user() -> Option<MinecraftUser> {
-    let settings = SettingsManager::get().lock().unwrap();
-    settings.user.as_ref().map(|user| {
+pub fn get_current_user() -> Result<Option<MinecraftUser>, String> {
+    let settings = SettingsManager::get()
+        .lock()
+        .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
+    Ok(settings.user.as_ref().map(|user| {
         let mut u = user.clone();
         let _ = u.load_tokens();
         u
-    })
+    }))
 }
 
 #[command]
-pub fn logout() {
-    let mut settings = SettingsManager::get().lock().unwrap();
+pub fn logout() -> Result<(), String> {
+    let mut settings = SettingsManager::get()
+        .lock()
+        .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
 
     // Securely delete tokens before clearing the user
     if let Some(user) = settings.user.as_ref() {
@@ -76,4 +82,5 @@ pub fn logout() {
 
     settings.set_user(None);
     settings.save();
+    Ok(())
 }

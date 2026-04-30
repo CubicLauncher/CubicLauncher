@@ -13,7 +13,9 @@ pub async fn launch(app: tauri::AppHandle, instance_id: String) -> Result<(), St
     let result = Launcher::get().launch(handle.clone()).await;
 
     if result.is_ok() {
-        let settings = crate::core::SettingsManager::get().lock().unwrap();
+        let settings = crate::core::SettingsManager::get()
+            .lock()
+            .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
         if settings.close_launcher_on_play {
             let windows = app.webview_windows();
             for window in windows.values() {
@@ -82,10 +84,9 @@ pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
             })
             .collect();
 
-        screenshots.sort_by_key(|e| {
-            e.metadata()
-                .and_then(|m| m.modified())
-                .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+        screenshots.sort_by_key(|e| match e.metadata().and_then(|m| m.modified()) {
+            Ok(t) => t,
+            Err(_) => std::time::SystemTime::UNIX_EPOCH,
         });
 
         if let Some(latest) = screenshots.last() {
@@ -114,11 +115,11 @@ pub async fn get_all_instance_screenshots(instance_name: String) -> Vec<String> 
             .collect();
 
         screenshots.sort_by_key(|e| {
-            std::cmp::Reverse(
-                e.metadata()
-                    .and_then(|m| m.modified())
-                    .unwrap_or(std::time::SystemTime::UNIX_EPOCH),
-            )
+            let time = match e.metadata().and_then(|m| m.modified()) {
+                Ok(t) => t,
+                Err(_) => std::time::SystemTime::UNIX_EPOCH,
+            };
+            std::cmp::Reverse(time)
         });
 
         for e in screenshots {
@@ -292,7 +293,10 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
             if path.is_file() {
                 if let Some(ext) = path.extension() {
                     let ext_str = ext.to_string_lossy().to_lowercase();
-                    let file_name_str = path.file_name().unwrap().to_string_lossy().to_lowercase();
+                    let Some(file_name) = path.file_name() else {
+                        continue;
+                    };
+                    let file_name_str = file_name.to_string_lossy().to_lowercase();
 
                     let (is_mod, enabled) = if ext_str == "jar" || ext_str == "zip" {
                         (true, true)
@@ -306,11 +310,11 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
                     };
 
                     if is_mod {
-                        let filename = path.file_name().unwrap().to_string_lossy().to_string();
-                        let display_name = filename
-                            .strip_suffix(".disabled")
-                            .unwrap_or(&filename)
-                            .to_string();
+                        let filename = file_name.to_string_lossy().to_string();
+                        let display_name = match filename.strip_suffix(".disabled") {
+                            Some(stripped) => stripped.to_string(),
+                            None => filename.clone(),
+                        };
                         mods.push(ModDto {
                             name: display_name,
                             filename,
@@ -343,7 +347,9 @@ pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> 
     let is_currently_disabled = filename.ends_with(".disabled");
 
     if enable && is_currently_disabled {
-        let new_filename = filename.strip_suffix(".disabled").unwrap();
+        let new_filename = filename
+            .strip_suffix(".disabled")
+            .ok_or("Error al procesar el nombre del archivo")?;
         let new_path = mods_dir.join(new_filename);
         std::fs::rename(file_path, new_path).map_err(|e| e.to_string())?;
     } else if !enable && !is_currently_disabled {
@@ -369,7 +375,10 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file() {
-                let filename = path.file_name().unwrap().to_string_lossy().to_string();
+                let Some(file_name) = path.file_name() else {
+                    continue;
+                };
+                let filename = file_name.to_string_lossy().to_string();
                 resourcepacks.push(ModDto {
                     name: filename.clone(),
                     filename,
@@ -397,7 +406,9 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file() {
-                logs.push(path.file_name().unwrap().to_string_lossy().to_string());
+                if let Some(file_name) = path.file_name() {
+                    logs.push(file_name.to_string_lossy().to_string());
+                }
             }
         }
     }

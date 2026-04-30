@@ -4,14 +4,18 @@ use std::path::Path;
 use tauri::command;
 
 #[command]
-pub fn get_settings() -> SettingsManager {
-    let settings = SettingsManager::get().lock().unwrap();
-    settings.clone()
+pub fn get_settings() -> Result<SettingsManager, String> {
+    let settings = SettingsManager::get()
+        .lock()
+        .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
+    Ok(settings.clone())
 }
 
 #[command]
 pub fn update_settings(new_settings: SettingsManager) -> Result<(), String> {
-    let mut settings = SettingsManager::get().lock().unwrap();
+    let mut settings = SettingsManager::get()
+        .lock()
+        .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
     *settings = new_settings;
     settings.dirty = true;
     settings.save();
@@ -47,11 +51,10 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
                 for entry in entries.flatten() {
                     let path = entry.path();
                     if path.is_dir() {
-                        let name = path
-                            .file_name()
-                            .unwrap_or_default()
-                            .to_string_lossy()
-                            .to_lowercase();
+                        let name = match path.file_name() {
+                            Some(n) => n.to_string_lossy().to_lowercase(),
+                            None => String::new(),
+                        };
                         let exact_java = path.join("bin").join("javaw.exe");
                         if exact_java.exists() {
                             if name.contains("1.8") || name.contains("-8") {
@@ -82,11 +85,10 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.is_dir() {
-                    let name = path
-                        .file_name()
-                        .unwrap_or_default()
-                        .to_string_lossy()
-                        .to_lowercase();
+                    let name = match path.file_name() {
+                        Some(n) => n.to_string_lossy().to_lowercase(),
+                        None => String::new(),
+                    };
                     let exact_java = path.join("bin").join("java");
                     if exact_java.exists() {
                         if name.contains("-8-") || name.contains("1.8.0") {
