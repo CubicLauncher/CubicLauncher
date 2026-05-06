@@ -5,20 +5,16 @@ use tauri::command;
 
 #[command]
 pub fn get_settings() -> Result<SettingsManager, String> {
-    let settings = SettingsManager::get()
-        .lock()
-        .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
-    Ok(settings.clone())
+    Ok(SettingsManager::snapshot())
 }
 
 #[command]
 pub fn update_settings(new_settings: SettingsManager) -> Result<(), String> {
-    let mut settings = SettingsManager::get()
-        .lock()
-        .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
-    *settings = new_settings;
-    settings.dirty = true;
-    settings.save();
+    SettingsManager::write(|s| {
+        *s = new_settings;
+        s.dirty = true;
+        s.save();
+    })?;
     Ok(())
 }
 

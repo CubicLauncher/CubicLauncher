@@ -1,5 +1,10 @@
 use crate::core::DownloadQueue;
+use crate::core::PathManager;
 use serde::{Deserialize, Serialize};
+use tokio::fs;
+
+const MOJANG_MANIFEST_URL: &'static str =
+    "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MinecraftVersion {
@@ -22,15 +27,6 @@ pub struct MinecraftManifest {
 pub struct LatestVersions {
     pub release: String,
     pub snapshot: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct VersionSummary {
-    pub id: String,
-    #[serde(rename = "type")]
-    pub version_type: String,
-    #[serde(rename = "releaseTime")]
-    pub release_time: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -67,29 +63,48 @@ pub async fn add_to_queue(version: String) {
     DownloadQueue::get().enqueue(version).await
 }
 
+pub async fn download_manifest() -> Result<Vec<MinecraftVersion>, String> {
+    let path = PathManager::get()
+        .get_settings_dir()
+        .join("manifest_cache.cub");
+
+    let response = reqwest::get(MOJANG_MANIFEST_URL)
+        .await
+        .map_err(|e| format!("Error al obtener el manifiesto: {e}"))?;
+
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("Error al leer bytes del manifiesto: {e}"))?;
+
+    fs::write(&path, &bytes)
+        .await
+        .map_err(|e| format!("Error al escribir manifiesto al disco: {e}"))?;
+
+    let manifest: MinecraftManifest =
+        serde_json::from_slice(&bytes).map_err(|e| format!("Error parseando JSON: {e}"))?;
+
+    Ok(manifest.versions)
+}
+
 #[tauri::command]
-pub async fn get_available_versions() -> Result<Vec<VersionSummary>, String> {
-    let url = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
-    let response = reqwest::get(url)
-        .await
-        .map_err(|e| format!("Error al obtener el manifiesto: {}", e))?;
+pub async fn get_available_versions() -> Result<Vec<MinecraftVersion>, String> {
+    let path = PathManager::get()
+        .get_settings_dir()
+        .join("manifest_cache.cub");
 
-    let manifest = response
-        .json::<MinecraftManifest>()
-        .await
-        .map_err(|e| format!("Error al parsear el manifiesto: {}", e))?;
-
-    let summary: Vec<VersionSummary> = manifest
-        .versions
-        .into_iter()
-        .map(|v| VersionSummary {
-            id: v.id,
-            version_type: v.version_type,
-            release_time: v.release_time,
-        })
-        .collect();
-
-    Ok(summary)
+    if tokio::fs::try_exists(&path).await.unwrap_or(false) {
+        match tokio::fs::read(path).await {
+            Ok(d) => {
+                let manifest: MinecraftManifest = serde_json::from_slice(&d)
+                    .map_err(|e| format!("Error parseando manifest: {}", e))?;
+                Ok(manifest.versions)
+            }
+            Err(_) => download_manifest().await,
+        }
+    } else {
+        download_manifest().await
+    }
 }
 
 #[tauri::command]

@@ -175,10 +175,6 @@ impl DownloadQueue {
         queue
     }
 
-    pub fn set_handle(&self, handle: tauri::AppHandle) {
-        *self.app_handle.lock().unwrap() = Some(handle);
-    }
-
     /// Encola una versión. O(1), sin await de lock.
     /// Si ya está activa (pending o downloading), la ignora silenciosamente.
     pub async fn enqueue(&self, version: String) {
@@ -371,9 +367,7 @@ impl Launcher {
         let shared_dir = PathManager::get().get_shared_dir().to_path_buf();
         let instance_dir = PathManager::get().get_instance_dir().join(&name);
 
-        // Clonar settings una sola vez, fuera del lock lo antes posible
-        let settings_raw = { SettingsManager::get().lock().unwrap().clone() };
-        let java_path = settings_raw.get_jre21_path().to_string_lossy().into_owned();
+        let java_path = SettingsManager::read().get_jre17_path().to_path_buf();
 
         // Si la versión no está descargada, encolarla y salir con error descriptivo
         // El frontend puede escuchar "download-finished" y reintentar el launch
@@ -391,7 +385,7 @@ impl Launcher {
             ));
         }
 
-        let mut user = settings_raw.get_minecraft_user();
+        let mut user = SettingsManager::read().get_minecraft_user();
 
         // Auto-refresh del token Microsoft — el lock de settings se toma y suelta rápido
         if user.user_type == AccountType::Microsoft {
@@ -399,7 +393,9 @@ impl Launcher {
                 info!("Refrescando token de Microsoft...");
                 let rt = refresh_token.clone();
                 let refresh_result = tokio::task::spawn_blocking(move || {
-                    MicrosoftAuth::refresh_token(&rt).map_err(|e| e.to_string())
+                    MicrosoftAuth::default()
+                        .refresh_token(&rt)
+                        .map_err(|e| e.to_string())
                 })
                 .await
                 .map_err(|e| e.to_string())?;
@@ -409,12 +405,11 @@ impl Launcher {
                         info!("Token refrescado para {}", new_user.username);
                         user = new_user;
                         let _ = user.save_tokens();
-                        // Lock tomado y soltado en el scope mínimo posible
                         {
-                            let mut settings = SettingsManager::get().lock().unwrap();
-                            settings.set_user(Some(user.clone()));
-                            // save() escribe a disco — ver nota en SettingsManager
-                            settings.save();
+                            SettingsManager::write(|settings| {
+                                settings.set_user(Some(user.clone()));
+                                settings.save();
+                            })?;
                         }
                     }
                     Err(e) => {
@@ -427,12 +422,12 @@ impl Launcher {
             }
         }
 
-        let min_mem = format!("{}G", settings_raw.min_memory);
-        let max_mem = format!("{}G", settings_raw.max_memory);
+        let min_mem = format!("{}G", SettingsManager::read().get_min_memory());
+        let max_mem = format!("{}G", SettingsManager::read().get_max_memory());
         let options = LaunchOptions::new().with_demo(false);
 
         let mut custom_env: HashMap<String, String> = HashMap::new();
-        if settings_raw.force_gpu {
+        if SettingsManager::read().force_gpu {
             custom_env.insert("DRI_PRIME".to_string(), "1".to_string());
         }
 

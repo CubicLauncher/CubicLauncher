@@ -89,7 +89,14 @@
     });
 </script>
 
-<div class="notification-toast" class:removing role="alert" onclick={dismiss}>
+<div
+    class="notification-toast"
+    class:removing
+    role="button"
+    tabindex="0"
+    onclick={dismiss}
+    onkeydown={(e) => (e.key === "Enter" || e.key === " ") && dismiss()}
+>
     <!-- gloss superior -->
     <div class="notification-gloss" aria-hidden="true"></div>
 

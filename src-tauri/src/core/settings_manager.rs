@@ -1,14 +1,15 @@
+use crate::core::errors::SettingsError;
 use crate::core::path_manager::PathManager;
 use claunch_rs::MinecraftUser;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::sync::{LazyLock, Mutex};
+use std::sync::{LazyLock, RwLock};
 use tracing::{error, warn};
 
 // ── Static global ─────────────────────────────────────────────────────────────
 
-static SETTINGS: LazyLock<Mutex<SettingsManager>> =
-    LazyLock::new(|| Mutex::new(SettingsManager::load()));
+static SETTINGS: LazyLock<RwLock<SettingsManager>> =
+    LazyLock::new(|| RwLock::new(SettingsManager::load()));
 
 // ── Defaults (serde) ──────────────────────────────────────────────────────────
 
@@ -92,10 +93,20 @@ impl Default for SettingsManager {
 }
 
 impl SettingsManager {
-    // ── Global ────────────────────────────────────────────────────────────────
+    pub fn read() -> std::sync::RwLockReadGuard<'static, SettingsManager> {
+        SETTINGS.read().unwrap_or_else(|e| e.into_inner())
+    }
 
-    pub fn get() -> &'static Mutex<SettingsManager> {
-        &SETTINGS
+    pub fn write(f: impl FnOnce(&mut SettingsManager)) -> Result<(), SettingsError> {
+        let mut settings = SETTINGS
+            .write()
+            .map_err(|e| SettingsError::LockPoisoned(e.to_string()))?;
+        f(&mut settings);
+        Ok(())
+    }
+
+    pub fn snapshot() -> SettingsManager {
+        SETTINGS.read().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
     // ── Getters ───────────────────────────────────────────────────────────────

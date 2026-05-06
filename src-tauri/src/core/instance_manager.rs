@@ -1,3 +1,4 @@
+use crate::core::{FsError, InstanceError};
 use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -249,7 +250,7 @@ impl InstanceHandle {
             .read()
             .await
             .min_memory
-            .unwrap_or_else(|| SettingsManager::get().lock().unwrap().get_min_memory())
+            .unwrap_or_else(|| SettingsManager::read().get_min_memory())
     }
 
     pub async fn get_max_memory(&self) -> u32 {
@@ -257,7 +258,7 @@ impl InstanceHandle {
             .read()
             .await
             .max_memory
-            .unwrap_or_else(|| SettingsManager::get().lock().unwrap().get_max_memory())
+            .unwrap_or_else(|| SettingsManager::read().get_max_memory())
     }
 
     pub async fn get_instance_dir(&self) -> PathBuf {
@@ -392,23 +393,34 @@ impl InstanceManager {
         }
     }
 
-    pub async fn create_instance(&self, name: String, version: String, icon: Option<String>) {
-        if let Err(e) = validate_instance_name(&name) {
-            error!("Error al crear instancia: {}", e);
-            return;
-        }
+    pub async fn create_instance(
+        &self,
+        name: String,
+        version: String,
+        icon: Option<String>,
+    ) -> Result<String, InstanceError> {
+        validate_instance_name(&name).map_err(|e| InstanceError::InstNameParse(e))?;
 
         let mut data = InstanceData::new(name, version, icon);
-        if let Err(e) = data.save().await {
-            error!("Error al guardar instancia nueva: {:?}", e);
-            return;
-        }
+        data.save().await.map_err(|e| {
+            InstanceError::Fs(FsError::WriteFile {
+                path: data
+                    .get_instance_dir()
+                    .join("instance.cub")
+                    .to_string_lossy()
+                    .to_string(),
+                source: e,
+            })
+        })?;
 
+        let uuid = data.uuid.clone();
         let handle = InstanceHandle::new(data);
         self.instances
             .write()
             .await
             .insert(handle.uuid.clone(), handle);
+
+        Ok(uuid)
     }
 
     pub async fn get_handle(&self, uuid: &str) -> Option<InstanceHandle> {

@@ -1,43 +1,16 @@
 use crate::core::{InstanceDto, InstanceManager, Launcher, PathManager};
 use std::path::PathBuf;
-use tauri::Manager;
+use tauri::Emitter;
 use tracing::error;
 
 #[tauri::command]
-pub async fn launch(app: tauri::AppHandle, instance_id: String) -> Result<(), String> {
+pub async fn launch(instance_id: String) -> Result<(), String> {
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&instance_id).await else {
         return Err("Instancia no encontrada".to_string());
     };
 
     let result = Launcher::get().launch(handle.clone()).await;
-
-    if result.is_ok() {
-        let settings = crate::core::SettingsManager::get()
-            .lock()
-            .map_err(|e| format!("No se pudieron bloquear los ajustes: {}", e))?;
-        if settings.close_launcher_on_play {
-            let windows = app.webview_windows();
-            for window in windows.values() {
-                let _ = window.hide();
-            }
-
-            let app_clone = app.clone();
-            tokio::spawn(async move {
-                loop {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
-                    if handle.check_and_detach() {
-                        let windows = app_clone.webview_windows();
-                        for window in windows.values() {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                        break;
-                    }
-                }
-            });
-        }
-    }
 
     result
 }
