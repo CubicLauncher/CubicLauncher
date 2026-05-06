@@ -398,7 +398,7 @@ impl InstanceManager {
         name: String,
         version: String,
         icon: Option<String>,
-    ) -> Result<String, InstanceError> {
+    ) -> Result<InstanceHandle, InstanceError> {
         validate_instance_name(&name).map_err(|e| InstanceError::InstNameParse(e))?;
 
         let mut data = InstanceData::new(name, version, icon);
@@ -413,14 +413,13 @@ impl InstanceManager {
             })
         })?;
 
-        let uuid = data.uuid.clone();
         let handle = InstanceHandle::new(data);
         self.instances
             .write()
             .await
-            .insert(handle.uuid.clone(), handle);
+            .insert(handle.uuid.clone(), handle.clone());
 
-        Ok(uuid)
+        Ok(handle)
     }
 
     pub async fn get_handle(&self, uuid: &str) -> Option<InstanceHandle> {

@@ -1,6 +1,5 @@
-use crate::core::{InstanceDto, InstanceManager, Launcher, PathManager};
+use crate::core::{AppEvent, InstanceDto, InstanceManager, Launcher, PathManager, emit};
 use std::path::PathBuf;
-use tauri::Emitter;
 use tracing::error;
 
 #[tauri::command]
@@ -31,10 +30,24 @@ pub async fn get_instances() -> Vec<InstanceDto> {
 }
 
 #[tauri::command]
-pub async fn create_instance(name: String, version: String, icon: Option<String>) {
-    InstanceManager::get()
+pub async fn create_instance(
+    name: String,
+    version: String,
+    icon: Option<String>,
+) -> Result<(), String> {
+    match InstanceManager::get()
         .create_instance(name, version, icon)
-        .await;
+        .await
+    {
+        Ok(d) => {
+            emit(AppEvent::InstanceCreated {
+                id: d.uuid.clone(),
+                dto: d.to_dto().await,
+            });
+            Ok(())
+        }
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 #[tauri::command]

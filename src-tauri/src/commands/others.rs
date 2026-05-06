@@ -2,6 +2,7 @@ use crate::core::{InstanceManager, InstancesPollingPayload};
 use tauri::{AppHandle, Emitter};
 use tracing::debug;
 
+#[deprecated(since = "26.4.3", note = "Por favor usa el nuevo EventBus")]
 #[tauri::command]
 pub fn start_polling(app: AppHandle) {
     tauri::async_runtime::spawn(async move {

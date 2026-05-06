@@ -53,6 +53,10 @@ pub fn run() {
             });
             Ok(())
         })
+        .setup(|app| {
+            core::init(app.handle().clone());
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

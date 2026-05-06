@@ -1,13 +1,13 @@
 use std::sync::OnceLock;
 
 use serde::Serialize;
-use tauri::ipc::Channel;
+use tauri::{AppHandle, Emitter};
 
 use crate::core::InstanceDto;
 
-static CHANNEL: OnceLock<Channel<AppEvent>> = OnceLock::new();
+static APP: OnceLock<AppHandle> = OnceLock::new();
 
-#[derive(Serialize, Clone)]
+#[derive(Clone, Serialize)]
 pub enum AppEvent {
     InstanceStarted { id: String },
     InstanceDeleted { id: String },
@@ -17,31 +17,14 @@ pub enum AppEvent {
     DFinish { version: String },
 }
 
-impl std::fmt::Display for AppEvent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AppEvent::InstanceStarted { id } => write!(f, "InstanceStarted({id})"),
-            AppEvent::InstanceDeleted { id } => write!(f, "InstanceDeleted({id})"),
-            AppEvent::InstanceEdited { id } => write!(f, "InstanceEdited({id})"),
-            AppEvent::InstanceCreated { id, dto: _ } => write!(f, "InstanceCreated({id})"),
-            AppEvent::DProgress { version, progress } => {
-                write!(f, "DProgress({version}/{progress})")
-            }
-            AppEvent::DFinish { version } => write!(f, "DFinish({version})"),
-        }
-    }
-}
-
-pub fn activate(channel: Channel<AppEvent>) {
-    CHANNEL.set(channel).ok();
+pub fn init(app: AppHandle) {
+    let _ = APP.set(app);
 }
 
 pub fn emit(event: AppEvent) {
-    match CHANNEL.get() {
-        Some(ch) => {
-            ch.send(event)
-                .unwrap_or_else(|e| tracing::warn!("Error sending event: {}", e));
+    if let Some(app) = APP.get() {
+        if let Err(err) = app.emit("app-event", event) {
+            tracing::warn!("failed to emit event: {}", err);
         }
-        None => tracing::debug!("EventBus no esta activo, tirando: {}", event),
     }
 }
