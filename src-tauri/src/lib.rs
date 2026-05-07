@@ -49,12 +49,9 @@ pub fn run() {
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 core::DownloadQueue::init(Some(handle.clone())).await;
-                core::Launcher::init().set_handle(handle);
+                core::Launcher::init().set_handle(handle.clone());
+                core::init(handle);
             });
-            Ok(())
-        })
-        .setup(|app| {
-            core::init(app.handle().clone());
             Ok(())
         })
         .run(tauri::generate_context!())
