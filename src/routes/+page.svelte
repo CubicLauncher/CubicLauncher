@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import "../styles/App.css";
     import { launcherStore } from "$lib/state/state.svelte";
-    import { getVersions, initPolling } from "$lib/api/launcherService";
+    import { getVersions } from "$lib/api/launcherService";
     import type { InstanceDto } from "$lib/types/types";
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
     import InstanceView from "$lib/components/instances/InstanceView.svelte";
@@ -21,32 +21,38 @@
     let versionDownloaderOpen = $state(false);
     let openCreateModal = $state(false);
 
-    onMount(() => {
-        getVersions();
-        const unlistenPromise = initPolling();
-        invoke("start_polling");
+    onMount(async () => {
+        await getVersions();
 
-        // Auto-select first instance if available
-        if (launcherStore.loadedInstances.length > 0 && !selectedInstance) {
-            selectedInstance = launcherStore.loadedInstances[0];
+        const firstInstance = launcherStore.loadedInstances[0];
+
+        if (firstInstance && !selectedInstance) {
+            selectedInstance = firstInstance;
         }
+
         if (launcherStore.settings.auto_updates) {
             checkForUpdates(true);
         }
-        return () => {
-            unlistenPromise.then((unlisten) => unlisten());
-        };
     });
     $effect(() => {
         const current = selectedInstance;
-        if (current && launcherStore.loadedInstances.length > 0) {
-            const updated = launcherStore.loadedInstances.find(
-                (i) => i.uuid === current.uuid,
-            );
 
-            if (updated && updated !== current) {
-                selectedInstance = updated;
-            }
+        if (!current) return;
+
+        const updated = launcherStore.loadedInstances.find(
+            (i) => i.uuid === current.uuid,
+        );
+
+        if (!updated) return;
+
+        const changed =
+            updated.name !== current.name ||
+            updated.version !== current.version ||
+            updated.status !== current.status ||
+            updated.icon !== current.icon;
+
+        if (changed) {
+            selectedInstance = updated;
         }
     });
 </script>

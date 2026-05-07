@@ -234,7 +234,10 @@
                         height="12"
                     />
                 </div>
-                <span class="user-status" class:premium={launcherStore.settings.user}>
+                <span
+                    class="user-status"
+                    class:premium={launcherStore.settings.user}
+                >
                     {launcherStore.settings.user
                         ? t("userMenu.premium")
                         : t("userMenu.offline")}

@@ -312,13 +312,8 @@ impl DownloadQueue {
 
             let _ = monitor_task.await;
 
-            // Limpiar handles terminados para no acumular memoria indefinidamente
-            // Conservamos los Error para que el frontend pueda consultarlos
-            queue
-                .active
-                .write()
-                .await
-                .retain(|_, h| !matches!(h.get_status(), DownloadStatus::Done));
+            // evitar q acomule descargas fallidas
+            queue.active.write().await.retain(|_, h| h.is_active());
         }
 
         error!("Worker de descargas terminó inesperadamente — el channel fue cerrado");

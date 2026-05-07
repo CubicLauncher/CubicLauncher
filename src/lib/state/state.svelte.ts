@@ -3,6 +3,7 @@ import type {
   Settings,
   Notification,
   NotificationType,
+  AppEvent,
 } from "../types/types";
 
 export interface PendingUpdate {

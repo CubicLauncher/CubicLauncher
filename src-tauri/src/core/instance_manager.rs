@@ -436,11 +436,7 @@ impl InstanceManager {
 
     pub async fn get_all_dtos(&self) -> Vec<InstanceDto> {
         let handles = self.get_all_handles().await;
-        let mut dtos = Vec::with_capacity(handles.len());
-        for handle in &handles {
-            dtos.push(handle.to_dto().await);
-        }
-        dtos
+        futures::future::join_all(handles.iter().map(|h| h.to_dto())).await
     }
 
     /// Sin await — lee el AtomicU8 directamente por cada handle

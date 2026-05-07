@@ -73,3 +73,30 @@ export interface Notification {
   message: string;
   timeout?: number;
 }
+
+export type AppEvent =
+  | {
+      type: "InstanceStarted";
+      data: {
+        id: string;
+      };
+    }
+  | {
+      type: "InstanceDeleted";
+      data: {
+        id: string;
+      };
+    }
+  | {
+      type: "InstanceEdited";
+      data: {
+        id: string;
+      };
+    }
+  | {
+      type: "InstanceCreated";
+      data: {
+        id: string;
+        dto: InstanceDto;
+      };
+    };
