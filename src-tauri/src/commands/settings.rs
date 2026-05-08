@@ -23,6 +23,7 @@ pub struct JavaPaths {
     jre8: String,
     jre17: String,
     jre21: String,
+    jre25: String,
 }
 
 #[command]
@@ -31,6 +32,7 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
         jre8: String::new(),
         jre17: String::new(),
         jre21: String::new(),
+        jre25: String::new(),
     };
 
     #[cfg(target_os = "windows")]
@@ -64,6 +66,10 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
                             } else if name.contains("-21") || name.contains("21.") {
                                 if paths.jre21.is_empty() {
                                     paths.jre21 = exact_java.to_string_lossy().into_owned();
+                                }
+                            } else if name.contains("-25") || name.contains("25.") {
+                                if paths.jre25.is_empty() {
+                                    paths.jre25 = exact_java.to_string_lossy().into_owned();
                                 }
                             }
                         }
@@ -105,6 +111,13 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
                             if paths.jre21.is_empty() {
                                 paths.jre21 = exact_java.to_string_lossy().into_owned();
                             }
+                        } else if name.contains("-25-")
+                            || name.ends_with("-25")
+                            || name.contains("25-")
+                        {
+                            if paths.jre25.is_empty() {
+                                paths.jre25 = exact_java.to_string_lossy().into_owned();
+                            }
                         }
                     }
                 }
@@ -123,6 +136,11 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
             }
         }
         if paths.jre21.is_empty() {
+            if Path::new("/usr/bin/java").exists() {
+                paths.jre21 = "/usr/bin/java".to_string();
+            }
+        }
+        if paths.jre25.is_empty() {
             if Path::new("/usr/bin/java").exists() {
                 paths.jre21 = "/usr/bin/java".to_string();
             }

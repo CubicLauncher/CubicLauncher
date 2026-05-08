@@ -49,6 +49,8 @@ pub struct SettingsManager {
     pub jre17_path: PathBuf,
     #[serde(default)]
     pub jre21_path: PathBuf,
+    #[serde(default)]
+    pub jre25_path: PathBuf,
     #[serde(default = "default_lang")]
     pub language: String,
     #[serde(default = "default_true")]
@@ -79,6 +81,7 @@ impl Default for SettingsManager {
             jre8_path: PathBuf::new(),
             jre17_path: PathBuf::new(),
             jre21_path: PathBuf::new(),
+            jre25_path: PathBuf::new(),
             language: String::from("es"),
             auto_updates: true,
             show_error_console: false,
@@ -129,7 +132,9 @@ impl SettingsManager {
     pub fn get_jre21_path(&self) -> &Path {
         &self.jre21_path
     }
-
+    pub fn get_jre25_path(&self) -> &Path {
+        &self.jre25_path
+    }
     pub fn get_minecraft_user(&self) -> MinecraftUser {
         match &self.user {
             Some(user) => {
@@ -185,7 +190,10 @@ impl SettingsManager {
         self.jre21_path = path;
         self.dirty = true;
     }
-
+    pub fn set_jre25_path(&mut self, path: PathBuf) {
+        self.jre25_path = path;
+        self.dirty = true;
+    }
     // ── Persistencia ──────────────────────────────────────────────────────────
 
     /// Serializa y escribe a disco.

@@ -34,7 +34,6 @@ pub fn run() {
             commands::download::get_available_versions,
             commands::download::get_fabric_versions,
             commands::download::download_fabric,
-            commands::others::start_polling,
             commands::others::open_url,
             commands::settings::get_settings,
             commands::settings::update_settings,

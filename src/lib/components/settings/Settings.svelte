@@ -33,11 +33,16 @@
 
     async function autoDetectJava() {
         try {
-            const paths: { jre8: string; jre17: string; jre21: string } =
-                await invoke("detect_java_paths");
+            const paths: {
+                jre8: string;
+                jre17: string;
+                jre21: string;
+                jre25: string;
+            } = await invoke("detect_java_paths");
             if (paths.jre8) launcherStore.settings.jre8_path = paths.jre8;
             if (paths.jre17) launcherStore.settings.jre17_path = paths.jre17;
             if (paths.jre21) launcherStore.settings.jre21_path = paths.jre21;
+            if (paths.jre25) launcherStore.settings.jre25_path = paths.jre25;
         } catch (e) {
             console.error("Failed to detect java paths", e);
         }

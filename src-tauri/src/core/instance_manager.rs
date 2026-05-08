@@ -1,5 +1,6 @@
 use crate::core::{FsError, InstanceError};
 use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
+use launchwerk::InstanceHandle as IHandleLaunchwerk;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -153,7 +154,7 @@ pub struct InstanceHandle {
     pub uuid: String,
     data: Arc<RwLock<InstanceData>>,
     status: Arc<AtomicStatus>,
-    process: Arc<Mutex<Option<Child>>>,
+    handle: Option<Arc<IHandleLaunchwerk>>,
 }
 
 impl InstanceHandle {
@@ -162,7 +163,7 @@ impl InstanceHandle {
             uuid: data.uuid.clone(),
             data: Arc::new(RwLock::new(data)),
             status: Arc::new(AtomicStatus::new()),
-            process: Arc::new(Mutex::new(None)),
+            handle: None,
         }
     }
 
@@ -190,49 +191,15 @@ impl InstanceHandle {
 
     // ── Proceso ───────────────────────────────────────────────────────────
 
-    pub fn attach_process(&self, child: Child) {
-        *self.process.lock().unwrap() = Some(child);
+    pub fn attach_handle(&mut self, handle: Arc<IHandleLaunchwerk>) {
+        self.handle = Some(handle);
     }
 
-    pub fn kill(&self) {
-        let mut guard = self.process.lock().unwrap();
-        if let Some(ref mut child) = *guard {
-            let _ = child.kill();
+    pub async fn kill(&self) {
+        if let Some(handle) = &self.handle {
+            handle.kill().await;
         }
-        *guard = None;
-        drop(guard);
         self.set_status(InstanceStatus::Off);
-    }
-
-    /// Retorna true cuando el proceso terminó.
-    /// Actualiza el status a Off o Error según el exit code.
-    pub fn check_and_detach(&self) -> bool {
-        let mut guard = self.process.lock().unwrap();
-        match *guard {
-            None => true,
-            Some(ref mut child) => match child.try_wait() {
-                Ok(Some(exit)) => {
-                    *guard = None;
-                    drop(guard);
-                    if exit.success() {
-                        self.set_status(InstanceStatus::Off);
-                    } else {
-                        self.set_status(InstanceStatus::Error(format!(
-                            "Proceso terminó con código {:?}",
-                            exit.code()
-                        )));
-                    }
-                    true
-                }
-                Ok(None) => false,
-                Err(e) => {
-                    *guard = None;
-                    drop(guard);
-                    self.set_status(InstanceStatus::Error(e.to_string()));
-                    true
-                }
-            },
-        }
     }
 
     // ── Lecturas de data ──────────────────────────────────────────────────

@@ -1,16 +1,18 @@
 use crate::core::SettingsManager;
 use crate::core::instance_manager::{InstanceHandle, InstanceStatus};
 use crate::core::path_manager::PathManager;
+use claunch_rs::AccountType;
 use claunch_rs::auth::microsoft::MicrosoftAuth;
-use claunch_rs::resolvers::{CommandBuilder, DependencyResolver};
-use claunch_rs::{AccountType, LaunchOptions, VersionInfo};
+use launchwerk::models::VersionManifest;
+use launchwerk::{LaunchConfig, Launchwerk};
 use proton::{DownloadProgress, MinecraftDownloader, resolve_version_data};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
+use tokio::fs;
+use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::{RwLock, mpsc};
 use tracing::{error, info, trace, warn};
-
 // ── Statics ───────────────────────────────────────────────────────────────────
 
 static LAUNCHER: OnceLock<Arc<Launcher>> = OnceLock::new();
@@ -327,6 +329,7 @@ impl DownloadQueue {
 
 pub struct Launcher {
     app_handle: std::sync::Mutex<Option<tauri::AppHandle>>,
+    lw: Launchwerk,
 }
 
 impl Launcher {
@@ -337,6 +340,7 @@ impl Launcher {
     pub fn init() -> Arc<Self> {
         let launcher = Arc::new(Self {
             app_handle: std::sync::Mutex::new(None),
+            lw: Launchwerk::new(PathManager::get().get_shared_dir().to_path_buf()),
         });
         let _ = LAUNCHER.set(launcher.clone());
         launcher
@@ -347,7 +351,7 @@ impl Launcher {
     }
 
     pub async fn launch(&self, handle: InstanceHandle) -> Result<(), String> {
-        trace!("=== CLaunch ===");
+        trace!("=== CubicLaunchwerk ===");
 
         if handle.is_busy() {
             let msg = "La instancia ya está corriendo o iniciando".to_string();
@@ -356,13 +360,17 @@ impl Launcher {
         }
         handle.set_status(InstanceStatus::Starting);
 
-        // Leer todo lo necesario antes del spawn_blocking
+        let settings_m = SettingsManager::snapshot();
+
         let version = handle.get_version().await;
         let name = handle.get_name().await;
         let shared_dir = PathManager::get().get_shared_dir().to_path_buf();
         let instance_dir = PathManager::get().get_instance_dir().join(&name);
 
-        let java_path = SettingsManager::read().get_jre17_path().to_path_buf();
+        // Sacar unwrap
+        if !instance_dir.exists() {
+            fs::create_dir(&instance_dir).await.unwrap();
+        }
 
         // Si la versión no está descargada, encolarla y salir con error descriptivo
         // El frontend puede escuchar "download-finished" y reintentar el launch
@@ -379,8 +387,20 @@ impl Launcher {
                 version
             ));
         }
-
+        // TODO: Sacar unwrap
+        let manifest = VersionManifest::from_file(version_json).unwrap();
         let mut user = SettingsManager::read().get_minecraft_user();
+
+        let java_path = match manifest.java_version {
+            Some(ref v) => match v.major_version {
+                25 => settings_m.get_jre25_path(),
+                21 => settings_m.get_jre21_path(),
+                17 => settings_m.get_jre17_path(),
+                8 => settings_m.get_jre8_path(),
+                _ => settings_m.get_jre21_path(),
+            },
+            None => settings_m.get_jre25_path(),
+        };
 
         // Auto-refresh del token Microsoft — el lock de settings se toma y suelta rápido
         if user.user_type == AccountType::Microsoft {
@@ -417,130 +437,28 @@ impl Launcher {
             }
         }
 
-        let min_mem = format!("{}G", SettingsManager::read().get_min_memory());
-        let max_mem = format!("{}G", SettingsManager::read().get_max_memory());
-        let options = LaunchOptions::new().with_demo(false);
+        let min_mem = format!("{}G", settings_m.get_min_memory());
+        let max_mem = format!("{}G", settings_m.get_max_memory());
+        let options = LaunchConfig::builder()
+            .java_path(java_path)
+            .username(user.username)
+            .ram(min_mem, max_mem)
+            .cracked(true)
+            .build();
 
-        let mut custom_env: HashMap<String, String> = HashMap::new();
-        if SettingsManager::read().force_gpu {
-            custom_env.insert("DRI_PRIME".to_string(), "1".to_string());
-        }
+        let lw_handle = self.lw.prepare(manifest, options, instance_dir);
 
-        let handle_for_monitor = handle.clone();
-
-        let child_result = tokio::task::spawn_blocking(move || {
-            let info = VersionInfo::new(&version_json, &shared_dir, &instance_dir)
-                .map_err(|e| e.to_string())?;
-
-            let mut resolver =
-                DependencyResolver::new(info.lib_dir.clone(), info.natives_dir.clone());
-            if info.has_inheritance() {
-                if let Some(base_data) = &info.base_version_data {
-                    resolver.process_version(base_data, false);
-                }
-            }
-            resolver.process_version(&info.version_data, true);
-            let classpath = resolver.build_classpath(&info);
-
-            let user_type_str = match user.user_type {
-                AccountType::Cracked => "mojang",
-                AccountType::Microsoft => "msa",
-            };
-
-            let mut vars = HashMap::new();
-            vars.insert("auth_player_name".to_string(), user.username.clone());
-            vars.insert("version_name".to_string(), info.version_id.clone());
-            vars.insert(
-                "game_directory".to_string(),
-                instance_dir.display().to_string(),
-            );
-            vars.insert(
-                "assets_root".to_string(),
-                info.assets_dir.display().to_string(),
-            );
-            vars.insert(
-                "assets_index_name".to_string(),
-                info.get_assets_index_name(),
-            );
-            vars.insert("auth_uuid".to_string(), user.uuid.clone());
-            vars.insert("auth_access_token".to_string(), user.access_token.clone());
-            vars.insert("user_type".to_string(), user_type_str.to_string());
-            vars.insert("user_properties".to_string(), "{}".to_string());
-            vars.insert(
-                "version_type".to_string(),
-                info.get_property("type").unwrap_or("release").to_string(),
-            );
-            #[cfg(windows)]
-            vars.insert("classpath_separator".to_string(), ";".to_string());
-            #[cfg(not(windows))]
-            vars.insert("classpath_separator".to_string(), ":".to_string());
-            vars.insert(
-                "library_directory".to_string(),
-                info.lib_dir.display().to_string(),
-            );
-            vars.insert(
-                "natives_directory".to_string(),
-                info.natives_dir.display().to_string(),
-            );
-
-            let main_class = info
-                .get_property("mainClass")
-                .ok_or("Main class not found")?;
-
-            let mut builder = CommandBuilder::new(&info, vars, options);
-            builder
-                .add_java(&java_path)
-                .add_jvm_args(&min_mem, &max_mem, user.user_type == AccountType::Cracked)
-                .add_classpath(&classpath)
-                .add_main_class(main_class)
-                .add_game_args(854, 480);
-
-            let args = builder.build();
-            let mut cmd = std::process::Command::new(&args[0]);
-            cmd.args(&args[1..])
-                .current_dir(&instance_dir)
-                .stdin(std::process::Stdio::inherit())
-                .stdout(std::process::Stdio::inherit())
-                .stderr(std::process::Stdio::inherit());
-
-            for (key, value) in custom_env {
-                cmd.env(key, value);
-            }
-
-            cmd.spawn().map_err(|e| e.to_string())
-        })
-        .await;
-
-        match child_result {
-            Ok(Ok(child)) => {
-                handle.attach_process(child);
-                handle.set_status(InstanceStatus::Started);
-                handle.update_last_played().await;
-
-                // Monitor de proceso — detecta cuando termina
-                tokio::spawn(async move {
-                    loop {
-                        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-                        if handle_for_monitor.check_and_detach() {
-                            break;
-                        }
-                    }
-                });
-
-                Ok(())
-            }
-            Ok(Err(e)) => {
-                let msg = format!("Launch failed: {}", e);
-                error!("❌ {}", msg);
-                handle.set_status(InstanceStatus::Error(msg.clone()));
-                Err(msg)
+        match lw_handle.launch().await {
+            Ok(_) => {
+                info!("Handle {} lanzado", lw_handle.id().to_string());
+                lw_handle.wait().await;
+                handle.set_status(InstanceStatus::Off);
             }
             Err(e) => {
-                let msg = format!("spawn_blocking panicked: {}", e);
-                error!("❌ {}", msg);
-                handle.set_status(InstanceStatus::Error(msg.clone()));
-                Err(msg)
+                error!("{}", e.to_string());
+                handle.set_status(InstanceStatus::Error(e.to_string()));
             }
         }
+        Ok(())
     }
 }

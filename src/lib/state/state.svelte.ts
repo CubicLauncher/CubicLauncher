@@ -38,6 +38,7 @@ export const launcherStore = $state<LauncherState>({
     jre8_path: "",
     jre17_path: "",
     jre21_path: "",
+    jre25_path: "",
     language: "es",
     auto_updates: true,
     close_launcher_on_play: true,

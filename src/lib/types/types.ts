@@ -37,6 +37,7 @@ export interface Settings {
   jre8_path: string;
   jre17_path: string;
   jre21_path: string;
+  jre25_path: string;
   language: string;
   auto_updates: boolean;
   close_launcher_on_play: boolean;

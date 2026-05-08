@@ -21,7 +21,7 @@ pub async fn kill_instance(uuid: String) {
         error!("Instancia no encontrada");
         return;
     };
-    handle.kill();
+    handle.kill().await;
 }
 
 #[tauri::command]
