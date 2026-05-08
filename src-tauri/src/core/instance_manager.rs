@@ -1,10 +1,9 @@
-use crate::core::{FsError, InstanceError};
+use crate::core::{AppEvent, FsError, InstanceError, emit};
 use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
 use launchwerk::InstanceHandle as IHandleLaunchwerk;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::process::Child;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::{fs, io};
@@ -180,6 +179,9 @@ impl InstanceHandle {
 
     pub fn set_status(&self, status: InstanceStatus) {
         self.status.set(status);
+        emit(AppEvent::InstanceEdited {
+            id: self.uuid.to_string(),
+        });
     }
 
     pub fn is_busy(&self) -> bool {
@@ -195,11 +197,15 @@ impl InstanceHandle {
         self.handle = Some(handle);
     }
 
-    pub async fn kill(&self) {
+    pub async fn kill(&self) -> Result<(), InstanceError> {
         if let Some(handle) = &self.handle {
-            handle.kill().await;
+            if let Err(e) = handle.kill().await {
+                error!("Error al cerrar instancia {}", e.to_string());
+            }
         }
         self.set_status(InstanceStatus::Off);
+
+        Ok(())
     }
 
     // ── Lecturas de data ──────────────────────────────────────────────────
@@ -499,23 +505,6 @@ pub struct InstanceDto {
     pub icon: Option<String>,
     pub uuid: String,
     pub path: PathBuf,
-}
-
-#[derive(Serialize, Clone)]
-pub struct InstancesPollingPayload {
-    running: Vec<String>,
-    all: Vec<InstanceDto>,
-    count: usize,
-}
-
-impl InstancesPollingPayload {
-    pub fn new(running: Vec<String>, all: Vec<InstanceDto>, count: usize) -> Self {
-        Self {
-            running,
-            all,
-            count,
-        }
-    }
 }
 
 // ── Validación ────────────────────────────────────────────────────────────────

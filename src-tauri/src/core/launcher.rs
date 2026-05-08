@@ -1,16 +1,14 @@
 use crate::core::SettingsManager;
 use crate::core::instance_manager::{InstanceHandle, InstanceStatus};
 use crate::core::path_manager::PathManager;
-use claunch_rs::AccountType;
-use claunch_rs::auth::microsoft::MicrosoftAuth;
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
+use launchwerk::{auth::AccountType, auth::microsoft::MicrosoftAuth};
 use proton::{DownloadProgress, MinecraftDownloader, resolve_version_data};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
 use tokio::fs;
-use tokio::sync::broadcast::error::RecvError;
 use tokio::sync::{RwLock, mpsc};
 use tracing::{error, info, trace, warn};
 // ── Statics ───────────────────────────────────────────────────────────────────
@@ -447,10 +445,11 @@ impl Launcher {
             .build();
 
         let lw_handle = self.lw.prepare(manifest, options, instance_dir);
-
+        handle.update_last_played().await;
         match lw_handle.launch().await {
             Ok(_) => {
                 info!("Handle {} lanzado", lw_handle.id().to_string());
+                handle.set_status(InstanceStatus::Started);
                 lw_handle.wait().await;
                 handle.set_status(InstanceStatus::Off);
             }

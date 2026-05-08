@@ -15,13 +15,18 @@ pub async fn launch(instance_id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn kill_instance(uuid: String) {
+pub async fn kill_instance(uuid: String) -> Result<(), String> {
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&uuid).await else {
         error!("Instancia no encontrada");
-        return;
+        return Err("Instancia no encontrada".to_string());
     };
-    handle.kill().await;
+
+    if let Err(e) = handle.kill().await {
+        return Err(e.to_string());
+    }
+
+    Ok(())
 }
 
 #[tauri::command]

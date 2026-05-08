@@ -1,7 +1,3 @@
-use crate::core::{InstanceManager, InstancesPollingPayload};
-use tauri::{AppHandle, Emitter};
-use tracing::debug;
-
 #[tauri::command]
 pub fn open_url(url: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]

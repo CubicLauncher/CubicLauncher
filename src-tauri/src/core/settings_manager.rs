@@ -1,6 +1,6 @@
 use crate::core::errors::SettingsError;
 use crate::core::path_manager::PathManager;
-use claunch_rs::MinecraftUser;
+use launchwerk::auth::MinecraftUser;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, RwLock};
