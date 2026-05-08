@@ -10,12 +10,28 @@ static APP: OnceLock<AppHandle> = OnceLock::new();
 #[derive(Clone, Serialize)]
 #[serde(tag = "type", content = "data")]
 pub enum AppEvent {
-    InstanceStarted { id: String },
-    InstanceDeleted { id: String },
-    InstanceEdited { id: String },
-    InstanceCreated { id: String, dto: InstanceDto },
-    DProgress { version: String, progress: u32 },
-    DFinish { version: String },
+    InstanceStarted {
+        id: String,
+    },
+    InstanceDeleted {
+        id: String,
+    },
+    InstanceEdited {
+        id: String,
+    },
+    InstanceCreated {
+        id: String,
+        dto: InstanceDto,
+    },
+    DProgress {
+        version: String,
+        current: u32,
+        total: u32,
+        d_type: String,
+    },
+    DFinish {
+        version: String,
+    },
 }
 
 pub fn init(app: AppHandle) {

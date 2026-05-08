@@ -18,5 +18,5 @@ pub enum AuthError {
     SpawnBlocking(String),
 
     #[error(transparent)]
-    Settings(#[from] crate::core::errors::SettingsError),
+    CoreError(#[from] crate::core::errors::CoreError),
 }

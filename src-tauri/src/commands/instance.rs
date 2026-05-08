@@ -9,9 +9,12 @@ pub async fn launch(instance_id: String) -> Result<(), String> {
         return Err("Instancia no encontrada".to_string());
     };
 
-    let result = Launcher::get().launch(handle.clone()).await;
+    Launcher::get()
+        .launch(handle.clone())
+        .await
+        .map_err(|e| e.to_string())?;
 
-    result
+    Ok(())
 }
 
 #[tauri::command]

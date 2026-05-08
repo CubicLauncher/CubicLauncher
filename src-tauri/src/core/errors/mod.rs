@@ -1,14 +1,14 @@
 pub mod auth;
+pub mod core;
 pub mod download;
 pub mod fs;
 pub mod instance;
-pub mod settings;
 
 pub use auth::AuthError;
+pub use core::CoreError;
 pub use download::DownloadError;
 pub use fs::FsError;
 pub use instance::InstanceError;
-pub use settings::SettingsError;
 
 use thiserror::Error;
 
@@ -18,7 +18,7 @@ pub enum AppError {
     Instance(#[from] InstanceError),
 
     #[error(transparent)]
-    Settings(#[from] SettingsError),
+    CoreError(#[from] CoreError),
 
     #[error(transparent)]
     Auth(#[from] AuthError),
@@ -39,8 +39,8 @@ impl From<InstanceError> for String {
         e.to_string()
     }
 }
-impl From<SettingsError> for String {
-    fn from(e: SettingsError) -> String {
+impl From<CoreError> for String {
+    fn from(e: CoreError) -> String {
         e.to_string()
     }
 }

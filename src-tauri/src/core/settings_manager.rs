@@ -1,4 +1,4 @@
-use crate::core::errors::SettingsError;
+use crate::core::errors::CoreError;
 use crate::core::path_manager::PathManager;
 use launchwerk::auth::MinecraftUser;
 use serde::{Deserialize, Serialize};
@@ -100,10 +100,10 @@ impl SettingsManager {
         SETTINGS.read().unwrap_or_else(|e| e.into_inner())
     }
 
-    pub fn write(f: impl FnOnce(&mut SettingsManager)) -> Result<(), SettingsError> {
+    pub fn write(f: impl FnOnce(&mut SettingsManager)) -> Result<(), CoreError> {
         let mut settings = SETTINGS
             .write()
-            .map_err(|e| SettingsError::LockPoisoned(e.to_string()))?;
+            .map_err(|e| CoreError::LockPoisoned(e.to_string()))?;
         f(&mut settings);
         Ok(())
     }

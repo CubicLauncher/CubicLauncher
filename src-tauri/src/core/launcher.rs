@@ -1,6 +1,9 @@
-use crate::core::SettingsManager;
 use crate::core::instance_manager::{InstanceHandle, InstanceStatus};
 use crate::core::path_manager::PathManager;
+use crate::core::{
+    AppError, AppEvent, AuthError, CoreError, DownloadError, FsError, InstanceError,
+    SettingsManager, emit,
+};
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
 use launchwerk::{auth::AccountType, auth::microsoft::MicrosoftAuth};
@@ -49,7 +52,9 @@ impl AtomicDownloadStatus {
         match self.state.load(Ordering::Acquire) {
             DS_DOWNLOADING => DownloadStatus::Downloading,
             DS_DONE => DownloadStatus::Done,
-            DS_ERROR => DownloadStatus::Error(self.error.lock().unwrap().clone()),
+            DS_ERROR => {
+                DownloadStatus::Error(self.error.lock().unwrap_or_else(|e| e.into_inner()).clone())
+            }
             _ => DownloadStatus::Pending,
         }
     }
@@ -60,7 +65,7 @@ impl AtomicDownloadStatus {
             DownloadStatus::Downloading => self.state.store(DS_DOWNLOADING, Ordering::Release),
             DownloadStatus::Done => self.state.store(DS_DONE, Ordering::Release),
             DownloadStatus::Error(e) => {
-                *self.error.lock().unwrap() = e.clone();
+                *self.error.lock().unwrap_or_else(|e| e.into_inner()) = e.clone();
                 self.state.store(DS_ERROR, Ordering::Release);
             }
         }
@@ -165,10 +170,11 @@ impl DownloadQueue {
             app_handle: std::sync::Mutex::new(app_handle),
         });
 
-        // Worker independiente — spawnado una sola vez, vive toda la app
         let queue_clone = queue.clone();
         tokio::spawn(async move {
-            Self::worker(rx, queue_clone).await;
+            if let Err(e) = Self::worker(rx, queue_clone).await {
+                error!("Worker de descargas terminó con error: {}", e);
+            }
         });
 
         let _ = DOWNLOAD_QUEUE.set(queue.clone());
@@ -221,7 +227,10 @@ impl DownloadQueue {
     // Loop independiente — nadie lo lockea desde afuera.
     // Lee del channel, descarga, actualiza el handle.
 
-    async fn worker(mut rx: mpsc::Receiver<String>, queue: Arc<DownloadQueue>) {
+    async fn worker(
+        mut rx: mpsc::Receiver<String>,
+        queue: Arc<DownloadQueue>,
+    ) -> Result<(), AppError> {
         while let Some(version) = rx.recv().await {
             let handle = {
                 let active = queue.active.read().await;
@@ -239,7 +248,6 @@ impl DownloadQueue {
             let version_data = match resolve_version_data(&version).await {
                 Ok(v) => v,
                 Err(_) => {
-                    // Fallback para Fabric: intentar con la versión base
                     if version.starts_with("fabric-loader-") {
                         let game_version = version.split('-').last().unwrap_or("");
                         match resolve_version_data(game_version).await {
@@ -266,30 +274,38 @@ impl DownloadQueue {
             let shared_dir = PathManager::get().get_shared_dir().to_path_buf();
             let mut downloader = MinecraftDownloader::new(shared_dir, version_data);
 
-            // Canal de progreso — el monitor actualiza el handle atómicamente
             let (tx, mut progress_rx) = mpsc::channel::<DownloadProgress>(100);
-            let app_handle = queue.app_handle.lock().unwrap().clone();
+            let app_handle = queue
+                .app_handle
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .clone();
             let handle_for_monitor = handle.clone();
             let version_for_monitor = version.clone();
 
             let monitor_task = tokio::spawn(async move {
                 while let Some(progress) = progress_rx.recv().await {
-                    // Actualizar atómicamente — sin lock
                     handle_for_monitor
                         .update_progress(progress.current as u64, progress.total as u64);
 
-                    if let Some(ref app) = app_handle {
-                        use tauri::Emitter;
-                        let _ = app.emit(
-                            "download-progress",
-                            serde_json::json!({
-                                "version": version_for_monitor,
-                                "current": progress.current,
-                                "total":   progress.total,
-                                "type":    format!("{:?}", progress.download_type),
-                            }),
-                        );
-                    }
+                    // if let Some(ref app) = app_handle {
+                    //     use tauri::Emitter;
+                    //     let _ = app.emit(
+                    //         "download-progress",
+                    //         serde_json::json!({
+                    //             "version": version_for_monitor,
+                    //             "current": progress.current,
+                    //             "total":   progress.total,
+                    //             "type":    format!("{:?}", progress.download_type),
+                    //         }),
+                    //     );
+                    // }
+                    emit(AppEvent::DProgress {
+                        version: version_for_monitor.to_string(),
+                        current: progress.current as u32,
+                        total: progress.total as u32,
+                        d_type: format!("{:?}", progress.download_type),
+                    });
                 }
             });
 
@@ -298,10 +314,7 @@ impl DownloadQueue {
                     info!("Versión {} descargada correctamente", version);
                     handle.set_status(DownloadStatus::Done);
 
-                    if let Some(ref app) = queue.app_handle.lock().unwrap().clone() {
-                        use tauri::Emitter;
-                        let _ = app.emit("download-finished", &version);
-                    }
+                    emit(AppEvent::DFinish { version });
                 }
                 Err(e) => {
                     let msg = format!("No se pudo descargar {}: {:?}", version, e);
@@ -312,11 +325,11 @@ impl DownloadQueue {
 
             let _ = monitor_task.await;
 
-            // evitar q acomule descargas fallidas
             queue.active.write().await.retain(|_, h| h.is_active());
         }
 
         error!("Worker de descargas terminó inesperadamente — el channel fue cerrado");
+        Ok(())
     }
 }
 
@@ -345,16 +358,16 @@ impl Launcher {
     }
 
     pub fn set_handle(&self, handle: tauri::AppHandle) {
-        *self.app_handle.lock().unwrap() = Some(handle);
+        *self.app_handle.lock().unwrap_or_else(|e| e.into_inner()) = Some(handle);
     }
 
-    pub async fn launch(&self, handle: InstanceHandle) -> Result<(), String> {
+    pub async fn launch(&self, handle: InstanceHandle) -> Result<(), AppError> {
         trace!("=== CubicLaunchwerk ===");
 
         if handle.is_busy() {
             let msg = "La instancia ya está corriendo o iniciando".to_string();
             warn!("{}", msg);
-            return Err(msg);
+            return Err(AppError::Instance(InstanceError::AlreadyStarted));
         }
         handle.set_status(InstanceStatus::Starting);
 
@@ -365,9 +378,13 @@ impl Launcher {
         let shared_dir = PathManager::get().get_shared_dir().to_path_buf();
         let instance_dir = PathManager::get().get_instance_dir().join(&name);
 
-        // Sacar unwrap
         if !instance_dir.exists() {
-            fs::create_dir(&instance_dir).await.unwrap();
+            fs::create_dir(&instance_dir)
+                .await
+                .map_err(|e| FsError::CreateDir {
+                    path: instance_dir.to_string_lossy().to_string(),
+                    source: e,
+                })?;
         }
 
         // Si la versión no está descargada, encolarla y salir con error descriptivo
@@ -380,13 +397,11 @@ impl Launcher {
             );
             DownloadQueue::get().enqueue(version.clone()).await;
             handle.set_status(InstanceStatus::Off);
-            return Err(format!(
-                "La versión {} no está descargada. Iniciando descarga automática.",
-                version
-            ));
+            return Err(AppError::Instance(InstanceError::NotFound));
         }
-        // TODO: Sacar unwrap
-        let manifest = VersionManifest::from_file(version_json).unwrap();
+
+        let manifest = VersionManifest::from_file(version_json)
+            .map_err(|e| DownloadError::ParseJson(e.to_string()))?;
         let mut user = SettingsManager::read().get_minecraft_user();
 
         let java_path = match manifest.java_version {
@@ -411,7 +426,7 @@ impl Launcher {
                         .map_err(|e| e.to_string())
                 })
                 .await
-                .map_err(|e| e.to_string())?;
+                .map_err(|e| AuthError::AuthFailed(e.to_string()))?;
 
                 match refresh_result {
                     Ok(new_user) => {
