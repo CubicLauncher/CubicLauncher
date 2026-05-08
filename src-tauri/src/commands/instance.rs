@@ -74,7 +74,7 @@ pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
             .filter(|e| {
                 e.path()
                     .extension()
-                    .map_or(false, |ext| ext.to_ascii_lowercase() == "png")
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
             })
             .collect();
 
@@ -104,7 +104,7 @@ pub async fn get_all_instance_screenshots(instance_name: String) -> Vec<String> 
             .filter(|e| {
                 e.path()
                     .extension()
-                    .map_or(false, |ext| ext.to_ascii_lowercase() == "png")
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
             })
             .collect();
 
@@ -171,11 +171,10 @@ pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<()
         path = path.join(sub);
     }
 
-    if !path.exists() {
-        if let Err(e) = std::fs::create_dir_all(&path) {
+    if !path.exists()
+        && let Err(e) = std::fs::create_dir_all(&path) {
             return Err(format!("No se pudo crear el directorio: {}", e));
         }
-    }
 
     #[cfg(target_os = "windows")]
     {
@@ -234,11 +233,10 @@ pub async fn get_available_logos() -> Vec<String> {
     for path in paths {
         if let Ok(entries) = std::fs::read_dir(path) {
             for entry in entries.flatten() {
-                if let Some(name) = entry.file_name().to_str() {
-                    if name.ends_with(".ico") || name.ends_with(".png") || name.ends_with(".svg") {
+                if let Some(name) = entry.file_name().to_str()
+                    && (name.ends_with(".ico") || name.ends_with(".png") || name.ends_with(".svg")) {
                         logos.push(name.to_string());
                     }
-                }
             }
             break;
         }
@@ -252,11 +250,10 @@ pub async fn get_installed_versions() -> Vec<String> {
     let mut versions = Vec::new();
     if let Ok(entries) = std::fs::read_dir(versions_dir) {
         for entry in entries.flatten() {
-            if entry.path().is_dir() {
-                if let Some(name) = entry.file_name().to_str() {
+            if entry.path().is_dir()
+                && let Some(name) = entry.file_name().to_str() {
                     versions.push(name.to_string());
                 }
-            }
         }
     }
     versions.sort_by(|a, b| b.cmp(a));
@@ -284,8 +281,8 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
     if let Ok(entries) = std::fs::read_dir(mods_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_file() {
-                if let Some(ext) = path.extension() {
+            if path.is_file()
+                && let Some(ext) = path.extension() {
                     let ext_str = ext.to_string_lossy().to_lowercase();
                     let Some(file_name) = path.file_name() else {
                         continue;
@@ -317,10 +314,9 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
                         });
                     }
                 }
-            }
         }
     }
-    mods.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    mods.sort_by_key(|a| a.name.to_lowercase());
     mods
 }
 
@@ -382,7 +378,7 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
             }
         }
     }
-    resourcepacks.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    resourcepacks.sort_by_key(|a| a.name.to_lowercase());
     resourcepacks
 }
 
@@ -399,11 +395,10 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
     if let Ok(entries) = std::fs::read_dir(logs_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_file() {
-                if let Some(file_name) = path.file_name() {
+            if path.is_file()
+                && let Some(file_name) = path.file_name() {
                     logs.push(file_name.to_string_lossy().to_string());
                 }
-            }
         }
     }
     logs.sort_by(|a, b| b.cmp(a));

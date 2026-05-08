@@ -3,8 +3,7 @@ use crate::core::PathManager;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
-const MOJANG_MANIFEST_URL: &'static str =
-    "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
+const MOJANG_MANIFEST_URL: &str = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MinecraftVersion {
@@ -193,10 +192,7 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         );
         let dest_path = lib_base_dir.join(&rel_path);
 
-        let exists = match tokio::fs::try_exists(&dest_path).await {
-            Ok(e) => e,
-            Err(_) => false,
-        };
+        let exists = tokio::fs::try_exists(&dest_path).await.unwrap_or_default();
 
         if !exists {
             if let Some(parent) = dest_path.parent() {
@@ -204,10 +200,10 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
             }
 
             let download_url = format!("{}{}", lib.url, rel_path);
-            if let Ok(res) = reqwest::get(&download_url).await {
-                if let Ok(bytes) = res.bytes().await {
-                    let _ = tokio::fs::write(dest_path, bytes).await;
-                }
+            if let Ok(res) = reqwest::get(&download_url).await
+                && let Ok(bytes) = res.bytes().await
+            {
+                let _ = tokio::fs::write(dest_path, bytes).await;
             }
         }
     }

@@ -111,40 +111,34 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
                             if paths.jre21.is_empty() {
                                 paths.jre21 = exact_java.to_string_lossy().into_owned();
                             }
-                        } else if name.contains("-25-")
+                        } else if (name.contains("-25-")
                             || name.ends_with("-25")
-                            || name.contains("25-")
-                        {
-                            if paths.jre25.is_empty() {
+                            || name.contains("25-"))
+                            && paths.jre25.is_empty() {
                                 paths.jre25 = exact_java.to_string_lossy().into_owned();
                             }
-                        }
                     }
                 }
             }
         }
 
         // Fallbacks if not found
-        if paths.jre8.is_empty() {
-            if Path::new("/usr/bin/java").exists() {
+        if paths.jre8.is_empty()
+            && Path::new("/usr/bin/java").exists() {
                 paths.jre8 = "/usr/bin/java".to_string();
             }
-        }
-        if paths.jre17.is_empty() {
-            if Path::new("/usr/bin/java").exists() {
+        if paths.jre17.is_empty()
+            && Path::new("/usr/bin/java").exists() {
                 paths.jre17 = "/usr/bin/java".to_string();
             }
-        }
-        if paths.jre21.is_empty() {
-            if Path::new("/usr/bin/java").exists() {
+        if paths.jre21.is_empty()
+            && Path::new("/usr/bin/java").exists() {
                 paths.jre21 = "/usr/bin/java".to_string();
             }
-        }
-        if paths.jre25.is_empty() {
-            if Path::new("/usr/bin/java").exists() {
+        if paths.jre25.is_empty()
+            && Path::new("/usr/bin/java").exists() {
                 paths.jre21 = "/usr/bin/java".to_string();
             }
-        }
     }
 
     Ok(paths)

@@ -1,7 +1,7 @@
 use crate::core::instance_manager::{InstanceHandle, InstanceStatus};
 use crate::core::path_manager::PathManager;
 use crate::core::{
-    AppError, AppEvent, AuthError, CoreError, DownloadError, FsError, InstanceError,
+    AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError,
     SettingsManager, emit,
 };
 use launchwerk::models::VersionManifest;
@@ -186,12 +186,11 @@ impl DownloadQueue {
     pub async fn enqueue(&self, version: String) {
         {
             let active = self.active.read().await;
-            if let Some(handle) = active.get(&version) {
-                if handle.is_active() {
+            if let Some(handle) = active.get(&version)
+                && handle.is_active() {
                     warn!("La version {} ya está en cola o descargándose", version);
                     return;
                 }
-            }
         }
 
         trace!("Encolando versión {}", version);
@@ -249,7 +248,7 @@ impl DownloadQueue {
                 Ok(v) => v,
                 Err(_) => {
                     if version.starts_with("fabric-loader-") {
-                        let game_version = version.split('-').last().unwrap_or("");
+                        let game_version = version.split('-').next_back().unwrap_or("");
                         match resolve_version_data(game_version).await {
                             Ok(v) => v,
                             Err(_) => {
@@ -275,7 +274,7 @@ impl DownloadQueue {
             let mut downloader = MinecraftDownloader::new(shared_dir, version_data);
 
             let (tx, mut progress_rx) = mpsc::channel::<DownloadProgress>(100);
-            let app_handle = queue
+            let _app_handle = queue
                 .app_handle
                 .lock()
                 .unwrap_or_else(|e| e.into_inner())
@@ -416,8 +415,8 @@ impl Launcher {
         };
 
         // Auto-refresh del token Microsoft — el lock de settings se toma y suelta rápido
-        if user.user_type == AccountType::Microsoft {
-            if let Some(refresh_token) = &user.refresh_token {
+        if user.user_type == AccountType::Microsoft
+            && let Some(refresh_token) = &user.refresh_token {
                 info!("Refrescando token de Microsoft...");
                 let rt = refresh_token.clone();
                 let refresh_result = tokio::task::spawn_blocking(move || {
@@ -448,7 +447,6 @@ impl Launcher {
                     }
                 }
             }
-        }
 
         let min_mem = format!("{}G", settings_m.get_min_memory());
         let max_mem = format!("{}G", settings_m.get_max_memory());

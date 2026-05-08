@@ -124,8 +124,7 @@ impl InstanceData {
         }
         let dir = self.get_instance_dir();
         tokio_fs::create_dir_all(&dir).await?;
-        let content = serde_json::to_string_pretty(self)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        let content = serde_json::to_string_pretty(self).map_err(io::Error::other)?;
         tokio_fs::write(dir.join("instance.cub"), content).await?;
         self.dirty = false;
         Ok(())
@@ -198,10 +197,10 @@ impl InstanceHandle {
     }
 
     pub async fn kill(&self) -> Result<(), InstanceError> {
-        if let Some(handle) = &self.handle {
-            if let Err(e) = handle.kill().await {
-                error!("Error al cerrar instancia {}", e.to_string());
-            }
+        if let Some(handle) = &self.handle
+            && let Err(e) = handle.kill().await
+        {
+            error!("Error al cerrar instancia {}", e.to_string());
         }
         self.set_status(InstanceStatus::Off);
 
@@ -372,7 +371,7 @@ impl InstanceManager {
         version: String,
         icon: Option<String>,
     ) -> Result<InstanceHandle, InstanceError> {
-        validate_instance_name(&name).map_err(|e| InstanceError::InstNameParse(e))?;
+        validate_instance_name(&name).map_err(InstanceError::InstNameParse)?;
 
         let mut data = InstanceData::new(name, version, icon);
         data.save().await.map_err(|e| {
