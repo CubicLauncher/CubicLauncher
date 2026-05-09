@@ -161,6 +161,7 @@ export async function getSettings(): Promise<Settings | null> {
 export async function updateSettings(settings: Settings): Promise<void> {
   try {
     await invoke("update_settings", { newSettings: settings });
+    console.log(settings);
   } catch (err) {
     console.error("Error al actualizar settings:", err);
   }
@@ -255,7 +256,10 @@ export async function getInstanceLogs(id: string): Promise<string[]> {
   }
 }
 
-export async function readInstanceLog(id: string, filename: string): Promise<string> {
+export async function readInstanceLog(
+  id: string,
+  filename: string,
+): Promise<string> {
   try {
     return await invoke<string>("read_instance_log", { id, filename });
   } catch (err) {
@@ -264,7 +268,11 @@ export async function readInstanceLog(id: string, filename: string): Promise<str
   }
 }
 
-export async function deleteInstanceFile(id: string, subDir: string, filename: string): Promise<void> {
+export async function deleteInstanceFile(
+  id: string,
+  subDir: string,
+  filename: string,
+): Promise<void> {
   try {
     await invoke("delete_instance_file", { id, subDir, filename });
   } catch (err) {
@@ -272,11 +280,30 @@ export async function deleteInstanceFile(id: string, subDir: string, filename: s
   }
 }
 
-export async function addInstanceFile(id: string, subDir: string, sourcePath: string): Promise<void> {
+export async function addInstanceFile(
+  id: string,
+  subDir: string,
+  sourcePath: string,
+): Promise<void> {
   try {
     await invoke("add_instance_file", { id, subDir, sourcePath });
   } catch (err) {
     console.error(`Error al añadir archivo ${sourcePath}:`, err);
     throw err;
+  }
+}
+export async function getDownloadQueue(): Promise<
+  {
+    version: string;
+    status: string;
+    current: number;
+    total: number;
+  }[]
+> {
+  try {
+    return await invoke("get_download_queue");
+  } catch (err) {
+    console.error("Error al obtener la cola de descargas:", err);
+    return [];
   }
 }

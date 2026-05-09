@@ -1,8 +1,7 @@
 use crate::core::instance_manager::{InstanceHandle, InstanceStatus};
 use crate::core::path_manager::PathManager;
 use crate::core::{
-    AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError,
-    SettingsManager, emit,
+    AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, SettingsManager, emit,
 };
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
@@ -187,13 +186,14 @@ impl DownloadQueue {
         {
             let active = self.active.read().await;
             if let Some(handle) = active.get(&version)
-                && handle.is_active() {
-                    warn!("La version {} ya está en cola o descargándose", version);
-                    return;
-                }
+                && handle.is_active()
+            {
+                warn!("La version {} ya está en cola o descargándose", version);
+                return;
+            }
         }
 
-        trace!("Encolando versión {}", version);
+        info!("{} Ha sido encolada en la cola de descargas", &version);
 
         // Registrar el handle antes de enviar al worker
         // para que get_active_downloads() refleje el estado inmediatamente
@@ -416,37 +416,38 @@ impl Launcher {
 
         // Auto-refresh del token Microsoft — el lock de settings se toma y suelta rápido
         if user.user_type == AccountType::Microsoft
-            && let Some(refresh_token) = &user.refresh_token {
-                info!("Refrescando token de Microsoft...");
-                let rt = refresh_token.clone();
-                let refresh_result = tokio::task::spawn_blocking(move || {
-                    MicrosoftAuth::default()
-                        .refresh_token(&rt)
-                        .map_err(|e| e.to_string())
-                })
-                .await
-                .map_err(|e| AuthError::AuthFailed(e.to_string()))?;
+            && let Some(refresh_token) = &user.refresh_token
+        {
+            info!("Refrescando token de Microsoft...");
+            let rt = refresh_token.clone();
+            let refresh_result = tokio::task::spawn_blocking(move || {
+                MicrosoftAuth::default()
+                    .refresh_token(&rt)
+                    .map_err(|e| e.to_string())
+            })
+            .await
+            .map_err(|e| AuthError::AuthFailed(e.to_string()))?;
 
-                match refresh_result {
-                    Ok(new_user) => {
-                        info!("Token refrescado para {}", new_user.username);
-                        user = new_user;
-                        let _ = user.save_tokens();
-                        {
-                            SettingsManager::write(|settings| {
-                                settings.set_user(Some(user.clone()));
-                                settings.save();
-                            })?;
-                        }
-                    }
-                    Err(e) => {
-                        warn!(
-                            "No se pudo refrescar el token: {}. Continuando con el actual...",
-                            e
-                        );
+            match refresh_result {
+                Ok(new_user) => {
+                    info!("Token refrescado para {}", new_user.username);
+                    user = new_user;
+                    let _ = user.save_tokens();
+                    {
+                        SettingsManager::write(|settings| {
+                            settings.set_user(Some(user.clone()));
+                            settings.save();
+                        })?;
                     }
                 }
+                Err(e) => {
+                    warn!(
+                        "No se pudo refrescar el token: {}. Continuando con el actual...",
+                        e
+                    );
+                }
             }
+        }
 
         let min_mem = format!("{}G", settings_m.get_min_memory());
         let max_mem = format!("{}G", settings_m.get_max_memory());

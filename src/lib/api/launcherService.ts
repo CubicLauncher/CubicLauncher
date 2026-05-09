@@ -7,7 +7,6 @@ import { invoke } from "@tauri-apps/api/core";
 
 export async function syncSettings(): Promise<void> {
   const settings = await getSettings();
-
   if (settings) {
     launcherStore.settings = settings;
   }

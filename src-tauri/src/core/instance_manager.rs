@@ -374,6 +374,9 @@ impl InstanceManager {
         validate_instance_name(&name).map_err(InstanceError::InstNameParse)?;
 
         let mut data = InstanceData::new(name, version, icon);
+        if data.get_instance_dir().exists() {
+            Err(InstanceError::AlreadyExists)?;
+        }
         data.save().await.map_err(|e| {
             InstanceError::Fs(FsError::WriteFile {
                 path: data

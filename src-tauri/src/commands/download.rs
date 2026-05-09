@@ -216,3 +216,23 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
 
     Ok(())
 }
+// todo: tipar esto
+#[tauri::command]
+pub async fn get_download_queue() -> Vec<serde_json::Value> {
+    let queue = crate::core::DownloadQueue::get();
+    let handles = queue.get_active_downloads().await;
+
+    handles
+        .iter()
+        .map(|h| {
+            let (current, total) = h.get_progress();
+            let status = format!("{:?}", h.get_status()).to_lowercase();
+            serde_json::json!({
+                "version": h.version,
+                "status": status,
+                "current": current,
+                "total": total,
+            })
+        })
+        .collect()
+}

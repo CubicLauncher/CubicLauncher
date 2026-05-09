@@ -100,4 +100,19 @@ export type AppEvent =
         id: string;
         dto: InstanceDto;
       };
+    }
+  | {
+      type: "DProgress";
+      data: {
+        version: string;
+        current: number;
+        total: number;
+        d_type: string;
+      };
+    }
+  | {
+      type: "DFinish";
+      data: {
+        version: string;
+      };
     };
