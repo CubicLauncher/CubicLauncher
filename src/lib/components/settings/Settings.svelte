@@ -78,7 +78,7 @@
         { value: "en", label: "English" },
     ];
 
-    const currentVersion = "2604c (26.4.2)";
+    const currentVersion = "2604d (26.4.3)";
 </script>
 
 <div class="qm-root">
