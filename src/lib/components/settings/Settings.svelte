@@ -425,6 +425,15 @@
                     />
                 </div>
                 <div class="qm-field">
+                    <label for="jre25">{t("settings.java.java25Path")}</label>
+                    <input
+                        type="text"
+                        id="jre25"
+                        bind:value={launcherStore.settings.jre25_path}
+                        placeholder="Path to javaw.exe"
+                    />
+                </div>
+                <div class="qm-field">
                     <label for="jvm-args">{t("settings.java.jvmArgs")}</label>
                     <textarea
                         id="jvm-args"

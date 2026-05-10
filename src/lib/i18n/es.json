@@ -45,6 +45,7 @@
       "java8Path": "Ruta de Java 8",
       "java17Path": "Ruta de Java 17",
       "java21Path": "Ruta de Java 21",
+      "java25Path": "Ruta de Java 25",
       "jvmArgs": "Argumentos JVM",
       "saveBtn": "Guardar Ajustes",
       "saving": "Guardando..."

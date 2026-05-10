@@ -137,7 +137,7 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
             }
         if paths.jre25.is_empty()
             && Path::new("/usr/bin/java").exists() {
-                paths.jre21 = "/usr/bin/java".to_string();
+                paths.jre25 = "/usr/bin/java".to_string();
             }
     }
 
