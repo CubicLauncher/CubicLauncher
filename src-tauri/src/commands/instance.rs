@@ -265,6 +265,9 @@ pub struct ModDto {
     pub name: String,
     pub filename: String,
     pub version: Option<String>,
+    pub description: Option<String>,
+    pub authors: Option<Vec<String>>,
+    pub icon: Option<String>,
     pub enabled: bool,
 }
 
@@ -306,10 +309,16 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
                             Some(stripped) => stripped.to_string(),
                             None => filename.clone(),
                         };
+
+                        let metadata = crate::core::ModManager::get_mod_info(&path);
+
                         mods.push(ModDto {
-                            name: display_name,
+                            name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(display_name),
                             filename,
-                            version: None,
+                            version: metadata.as_ref().and_then(|m| m.version.clone()),
+                            description: metadata.as_ref().and_then(|m| m.description.clone()),
+                            authors: metadata.as_ref().and_then(|m| m.authors.clone()),
+                            icon: metadata.as_ref().and_then(|m| m.icon.clone()),
                             enabled,
                         });
                     }
@@ -373,6 +382,9 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
                     name: filename.clone(),
                     filename,
                     version: None,
+                    description: None,
+                    authors: None,
+                    icon: None,
                     enabled: true,
                 });
             }

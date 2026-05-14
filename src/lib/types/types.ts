@@ -21,6 +21,9 @@ export interface ModDto {
   name: string;
   filename: string;
   version: string | null;
+  description: string | null;
+  authors: string[] | null;
+  icon: string | null;
   enabled: boolean;
 }
 export interface InstancesPollingPayload {

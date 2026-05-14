@@ -136,7 +136,9 @@
     "mods": {
       "title": "Installed Mods",
       "jarFile": ".JAR File",
-      "empty": "No mods installed in this instance"
+      "empty": "No mods installed in this instance",
+      "authors": "Authors",
+      "noDescription": "No description available"
     },
     "resources": {
       "title": "Resource Packs",

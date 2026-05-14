@@ -28,12 +28,27 @@
     <span class="section-title">{t('instanceView.mods.title')} ({mods.length})</span>
     <div class="mods-grid">
         {#each mods as mod}
-            <div class="mod-card" title={mod.filename} class:disabled={!mod.enabled}>
+            <div class="mod-card" class:disabled={!mod.enabled}>
+                <div class="mod-icon">
+                    {#if mod.icon}
+                        <img src={mod.icon} alt={mod.name} />
+                    {:else}
+                        <div class="mod-icon-placeholder">📦</div>
+                    {/if}
+                </div>
                 <div class="mod-info">
-                    <span class="mod-name">{mod.name}</span>
-                    <span class="mod-category"
-                        >{mod.version || t('instanceView.mods.jarFile')}</span
-                    >
+                    <div class="mod-name-row">
+                        <span class="mod-name" title={mod.name}>{mod.name}</span>
+                        <span class="mod-version">{mod.version || t('instanceView.mods.jarFile')}</span>
+                    </div>
+                    <p class="mod-description" title={mod.description}>
+                        {mod.description || t('instanceView.mods.noDescription')}
+                    </p>
+                    {#if mod.authors && mod.authors.length > 0}
+                        <span class="mod-authors" title={mod.authors.join(', ')}>
+                            {t('instanceView.mods.authors')}: {mod.authors.join(', ')}
+                        </span>
+                    {/if}
                 </div>
                 <div class="mod-status-toggle">
                     <input 
