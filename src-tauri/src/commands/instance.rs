@@ -310,7 +310,7 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
                             None => filename.clone(),
                         };
 
-                        let metadata = crate::core::ModManager::get_mod_info(&path);
+                        let metadata = crate::core::AddonManager::get_mod_info(&path);
 
                         mods.push(ModDto {
                             name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(display_name),
@@ -378,13 +378,15 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
                     continue;
                 };
                 let filename = file_name.to_string_lossy().to_string();
+                let metadata = crate::core::AddonManager::get_resourcepack_info(&path);
+                
                 resourcepacks.push(ModDto {
-                    name: filename.clone(),
+                    name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(filename.clone()),
                     filename,
                     version: None,
-                    description: None,
+                    description: metadata.as_ref().and_then(|m| m.description.clone()),
                     authors: None,
-                    icon: None,
+                    icon: metadata.as_ref().and_then(|m| m.icon.clone()),
                     enabled: true,
                 });
             }

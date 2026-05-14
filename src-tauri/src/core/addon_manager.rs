@@ -6,7 +6,7 @@ use zip::ZipArchive;
 use base64::{Engine as _, engine::general_purpose};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ModMetadata {
+pub struct AddonMetadata {
     pub name: String,
     pub version: Option<String>,
     pub description: Option<String>,
@@ -14,10 +14,10 @@ pub struct ModMetadata {
     pub icon: Option<String>, // Base64
 }
 
-pub struct ModManager;
+pub struct AddonManager;
 
-impl ModManager {
-    pub fn get_mod_info(path: &Path) -> Option<ModMetadata> {
+impl AddonManager {
+    pub fn get_mod_info(path: &Path) -> Option<AddonMetadata> {
         let file = File::open(path).ok()?;
         let mut archive = ZipArchive::new(file).ok()?;
 
@@ -44,6 +44,32 @@ impl ModManager {
         None
     }
 
+    pub fn get_resourcepack_info(path: &Path) -> Option<AddonMetadata> {
+        let file = File::open(path).ok()?;
+        let mut archive = ZipArchive::new(file).ok()?;
+
+        let json: serde_json::Value = {
+            let mut file = archive.by_name("pack.mcmeta").ok()?;
+            let mut content = String::new();
+            file.read_to_string(&mut content).ok()?;
+            serde_json::from_str(&content).ok()?
+        };
+
+        let description = json["pack"]["description"].as_str()
+            .or_else(|| json["pack"]["description"]["text"].as_str()) // Some packs use text object
+            .map(|s| s.to_string());
+        
+        let icon = Self::extract_icon(&mut archive, "pack.png");
+
+        Some(AddonMetadata {
+            name: path.file_stem()?.to_string_lossy().to_string(),
+            version: None,
+            description,
+            authors: None,
+            icon,
+        })
+    }
+
     fn extract_icon(archive: &mut ZipArchive<File>, path: &str) -> Option<String> {
         let clean_path = path.trim_start_matches('/');
         let mut file = archive.by_name(clean_path).ok()?;
@@ -63,7 +89,7 @@ impl ModManager {
         Some(format!("data:{};base64,{}", mime_type, general_purpose::STANDARD.encode(buffer)))
     }
 
-    fn parse_fabric(archive: &mut ZipArchive<File>) -> Option<ModMetadata> {
+    fn parse_fabric(archive: &mut ZipArchive<File>) -> Option<AddonMetadata> {
         let json: serde_json::Value = {
             let mut file = archive.by_name("fabric.mod.json").ok()?;
             let mut content = String::new();
@@ -100,7 +126,7 @@ impl ModManager {
         let icon_path = json["icon"].as_str().map(|s| s.to_string());
         let icon = icon_path.and_then(|path| Self::extract_icon(archive, &path));
 
-        Some(ModMetadata {
+        Some(AddonMetadata {
             name,
             version,
             description,
@@ -109,7 +135,7 @@ impl ModManager {
         })
     }
 
-    fn parse_quilt(archive: &mut ZipArchive<File>) -> Option<ModMetadata> {
+    fn parse_quilt(archive: &mut ZipArchive<File>) -> Option<AddonMetadata> {
         let json: serde_json::Value = {
             let mut file = archive.by_name("quilt.mod.json").ok()?;
             let mut content = String::new();
@@ -136,7 +162,7 @@ impl ModManager {
         let icon_path = metadata["icon"].as_str().map(|s| s.to_string());
         let icon = icon_path.and_then(|path| Self::extract_icon(archive, &path));
 
-        Some(ModMetadata {
+        Some(AddonMetadata {
             name,
             version,
             description,
@@ -145,7 +171,7 @@ impl ModManager {
         })
     }
 
-    fn parse_forge_modern(archive: &mut ZipArchive<File>) -> Option<ModMetadata> {
+    fn parse_forge_modern(archive: &mut ZipArchive<File>) -> Option<AddonMetadata> {
         let content = {
             let mut file = archive.by_name("META-INF/mods.toml").ok()?;
             let mut content = String::new();
@@ -168,7 +194,7 @@ impl ModManager {
         let icon_path = first_mod.get("logoFile").and_then(|v| v.as_str()).map(|s| s.to_string());
         let icon = icon_path.and_then(|path| Self::extract_icon(archive, &path));
 
-        Some(ModMetadata {
+        Some(AddonMetadata {
             name,
             version,
             description,
@@ -177,7 +203,7 @@ impl ModManager {
         })
     }
 
-    fn parse_forge_legacy(archive: &mut ZipArchive<File>) -> Option<ModMetadata> {
+    fn parse_forge_legacy(archive: &mut ZipArchive<File>) -> Option<AddonMetadata> {
         let json: serde_json::Value = {
             let mut file = archive.by_name("mcmod.info").ok()?;
             let mut content = String::new();
@@ -203,7 +229,7 @@ impl ModManager {
         let icon_path = mod_data["logoFile"].as_str().map(|s| s.to_string());
         let icon = icon_path.and_then(|path| Self::extract_icon(archive, &path));
 
-        Some(ModMetadata {
+        Some(AddonMetadata {
             name,
             version,
             description,
