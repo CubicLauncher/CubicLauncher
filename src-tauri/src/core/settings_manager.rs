@@ -1,9 +1,11 @@
 use crate::core::errors::CoreError;
 use crate::core::path_manager::PathManager;
+use crate::core::{AppError, FsError, emit};
 use launchwerk::auth::MinecraftUser;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, RwLock};
+use tokio::fs;
 use tracing::{error, warn};
 
 // ── Static global ─────────────────────────────────────────────────────────────
@@ -199,30 +201,38 @@ impl SettingsManager {
     /// Serializa y escribe a disco.
     /// Extrae el contenido con el Mutex tomado, luego escribe fuera del scope
     /// para minimizar el tiempo que el lock bloquea otros hilos.
-    pub fn save(&mut self) {
-        if !self.dirty {
-            return;
-        }
-
-        let path = PathManager::get().get_settings_dir().join("settings.cub");
-
-        // Serializar mientras tenemos &self — el write al disco ocurre después
-        let content = match serde_json::to_string_pretty(&self) {
-            Ok(c) => c,
-            Err(e) => {
-                error!("No se pudo serializar la configuración: {}", e);
-                return;
+    pub async fn save() -> Result<(), AppError> {
+        let (content, path) = {
+            let mut settings = SETTINGS
+                .write()
+                .map_err(|e| CoreError::LockPoisoned(e.to_string()))?;
+            if !settings.dirty {
+                return Ok(());
             }
+            let content = serde_json::to_string_pretty(&*settings)
+                .map_err(|e| CoreError::Serialize(e.to_string()))?;
+            settings.dirty = false;
+            let path = PathManager::get().get_settings_dir().join("settings.cub");
+            (content, path)
         };
 
-        // Marcar como limpio antes de escribir — si el write falla dirty
-        // vuelve a true en el Err de abajo, evitando pérdida silenciosa
-        self.dirty = false;
+        fs::create_dir_all(path.parent().unwrap())
+            .await
+            .map_err(|e| {
+                AppError::Fs(FsError::CreateDir {
+                    path: path.parent().unwrap().to_string_lossy().to_string(),
+                    source: e,
+                })
+            })?;
 
-        if let Err(e) = std::fs::write(&path, content) {
-            error!("No se pudo guardar la configuración en {:?}: {}", path, e);
-            self.dirty = true; // revertir para reintentar en el próximo save()
-        }
+        fs::write(&path, content).await.map_err(|e| {
+            AppError::Fs(FsError::WriteFile {
+                path: path.to_string_lossy().to_string(),
+                source: e,
+            })
+        })?;
+        emit(super::AppEvent::STChanged);
+        Ok(())
     }
 
     pub fn load() -> Self {

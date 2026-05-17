@@ -103,5 +103,8 @@ listen<AppEvent>("app-event", (event) => {
         (i) => i.uuid !== payload.data.id,
       );
       break;
+    case "STChanged":
+      syncSettings();
+      break;
   }
 });

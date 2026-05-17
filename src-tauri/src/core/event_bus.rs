@@ -32,6 +32,7 @@ pub enum AppEvent {
     DFinish {
         version: String,
     },
+    STChanged,
 }
 
 pub fn init(app: AppHandle) {
@@ -40,7 +41,8 @@ pub fn init(app: AppHandle) {
 
 pub fn emit(event: AppEvent) {
     if let Some(app) = APP.get()
-        && let Err(err) = app.emit("app-event", event) {
-            tracing::warn!("failed to emit event: {}", err);
-        }
+        && let Err(err) = app.emit("app-event", event)
+    {
+        tracing::warn!("failed to emit event: {}", err);
+    }
 }
