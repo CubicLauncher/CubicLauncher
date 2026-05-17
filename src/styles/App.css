@@ -115,7 +115,7 @@ body {
     bottom: 0;
     background-size: cover;
     background-position: center;
-    filter: blur(20px) brightness(0.2);
+    filter: blur(8px) brightness(0.4);
     z-index: 0;
     opacity: 0.3;
 }

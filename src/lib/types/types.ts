@@ -118,4 +118,7 @@ export type AppEvent =
       data: {
         version: string;
       };
+    }
+  | {
+      type: "STChanged";
     };

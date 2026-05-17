@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
+    import { convertFileSrc, invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
     import "../styles/App.css";
     import { launcherStore } from "$lib/state/state.svelte";
-    import { getVersions } from "$lib/api/launcherService";
+    import { getVersions, syncSettings } from "$lib/api/launcherService";
     import type { InstanceDto } from "$lib/types/types";
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
     import InstanceView from "$lib/components/instances/InstanceView.svelte";
@@ -18,10 +18,12 @@
 
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
+    let drawerRef = $state<ReturnType<typeof Drawer> | null>(null);
     let versionDownloaderOpen = $state(false);
     let openCreateModal = $state(false);
 
     onMount(async () => {
+        await syncSettings();
         await getVersions();
 
         const firstInstance = launcherStore.loadedInstances[0];
@@ -55,6 +57,9 @@
             selectedInstance = updated;
         }
     });
+    let bgImage = $state(
+        convertFileSrc("/home/santiagolxx/.cubic/bg/miku-full.jpg"),
+    );
 </script>
 
 <div class="app-container">
@@ -68,7 +73,7 @@
     <main class="main-content">
         <div
             class="background-overlay"
-            style="background-image: url('/images/bg.png');"
+            style="background-image: url('{bgImage}');"
         ></div>
 
         {#if selectedInstance}
@@ -87,8 +92,16 @@
     </main>
 </div>
 
-<Drawer bind:open={quickMenuOpen} direction="right">
-    <Settings onclose={() => (quickMenuOpen = false)} />
+<Drawer
+    bind:open={quickMenuOpen}
+    direction="right"
+    rootTitle="Settings"
+    bind:this={drawerRef}
+>
+    <Settings
+        onclose={() => (quickMenuOpen = false)}
+        pushView={(view) => drawerRef?.pushView(view)}
+    />
 </Drawer>
 
 <Drawer bind:open={versionDownloaderOpen} direction="right">

@@ -50,6 +50,7 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 core::DownloadQueue::init(Some(handle.clone())).await;
                 core::Launcher::init().set_handle(handle.clone());
+                InstanceManager::init().await;
                 core::init(handle);
             });
             Ok(())

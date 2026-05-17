@@ -9,12 +9,12 @@ pub fn get_settings() -> Result<SettingsManager, String> {
 }
 
 #[command]
-pub fn update_settings(new_settings: SettingsManager) -> Result<(), String> {
+pub async fn update_settings(new_settings: SettingsManager) -> Result<(), String> {
     SettingsManager::write(|s| {
         *s = new_settings;
         s.dirty = true;
-        s.save();
     })?;
+    SettingsManager::save().await?;
     Ok(())
 }
 
@@ -114,9 +114,10 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
                         } else if (name.contains("-25-")
                             || name.ends_with("-25")
                             || name.contains("25-"))
-                            && paths.jre25.is_empty() {
-                                paths.jre25 = exact_java.to_string_lossy().into_owned();
-                            }
+                            && paths.jre25.is_empty()
+                        {
+                            paths.jre25 = exact_java.to_string_lossy().into_owned();
+                        }
                     }
                 }
             }

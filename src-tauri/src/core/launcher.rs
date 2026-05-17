@@ -433,12 +433,10 @@ impl Launcher {
                     info!("Token refrescado para {}", new_user.username);
                     user = new_user;
                     let _ = user.save_tokens();
-                    {
-                        SettingsManager::write(|settings| {
-                            settings.set_user(Some(user.clone()));
-                            settings.save();
-                        })?;
-                    }
+                    SettingsManager::write(|settings| {
+                        settings.set_user(Some(user.clone()));
+                    })?;
+                    SettingsManager::save().await?;
                 }
                 Err(e) => {
                     warn!(

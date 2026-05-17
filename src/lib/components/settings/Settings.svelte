@@ -1,6 +1,5 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
-    import type { InstanceDto } from "$lib/types/types";
     import { launcherStore } from "$lib/state/state.svelte";
     import { killInst, saveSettings } from "$lib/api/launcherService";
     import { t } from "$lib/i18n";
@@ -77,6 +76,11 @@
         { value: "es", label: "Español" },
         { value: "en", label: "English" },
     ];
+    let runningInstances = $derived(
+        launcherStore.loadedInstances
+            .filter((i) => i.status === "started" || i.status === "starting")
+            .map((i) => i.uuid),
+    );
 
     const currentVersion = "2604d (26.4.3)";
 </script>
@@ -108,7 +112,7 @@
                 <span class="qm-section-label"
                     >{t("settings.launcher.activeInstancesTitle")}</span
                 >
-                {#each launcherStore.runningInstances as uuid}
+                {#each runningInstances as uuid}
                     {@const inst = launcherStore.loadedInstances.find(
                         (i) => i.uuid === uuid,
                     )}

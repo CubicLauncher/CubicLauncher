@@ -53,9 +53,8 @@ pub async fn authenticate_with_device_code(
     // 3. Update the global launcher settings
     SettingsManager::write(|settings| {
         settings.set_user(Some(user.clone()));
-        settings.save();
     })?;
-
+    SettingsManager::save().await?;
     Ok(user)
 }
 
@@ -70,14 +69,14 @@ pub fn get_current_user() -> Result<Option<MinecraftUser>, String> {
 }
 
 #[command]
-pub fn logout() -> Result<(), String> {
+pub async fn logout() -> Result<(), String> {
     SettingsManager::write(|settings| {
         if let Some(user) = settings.user.as_ref() {
             let _ = user.delete_tokens();
         }
 
         settings.set_user(None);
-        settings.save();
     })?;
+    SettingsManager::save().await?;
     Ok(())
 }

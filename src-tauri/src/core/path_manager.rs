@@ -16,6 +16,7 @@ impl PathManager {
     pub fn get() -> &'static PathManager {
         &PATH_MANAGER
     }
+
     // getters
     pub fn get_instance_dir(&self) -> &Path {
         &self.instances_dir
@@ -58,9 +59,10 @@ fn resolve_base_dir() -> PathBuf {
     }
     // en el caso de que no obtenga path que use el path actual de donde se ejecuta el binario
     if let Ok(exe) = std::env::current_exe()
-        && let Some(parent) = exe.parent() {
-            return parent.to_path_buf();
-        }
+        && let Some(parent) = exe.parent()
+    {
+        return parent.to_path_buf();
+    }
     // si eso no funciona
     // entonces dir de trabajo actual lpm
     if let Ok(cwd) = std::env::current_dir() {
