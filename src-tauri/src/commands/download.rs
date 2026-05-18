@@ -216,9 +216,16 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
 
     Ok(())
 }
-// todo: tipar esto
+#[derive(serde::Serialize)]
+pub struct DownloadQueueItem {
+    pub version: String,
+    pub status: String,
+    pub current: u64,
+    pub total: u64,
+}
+
 #[tauri::command]
-pub async fn get_download_queue() -> Vec<serde_json::Value> {
+pub async fn get_download_queue() -> Vec<DownloadQueueItem> {
     let queue = crate::services::DownloadQueue::get();
     let handles = queue.get_active_downloads().await;
 
@@ -226,13 +233,12 @@ pub async fn get_download_queue() -> Vec<serde_json::Value> {
         .iter()
         .map(|h| {
             let (current, total) = h.get_progress();
-            let status = format!("{:?}", h.get_status()).to_lowercase();
-            serde_json::json!({
-                "version": h.version,
-                "status": status,
-                "current": current,
-                "total": total,
-            })
+            DownloadQueueItem {
+                version: h.version.clone(),
+                status: format!("{:?}", h.get_status()).to_lowercase(),
+                current,
+                total,
+            }
         })
         .collect()
 }
