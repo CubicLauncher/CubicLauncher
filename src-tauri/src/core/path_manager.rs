@@ -13,12 +13,10 @@ pub struct PathManager {
 }
 
 impl PathManager {
-    // Getters
     pub fn get() -> &'static PathManager {
         &PATH_MANAGER
     }
 
-    // getters
     pub fn get_instance_dir(&self) -> &Path {
         &self.instances_dir
     }
@@ -31,30 +29,37 @@ impl PathManager {
     pub fn get_themes_dir(&self) -> &Path {
         &self.themes_dir
     }
-    // Inicializador
+
+    pub fn ensure_dirs() -> Result<(), Vec<String>> {
+        let dirs = [
+            Self::get().get_instance_dir(),
+            Self::get().get_shared_dir(),
+            Self::get().get_settings_dir(),
+            Self::get().get_themes_dir(),
+        ];
+
+        let mut errors = Vec::new();
+        for dir in &dirs {
+            if let Err(e) = std::fs::create_dir_all(dir) {
+                errors.push(format!("{}: {}", dir.display(), e));
+            }
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+
     fn initialize() -> PathManager {
         let base_dir = resolve_base_dir();
 
-        let instances_dir = base_dir.join(".cubic").join("instances");
-        let shared_dir = base_dir.join(".cubic").join("shared");
-        let settings_dir = base_dir.join(".cubic").join("settings");
-        let themes_dir = base_dir.join(".cubic").join("themes");
-
-        // Crear directorios si no existen
-        std::fs::create_dir_all(&instances_dir)
-            .unwrap_or_else(|e| panic!("No se pudo crear instances dir: {}", e));
-        std::fs::create_dir_all(&shared_dir)
-            .unwrap_or_else(|e| panic!("No se pudo crear shared dir: {}", e));
-        std::fs::create_dir_all(&settings_dir)
-            .unwrap_or_else(|e| panic!("No se pudo crear settings dir: {}", e));
-        std::fs::create_dir_all(&themes_dir)
-            .unwrap_or_else(|e| panic!("No se pudo crear themes dir: {}", e));
-
         PathManager {
-            instances_dir,
-            shared_dir,
-            settings_dir,
-            themes_dir,
+            instances_dir: base_dir.join(".cubic").join("instances"),
+            shared_dir: base_dir.join(".cubic").join("shared"),
+            settings_dir: base_dir.join(".cubic").join("settings"),
+            themes_dir: base_dir.join(".cubic").join("themes"),
         }
     }
 }

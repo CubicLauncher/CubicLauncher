@@ -54,6 +54,22 @@ pub fn run() {
         ])
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
+            if let Err(errors) = core::PathManager::ensure_dirs() {
+                use tauri_plugin_dialog::DialogExt;
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    handle.dialog()
+                        .message(format!(
+                            "No se pudieron crear los directorios necesarios:\n{}",
+                            errors.join("\n")
+                        ))
+                        .title("Error de inicialización")
+                        .kind(tauri_plugin_dialog::MessageDialogKind::Error)
+                        .show(|_| std::process::exit(1));
+                });
+                return Err("Error de inicialización: no se pudieron crear los directorios".into());
+            }
+
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 services::DownloadQueue::init(Some(handle.clone())).await;
