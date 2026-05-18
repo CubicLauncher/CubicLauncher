@@ -9,6 +9,7 @@ pub struct PathManager {
     instances_dir: PathBuf,
     shared_dir: PathBuf,
     settings_dir: PathBuf,
+    themes_dir: PathBuf,
 }
 
 impl PathManager {
@@ -27,6 +28,9 @@ impl PathManager {
     pub fn get_settings_dir(&self) -> &Path {
         &self.settings_dir
     }
+    pub fn get_themes_dir(&self) -> &Path {
+        &self.themes_dir
+    }
     // Inicializador
     fn initialize() -> PathManager {
         let base_dir = resolve_base_dir();
@@ -34,6 +38,7 @@ impl PathManager {
         let instances_dir = base_dir.join(".cubic").join("instances");
         let shared_dir = base_dir.join(".cubic").join("shared");
         let settings_dir = base_dir.join(".cubic").join("settings");
+        let themes_dir = base_dir.join(".cubic").join("themes");
 
         // Crear directorios si no existen
         std::fs::create_dir_all(&instances_dir)
@@ -42,11 +47,14 @@ impl PathManager {
             .unwrap_or_else(|e| panic!("No se pudo crear shared dir: {}", e));
         std::fs::create_dir_all(&settings_dir)
             .unwrap_or_else(|e| panic!("No se pudo crear settings dir: {}", e));
+        std::fs::create_dir_all(&themes_dir)
+            .unwrap_or_else(|e| panic!("No se pudo crear themes dir: {}", e));
 
         PathManager {
             instances_dir,
             shared_dir,
             settings_dir,
+            themes_dir,
         }
     }
 }

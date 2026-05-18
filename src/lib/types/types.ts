@@ -48,6 +48,7 @@ export interface Settings {
   show_alpha: boolean;
   force_gpu: boolean;
   jvm_args: string;
+  theme: string;
 }
 
 export type AccountType = "Cracked" | "Microsoft";
@@ -121,4 +122,17 @@ export type AppEvent =
     }
   | {
       type: "STChanged";
+    }
+  | {
+      type: "ThemeChanged";
+      data: {
+        id: string;
+      };
     };
+
+export interface ThemeEntry {
+  id: string;
+  name: string;
+  author: string;
+  type: string;
+}

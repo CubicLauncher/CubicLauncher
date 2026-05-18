@@ -2,6 +2,7 @@ import { launcherStore, showError } from "../state/state.svelte";
 import { listen } from "@tauri-apps/api/event";
 import type { AppEvent, InstanceDto } from "../types/types";
 import { killInstance, getSettings, updateSettings } from "./cubicApi";
+import { applyTheme } from "./themeManager";
 
 import { invoke } from "@tauri-apps/api/core";
 
@@ -105,6 +106,12 @@ listen<AppEvent>("app-event", (event) => {
       break;
     case "STChanged":
       syncSettings();
+      break;
+    case "ThemeChanged":
+      console.log("ThemeChanged event:", payload.data.id);
+      if (payload.data.id === launcherStore.settings.theme) {
+        applyTheme(payload.data.id);
+      }
       break;
   }
 });

@@ -186,7 +186,7 @@
             type="text"
             placeholder={t('versionDownloader.searchPlaceholder')}
             bind:value={search}
-            style="width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;"
+            style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;"
         />
         <div class="qm-filters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 4px; padding-bottom: 8px;">
             <Select 
@@ -236,7 +236,7 @@
                     >
                         <div
                             class="version-item"
-                            style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid #222; border-radius: 8px; height: 58px;"
+                            style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; height: 58px;"
                         >
                             <div class="version-info">
                                 <div
@@ -249,13 +249,13 @@
                                     </div>
                                     {#if isInstalled || (filter === 'fabric' && installedVersions.some(iv => iv.startsWith('fabric-loader-') && iv.endsWith(version.version)))}
                                         <span
-                                            style="font-size: 0.6rem; background: rgba(0, 255, 100, 0.1); color: #00ff64; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(0, 255, 100, 0.2);"
+                                            style="font-size: 0.6rem; background: rgba(var(--color-success-rgb), 0.1); color: var(--color-success); padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(var(--color-success-rgb), 0.2);"
                                             >{t('versionDownloader.installedTag')}</span
                                         >
                                     {/if}
                                 </div>
                                 <div
-                                    style="font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px;"
+                                    style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;"
                                 >
                                     {#if filter === 'fabric'}
                                         Fabric Meta • {version.stable ? 'STABLE' : 'UNSTABLE'}
@@ -269,7 +269,7 @@
 
                             {#if isInstalled}
                                 <div
-                                    style="color: #00ff64; padding: 6px 14px; display: flex; align-items: center; gap: 4px;"
+                                    style="color: var(--color-success); padding: 6px 14px; display: flex; align-items: center; gap: 4px;"
                                 >
                                     <svg
                                         width="16"
@@ -288,7 +288,7 @@
                                 <button
                                     class="download-btn"
                                     onclick={() => handleDownload(filter === 'fabric' ? version.version : version.id)}
-                                    style="background: #fff; color: #000; border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
+                                    style="background: var(--accent); color: var(--accent-text); border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
                                 >
                                     {t('versionDownloader.downloadBtn')}
                                 </button>

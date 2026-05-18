@@ -27,7 +27,7 @@
 <div class="mods-section">
     <span class="section-title">{t('instanceView.mods.title')} ({mods.length})</span>
     <div class="mods-grid">
-        {#each mods as mod}
+        {#each mods as mod (mod.filename)}
             <div class="mod-card" class:disabled={!mod.enabled}>
                 <div class="mod-icon">
                     {#if mod.icon}

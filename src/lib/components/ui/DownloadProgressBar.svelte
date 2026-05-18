@@ -247,7 +247,7 @@
                                     height="10"
                                     viewBox="0 0 24 24"
                                     fill="none"
-                                    stroke="#4ade80"
+                                    stroke="var(--color-success)"
                                     stroke-width="2.5"
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
@@ -275,13 +275,13 @@
                                         class="dl-tray-seg-label"
                                         style:color={pct > 0 || isActive
                                             ? color
-                                            : "#333"}
+                                            : "var(--text-muted)"}
                                     >
                                         {SEGMENT_LABELS[key]}
                                     </span>
                                     <span
                                         class="dl-tray-seg-pct"
-                                        style:color={pct > 0 ? color : "#333"}
+                                        style:color={pct > 0 ? color : "var(--text-muted)"}
                                     >
                                         {pct}%
                                     </span>

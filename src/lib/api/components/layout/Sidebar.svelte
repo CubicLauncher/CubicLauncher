@@ -40,7 +40,6 @@
     let selectedIcon = $state<string | null>(null);
     let installedVersions = $state<string[]>([]);
     let availableIcons = $state<string[]>([]);
-    let versionOptions = $derived(installedVersions.map((v) => ({ value: v, label: v })));
 
     async function openRenameModal(instance: InstanceDto) {
         instanceToActOn = instance;
@@ -94,13 +93,14 @@
 
 <aside class="sidebar">
     <div class="sidebar-header">
+        <img src="/images/cubic.svg" alt="CUBICLAUNCHER" class="sidebar-logo" />
         <h1 style="font-size: 0.9rem; font-weight: bold;">CUBICLAUNCHER</h1>
     </div>
 
     <div class="sidebar-content">
         <div class="section-label">{t("sidebar.yourInstances")}</div>
         <div class="instance-list">
-            {#each launcherStore.loadedInstances as instance (instance.uuid)}
+            {#each launcherStore.loadedInstances as instance}
                 <div
                     class="instance-item"
                     class:active={selectedInstance?.uuid === instance.uuid}
@@ -183,7 +183,7 @@
                 alt=""
                 width="16"
                 height="16"
-                style="filter: var(--icon-filter);"
+                style="filter: invert(1);"
             />
             {t("sidebar.createInstance")}
         </button>
@@ -193,7 +193,7 @@
                 alt=""
                 width="16"
                 height="16"
-                style="filter: var(--icon-filter);"
+                style="filter: invert(1);"
             />
             {t("sidebar.downloadVersions")}
         </button>
@@ -203,7 +203,7 @@
                 alt=""
                 width="16"
                 height="16"
-                style="filter: var(--icon-filter);"
+                style="filter: invert(1);"
             />
             {t("sidebar.settings")}
         </button>
@@ -248,6 +248,28 @@
     </div>
 </aside>
 
+<style>
+    .sidebar {
+        font-family: "Cantarell", system-ui, sans-serif;
+    }
+
+    .sidebar-logo {
+        width: 24px;
+        height: 24px;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+    }
+
+    .sidebar-header h1 {
+        font-family: "Cantarell", system-ui, sans-serif;
+    }
+</style>
+
 <UserMenu bind:open={showUserMenu} />
 
 <ModalBase bind:open={showRenameModal} title={t("sidebar.modals.editTitle")}>
@@ -256,7 +278,7 @@
             >{t("createInstance.iconLabel") || "Logo de la Instancia"}</label
         >
         <div id="icon-selector" class="icon-selector" style="margin-top: 8px;">
-            {#each availableIcons as iconName (iconName)}
+            {#each availableIcons as iconName}
                 {@const iconPath = `/images/instances/${iconName}`}
                 <button
                     type="button"
@@ -290,7 +312,7 @@
         <Select
             id="version-select"
             label={t("sidebar.modals.versionLabel")}
-            options={versionOptions}
+            options={installedVersions.map((v) => ({ value: v, label: v }))}
             bind:value={versionInput}
         />
     </div>

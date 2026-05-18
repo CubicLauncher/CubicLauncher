@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { invoke } from "@tauri-apps/api/core";
     import { launcherStore } from "$lib/state/state.svelte";
     import { killInst, saveSettings } from "$lib/api/launcherService";
@@ -9,6 +10,8 @@
         downloadUpdate,
         installUpdate,
     } from "$lib/api/updaterServices";
+    import { applyTheme, listThemes } from "$lib/api/themeManager";
+    import type { ThemeEntry } from "$lib/types/types";
 
     interface Props {
         onclose?: () => void;
@@ -72,10 +75,21 @@
         { id: "java", label: t("settings.tabs.java") },
     ]);
 
-    let languageOptions = [
+    const languageOptions = [
         { value: "es", label: "Español" },
         { value: "en", label: "English" },
     ];
+    let availableThemes = $state<ThemeEntry[]>([]);
+    let themeOptions = $derived(availableThemes.map((t: ThemeEntry) => ({
+        value: t.id,
+        label: t.name,
+    })));
+
+    async function loadThemes() {
+        availableThemes = await listThemes();
+    }
+
+    onMount(loadThemes);
     let runningInstances = $derived(
         launcherStore.loadedInstances
             .filter((i) => i.status === "started" || i.status === "starting")
@@ -274,6 +288,27 @@
                 </div>
             </section>
 
+            <!-- Themes -->
+            <section class="qm-section">
+                <span class="qm-section-label">Temas</span>
+                <div class="qm-field">
+                    <Select
+                        id="theme"
+                        label="Tema activo"
+                        options={themeOptions}
+                        bind:value={launcherStore.settings.theme}
+                        onchange={async () => {
+                            try {
+                                await invoke("set_theme", { id: launcherStore.settings.theme });
+                                applyTheme(launcherStore.settings.theme);
+                            } catch (e) {
+                                console.error("Error setting theme:", e);
+                            }
+                        }}
+                    />
+                </div>
+            </section>
+
             <!-- General Settings -->
             <section class="qm-section">
                 <span class="qm-section-label"
@@ -443,7 +478,7 @@
                         id="jvm-args"
                         bind:value={launcherStore.settings.jvm_args}
                         placeholder="-Xmx2G -Xms1G ..."
-                        style="width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 60px;"
+                        style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 60px;"
                     ></textarea>
                 </div>
             </section>

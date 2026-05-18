@@ -30,6 +30,9 @@ fn default_lang() -> String {
 fn default_true() -> bool {
     true
 }
+fn default_theme() -> String {
+    String::from("dark")
+}
 
 // ── SettingsManager ───────────────────────────────────────────────────────────
 
@@ -69,6 +72,8 @@ pub struct SettingsManager {
     pub force_gpu: bool,
     #[serde(default)]
     pub jvm_args: String,
+    #[serde(default = "default_theme")]
+    pub theme: String,
     #[serde(skip)]
     pub dirty: bool,
 }
@@ -92,6 +97,7 @@ impl Default for SettingsManager {
             show_alpha: false,
             force_gpu: false,
             jvm_args: String::new(),
+            theme: String::from("dark"),
             dirty: true,
         }
     }

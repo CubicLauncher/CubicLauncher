@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+    import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
     import "../styles/App.css";
     import { launcherStore } from "$lib/state/state.svelte";
@@ -15,12 +15,12 @@
     import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
     import DownloadProgressBar from "$lib/components/ui/DownloadProgressBar.svelte";
     import { checkForUpdates } from "$lib/api/updaterServices";
-
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
-    let drawerRef = $state<ReturnType<typeof Drawer> | null>(null);
     let versionDownloaderOpen = $state(false);
     let openCreateModal = $state(false);
+
+    import { applyTheme } from "$lib/api/themeManager";
 
     onMount(async () => {
         await syncSettings();
@@ -31,6 +31,8 @@
         if (firstInstance && !selectedInstance) {
             selectedInstance = firstInstance;
         }
+
+        applyTheme(launcherStore.settings.theme);
 
         if (launcherStore.settings.auto_updates) {
             checkForUpdates(true);
@@ -57,9 +59,6 @@
             selectedInstance = updated;
         }
     });
-    let bgImage = $state(
-        convertFileSrc("/home/santiagolxx/.cubic/bg/miku-full.jpg"),
-    );
 </script>
 
 <div class="app-container">
@@ -71,10 +70,7 @@
     />
 
     <main class="main-content">
-        <div
-            class="background-overlay"
-            style="background-image: url('{bgImage}');"
-        ></div>
+        <div class="background-overlay"></div>
 
         {#if selectedInstance}
             <InstanceView {selectedInstance} />
@@ -92,16 +88,8 @@
     </main>
 </div>
 
-<Drawer
-    bind:open={quickMenuOpen}
-    direction="right"
-    rootTitle="Settings"
-    bind:this={drawerRef}
->
-    <Settings
-        onclose={() => (quickMenuOpen = false)}
-        pushView={(view) => drawerRef?.pushView(view)}
-    />
+<Drawer bind:open={quickMenuOpen} direction="right">
+    <Settings onclose={() => (quickMenuOpen = false)} />
 </Drawer>
 
 <Drawer bind:open={versionDownloaderOpen} direction="right">

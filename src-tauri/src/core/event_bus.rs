@@ -33,6 +33,9 @@ pub enum AppEvent {
         version: String,
     },
     STChanged,
+    ThemeChanged {
+        id: String,
+    },
 }
 
 pub fn init(app: AppHandle) {

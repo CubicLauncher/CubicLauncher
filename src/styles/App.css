@@ -113,11 +113,12 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
+    background-image: var(--bg-image, none);
     background-size: cover;
     background-position: center;
-    filter: blur(8px) brightness(0.4);
+    filter: blur(var(--bg-image-blur, 8px)) brightness(0.4);
     z-index: 0;
-    opacity: 0.3;
+    opacity: var(--bg-image-opacity, 0.3);
 }
 
 /* Scrollbars */
@@ -615,19 +616,19 @@ body {
 
 .banner-status {
     padding: 10px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .banner-status-starting {
     padding: 10px;
-    border-bottom: 1px solid var(--border);
-    background: #5e81ac;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--color-status-starting);
 }
 
 .banner-status-started {
     padding: 10px;
-    border-bottom: 1px solid var(--border);
-    background: #8fbc8f;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--color-status-started);
 }
 
 .banner-status-icon-rotate {
@@ -2788,11 +2789,11 @@ body {
     align-items: center;
     gap: 10px;
     padding: 9px 18px 9px 28px;
-    background: #141414;
+    background: var(--bg-card);
     border: none;
-    border-top: 1px solid #252525;
-    border-left: 1px solid #252525;
-    color: #777;
+    border-top: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    color: var(--text-muted);
     cursor: pointer;
     font-family: "Cantarell", system-ui, sans-serif;
     font-size: 0.75rem;
@@ -2807,8 +2808,8 @@ body {
 }
 
 .dl-tray-tab:hover {
-    background: #1c1c1c;
-    color: #aaa;
+    background: var(--bg-item-active);
+    color: var(--text-secondary);
 }
 
 .dl-tray-tab-left {
@@ -2819,7 +2820,7 @@ body {
 }
 
 .dl-tray-chevron {
-    color: #3a3a3a;
+    color: var(--text-muted);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
 }
@@ -2831,8 +2832,8 @@ body {
 .dl-tray-spinner {
     width: 11px;
     height: 11px;
-    border: 1.5px solid rgba(255, 255, 255, 0.07);
-    border-top-color: #888;
+    border: 1.5px solid var(--border-color);
+    border-top-color: var(--text-muted);
     border-radius: 50%;
     animation: dl-spin 0.7s linear infinite;
     flex-shrink: 0;
@@ -2841,8 +2842,8 @@ body {
 .dl-tray-spinner-sm {
     width: 9px;
     height: 9px;
-    border: 1.5px solid rgba(255, 255, 255, 0.07);
-    border-top-color: #666;
+    border: 1.5px solid var(--border-color);
+    border-top-color: var(--text-muted);
     border-radius: 50%;
     animation: dl-spin 0.7s linear infinite;
     flex-shrink: 0;
@@ -2858,9 +2859,9 @@ body {
     width: 340px;
     max-height: 0;
     overflow: hidden;
-    background: #0d0d0d;
-    border-top: 1px solid #1e1e1e;
-    border-left: 1px solid #1e1e1e;
+    background: var(--bg-main);
+    border-top: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
     transition:
         max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         opacity 0.2s ease;
@@ -2879,7 +2880,7 @@ body {
     width: 3px;
 }
 .dl-tray-body::-webkit-scrollbar-thumb {
-    background: #1e1e1e;
+    background: var(--border-color);
     border-radius: 3px;
 }
 
@@ -2894,19 +2895,19 @@ body {
 }
 
 .dl-tray-empty svg {
-    color: #1e1e1e;
+    color: var(--text-muted);
     margin-bottom: 4px;
 }
 
 .dl-tray-empty-title {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #2e2e2e;
+    color: var(--text-muted);
 }
 
 .dl-tray-empty-sub {
     font-size: 0.68rem;
-    color: #252525;
+    color: var(--text-muted);
     line-height: 1.4;
     max-width: 160px;
 }
@@ -2916,7 +2917,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    border-bottom: 1px solid #141414;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .dl-tray-item:last-child {
@@ -2938,7 +2939,7 @@ body {
 .dl-tray-version {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #c0c0c0;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2948,13 +2949,13 @@ body {
 .dl-tray-pct {
     font-size: 0.7rem;
     font-weight: 700;
-    color: #444;
+    color: var(--text-muted);
     flex-shrink: 0;
     transition: color 0.3s;
 }
 
 .dl-tray-pct.done {
-    color: #4ade80;
+    color: var(--color-success);
 }
 
 .dl-tray-segments {
@@ -2990,7 +2991,7 @@ body {
 
 .dl-tray-seg-track {
     height: 3px;
-    background: #181818;
+    background: var(--bg-input);
     border-radius: 2px;
     overflow: hidden;
 }
@@ -3013,7 +3014,7 @@ body {
 .dl-tray-overall-track {
     width: 100%;
     height: 2px;
-    background: #161616;
+    background: var(--bg-input);
     border-radius: 1px;
     overflow: hidden;
     margin-top: 2px;
@@ -3021,7 +3022,7 @@ body {
 
 .dl-tray-overall-fill {
     height: 100%;
-    background: #2e2e2e;
+    background: var(--text-muted);
     border-radius: 1px;
     transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }

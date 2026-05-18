@@ -57,7 +57,7 @@
     </div>
     
     <div class="packs-grid">
-        {#each packs as pack}
+        {#each packs as pack (pack.filename)}
             <div class="pack-card">
                 <div class="pack-icon">
                     {#if pack.icon}

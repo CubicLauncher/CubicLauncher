@@ -41,7 +41,7 @@
     <div class="logs-sidebar">
         <span class="section-title">{t('instanceView.logs.title')}</span>
         <div class="logs-list">
-            {#each logs as log}
+            {#each logs as log (log)}
                 <div 
                     class="log-item" 
                     class:active={selectedLog === log}

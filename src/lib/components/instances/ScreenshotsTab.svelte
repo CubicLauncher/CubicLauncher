@@ -35,7 +35,7 @@
     </div>
 
     <div class="screenshots-grid">
-        {#each screenshots as path}
+        {#each screenshots as path (path)}
             <div 
                 class="screenshot-card" 
                 role="button"
