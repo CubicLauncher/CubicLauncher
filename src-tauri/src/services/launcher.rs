@@ -448,12 +448,21 @@ impl Launcher {
 
         let min_mem = format!("{}G", settings_m.get_min_memory());
         let max_mem = format!("{}G", settings_m.get_max_memory());
-        let options = LaunchConfig::builder()
+
+        let mut builder = LaunchConfig::builder()
             .java_path(java_path)
             .username(user.username)
             .ram(min_mem, max_mem)
-            .cracked(true)
-            .build();
+            .cracked(user.user_type != AccountType::Microsoft);
+
+        if user.user_type == AccountType::Microsoft {
+            builder = builder
+                .access_token(user.access_token)
+                .auth_uuid(user.uuid)
+                .user_type("msa");
+        }
+
+        let options = builder.build();
 
         let lw_handle = self.lw.prepare(manifest, options, instance_dir);
         handle.update_last_played().await;
