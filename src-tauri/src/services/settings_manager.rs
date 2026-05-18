@@ -220,15 +220,18 @@ impl SettingsManager {
             (content, path)
         };
 
-        fs::create_dir_all(path.parent().unwrap())
-            .await
-            .map_err(|e| {
-                AppError::Fs(FsError::CreateDir {
-                    path: path.parent().unwrap().to_string_lossy().to_string(),
-                    source: e,
-                })
-            })?;
-
+        let parent = path.parent().ok_or_else(|| {
+            AppError::CoreError(CoreError::Serialize(format!(
+                "Ruta de settings inválida: {}",
+                path.display()
+            )))
+        })?;
+        fs::create_dir_all(parent).await.map_err(|e| {
+            AppError::Fs(FsError::CreateDir {
+                path: parent.to_string_lossy().to_string(),
+                source: e,
+            })
+        })?;
         fs::write(&path, content).await.map_err(|e| {
             AppError::Fs(FsError::WriteFile {
                 path: path.to_string_lossy().to_string(),
