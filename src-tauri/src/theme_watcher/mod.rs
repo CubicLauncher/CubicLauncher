@@ -42,14 +42,13 @@ impl ThemeWatcher {
                         PathManager::get().get_themes_dir().join(id).join("theme.json");
                     match std::fs::metadata(&theme_file) {
                         Ok(meta) => {
-                            if let Ok(mtime) = meta.modified() {
-                                if last_mtime.map_or(true, |last| mtime != last) {
+                            if let Ok(mtime) = meta.modified()
+                                && last_mtime != Some(mtime) {
                                     last_mtime = Some(mtime);
                                     emit(AppEvent::ThemeChanged {
                                         id: format!("user:{}", id),
                                     });
                                 }
-                            }
                         }
                         Err(_) => {
                             // El directorio fue eliminado

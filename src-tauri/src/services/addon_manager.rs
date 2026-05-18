@@ -107,18 +107,10 @@ impl AddonManager {
                     .filter_map(|v| {
                         if let Some(s) = v.as_str() {
                             Some(s.to_string())
-                        } else if let Some(name) = v["name"].as_str() {
-                            Some(name.to_string())
-                        } else {
-                            None
-                        }
+                        } else { v["name"].as_str().map(|name| name.to_string()) }
                     })
                     .collect())
-            } else if let Some(s) = authors_val.as_str() {
-                Some(vec![s.to_string()])
-            } else {
-                None
-            }
+            } else { authors_val.as_str().map(|s| vec![s.to_string()]) }
         } else {
             None
         };
@@ -150,11 +142,7 @@ impl AddonManager {
         let description = metadata["description"].as_str().map(|s| s.to_string());
         
         let authors = if let Some(contribs) = metadata.get("contributors") {
-            if let Some(map) = contribs.as_object() {
-                Some(map.keys().cloned().collect())
-            } else {
-                None
-            }
+            contribs.as_object().map(|map| map.keys().cloned().collect())
         } else {
             None
         };

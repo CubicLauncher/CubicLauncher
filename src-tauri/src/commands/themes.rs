@@ -84,15 +84,14 @@ pub fn get_user_theme(id: String) -> Result<ThemeFile, String> {
         serde_json::from_str(&content).map_err(|e| format!("Theme '{}' inválido: {}", id, e))?;
 
     // Resolver bg_image relativa al directorio del theme si no es absoluta
-    if let Some(ref bg) = theme.bg_image {
-        if !bg.starts_with('/') && !bg.starts_with("file:") {
+    if let Some(ref bg) = theme.bg_image
+        && !bg.starts_with('/') && !bg.starts_with("file:") {
             let abs_path = PathManager::get()
                 .get_themes_dir()
                 .join(&id)
                 .join(bg);
             theme.bg_image = Some(abs_path.to_string_lossy().to_string());
         }
-    }
 
     Ok(theme)
 }
@@ -158,17 +157,15 @@ pub fn import_theme(source_path: String) -> Result<ThemeEntry, String> {
         .map_err(|e| format!("No se pudo copiar el theme: {}", e))?;
 
     // Si el bg_image es una ruta relativa, intentar copiar el archivo
-    if let Some(ref bg) = theme_file.bg_image {
-        if !bg.starts_with('/') && !bg.starts_with("file:") {
+    if let Some(ref bg) = theme_file.bg_image
+        && !bg.starts_with('/') && !bg.starts_with("file:") {
             let bg_source = source.parent().map(|p| p.join(bg));
-            if let Some(bg_src) = bg_source {
-                if bg_src.exists() {
+            if let Some(bg_src) = bg_source
+                && bg_src.exists() {
                     let bg_dest = theme_dir.join(bg);
                     let _ = std::fs::copy(&bg_src, &bg_dest);
                 }
-            }
         }
-    }
 
     Ok(ThemeEntry {
         id: theme_id,
