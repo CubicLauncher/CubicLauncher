@@ -1,8 +1,7 @@
-use crate::core::instance_manager::{InstanceHandle, InstanceStatus};
 use crate::core::path_manager::PathManager;
-use crate::core::{
-    AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, SettingsManager, emit,
-};
+use crate::core::{AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, emit};
+use crate::services::instance_manager::{InstanceHandle, InstanceStatus};
+use crate::services::SettingsManager;
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
 use launchwerk::{auth::AccountType, auth::microsoft::MicrosoftAuth};

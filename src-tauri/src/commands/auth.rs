@@ -1,4 +1,4 @@
-use crate::core::SettingsManager;
+use crate::services::SettingsManager;
 use launchwerk::auth::{MinecraftUser, microsoft::MicrosoftAuth};
 use serde::Serialize;
 use tauri::command;

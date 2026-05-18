@@ -1,4 +1,4 @@
-use crate::core::SettingsManager;
+use crate::services::SettingsManager;
 use serde::Serialize;
 use std::path::Path;
 use tauri::command;

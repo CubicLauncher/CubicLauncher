@@ -1,6 +1,4 @@
-use crate::core::errors::CoreError;
-use crate::core::path_manager::PathManager;
-use crate::core::{AppError, FsError, emit};
+use crate::core::{AppError, CoreError, FsError, PathManager, emit};
 use launchwerk::auth::MinecraftUser;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -237,7 +235,7 @@ impl SettingsManager {
                 source: e,
             })
         })?;
-        emit(super::AppEvent::STChanged);
+        emit(crate::core::AppEvent::STChanged);
         Ok(())
     }
 

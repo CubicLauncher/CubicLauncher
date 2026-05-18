@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
-use crate::core::InstanceDto;
+use crate::services::InstanceDto;
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 

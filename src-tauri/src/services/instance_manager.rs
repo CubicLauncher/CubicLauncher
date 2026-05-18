@@ -1,5 +1,6 @@
 use crate::core::{AppEvent, FsError, InstanceError, emit};
-use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
+use crate::core::path_manager::PathManager;
+use crate::services::SettingsManager;
 use launchwerk::InstanceHandle as IHandleLaunchwerk;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

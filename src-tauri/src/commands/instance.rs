@@ -1,6 +1,11 @@
-use crate::core::{AppEvent, InstanceDto, InstanceManager, Launcher, PathManager, emit};
+use crate::core::{AppEvent, PathManager, emit};
+use crate::services::{InstanceDto, InstanceManager, Launcher};
 use std::path::PathBuf;
 use tracing::error;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Lifecycle
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn launch(instance_id: String) -> Result<(), String> {
@@ -17,6 +22,8 @@ pub async fn launch(instance_id: String) -> Result<(), String> {
     Ok(())
 }
 
+// ── Kill ─────────────────────────────────────────────────────────────────────
+
 #[tauri::command]
 pub async fn kill_instance(uuid: String) -> Result<(), String> {
     let manager = InstanceManager::get();
@@ -32,10 +39,16 @@ pub async fn kill_instance(uuid: String) -> Result<(), String> {
     Ok(())
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Querying
+// ═══════════════════════════════════════════════════════════════════════════════
+
 #[tauri::command]
 pub async fn get_instances() -> Vec<InstanceDto> {
     InstanceManager::get().get_all_dtos().await
 }
+
+// ── CRUD ─────────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub async fn create_instance(
@@ -57,6 +70,15 @@ pub async fn create_instance(
         Err(e) => Err(e.to_string()),
     }
 }
+
+#[tauri::command]
+pub async fn delete_instance(id: String) -> Result<(), String> {
+    InstanceManager::get().delete_instance(&id).await
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Screenshots & Cover Image
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
@@ -153,10 +175,9 @@ pub async fn get_instance_banner(instance_id: String) -> Option<String> {
     get_instance_screenshot(handle.get_name().await).await
 }
 
-#[tauri::command]
-pub async fn delete_instance(id: String) -> Result<(), String> {
-    InstanceManager::get().delete_instance(&id).await
-}
+// ═══════════════════════════════════════════════════════════════════════════════
+// Edición
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<(), String> {
@@ -225,6 +246,8 @@ pub async fn update_instance(
         .await
 }
 
+// ── Logos & Versiones ────────────────────────────────────────────────────────
+
 #[tauri::command]
 pub async fn get_available_logos() -> Vec<String> {
     let mut logos = Vec::new();
@@ -259,6 +282,10 @@ pub async fn get_installed_versions() -> Vec<String> {
     versions.sort_by(|a, b| b.cmp(a));
     versions
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Mods
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[derive(serde::Serialize)]
 pub struct ModDto {
@@ -310,7 +337,7 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
                             None => filename.clone(),
                         };
 
-                        let metadata = crate::core::AddonManager::get_mod_info(&path);
+                        let metadata = crate::services::AddonManager::get_mod_info(&path);
 
                         mods.push(ModDto {
                             name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(display_name),
@@ -328,6 +355,8 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
     mods.sort_by_key(|a| a.name.to_lowercase());
     mods
 }
+
+// ── Toggle mod ────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> Result<(), String> {
@@ -360,6 +389,10 @@ pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> 
     Ok(())
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Resource Packs
+// ═══════════════════════════════════════════════════════════════════════════════
+
 #[tauri::command]
 pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
     let manager = InstanceManager::get();
@@ -378,8 +411,8 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
                     continue;
                 };
                 let filename = file_name.to_string_lossy().to_string();
-                let metadata = crate::core::AddonManager::get_resourcepack_info(&path);
-                
+                let metadata = crate::services::AddonManager::get_resourcepack_info(&path);
+
                 resourcepacks.push(ModDto {
                     name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(filename.clone()),
                     filename,
@@ -395,6 +428,10 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
     resourcepacks.sort_by_key(|a| a.name.to_lowercase());
     resourcepacks
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Logs
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn get_instance_logs(id: String) -> Vec<String> {
@@ -433,6 +470,10 @@ pub async fn read_instance_log(id: String, filename: String) -> Result<String, S
 
     std::fs::read_to_string(log_path).map_err(|e| e.to_string())
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// File Operations
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn delete_instance_file(

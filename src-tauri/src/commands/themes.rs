@@ -1,4 +1,5 @@
-use crate::core::{AppEvent, PathManager, SettingsManager, emit};
+use crate::core::{AppEvent, PathManager, emit};
+use crate::services::SettingsManager;
 use crate::theme_watcher::ThemeWatcher;
 use serde::{Deserialize, Serialize};
 use tauri::command;

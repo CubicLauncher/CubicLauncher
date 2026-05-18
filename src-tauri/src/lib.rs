@@ -1,9 +1,9 @@
 mod commands;
 mod core;
+mod services;
 pub(crate) mod theme_watcher;
 
-pub use core::InstanceManager;
-use crate::core::SettingsManager;
+pub use services::InstanceManager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -56,12 +56,12 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                core::DownloadQueue::init(Some(handle.clone())).await;
-                core::Launcher::init().set_handle(handle.clone());
+                services::DownloadQueue::init(Some(handle.clone())).await;
+                services::Launcher::init().set_handle(handle.clone());
                 InstanceManager::init().await;
                 core::init(handle.clone());
                 theme_watcher::ThemeWatcher::start().await;
-                let theme = SettingsManager::read().theme.clone();
+                let theme = services::SettingsManager::read().theme.clone();
                 if let Some(dir) = theme.strip_prefix("user:") {
                     theme_watcher::ThemeWatcher::watch(Some(dir.to_string()));
                 }
