@@ -21,6 +21,9 @@ export interface ModDto {
   name: string;
   filename: string;
   version: string | null;
+  description: string | null;
+  authors: string[] | null;
+  icon: string | null;
   enabled: boolean;
 }
 export interface InstancesPollingPayload {
@@ -37,6 +40,7 @@ export interface Settings {
   jre8_path: string;
   jre17_path: string;
   jre21_path: string;
+  jre25_path: string;
   language: string;
   auto_updates: boolean;
   close_launcher_on_play: boolean;
@@ -44,6 +48,7 @@ export interface Settings {
   show_alpha: boolean;
   force_gpu: boolean;
   jvm_args: string;
+  theme: string;
 }
 
 export type AccountType = "Cracked" | "Microsoft";
@@ -99,4 +104,35 @@ export type AppEvent =
         id: string;
         dto: InstanceDto;
       };
+    }
+  | {
+      type: "DProgress";
+      data: {
+        version: string;
+        current: number;
+        total: number;
+        d_type: string;
+      };
+    }
+  | {
+      type: "DFinish";
+      data: {
+        version: string;
+      };
+    }
+  | {
+      type: "STChanged";
+    }
+  | {
+      type: "ThemeChanged";
+      data: {
+        id: string;
+      };
     };
+
+export interface ThemeEntry {
+  id: string;
+  name: string;
+  author: string;
+  type: string;
+}

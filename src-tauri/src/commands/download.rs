@@ -1,10 +1,9 @@
-use crate::core::DownloadQueue;
 use crate::core::PathManager;
+use crate::services::DownloadQueue;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
-const MOJANG_MANIFEST_URL: &'static str =
-    "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
+const MOJANG_MANIFEST_URL: &str = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MinecraftVersion {
@@ -164,7 +163,7 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         .map_err(|e| format!("Error al parsear el JSON del perfil: {}", e))?;
 
     // 3. Guardar el JSON en shared/versions/ID/ID.json
-    let shared_dir = crate::core::PathManager::get().get_shared_dir();
+    let shared_dir = PathManager::get().get_shared_dir();
     let version_dir = shared_dir.join("versions").join(&fabric_version_id);
     tokio::fs::create_dir_all(&version_dir)
         .await
@@ -193,10 +192,7 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         );
         let dest_path = lib_base_dir.join(&rel_path);
 
-        let exists = match tokio::fs::try_exists(&dest_path).await {
-            Ok(e) => e,
-            Err(_) => false,
-        };
+        let exists = tokio::fs::try_exists(&dest_path).await.unwrap_or_default();
 
         if !exists {
             if let Some(parent) = dest_path.parent() {
@@ -204,19 +200,45 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
             }
 
             let download_url = format!("{}{}", lib.url, rel_path);
-            if let Ok(res) = reqwest::get(&download_url).await {
-                if let Ok(bytes) = res.bytes().await {
-                    let _ = tokio::fs::write(dest_path, bytes).await;
-                }
+            if let Ok(res) = reqwest::get(&download_url).await
+                && let Ok(bytes) = res.bytes().await
+            {
+                let _ = tokio::fs::write(dest_path, bytes).await;
             }
         }
     }
 
     {
-        let d_queue = DownloadQueue::get();
+        let d_queue = crate::services::DownloadQueue::get();
         d_queue.enqueue(game_version).await;
         d_queue.enqueue(fabric_version_id).await;
     }
 
     Ok(())
+}
+#[derive(serde::Serialize)]
+pub struct DownloadQueueItem {
+    pub version: String,
+    pub status: String,
+    pub current: u64,
+    pub total: u64,
+}
+
+#[tauri::command]
+pub async fn get_download_queue() -> Vec<DownloadQueueItem> {
+    let queue = crate::services::DownloadQueue::get();
+    let handles = queue.get_active_downloads().await;
+
+    handles
+        .iter()
+        .map(|h| {
+            let (current, total) = h.get_progress();
+            DownloadQueueItem {
+                version: h.version.clone(),
+                status: format!("{:?}", h.get_status()).to_lowercase(),
+                current,
+                total,
+            }
+        })
+        .collect()
 }

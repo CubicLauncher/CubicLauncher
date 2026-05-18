@@ -9,14 +9,14 @@ pub struct PathManager {
     instances_dir: PathBuf,
     shared_dir: PathBuf,
     settings_dir: PathBuf,
+    themes_dir: PathBuf,
 }
 
 impl PathManager {
-    // Getters
     pub fn get() -> &'static PathManager {
         &PATH_MANAGER
     }
-    // getters
+
     pub fn get_instance_dir(&self) -> &Path {
         &self.instances_dir
     }
@@ -26,26 +26,40 @@ impl PathManager {
     pub fn get_settings_dir(&self) -> &Path {
         &self.settings_dir
     }
-    // Inicializador
+    pub fn get_themes_dir(&self) -> &Path {
+        &self.themes_dir
+    }
+
+    pub fn ensure_dirs() -> Result<(), Vec<String>> {
+        let dirs = [
+            Self::get().get_instance_dir(),
+            Self::get().get_shared_dir(),
+            Self::get().get_settings_dir(),
+            Self::get().get_themes_dir(),
+        ];
+
+        let mut errors = Vec::new();
+        for dir in &dirs {
+            if let Err(e) = std::fs::create_dir_all(dir) {
+                errors.push(format!("{}: {}", dir.display(), e));
+            }
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+
     fn initialize() -> PathManager {
         let base_dir = resolve_base_dir();
 
-        let instances_dir = base_dir.join(".cubic").join("instances");
-        let shared_dir = base_dir.join(".cubic").join("shared");
-        let settings_dir = base_dir.join(".cubic").join("settings");
-
-        // Crear directorios si no existen
-        std::fs::create_dir_all(&instances_dir)
-            .unwrap_or_else(|e| panic!("No se pudo crear instances dir: {}", e));
-        std::fs::create_dir_all(&shared_dir)
-            .unwrap_or_else(|e| panic!("No se pudo crear shared dir: {}", e));
-        std::fs::create_dir_all(&settings_dir)
-            .unwrap_or_else(|e| panic!("No se pudo crear settings dir: {}", e));
-
         PathManager {
-            instances_dir,
-            shared_dir,
-            settings_dir,
+            instances_dir: base_dir.join(".cubic").join("instances"),
+            shared_dir: base_dir.join(".cubic").join("shared"),
+            settings_dir: base_dir.join(".cubic").join("settings"),
+            themes_dir: base_dir.join(".cubic").join("themes"),
         }
     }
 }
@@ -57,10 +71,10 @@ fn resolve_base_dir() -> PathBuf {
         return d.home_dir().to_path_buf();
     }
     // en el caso de que no obtenga path que use el path actual de donde se ejecuta el binario
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(parent) = exe.parent() {
-            return parent.to_path_buf();
-        }
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(parent) = exe.parent()
+    {
+        return parent.to_path_buf();
     }
     // si eso no funciona
     // entonces dir de trabajo actual lpm
@@ -68,5 +82,5 @@ fn resolve_base_dir() -> PathBuf {
         return cwd;
     }
     // si tampoco da entonces temp
-    return temp_dir();
+    temp_dir()
 }

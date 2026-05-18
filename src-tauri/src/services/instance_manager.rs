@@ -1,9 +1,10 @@
-use crate::core::{FsError, InstanceError};
-use crate::core::{path_manager::PathManager, settings_manager::SettingsManager};
+use crate::core::{AppEvent, FsError, InstanceError, emit};
+use crate::core::path_manager::PathManager;
+use crate::services::SettingsManager;
+use launchwerk::InstanceHandle as IHandleLaunchwerk;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::process::Child;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::{fs, io};
@@ -124,8 +125,7 @@ impl InstanceData {
         }
         let dir = self.get_instance_dir();
         tokio_fs::create_dir_all(&dir).await?;
-        let content = serde_json::to_string_pretty(self)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        let content = serde_json::to_string_pretty(self).map_err(io::Error::other)?;
         tokio_fs::write(dir.join("instance.cub"), content).await?;
         self.dirty = false;
         Ok(())
@@ -153,7 +153,7 @@ pub struct InstanceHandle {
     pub uuid: String,
     data: Arc<RwLock<InstanceData>>,
     status: Arc<AtomicStatus>,
-    process: Arc<Mutex<Option<Child>>>,
+    handle: Option<Arc<IHandleLaunchwerk>>,
 }
 
 impl InstanceHandle {
@@ -162,7 +162,7 @@ impl InstanceHandle {
             uuid: data.uuid.clone(),
             data: Arc::new(RwLock::new(data)),
             status: Arc::new(AtomicStatus::new()),
-            process: Arc::new(Mutex::new(None)),
+            handle: None,
         }
     }
 
@@ -179,6 +179,9 @@ impl InstanceHandle {
 
     pub fn set_status(&self, status: InstanceStatus) {
         self.status.set(status);
+        emit(AppEvent::InstanceEdited {
+            id: self.uuid.to_string(),
+        });
     }
 
     pub fn is_busy(&self) -> bool {
@@ -190,49 +193,19 @@ impl InstanceHandle {
 
     // ── Proceso ───────────────────────────────────────────────────────────
 
-    pub fn attach_process(&self, child: Child) {
-        *self.process.lock().unwrap() = Some(child);
+    pub fn attach_handle(&mut self, handle: Arc<IHandleLaunchwerk>) {
+        self.handle = Some(handle);
     }
 
-    pub fn kill(&self) {
-        let mut guard = self.process.lock().unwrap();
-        if let Some(ref mut child) = *guard {
-            let _ = child.kill();
+    pub async fn kill(&self) -> Result<(), InstanceError> {
+        if let Some(handle) = &self.handle
+            && let Err(e) = handle.kill().await
+        {
+            error!("Error al cerrar instancia {}", e.to_string());
         }
-        *guard = None;
-        drop(guard);
         self.set_status(InstanceStatus::Off);
-    }
 
-    /// Retorna true cuando el proceso terminó.
-    /// Actualiza el status a Off o Error según el exit code.
-    pub fn check_and_detach(&self) -> bool {
-        let mut guard = self.process.lock().unwrap();
-        match *guard {
-            None => true,
-            Some(ref mut child) => match child.try_wait() {
-                Ok(Some(exit)) => {
-                    *guard = None;
-                    drop(guard);
-                    if exit.success() {
-                        self.set_status(InstanceStatus::Off);
-                    } else {
-                        self.set_status(InstanceStatus::Error(format!(
-                            "Proceso terminó con código {:?}",
-                            exit.code()
-                        )));
-                    }
-                    true
-                }
-                Ok(None) => false,
-                Err(e) => {
-                    *guard = None;
-                    drop(guard);
-                    self.set_status(InstanceStatus::Error(e.to_string()));
-                    true
-                }
-            },
-        }
+        Ok(())
     }
 
     // ── Lecturas de data ──────────────────────────────────────────────────
@@ -399,9 +372,12 @@ impl InstanceManager {
         version: String,
         icon: Option<String>,
     ) -> Result<InstanceHandle, InstanceError> {
-        validate_instance_name(&name).map_err(|e| InstanceError::InstNameParse(e))?;
+        validate_instance_name(&name).map_err(InstanceError::InstNameParse)?;
 
         let mut data = InstanceData::new(name, version, icon);
+        if data.get_instance_dir().exists() {
+            Err(InstanceError::AlreadyExists)?;
+        }
         data.save().await.map_err(|e| {
             InstanceError::Fs(FsError::WriteFile {
                 path: data
@@ -532,23 +508,6 @@ pub struct InstanceDto {
     pub icon: Option<String>,
     pub uuid: String,
     pub path: PathBuf,
-}
-
-#[derive(Serialize, Clone)]
-pub struct InstancesPollingPayload {
-    running: Vec<String>,
-    all: Vec<InstanceDto>,
-    count: usize,
-}
-
-impl InstancesPollingPayload {
-    pub fn new(running: Vec<String>, all: Vec<InstanceDto>, count: usize) -> Self {
-        Self {
-            running,
-            all,
-            count,
-        }
-    }
 }
 
 // ── Validación ────────────────────────────────────────────────────────────────

@@ -1,9 +1,9 @@
-use crate::core::errors::SettingsError;
-use crate::core::path_manager::PathManager;
-use claunch_rs::MinecraftUser;
+use crate::core::{AppError, CoreError, FsError, PathManager, emit};
+use launchwerk::auth::MinecraftUser;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, RwLock};
+use tokio::fs;
 use tracing::{error, warn};
 
 // ── Static global ─────────────────────────────────────────────────────────────
@@ -28,6 +28,9 @@ fn default_lang() -> String {
 fn default_true() -> bool {
     true
 }
+fn default_theme() -> String {
+    String::from("dark")
+}
 
 // ── SettingsManager ───────────────────────────────────────────────────────────
 
@@ -49,6 +52,8 @@ pub struct SettingsManager {
     pub jre17_path: PathBuf,
     #[serde(default)]
     pub jre21_path: PathBuf,
+    #[serde(default)]
+    pub jre25_path: PathBuf,
     #[serde(default = "default_lang")]
     pub language: String,
     #[serde(default = "default_true")]
@@ -65,6 +70,8 @@ pub struct SettingsManager {
     pub force_gpu: bool,
     #[serde(default)]
     pub jvm_args: String,
+    #[serde(default = "default_theme")]
+    pub theme: String,
     #[serde(skip)]
     pub dirty: bool,
 }
@@ -79,6 +86,7 @@ impl Default for SettingsManager {
             jre8_path: PathBuf::new(),
             jre17_path: PathBuf::new(),
             jre21_path: PathBuf::new(),
+            jre25_path: PathBuf::new(),
             language: String::from("es"),
             auto_updates: true,
             show_error_console: false,
@@ -87,6 +95,7 @@ impl Default for SettingsManager {
             show_alpha: false,
             force_gpu: false,
             jvm_args: String::new(),
+            theme: String::from("dark"),
             dirty: true,
         }
     }
@@ -97,10 +106,10 @@ impl SettingsManager {
         SETTINGS.read().unwrap_or_else(|e| e.into_inner())
     }
 
-    pub fn write(f: impl FnOnce(&mut SettingsManager)) -> Result<(), SettingsError> {
+    pub fn write(f: impl FnOnce(&mut SettingsManager)) -> Result<(), CoreError> {
         let mut settings = SETTINGS
             .write()
-            .map_err(|e| SettingsError::LockPoisoned(e.to_string()))?;
+            .map_err(|e| CoreError::LockPoisoned(e.to_string()))?;
         f(&mut settings);
         Ok(())
     }
@@ -129,7 +138,9 @@ impl SettingsManager {
     pub fn get_jre21_path(&self) -> &Path {
         &self.jre21_path
     }
-
+    pub fn get_jre25_path(&self) -> &Path {
+        &self.jre25_path
+    }
     pub fn get_minecraft_user(&self) -> MinecraftUser {
         match &self.user {
             Some(user) => {
@@ -185,36 +196,50 @@ impl SettingsManager {
         self.jre21_path = path;
         self.dirty = true;
     }
-
+    pub fn set_jre25_path(&mut self, path: PathBuf) {
+        self.jre25_path = path;
+        self.dirty = true;
+    }
     // ── Persistencia ──────────────────────────────────────────────────────────
 
     /// Serializa y escribe a disco.
     /// Extrae el contenido con el Mutex tomado, luego escribe fuera del scope
     /// para minimizar el tiempo que el lock bloquea otros hilos.
-    pub fn save(&mut self) {
-        if !self.dirty {
-            return;
-        }
-
-        let path = PathManager::get().get_settings_dir().join("settings.cub");
-
-        // Serializar mientras tenemos &self — el write al disco ocurre después
-        let content = match serde_json::to_string_pretty(&self) {
-            Ok(c) => c,
-            Err(e) => {
-                error!("No se pudo serializar la configuración: {}", e);
-                return;
+    pub async fn save() -> Result<(), AppError> {
+        let (content, path) = {
+            let mut settings = SETTINGS
+                .write()
+                .map_err(|e| CoreError::LockPoisoned(e.to_string()))?;
+            if !settings.dirty {
+                return Ok(());
             }
+            let content = serde_json::to_string_pretty(&*settings)
+                .map_err(|e| CoreError::Serialize(e.to_string()))?;
+            settings.dirty = false;
+            let path = PathManager::get().get_settings_dir().join("settings.cub");
+            (content, path)
         };
 
-        // Marcar como limpio antes de escribir — si el write falla dirty
-        // vuelve a true en el Err de abajo, evitando pérdida silenciosa
-        self.dirty = false;
-
-        if let Err(e) = std::fs::write(&path, content) {
-            error!("No se pudo guardar la configuración en {:?}: {}", path, e);
-            self.dirty = true; // revertir para reintentar en el próximo save()
-        }
+        let parent = path.parent().ok_or_else(|| {
+            AppError::CoreError(CoreError::Serialize(format!(
+                "Ruta de settings inválida: {}",
+                path.display()
+            )))
+        })?;
+        fs::create_dir_all(parent).await.map_err(|e| {
+            AppError::Fs(FsError::CreateDir {
+                path: parent.to_string_lossy().to_string(),
+                source: e,
+            })
+        })?;
+        fs::write(&path, content).await.map_err(|e| {
+            AppError::Fs(FsError::WriteFile {
+                path: path.to_string_lossy().to_string(),
+                source: e,
+            })
+        })?;
+        emit(crate::core::AppEvent::STChanged);
+        Ok(())
     }
 
     pub fn load() -> Self {

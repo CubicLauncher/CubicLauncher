@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import "../styles/App.css";
     import { launcherStore } from "$lib/state/state.svelte";
-    import { getVersions } from "$lib/api/launcherService";
+    import { getVersions, syncSettings } from "$lib/api/launcherService";
     import type { InstanceDto } from "$lib/types/types";
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
     import InstanceView from "$lib/components/instances/InstanceView.svelte";
@@ -15,13 +15,15 @@
     import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
     import DownloadProgressBar from "$lib/components/ui/DownloadProgressBar.svelte";
     import { checkForUpdates } from "$lib/api/updaterServices";
-
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
     let versionDownloaderOpen = $state(false);
     let openCreateModal = $state(false);
 
+    import { applyTheme } from "$lib/api/themeManager";
+
     onMount(async () => {
+        await syncSettings();
         await getVersions();
 
         const firstInstance = launcherStore.loadedInstances[0];
@@ -29,6 +31,8 @@
         if (firstInstance && !selectedInstance) {
             selectedInstance = firstInstance;
         }
+
+        applyTheme(launcherStore.settings.theme);
 
         if (launcherStore.settings.auto_updates) {
             checkForUpdates(true);
@@ -66,10 +70,7 @@
     />
 
     <main class="main-content">
-        <div
-            class="background-overlay"
-            style="background-image: url('/images/bg.png');"
-        ></div>
+        <div class="background-overlay"></div>
 
         {#if selectedInstance}
             <InstanceView {selectedInstance} />

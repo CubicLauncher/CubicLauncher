@@ -1,30 +1,3 @@
-use crate::core::{InstanceManager, InstancesPollingPayload};
-use tauri::{AppHandle, Emitter};
-use tracing::debug;
-
-#[deprecated(since = "26.4.3", note = "Por favor usa el nuevo EventBus")]
-#[tauri::command]
-pub fn start_polling(app: AppHandle) {
-    tauri::async_runtime::spawn(async move {
-        loop {
-            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-            debug!("Eviando polling");
-            let payload = {
-                let manager = InstanceManager::get();
-
-                InstancesPollingPayload::new(
-                    manager.get_running_ids().await,
-                    manager.get_all_dtos().await,
-                    manager.count().await,
-                )
-            };
-
-            // Emitimos un solo evento con toda la información
-            let _ = app.emit("instances-update", payload);
-        }
-    });
-}
-
 #[tauri::command]
 pub fn open_url(url: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]

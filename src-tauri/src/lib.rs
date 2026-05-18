@@ -1,7 +1,9 @@
 mod commands;
 mod core;
+mod services;
+pub(crate) mod theme_watcher;
 
-pub use core::InstanceManager;
+pub use services::InstanceManager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -34,7 +36,7 @@ pub fn run() {
             commands::download::get_available_versions,
             commands::download::get_fabric_versions,
             commands::download::download_fabric,
-            commands::others::start_polling,
+            commands::download::get_download_queue,
             commands::others::open_url,
             commands::settings::get_settings,
             commands::settings::update_settings,
@@ -43,14 +45,42 @@ pub fn run() {
             commands::auth::authenticate_with_device_code,
             commands::auth::get_current_user,
             commands::auth::logout,
+            commands::themes::list_themes,
+            commands::themes::get_user_theme,
+            commands::themes::set_theme,
+            commands::themes::get_current_theme,
+            commands::themes::import_theme,
+            commands::themes::get_themes_dir_path,
         ])
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
+            if let Err(errors) = core::PathManager::ensure_dirs() {
+                use tauri_plugin_dialog::DialogExt;
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    handle.dialog()
+                        .message(format!(
+                            "No se pudieron crear los directorios necesarios:\n{}",
+                            errors.join("\n")
+                        ))
+                        .title("Error de inicialización")
+                        .kind(tauri_plugin_dialog::MessageDialogKind::Error)
+                        .show(|_| std::process::exit(1));
+                });
+                return Err("Error de inicialización: no se pudieron crear los directorios".into());
+            }
+
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                core::DownloadQueue::init(Some(handle.clone())).await;
-                core::Launcher::init().set_handle(handle.clone());
-                core::init(handle);
+                services::DownloadQueue::init(Some(handle.clone())).await;
+                services::Launcher::init().set_handle(handle.clone());
+                InstanceManager::init().await;
+                core::init(handle.clone());
+                theme_watcher::ThemeWatcher::start().await;
+                let theme = services::SettingsManager::read().theme.clone();
+                if let Some(dir) = theme.strip_prefix("user:") {
+                    theme_watcher::ThemeWatcher::watch(Some(dir.to_string()));
+                }
             });
             Ok(())
         })

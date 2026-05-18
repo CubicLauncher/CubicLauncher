@@ -1,6 +1,6 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { invoke } from "@tauri-apps/api/core";
-    import type { InstanceDto } from "$lib/types/types";
     import { launcherStore } from "$lib/state/state.svelte";
     import { killInst, saveSettings } from "$lib/api/launcherService";
     import { t } from "$lib/i18n";
@@ -10,6 +10,8 @@
         downloadUpdate,
         installUpdate,
     } from "$lib/api/updaterServices";
+    import { applyTheme, listThemes } from "$lib/api/themeManager";
+    import type { ThemeEntry } from "$lib/types/types";
 
     interface Props {
         onclose?: () => void;
@@ -33,11 +35,16 @@
 
     async function autoDetectJava() {
         try {
-            const paths: { jre8: string; jre17: string; jre21: string } =
-                await invoke("detect_java_paths");
+            const paths: {
+                jre8: string;
+                jre17: string;
+                jre21: string;
+                jre25: string;
+            } = await invoke("detect_java_paths");
             if (paths.jre8) launcherStore.settings.jre8_path = paths.jre8;
             if (paths.jre17) launcherStore.settings.jre17_path = paths.jre17;
             if (paths.jre21) launcherStore.settings.jre21_path = paths.jre21;
+            if (paths.jre25) launcherStore.settings.jre25_path = paths.jre25;
         } catch (e) {
             console.error("Failed to detect java paths", e);
         }
@@ -68,12 +75,28 @@
         { id: "java", label: t("settings.tabs.java") },
     ]);
 
-    let languageOptions = [
+    const languageOptions = [
         { value: "es", label: "Español" },
         { value: "en", label: "English" },
     ];
+    let availableThemes = $state<ThemeEntry[]>([]);
+    let themeOptions = $derived(availableThemes.map((t: ThemeEntry) => ({
+        value: t.id,
+        label: t.name,
+    })));
 
-    const currentVersion = "2604c (26.4.2)";
+    async function loadThemes() {
+        availableThemes = await listThemes();
+    }
+
+    onMount(loadThemes);
+    let runningInstances = $derived(
+        launcherStore.loadedInstances
+            .filter((i) => i.status === "started" || i.status === "starting")
+            .map((i) => i.uuid),
+    );
+
+    const currentVersion = "2604d (26.4.3)";
 </script>
 
 <div class="qm-root">
@@ -103,7 +126,7 @@
                 <span class="qm-section-label"
                     >{t("settings.launcher.activeInstancesTitle")}</span
                 >
-                {#each launcherStore.runningInstances as uuid}
+                {#each runningInstances as uuid}
                     {@const inst = launcherStore.loadedInstances.find(
                         (i) => i.uuid === uuid,
                     )}
@@ -265,6 +288,27 @@
                 </div>
             </section>
 
+            <!-- Themes -->
+            <section class="qm-section">
+                <span class="qm-section-label">Temas</span>
+                <div class="qm-field">
+                    <Select
+                        id="theme"
+                        label="Tema activo"
+                        options={themeOptions}
+                        bind:value={launcherStore.settings.theme}
+                        onchange={async () => {
+                            try {
+                                await invoke("set_theme", { id: launcherStore.settings.theme });
+                                applyTheme(launcherStore.settings.theme);
+                            } catch (e) {
+                                console.error("Error setting theme:", e);
+                            }
+                        }}
+                    />
+                </div>
+            </section>
+
             <!-- General Settings -->
             <section class="qm-section">
                 <span class="qm-section-label"
@@ -420,12 +464,21 @@
                     />
                 </div>
                 <div class="qm-field">
+                    <label for="jre25">{t("settings.java.java25Path")}</label>
+                    <input
+                        type="text"
+                        id="jre25"
+                        bind:value={launcherStore.settings.jre25_path}
+                        placeholder="Path to javaw.exe"
+                    />
+                </div>
+                <div class="qm-field">
                     <label for="jvm-args">{t("settings.java.jvmArgs")}</label>
                     <textarea
                         id="jvm-args"
                         bind:value={launcherStore.settings.jvm_args}
                         placeholder="-Xmx2G -Xms1G ..."
-                        style="width: 100%; background: #111; border: 1px solid #333; color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 60px;"
+                        style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 60px;"
                     ></textarea>
                 </div>
             </section>

@@ -1,0 +1,53 @@
+{
+  "name": "Claro",
+  "author": "CubicLauncher",
+  "type": "builtin",
+  "variables": {
+    "--bg-main": "#f0f2f5",
+    "--bg-sidebar": "#ffffff",
+    "--bg-card": "#ffffff",
+    "--bg-item-active": "#e3e6ea",
+    "--bg-overlay": "rgba(0,0,0,0.2)",
+    "--bg-input": "#f8f9fa",
+
+    "--text-primary": "#1f2328",
+    "--text-secondary": "#656d76",
+    "--text-muted": "#8b949e",
+
+    "--border-color": "#d0d7de",
+    "--border-radius": "8px",
+    "--border-radius-sm": "4px",
+
+    "--accent": "#3b82f6",
+    "--accent-rgb": "59,130,246",
+    "--accent-hover": "#2563eb",
+    "--accent-text": "#ffffff",
+
+    "--shadow-sm": "0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.1)",
+    "--shadow-md": "0 4px 6px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.08)",
+    "--glow-accent": "0 0 12px rgba(59,130,246,0.3)",
+
+    "--color-success": "#16a34a",
+    "--color-success-rgb": "22,163,74",
+    "--color-error": "#dc2626",
+    "--color-error-rgb": "220,38,38",
+    "--color-warning": "#d97706",
+    "--color-warning-rgb": "217,119,6",
+    "--color-status-starting": "#5e81ac",
+    "--color-status-started": "#8fbc8f",
+    "--icon-filter": "brightness(0) saturate(100%) invert(13%) sepia(6%) saturate(718%) hue-rotate(186deg) brightness(95%) contrast(88%)",
+    "--icon-filter-error": "brightness(0) saturate(100%) invert(15%) sepia(91%) saturate(7480%) hue-rotate(2deg) brightness(97%) contrast(116%)",
+
+    "--scrollbar-track": "#f0f2f5",
+    "--scrollbar-thumb": "#c0c7cf",
+
+    "--font-family": "Cantarell, sans-serif",
+    "--font-size-base": "14px",
+    "--font-size-sm": "12px",
+    "--font-size-lg": "16px",
+
+    "--bg-image": "none",
+    "--bg-image-blur": "0px",
+    "--bg-image-opacity": "1"
+  }
+}

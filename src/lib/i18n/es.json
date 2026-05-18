@@ -45,6 +45,7 @@
       "java8Path": "Ruta de Java 8",
       "java17Path": "Ruta de Java 17",
       "java21Path": "Ruta de Java 21",
+      "java25Path": "Ruta de Java 25",
       "jvmArgs": "Argumentos JVM",
       "saveBtn": "Guardar Ajustes",
       "saving": "Guardando..."
@@ -135,7 +136,9 @@
     "mods": {
       "title": "Mods Instalados",
       "jarFile": "Archivo .JAR",
-      "empty": "No hay mods instalados en esta instancia"
+      "empty": "No hay mods instalados en esta instancia",
+      "authors": "Autores",
+      "noDescription": "Sin descripción disponible"
     },
     "resources": {
       "title": "Paquetes de Recursos",

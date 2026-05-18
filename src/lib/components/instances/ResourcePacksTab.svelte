@@ -57,10 +57,20 @@
     </div>
     
     <div class="packs-grid">
-        {#each packs as pack}
-            <div class="pack-card" title={pack.filename}>
+        {#each packs as pack (pack.filename)}
+            <div class="pack-card">
+                <div class="pack-icon">
+                    {#if pack.icon}
+                        <img src={pack.icon} alt={pack.name} />
+                    {:else}
+                        <div class="mod-icon-placeholder">🎨</div>
+                    {/if}
+                </div>
                 <div class="pack-info">
-                    <span class="pack-name">{pack.name}</span>
+                    <span class="pack-name" title={pack.name}>{pack.name}</span>
+                    <p class="pack-description" title={pack.description}>
+                        {pack.description || t('instanceView.mods.noDescription')}
+                    </p>
                 </div>
                 <button class="delete-btn" onclick={() => handleDelete(pack)} title="Eliminar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>

@@ -8,6 +8,12 @@ pub enum InstanceError {
     #[error("Mod no encontrado")]
     ModNotFound,
 
+    #[error("La instancia ya ha sido lanzada")]
+    AlreadyStarted,
+
+    #[error("La instancia ya existe")]
+    AlreadyExists,
+
     #[error("Archivo de registro no encontrado")]
     LogNotFound,
 

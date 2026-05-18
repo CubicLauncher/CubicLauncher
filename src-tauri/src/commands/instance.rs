@@ -1,6 +1,11 @@
-use crate::core::{AppEvent, InstanceDto, InstanceManager, Launcher, PathManager, emit};
+use crate::core::{AppEvent, PathManager, emit};
+use crate::services::{InstanceDto, InstanceManager, Launcher};
 use std::path::PathBuf;
 use tracing::error;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Lifecycle
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn launch(instance_id: String) -> Result<(), String> {
@@ -9,25 +14,41 @@ pub async fn launch(instance_id: String) -> Result<(), String> {
         return Err("Instancia no encontrada".to_string());
     };
 
-    let result = Launcher::get().launch(handle.clone()).await;
+    Launcher::get()
+        .launch(handle.clone())
+        .await
+        .map_err(|e| e.to_string())?;
 
-    result
+    Ok(())
 }
 
+// ── Kill ─────────────────────────────────────────────────────────────────────
+
 #[tauri::command]
-pub async fn kill_instance(uuid: String) {
+pub async fn kill_instance(uuid: String) -> Result<(), String> {
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&uuid).await else {
         error!("Instancia no encontrada");
-        return;
+        return Err("Instancia no encontrada".to_string());
     };
-    handle.kill();
+
+    if let Err(e) = handle.kill().await {
+        return Err(e.to_string());
+    }
+
+    Ok(())
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Querying
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn get_instances() -> Vec<InstanceDto> {
     InstanceManager::get().get_all_dtos().await
 }
+
+// ── CRUD ─────────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub async fn create_instance(
@@ -51,6 +72,15 @@ pub async fn create_instance(
 }
 
 #[tauri::command]
+pub async fn delete_instance(id: String) -> Result<(), String> {
+    InstanceManager::get().delete_instance(&id).await
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Screenshots & Cover Image
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[tauri::command]
 pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
     let all = InstanceManager::get().get_all_dtos().await;
     all.into_iter().find(|i| i.name == instance_name)?;
@@ -66,7 +96,7 @@ pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
             .filter(|e| {
                 e.path()
                     .extension()
-                    .map_or(false, |ext| ext.to_ascii_lowercase() == "png")
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
             })
             .collect();
 
@@ -96,7 +126,7 @@ pub async fn get_all_instance_screenshots(instance_name: String) -> Vec<String> 
             .filter(|e| {
                 e.path()
                     .extension()
-                    .map_or(false, |ext| ext.to_ascii_lowercase() == "png")
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
             })
             .collect();
 
@@ -145,10 +175,9 @@ pub async fn get_instance_banner(instance_id: String) -> Option<String> {
     get_instance_screenshot(handle.get_name().await).await
 }
 
-#[tauri::command]
-pub async fn delete_instance(id: String) -> Result<(), String> {
-    InstanceManager::get().delete_instance(&id).await
-}
+// ═══════════════════════════════════════════════════════════════════════════════
+// Edición
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<(), String> {
@@ -163,11 +192,10 @@ pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<()
         path = path.join(sub);
     }
 
-    if !path.exists() {
-        if let Err(e) = std::fs::create_dir_all(&path) {
+    if !path.exists()
+        && let Err(e) = std::fs::create_dir_all(&path) {
             return Err(format!("No se pudo crear el directorio: {}", e));
         }
-    }
 
     #[cfg(target_os = "windows")]
     {
@@ -218,6 +246,8 @@ pub async fn update_instance(
         .await
 }
 
+// ── Logos & Versiones ────────────────────────────────────────────────────────
+
 #[tauri::command]
 pub async fn get_available_logos() -> Vec<String> {
     let mut logos = Vec::new();
@@ -226,11 +256,10 @@ pub async fn get_available_logos() -> Vec<String> {
     for path in paths {
         if let Ok(entries) = std::fs::read_dir(path) {
             for entry in entries.flatten() {
-                if let Some(name) = entry.file_name().to_str() {
-                    if name.ends_with(".ico") || name.ends_with(".png") || name.ends_with(".svg") {
+                if let Some(name) = entry.file_name().to_str()
+                    && (name.ends_with(".ico") || name.ends_with(".png") || name.ends_with(".svg")) {
                         logos.push(name.to_string());
                     }
-                }
             }
             break;
         }
@@ -244,22 +273,28 @@ pub async fn get_installed_versions() -> Vec<String> {
     let mut versions = Vec::new();
     if let Ok(entries) = std::fs::read_dir(versions_dir) {
         for entry in entries.flatten() {
-            if entry.path().is_dir() {
-                if let Some(name) = entry.file_name().to_str() {
+            if entry.path().is_dir()
+                && let Some(name) = entry.file_name().to_str() {
                     versions.push(name.to_string());
                 }
-            }
         }
     }
     versions.sort_by(|a, b| b.cmp(a));
     versions
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Mods
+// ═══════════════════════════════════════════════════════════════════════════════
+
 #[derive(serde::Serialize)]
 pub struct ModDto {
     pub name: String,
     pub filename: String,
     pub version: Option<String>,
+    pub description: Option<String>,
+    pub authors: Option<Vec<String>>,
+    pub icon: Option<String>,
     pub enabled: bool,
 }
 
@@ -276,8 +311,8 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
     if let Ok(entries) = std::fs::read_dir(mods_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_file() {
-                if let Some(ext) = path.extension() {
+            if path.is_file()
+                && let Some(ext) = path.extension() {
                     let ext_str = ext.to_string_lossy().to_lowercase();
                     let Some(file_name) = path.file_name() else {
                         continue;
@@ -301,20 +336,27 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
                             Some(stripped) => stripped.to_string(),
                             None => filename.clone(),
                         };
+
+                        let metadata = crate::services::AddonManager::get_mod_info(&path);
+
                         mods.push(ModDto {
-                            name: display_name,
+                            name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(display_name),
                             filename,
-                            version: None,
+                            version: metadata.as_ref().and_then(|m| m.version.clone()),
+                            description: metadata.as_ref().and_then(|m| m.description.clone()),
+                            authors: metadata.as_ref().and_then(|m| m.authors.clone()),
+                            icon: metadata.as_ref().and_then(|m| m.icon.clone()),
                             enabled,
                         });
                     }
                 }
-            }
         }
     }
-    mods.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    mods.sort_by_key(|a| a.name.to_lowercase());
     mods
 }
+
+// ── Toggle mod ────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> Result<(), String> {
@@ -347,6 +389,10 @@ pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> 
     Ok(())
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Resource Packs
+// ═══════════════════════════════════════════════════════════════════════════════
+
 #[tauri::command]
 pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
     let manager = InstanceManager::get();
@@ -365,18 +411,27 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
                     continue;
                 };
                 let filename = file_name.to_string_lossy().to_string();
+                let metadata = crate::services::AddonManager::get_resourcepack_info(&path);
+
                 resourcepacks.push(ModDto {
-                    name: filename.clone(),
+                    name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(filename.clone()),
                     filename,
                     version: None,
+                    description: metadata.as_ref().and_then(|m| m.description.clone()),
+                    authors: None,
+                    icon: metadata.as_ref().and_then(|m| m.icon.clone()),
                     enabled: true,
                 });
             }
         }
     }
-    resourcepacks.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    resourcepacks.sort_by_key(|a| a.name.to_lowercase());
     resourcepacks
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Logs
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn get_instance_logs(id: String) -> Vec<String> {
@@ -391,11 +446,10 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
     if let Ok(entries) = std::fs::read_dir(logs_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_file() {
-                if let Some(file_name) = path.file_name() {
+            if path.is_file()
+                && let Some(file_name) = path.file_name() {
                     logs.push(file_name.to_string_lossy().to_string());
                 }
-            }
         }
     }
     logs.sort_by(|a, b| b.cmp(a));
@@ -416,6 +470,10 @@ pub async fn read_instance_log(id: String, filename: String) -> Result<String, S
 
     std::fs::read_to_string(log_path).map_err(|e| e.to_string())
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// File Operations
+// ═══════════════════════════════════════════════════════════════════════════════
 
 #[tauri::command]
 pub async fn delete_instance_file(

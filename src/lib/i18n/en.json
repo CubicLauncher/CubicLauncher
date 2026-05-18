@@ -45,6 +45,7 @@
       "java8Path": "Java 8 Path",
       "java17Path": "Java 17 Path",
       "java21Path": "Java 21 Path",
+      "java25Path": "Java 25 Path",
       "jvmArgs": "JVM Arguments",
       "saveBtn": "Save Settings",
       "saving": "Saving..."
@@ -135,7 +136,9 @@
     "mods": {
       "title": "Installed Mods",
       "jarFile": ".JAR File",
-      "empty": "No mods installed in this instance"
+      "empty": "No mods installed in this instance",
+      "authors": "Authors",
+      "noDescription": "No description available"
     },
     "resources": {
       "title": "Resource Packs",

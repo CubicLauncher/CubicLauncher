@@ -17,6 +17,7 @@
     let selectedIcon = $state<string | null>(null);
     let versions = $state<string[]>([]);
     let availableIcons = $state<string[]>([]);
+    let versionOptions = $derived(versions.map((v) => ({ value: v, label: v })));
     let loading = $state(false);
     let error = $state<string | null>(null);
 
@@ -144,7 +145,7 @@
                             <Select
                                 label={t("createInstance.versionLabel")}
                                 bind:value={selectedVersion}
-                                options={versions.map((v) => ({ value: v, label: v }))}
+                                options={versionOptions}
                                 disabled={loading || versions.length === 0}
                                 placeholder={t("createInstance.noVersionsErr")}
                             />
@@ -158,7 +159,7 @@
                 <div class="input-group">
                     <span class="input-label">Seleccionar Icono</span>
                     <div class="icon-selector" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; margin-top: 4px; max-height: 110px; overflow-y: auto; padding-right: 4px; padding-bottom: 4px;">
-                        {#each availableIcons as iconName}
+                        {#each availableIcons as iconName (iconName)}
                             {@const iconPath = `/images/instances/${iconName}`}
                             <button
                                 type="button"
@@ -180,7 +181,7 @@
 
                 {#if error}
                     <div
-                        style="color: #ff5252; font-size: 0.8rem; background: rgba(255, 82, 82, 0.1); border: 1px solid rgba(255, 82, 82, 0.2); border-radius: 6px; padding: 10px; text-align: center; font-weight: 500; margin-top: 8px;"
+                        style="color: var(--color-error); font-size: 0.8rem; background: rgba(var(--color-error-rgb), 0.1); border: 1px solid rgba(var(--color-error-rgb), 0.2); border-radius: 6px; padding: 10px; text-align: center; font-weight: 500; margin-top: 8px;"
                     >
                         {error}
                     </div>
