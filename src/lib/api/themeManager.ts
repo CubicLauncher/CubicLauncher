@@ -16,6 +16,9 @@ export interface UserTheme {
   bg_image_warning_key?: string | null;
 }
 
+let currentImage: HTMLImageElement | null = null;
+let currentGeneration = 0;
+
 export async function listThemes(): Promise<ThemeEntry[]> {
   let userThemes: ThemeEntry[] = [];
   try {
@@ -31,6 +34,8 @@ export async function listThemes(): Promise<ThemeEntry[]> {
 }
 
 export async function applyTheme(themeId: string) {
+  const gen = ++currentGeneration;
+
   let theme: UserTheme | null = null;
 
   if (builtinThemes.find((t) => t.id === themeId)) {
@@ -48,12 +53,25 @@ export async function applyTheme(themeId: string) {
   }
 
   if (!theme) return;
+  if (gen !== currentGeneration) return;
+
+  if (currentImage) {
+    currentImage.src = "";
+    currentImage = null;
+  }
+
+  const root = document.documentElement;
+  const style = root.style;
+  for (let i = style.length - 1; i >= 0; i--) {
+    const prop = style.item(i);
+    if (prop.startsWith("--")) {
+      style.removeProperty(prop);
+    }
+  }
 
   if (theme.bg_image_warning_key) {
     showWarning(t("themes.warning.title"), t(theme.bg_image_warning_key));
   }
-
-  const root = document.documentElement;
 
   for (const [key, value] of Object.entries(theme.variables)) {
     root.style.setProperty(key, value);
@@ -66,11 +84,16 @@ export async function applyTheme(themeId: string) {
     root.style.setProperty("--bg-image-loaded", "0");
 
     const img = new Image();
+    currentImage = img;
     img.onload = () => {
+      if (gen !== currentGeneration || currentImage !== img) return;
+      currentImage = null;
       root.style.setProperty("--bg-image", `url("${imgUrl}")`);
       root.style.setProperty("--bg-image-loaded", "1");
     };
     img.onerror = () => {
+      if (gen !== currentGeneration || currentImage !== img) return;
+      currentImage = null;
       root.style.setProperty("--bg-image", "none");
     };
     img.src = imgUrl;
