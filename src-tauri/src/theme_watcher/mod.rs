@@ -29,7 +29,10 @@ impl ThemeWatcher {
                     match rx.try_recv() {
                         Ok(opt) => {
                             current_id = opt;
-                            last_mtime = None;
+                            last_mtime = current_id.as_ref().and_then(|id| {
+                                let f = PathManager::get().get_themes_dir().join(id).join("theme.json");
+                                std::fs::metadata(&f).ok()?.modified().ok()
+                            });
                         }
                         Err(mpsc::TryRecvError::Disconnected) => return,
                         Err(mpsc::TryRecvError::Empty) => break,
@@ -44,10 +47,19 @@ impl ThemeWatcher {
                         Ok(meta) => {
                             if let Ok(mtime) = meta.modified()
                                 && last_mtime != Some(mtime) {
-                                    last_mtime = Some(mtime);
-                                    emit(AppEvent::ThemeChanged {
-                                        id: format!("user:{}", id),
-                                    });
+                                    // Debounce: esperar 200ms y confirmar que el mtime se estabilizó
+                                    std::thread::sleep(Duration::from_millis(200));
+                                    if let Ok(meta2) = std::fs::metadata(&theme_file) {
+                                        if let Ok(mtime2) = meta2.modified() {
+                                            if mtime2 == mtime {
+                                                last_mtime = Some(mtime);
+                                                emit(AppEvent::ThemeChanged {
+                                                    id: format!("user:{}", id),
+                                                });
+                                                continue;
+                                            }
+                                        }
+                                    }
                                 }
                         }
                         Err(_) => {
