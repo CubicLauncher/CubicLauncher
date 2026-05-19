@@ -219,6 +219,7 @@
 
         /* entrada */
         animation: notificationIn 0.3s cubic-bezier(0.2, 0.85, 0.3, 1) both;
+        pointer-events: auto;
         will-change: transform, opacity;
     }
 

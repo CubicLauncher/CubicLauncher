@@ -7,6 +7,7 @@
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
     import InstanceView from "$lib/components/instances/InstanceView.svelte";
     import Drawer from "$lib/components/layout/Drawer.svelte";
+    import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
     import { t } from "$lib/i18n";
     import { applyTheme } from "$lib/api/themeManager";
     import { checkForUpdates } from "$lib/api/updaterServices";
@@ -19,7 +20,6 @@
     let SettingsComponent = $state<any>(null);
     let CreateInstanceModalComponent = $state<any>(null);
     let VersionDownloaderComponent = $state<any>(null);
-    let NotificationContainerComponent = $state<any>(null);
     let DownloadProgressBarComponent = $state<any>(null);
 
     onMount(async () => {
@@ -46,13 +46,11 @@
             import("$lib/components/settings/Settings.svelte"),
             import("$lib/components/instances/CreateInstanceModal.svelte"),
             import("$lib/components/layout/VersionDownloader.svelte"),
-            import("$lib/components/ui/NotificationContainer.svelte"),
             import("$lib/components/ui/DownloadProgressBar.svelte"),
-        ]).then(([s, c, v, n, d]) => {
+        ]).then(([s, c, v, d]) => {
             SettingsComponent = s.default;
             CreateInstanceModalComponent = c.default;
             VersionDownloaderComponent = v.default;
-            NotificationContainerComponent = n.default;
             DownloadProgressBarComponent = d.default;
         });
     });
@@ -115,6 +113,6 @@
 
 <CreateInstanceModalComponent bind:open={openCreateModal} />
 
-<NotificationContainerComponent />
+<NotificationContainer />
 
 <DownloadProgressBarComponent />
