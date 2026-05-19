@@ -1,5 +1,5 @@
-use crate::core::{AppEvent, FsError, InstanceError, emit};
 use crate::core::path_manager::PathManager;
+use crate::core::{AppEvent, FsError, InstanceError, emit};
 use crate::services::SettingsManager;
 use launchwerk::InstanceHandle as IHandleLaunchwerk;
 use serde::{Deserialize, Serialize};
@@ -320,7 +320,7 @@ impl InstanceManager {
             _sync_handle: tokio::spawn(Self::sync_task()),
         });
 
-        let mut guard = manager.instances.write().await;
+        let guard = manager.instances.write().await;
         let names: Vec<String> = match fs::read_dir(PathManager::get().get_instance_dir()) {
             Ok(entries) => entries
                 .flatten()

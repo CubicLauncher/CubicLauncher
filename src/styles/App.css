@@ -118,7 +118,8 @@ body {
     background-position: center;
     filter: blur(var(--bg-image-blur, 8px)) brightness(0.4);
     z-index: 0;
-    opacity: var(--bg-image-opacity, 0.3);
+    opacity: calc(var(--bg-image-loaded, 0) * var(--bg-image-opacity, 0.3));
+    transition: opacity 0.6s ease;
 }
 
 /* Scrollbars */
@@ -3242,7 +3243,6 @@ body {
     line-height: 1.4;
     margin-top: 4px;
 }
-
 
 .resources-section .delete-btn {
     background: transparent;
