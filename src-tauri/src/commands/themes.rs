@@ -18,6 +18,8 @@ pub struct ThemeFile {
     pub bg_image_blur: Option<String>,
     #[serde(default)]
     pub bg_image_opacity: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bg_image_warning_key: Option<String>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -85,13 +87,43 @@ pub fn get_user_theme(id: String) -> Result<ThemeFile, String> {
 
     // Resolver bg_image relativa al directorio del theme si no es absoluta
     if let Some(ref bg) = theme.bg_image
-        && !bg.starts_with('/') && !bg.starts_with("file:") {
-            let abs_path = PathManager::get()
-                .get_themes_dir()
-                .join(&id)
-                .join(bg);
-            theme.bg_image = Some(abs_path.to_string_lossy().to_string());
+        && !bg.starts_with('/')
+        && !bg.starts_with("file:")
+    {
+        let abs_path = PathManager::get().get_themes_dir().join(&id).join(bg);
+        theme.bg_image = Some(abs_path.to_string_lossy().to_string());
+    }
+
+    // Valida si un archivo pesa mas de 25MB
+    // Esto lo agregue ya que probe cargar un archivo
+    // el cual NO es una imagen llena de datos aleatorios
+    // y la app se colgo xD
+    if let Some(ref bg) = theme.bg_image {
+        if let Ok(meta) = std::fs::metadata(bg) {
+            if meta.len() > 25 * 1024 * 1024 {
+                theme.bg_image_warning_key = Some("themes.warning.largeFile".into());
+                theme.bg_image = None;
+            }
         }
+    }
+
+    // Validar magic bytes para asegurar que es una imagen
+    if let Some(ref bg) = theme.bg_image {
+        let is_image = std::fs::File::open(bg)
+            .ok()
+            .and_then(|mut f| {
+                use std::io::Read;
+                let mut buf = [0u8; 16];
+                f.read_exact(&mut buf).ok()?;
+                Some(infer::is_image(&buf))
+            })
+            .unwrap_or(false);
+
+        if !is_image {
+            theme.bg_image_warning_key = Some("themes.warning.notAnImage".into());
+            theme.bg_image = None;
+        }
+    }
 
     Ok(theme)
 }
@@ -146,7 +178,10 @@ pub fn import_theme(source_path: String) -> Result<ThemeEntry, String> {
     let theme_dir = PathManager::get().get_themes_dir().join(&theme_id);
 
     if theme_dir.exists() {
-        return Err(format!("Ya existe un theme con el nombre '{}'", theme_file.name));
+        return Err(format!(
+            "Ya existe un theme con el nombre '{}'",
+            theme_file.name
+        ));
     }
 
     std::fs::create_dir_all(&theme_dir)
@@ -158,14 +193,17 @@ pub fn import_theme(source_path: String) -> Result<ThemeEntry, String> {
 
     // Si el bg_image es una ruta relativa, intentar copiar el archivo
     if let Some(ref bg) = theme_file.bg_image
-        && !bg.starts_with('/') && !bg.starts_with("file:") {
-            let bg_source = source.parent().map(|p| p.join(bg));
-            if let Some(bg_src) = bg_source
-                && bg_src.exists() {
-                    let bg_dest = theme_dir.join(bg);
-                    let _ = std::fs::copy(&bg_src, &bg_dest);
-                }
+        && !bg.starts_with('/')
+        && !bg.starts_with("file:")
+    {
+        let bg_source = source.parent().map(|p| p.join(bg));
+        if let Some(bg_src) = bg_source
+            && bg_src.exists()
+        {
+            let bg_dest = theme_dir.join(bg);
+            let _ = std::fs::copy(&bg_src, &bg_dest);
         }
+    }
 
     Ok(ThemeEntry {
         id: theme_id,

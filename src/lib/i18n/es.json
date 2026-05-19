@@ -192,6 +192,13 @@
       "fabric": "Fabric"
     }
   },
+  "themes": {
+    "warning": {
+      "title": "Fondo del Theme",
+      "largeFile": "El fondo supera los 25MB — no se cargará",
+      "notAnImage": "El fondo no es una imagen válida — no se cargará"
+    }
+  },
   "downloadProgress": {
     "items": "objetos"
   }

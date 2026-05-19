@@ -1,5 +1,7 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import type { ThemeEntry } from "../types/types";
+import { t } from "$lib/i18n";
+import { showWarning } from "$lib/state/state.svelte";
 
 const builtinThemes: ThemeEntry[] = [
   { id: "dark", name: "Oscuro", author: "CubicLauncher", type: "builtin" },
@@ -11,6 +13,7 @@ export interface UserTheme {
   bg_image?: string | null;
   bg_image_blur?: string | null;
   bg_image_opacity?: number | null;
+  bg_image_warning_key?: string | null;
 }
 
 export async function listThemes(): Promise<ThemeEntry[]> {
@@ -45,6 +48,10 @@ export async function applyTheme(themeId: string) {
   }
 
   if (!theme) return;
+
+  if (theme.bg_image_warning_key) {
+    showWarning(t("themes.warning.title"), t(theme.bg_image_warning_key));
+  }
 
   const root = document.documentElement;
 
