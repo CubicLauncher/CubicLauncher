@@ -464,15 +464,20 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
     let Some(handle) = manager.get_handle(&id).await else {
         return Vec::new();
     };
-
     let logs_dir = handle.get_instance_dir().await.join("logs");
-
     let mut logs = Vec::new();
     if let Ok(entries) = std::fs::read_dir(logs_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file()
                 && let Some(file_name) = path.file_name()
+                && let Some(ext) = path.extension()
+                // Mojang comprime en gzip los logs anteriores
+                // asi q nomas nos tendremos que quedar con el latest :/
+                //
+                // TODO: Podriamos hacer que enves de enviar el filename entero enviar un stream
+                // asi podriamos enviar un stream de datos descomprimidos
+                && ext == "log"
             {
                 logs.push(file_name.to_string_lossy().to_string());
             }
@@ -481,7 +486,6 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
     logs.sort_by(|a, b| b.cmp(a));
     logs
 }
-
 #[tauri::command]
 pub async fn read_instance_log(id: String, filename: String) -> Result<String, String> {
     let manager = InstanceManager::get();
