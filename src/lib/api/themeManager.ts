@@ -56,7 +56,6 @@ export async function applyTheme(themeId: string) {
   if (bgImg) {
     const imgUrl = themeId.startsWith("user:") ? convertFileSrc(bgImg) : bgImg;
 
-    root.style.setProperty("--bg-image", "none");
     root.style.setProperty("--bg-image-loaded", "0");
 
     const img = new Image();
