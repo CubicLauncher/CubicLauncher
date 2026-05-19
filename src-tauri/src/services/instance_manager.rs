@@ -125,7 +125,7 @@ impl InstanceData {
         }
         let dir = self.get_instance_dir();
         tokio_fs::create_dir_all(&dir).await?;
-        let content = serde_json::to_string_pretty(self).map_err(io::Error::other)?;
+        let content = serde_json::to_string(self).map_err(io::Error::other)?;
         tokio_fs::write(dir.join("instance.cub"), content).await?;
         self.dirty = false;
         Ok(())

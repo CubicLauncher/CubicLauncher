@@ -1,4 +1,4 @@
-use crate::core::PathManager;
+use crate::core::{HTTP, PathManager};
 use crate::services::DownloadQueue;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
@@ -67,7 +67,8 @@ pub async fn download_manifest() -> Result<Vec<MinecraftVersion>, String> {
         .get_settings_dir()
         .join("manifest_cache.cub");
 
-    let response = reqwest::get(MOJANG_MANIFEST_URL)
+    let response = HTTP.get(MOJANG_MANIFEST_URL)
+        .send()
         .await
         .map_err(|e| format!("Error al obtener el manifiesto: {e}"))?;
 
@@ -109,7 +110,8 @@ pub async fn get_available_versions() -> Result<Vec<MinecraftVersion>, String> {
 #[tauri::command]
 pub async fn get_fabric_versions() -> Result<Vec<FabricGameVersion>, String> {
     let url = "https://meta.fabricmc.net/v2/versions/game";
-    let response = reqwest::get(url)
+    let response = HTTP.get(url)
+        .send()
         .await
         .map_err(|e| format!("Error al obtener versiones de Fabric: {}", e))?;
 
@@ -128,7 +130,8 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         "https://meta.fabricmc.net/v2/versions/loader/{}",
         game_version
     );
-    let response = reqwest::get(&loader_url)
+    let response = HTTP.get(&loader_url)
+        .send()
         .await
         .map_err(|e| format!("Error al obtener loaders: {}", e))?;
 
@@ -150,7 +153,8 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         game_version, loader_version
     );
 
-    let profile_response = reqwest::get(&profile_url)
+    let profile_response = HTTP.get(&profile_url)
+        .send()
         .await
         .map_err(|e| format!("Error al descargar el perfil de Fabric: {}", e))?;
 
@@ -200,7 +204,7 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
             }
 
             let download_url = format!("{}{}", lib.url, rel_path);
-            if let Ok(res) = reqwest::get(&download_url).await
+            if let Ok(res) = HTTP.get(&download_url).send().await
                 && let Ok(bytes) = res.bytes().await
             {
                 let _ = tokio::fs::write(dest_path, bytes).await;
@@ -210,7 +214,6 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
 
     {
         let d_queue = crate::services::DownloadQueue::get();
-        d_queue.enqueue(game_version).await;
         d_queue.enqueue(fabric_version_id).await;
     }
 

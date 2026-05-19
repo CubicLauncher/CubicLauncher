@@ -1,9 +1,8 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
     import "../styles/App.css";
     import { launcherStore } from "$lib/state/state.svelte";
-    import { getVersions, syncSettings } from "$lib/api/launcherService";
+    import { getVersions, syncSettings, initEventListeners } from "$lib/api/launcherService";
     import type { InstanceDto } from "$lib/types/types";
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
     import InstanceView from "$lib/components/instances/InstanceView.svelte";
@@ -23,6 +22,7 @@
     import { applyTheme } from "$lib/api/themeManager";
 
     onMount(async () => {
+        initEventListeners();
         await syncSettings();
         await getVersions();
 

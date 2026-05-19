@@ -55,9 +55,11 @@ export async function applyTheme(themeId: string) {
 
   const bgImg = theme.bg_image;
   if (bgImg) {
-    root.style.setProperty("--bg-image", `url("${convertFileSrc(bgImg)}")`);
-  } else {
-    root.style.setProperty("--bg-image", "none");
+    if (themeId.startsWith("user:")) {
+      root.style.setProperty("--bg-image", `url("${convertFileSrc(bgImg)}")`);
+    } else {
+      root.style.setProperty("--bg-image", `url("${bgImg}")`);
+    }
   }
   if (theme.bg_image_blur) {
     root.style.setProperty("--bg-image-blur", theme.bg_image_blur);

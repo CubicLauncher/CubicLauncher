@@ -21,27 +21,20 @@ impl AddonManager {
         let file = File::open(path).ok()?;
         let mut archive = ZipArchive::new(file).ok()?;
 
-        // Try Fabric
-        if let Some(meta) = Self::parse_fabric(&mut archive) {
-            return Some(meta);
-        }
+        // Check entry names first — no decompression, solo el Central Directory
+        let names: Vec<String> = archive.file_names().map(String::from).collect();
 
-        // Try Quilt
-        if let Some(meta) = Self::parse_quilt(&mut archive) {
-            return Some(meta);
+        if names.iter().any(|n| n == "fabric.mod.json") {
+            Self::parse_fabric(&mut archive)
+        } else if names.iter().any(|n| n == "quilt.mod.json") {
+            Self::parse_quilt(&mut archive)
+        } else if names.iter().any(|n| n == "META-INF/mods.toml") {
+            Self::parse_forge_modern(&mut archive)
+        } else if names.iter().any(|n| n == "mcmod.info") {
+            Self::parse_forge_legacy(&mut archive)
+        } else {
+            None
         }
-
-        // Try Forge Modern
-        if let Some(meta) = Self::parse_forge_modern(&mut archive) {
-            return Some(meta);
-        }
-
-        // Try Forge Legacy
-        if let Some(meta) = Self::parse_forge_legacy(&mut archive) {
-            return Some(meta);
-        }
-
-        None
     }
 
     pub fn get_resourcepack_info(path: &Path) -> Option<AddonMetadata> {

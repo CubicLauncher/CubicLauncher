@@ -82,9 +82,6 @@ pub async fn delete_instance(id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
-    let all = InstanceManager::get().get_all_dtos().await;
-    all.into_iter().find(|i| i.name == instance_name)?;
-
     let screenshots_dir = PathManager::get()
         .get_instance_dir()
         .join(&instance_name)
@@ -193,7 +190,7 @@ pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<()
     }
 
     if !path.exists()
-        && let Err(e) = std::fs::create_dir_all(&path) {
+        && let Err(e) = tokio::fs::create_dir_all(&path).await {
             return Err(format!("No se pudo crear el directorio: {}", e));
         }
 
@@ -337,15 +334,23 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
                             None => filename.clone(),
                         };
 
-                        let metadata = crate::services::AddonManager::get_mod_info(&path);
+                        let path_clone = path.clone();
+                        let metadata = tokio::task::spawn_blocking(move || {
+                            crate::services::AddonManager::get_mod_info(&path_clone)
+                        }).await.unwrap_or(None);
+
+                        let (md_name, md_version, md_desc, md_authors, md_icon) = match metadata {
+                            Some(m) => (m.name, m.version, m.description, m.authors, m.icon),
+                            None => (display_name, None, None, None, None),
+                        };
 
                         mods.push(ModDto {
-                            name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(display_name),
+                            name: md_name,
                             filename,
-                            version: metadata.as_ref().and_then(|m| m.version.clone()),
-                            description: metadata.as_ref().and_then(|m| m.description.clone()),
-                            authors: metadata.as_ref().and_then(|m| m.authors.clone()),
-                            icon: metadata.as_ref().and_then(|m| m.icon.clone()),
+                            version: md_version,
+                            description: md_desc,
+                            authors: md_authors,
+                            icon: md_icon,
                             enabled,
                         });
                     }
@@ -379,11 +384,11 @@ pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> 
             .strip_suffix(".disabled")
             .ok_or("Error al procesar el nombre del archivo")?;
         let new_path = mods_dir.join(new_filename);
-        std::fs::rename(file_path, new_path).map_err(|e| e.to_string())?;
+        tokio::fs::rename(file_path, new_path).await.map_err(|e| e.to_string())?;
     } else if !enable && !is_currently_disabled {
         let new_filename = format!("{}.disabled", filename);
         let new_path = mods_dir.join(new_filename);
-        std::fs::rename(file_path, new_path).map_err(|e| e.to_string())?;
+        tokio::fs::rename(file_path, new_path).await.map_err(|e| e.to_string())?;
     }
 
     Ok(())
@@ -411,15 +416,23 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
                     continue;
                 };
                 let filename = file_name.to_string_lossy().to_string();
-                let metadata = crate::services::AddonManager::get_resourcepack_info(&path);
+                let path_clone = path.clone();
+                let metadata = tokio::task::spawn_blocking(move || {
+                    crate::services::AddonManager::get_resourcepack_info(&path_clone)
+                }).await.unwrap_or(None);
+
+                let (md_name, md_desc, md_icon) = match metadata {
+                    Some(m) => (m.name, m.description, m.icon),
+                    None => (filename.clone(), None, None),
+                };
 
                 resourcepacks.push(ModDto {
-                    name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(filename.clone()),
+                    name: md_name,
                     filename,
                     version: None,
-                    description: metadata.as_ref().and_then(|m| m.description.clone()),
+                    description: md_desc,
                     authors: None,
-                    icon: metadata.as_ref().and_then(|m| m.icon.clone()),
+                    icon: md_icon,
                     enabled: true,
                 });
             }
@@ -468,7 +481,7 @@ pub async fn read_instance_log(id: String, filename: String) -> Result<String, S
         return Err("Archivo de registro no encontrado".to_string());
     }
 
-    std::fs::read_to_string(log_path).map_err(|e| e.to_string())
+    tokio::fs::read_to_string(log_path).await.map_err(|e| e.to_string())
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -488,7 +501,7 @@ pub async fn delete_instance_file(
 
     let file_path = handle.get_instance_dir().await.join(sub_dir).join(filename);
     if file_path.exists() {
-        std::fs::remove_file(file_path).map_err(|e| e.to_string())?;
+        tokio::fs::remove_file(file_path).await.map_err(|e| e.to_string())?;
     }
     Ok(())
 }
@@ -506,13 +519,13 @@ pub async fn add_instance_file(
 
     let dest_dir = handle.get_instance_dir().await.join(sub_dir);
     if !dest_dir.exists() {
-        std::fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
+        tokio::fs::create_dir_all(&dest_dir).await.map_err(|e| e.to_string())?;
     }
 
     let src = PathBuf::from(source_path);
     let filename = src.file_name().ok_or("Ruta de origen inválida")?;
     let dest_path = dest_dir.join(filename);
 
-    std::fs::copy(src, dest_path).map_err(|e| e.to_string())?;
+    tokio::fs::copy(src, dest_path).await.map_err(|e| e.to_string())?;
     Ok(())
 }
