@@ -1,6 +1,6 @@
 use crate::core::path_manager::PathManager;
 use crate::core::{AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, emit};
-use crate::services::instance_manager::{InstanceHandle, InstanceStatus};
+use crate::services::instance_manager::{register_kill_sender, unregister_kill_sender, InstanceHandle, InstanceStatus};
 use crate::services::SettingsManager;
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
@@ -451,8 +451,26 @@ impl Launcher {
             Ok(_) => {
                 info!("Handle {} lanzado", lw_handle.id().to_string());
                 handle.set_status(InstanceStatus::Started);
-                lw_handle.wait().await;
-                handle.set_status(InstanceStatus::Off);
+
+                let (kill_tx, kill_rx) = tokio::sync::oneshot::channel::<()>();
+                register_kill_sender(&handle.uuid, kill_tx);
+
+                let uuid = handle.uuid.clone();
+                let h = handle.clone();
+                tokio::spawn(async move {
+                    tokio::select! {
+                        _ = kill_rx => {
+                            info!("Kill signal received for {}", uuid);
+                            let _ = lw_handle.kill().await;
+                            lw_handle.wait().await;
+                        }
+                        result = lw_handle.wait() => {
+                            info!("Instance {} exited: {:?}", uuid, result);
+                            unregister_kill_sender(&uuid);
+                        }
+                    }
+                    h.set_status(InstanceStatus::Off);
+                });
             }
             Err(e) => {
                 error!("{}", e.to_string());

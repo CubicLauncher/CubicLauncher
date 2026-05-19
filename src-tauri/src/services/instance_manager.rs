@@ -1,14 +1,14 @@
 use crate::core::path_manager::PathManager;
 use crate::core::{AppEvent, FsError, InstanceError, emit};
 use crate::services::SettingsManager;
-use launchwerk::InstanceHandle as IHandleLaunchwerk;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 use std::{fs, io};
 use tokio::fs as tokio_fs;
+use tokio::sync::oneshot;
 use tokio::sync::RwLock;
 use tokio::time::{self, Duration};
 use tracing::{error, info};
@@ -153,7 +153,6 @@ pub struct InstanceHandle {
     pub uuid: String,
     data: Arc<RwLock<InstanceData>>,
     status: Arc<AtomicStatus>,
-    handle: Option<Arc<IHandleLaunchwerk>>,
 }
 
 impl InstanceHandle {
@@ -162,7 +161,6 @@ impl InstanceHandle {
             uuid: data.uuid.clone(),
             data: Arc::new(RwLock::new(data)),
             status: Arc::new(AtomicStatus::new()),
-            handle: None,
         }
     }
 
@@ -193,18 +191,9 @@ impl InstanceHandle {
 
     // ── Proceso ───────────────────────────────────────────────────────────
 
-    pub fn attach_handle(&mut self, handle: Arc<IHandleLaunchwerk>) {
-        self.handle = Some(handle);
-    }
-
     pub async fn kill(&self) -> Result<(), InstanceError> {
-        if let Some(handle) = &self.handle
-            && let Err(e) = handle.kill().await
-        {
-            error!("Error al cerrar instancia {}", e.to_string());
-        }
+        signal_kill(&self.uuid);
         self.set_status(InstanceStatus::Off);
-
         Ok(())
     }
 
@@ -501,6 +490,28 @@ impl InstanceManager {
 }
 
 static INSTANCE_MANAGER: OnceLock<Arc<InstanceManager>> = OnceLock::new();
+
+// ── Process kill coordination ─────────────────────────────────────────────────
+//
+// Se usa un canal oneshot para señalarle al background task que debe matar el
+// proceso. El launchwerk::InstanceHandle nunca se comparte — vive en el closure.
+
+static KILL_SENDERS: LazyLock<Mutex<HashMap<String, oneshot::Sender<()>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub fn register_kill_sender(uuid: &str, tx: oneshot::Sender<()>) {
+    KILL_SENDERS.lock().unwrap().insert(uuid.to_string(), tx);
+}
+
+pub fn unregister_kill_sender(uuid: &str) {
+    KILL_SENDERS.lock().unwrap().remove(uuid);
+}
+
+/// Envía la señal de kill. Retorna `true` si el proceso estaba corriendo.
+pub fn signal_kill(uuid: &str) -> bool {
+    let tx = KILL_SENDERS.lock().unwrap().remove(uuid);
+    tx.is_some_and(|tx| tx.send(()).is_ok())
+}
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
 
