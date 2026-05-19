@@ -2,6 +2,9 @@
   "name": "Oscuro",
   "author": "CubicLauncher",
   "type": "builtin",
+  "bg_image": "/images/bg.webp",
+  "bg_image_blur": "10px",
+  "bg_image_opacity": 0.5,
   "variables": {
     "--bg-main": "#0c0c0c",
     "--bg-sidebar": "#0f1010",

@@ -3,7 +3,6 @@ import type { ThemeEntry } from "../types/types";
 
 const builtinThemes: ThemeEntry[] = [
   { id: "dark", name: "Oscuro", author: "CubicLauncher", type: "builtin" },
-  { id: "light", name: "Claro", author: "CubicLauncher", type: "builtin" },
 ];
 
 export interface UserTheme {
@@ -55,11 +54,20 @@ export async function applyTheme(themeId: string) {
 
   const bgImg = theme.bg_image;
   if (bgImg) {
-    if (themeId.startsWith("user:")) {
-      root.style.setProperty("--bg-image", `url("${convertFileSrc(bgImg)}")`);
-    } else {
-      root.style.setProperty("--bg-image", `url("${bgImg}")`);
-    }
+    const imgUrl = themeId.startsWith("user:") ? convertFileSrc(bgImg) : bgImg;
+
+    root.style.setProperty("--bg-image", "none");
+    root.style.setProperty("--bg-image-loaded", "0");
+
+    const img = new Image();
+    img.onload = () => {
+      root.style.setProperty("--bg-image", `url("${imgUrl}")`);
+      root.style.setProperty("--bg-image-loaded", "1");
+    };
+    img.onerror = () => {
+      root.style.setProperty("--bg-image", "none");
+    };
+    img.src = imgUrl;
   }
   if (theme.bg_image_blur) {
     root.style.setProperty("--bg-image-blur", theme.bg_image_blur);

@@ -72,11 +72,13 @@ pub fn run() {
 
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                services::DownloadQueue::init(Some(handle.clone())).await;
-                services::Launcher::init().set_handle(handle.clone());
-                InstanceManager::init().await;
-                core::init(handle.clone());
-                theme_watcher::ThemeWatcher::start().await;
+                tokio::join!(
+                    services::DownloadQueue::init(Some(handle.clone())),
+                    async { services::Launcher::init().set_handle(handle.clone()); },
+                    InstanceManager::init(),
+                    async { core::init(handle.clone()); },
+                    theme_watcher::ThemeWatcher::start(),
+                );
                 let theme = services::SettingsManager::read().theme.clone();
                 if let Some(dir) = theme.strip_prefix("user:") {
                     theme_watcher::ThemeWatcher::watch(Some(dir.to_string()));

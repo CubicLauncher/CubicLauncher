@@ -7,27 +7,30 @@
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
     import InstanceView from "$lib/components/instances/InstanceView.svelte";
     import Drawer from "$lib/components/layout/Drawer.svelte";
-    import Settings from "$lib/components/settings/Settings.svelte";
-    import CreateInstanceModal from "$lib/components/instances/CreateInstanceModal.svelte";
-    import VersionDownloader from "$lib/components/layout/VersionDownloader.svelte";
     import { t } from "$lib/i18n";
-    import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
-    import DownloadProgressBar from "$lib/components/ui/DownloadProgressBar.svelte";
+    import { applyTheme } from "$lib/api/themeManager";
     import { checkForUpdates } from "$lib/api/updaterServices";
+
     let selectedInstance = $state<InstanceDto | null>(null);
     let quickMenuOpen = $state(false);
     let versionDownloaderOpen = $state(false);
     let openCreateModal = $state(false);
 
-    import { applyTheme } from "$lib/api/themeManager";
+    let SettingsComponent = $state<any>(null);
+    let CreateInstanceModalComponent = $state<any>(null);
+    let VersionDownloaderComponent = $state<any>(null);
+    let NotificationContainerComponent = $state<any>(null);
+    let DownloadProgressBarComponent = $state<any>(null);
 
     onMount(async () => {
         initEventListeners();
-        await syncSettings();
-        await getVersions();
+
+        const [settings, _] = await Promise.all([
+            syncSettings(),
+            getVersions(),
+        ]);
 
         const firstInstance = launcherStore.loadedInstances[0];
-
         if (firstInstance && !selectedInstance) {
             selectedInstance = firstInstance;
         }
@@ -35,18 +38,32 @@
         applyTheme(launcherStore.settings.theme);
 
         if (launcherStore.settings.auto_updates) {
-            checkForUpdates(true);
+            setTimeout(() => checkForUpdates(true), 2000);
         }
+
+        // Lazy load non-critical components after first paint
+        Promise.all([
+            import("$lib/components/settings/Settings.svelte"),
+            import("$lib/components/instances/CreateInstanceModal.svelte"),
+            import("$lib/components/layout/VersionDownloader.svelte"),
+            import("$lib/components/ui/NotificationContainer.svelte"),
+            import("$lib/components/ui/DownloadProgressBar.svelte"),
+        ]).then(([s, c, v, n, d]) => {
+            SettingsComponent = s.default;
+            CreateInstanceModalComponent = c.default;
+            VersionDownloaderComponent = v.default;
+            NotificationContainerComponent = n.default;
+            DownloadProgressBarComponent = d.default;
+        });
     });
+
     $effect(() => {
         const current = selectedInstance;
-
         if (!current) return;
 
         const updated = launcherStore.loadedInstances.find(
             (i) => i.uuid === current.uuid,
         );
-
         if (!updated) return;
 
         const changed =
@@ -89,14 +106,15 @@
 </div>
 
 <Drawer bind:open={quickMenuOpen} direction="right">
-    <Settings onclose={() => (quickMenuOpen = false)} />
+    <SettingsComponent onclose={() => (quickMenuOpen = false)} />
 </Drawer>
 
 <Drawer bind:open={versionDownloaderOpen} direction="right">
-    <VersionDownloader onclose={() => (versionDownloaderOpen = false)} />
+    <VersionDownloaderComponent onclose={() => (versionDownloaderOpen = false)} />
 </Drawer>
 
-<CreateInstanceModal bind:open={openCreateModal} />
+<CreateInstanceModalComponent bind:open={openCreateModal} />
 
-<NotificationContainer />
-<DownloadProgressBar />
+<NotificationContainerComponent />
+
+<DownloadProgressBarComponent />

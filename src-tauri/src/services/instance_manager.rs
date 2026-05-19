@@ -321,15 +321,22 @@ impl InstanceManager {
         });
 
         let mut guard = manager.instances.write().await;
-        if let Ok(entries) = fs::read_dir(PathManager::get().get_instance_dir()) {
-            for entry in entries.flatten() {
-                if entry.path().is_dir() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    if let Some(handle) = InstanceHandle::load(&name).await {
-                        guard.insert(handle.uuid.clone(), handle);
-                    }
-                }
-            }
+        let names: Vec<String> = match fs::read_dir(PathManager::get().get_instance_dir()) {
+            Ok(entries) => entries
+                .flatten()
+                .filter(|e| e.path().is_dir())
+                .map(|e| e.file_name().to_string_lossy().to_string())
+                .collect(),
+            Err(_) => Vec::new(),
+        };
+        drop(guard);
+
+        let handles: Vec<Option<InstanceHandle>> =
+            futures::future::join_all(names.iter().map(|name| InstanceHandle::load(name))).await;
+
+        let mut guard = manager.instances.write().await;
+        for handle in handles.into_iter().flatten() {
+            guard.insert(handle.uuid.clone(), handle);
         }
         drop(guard);
 

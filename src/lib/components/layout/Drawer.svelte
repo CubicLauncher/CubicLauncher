@@ -107,10 +107,7 @@
             ? drawerEl.getBoundingClientRect().height
             : drawerEl.getBoundingClientRect().width;
 
-        translatePct =
-            dragged < 0
-                ? (dragged / size) * 15 // dampen over-drag
-                : (dragged / size) * 100;
+        translatePct = Math.max(0, (dragged / size) * 100);
     }
 
     function onPointerUp(e: PointerEvent) {
