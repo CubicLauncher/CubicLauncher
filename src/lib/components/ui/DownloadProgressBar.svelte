@@ -52,11 +52,8 @@
     );
 
     onMount(() => {
-        let pollInterval: ReturnType<typeof setInterval> | null = null;
-
-        async function syncQueue() {
-            const queue = await getDownloadQueue();
-            let addedNew = false;
+        // Cargar descargas activas al abrir — una sola vez
+        getDownloadQueue().then((queue) => {
             for (const item of queue) {
                 if (!downloads.has(item.version)) {
                     downloads.set(item.version, {
@@ -65,29 +62,13 @@
                         segments: emptySegments(),
                         done: item.status === "done",
                     });
-                    addedNew = true;
                 }
             }
-            if (addedNew) {
+            if (queue.length > 0) {
                 downloads = new Map(downloads);
                 expanded = true;
             }
-        }
-
-        function startPolling() {
-            if (pollInterval) return;
-            pollInterval = setInterval(syncQueue, 1500);
-        }
-
-        function stopPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
-        }
-
-        syncQueue();
-        startPolling();
+        });
 
         const unlisten = listen<AppEvent>("app-event", (event) => {
             const payload = event.payload;
@@ -124,7 +105,6 @@
                     setTimeout(() => {
                         downloads.delete(version);
                         downloads = new Map(downloads);
-                        if (activeCount === 0) stopPolling();
                     }, 4000);
                     break;
                 }
@@ -133,7 +113,6 @@
 
         return () => {
             unlisten.then((u) => u());
-            stopPolling();
         };
     });
 

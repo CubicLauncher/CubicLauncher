@@ -79,7 +79,7 @@
     });
 
     // ── Sub-texto para toasts de progreso ─────────────────────────────
-    const progressSub = $derived.by(() => {
+    const progressSub = $derived(() => {
         const p = (notification as any).progress as number | undefined;
         if (typeof p !== "number") return null;
         const total = (notification as any).totalMb as number | undefined;
@@ -189,9 +189,9 @@
         {#if notification.message}
             <span class="notification-message">{notification.message}</span>
         {/if}
-        {#if progressSub}
+        {#if progressSub()}
             <span class="notification-sub" class:done={isDone}
-                >{progressSub}</span
+                >{progressSub()}</span
             >
         {/if}
     </div>
@@ -219,6 +219,7 @@
 
         /* entrada */
         animation: notificationIn 0.3s cubic-bezier(0.2, 0.85, 0.3, 1) both;
+        pointer-events: auto;
         will-change: transform, opacity;
     }
 

@@ -2,6 +2,9 @@
   "name": "Oscuro",
   "author": "CubicLauncher",
   "type": "builtin",
+  "bg_image": "/images/bg.webp",
+  "bg_image_blur": "10px",
+  "bg_image_opacity": 0.5,
   "variables": {
     "--bg-main": "#0c0c0c",
     "--bg-sidebar": "#0f1010",
@@ -44,10 +47,6 @@
     "--font-family": "Cantarell, sans-serif",
     "--font-size-base": "14px",
     "--font-size-sm": "12px",
-    "--font-size-lg": "16px",
-
-    "--bg-image": "none",
-    "--bg-image-blur": "0px",
-    "--bg-image-opacity": "1"
+    "--font-size-lg": "16px"
   }
 }

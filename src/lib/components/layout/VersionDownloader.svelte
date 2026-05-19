@@ -22,6 +22,11 @@
     let manifest = $state<any>(null);
     let fabricManifest = $state<any[]>([]);
     let installedVersions = $state<string[]>([]);
+    let fabricInstalledSet = $derived.by(() => new Set(
+        installedVersions
+            .filter(iv => iv.startsWith('fabric-loader-'))
+            .map(iv => iv.replace('fabric-loader-', ''))
+    ));
     let filter = $state("release");
     let search = $state("");
     let installStatusFilter = $state("all");
@@ -91,7 +96,7 @@
             
             // Installed filter
             const isInstalled = installedVersions.includes(versionId) || 
-                (filter === 'fabric' && installedVersions.some(iv => iv.startsWith('fabric-loader-') && iv.endsWith(versionId)));
+                (filter === 'fabric' && fabricInstalledSet.has(versionId));
             
             if (installStatusFilter === "installed" && !isInstalled) return false;
             if (installStatusFilter === "not_installed" && isInstalled) return false;
@@ -247,7 +252,7 @@
                                     >
                                         {filter === 'fabric' ? version.version : version.id}
                                     </div>
-                                    {#if isInstalled || (filter === 'fabric' && installedVersions.some(iv => iv.startsWith('fabric-loader-') && iv.endsWith(version.version)))}
+                                    {#if isInstalled || (filter === 'fabric' && fabricInstalledSet.has(version.version))}
                                         <span
                                             style="font-size: 0.6rem; background: rgba(var(--color-success-rgb), 0.1); color: var(--color-success); padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(var(--color-success-rgb), 0.2);"
                                             >{t('versionDownloader.installedTag')}</span

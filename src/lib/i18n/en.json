@@ -192,6 +192,13 @@
       "fabric": "Fabric"
     }
   },
+  "themes": {
+    "warning": {
+      "title": "Theme Background",
+      "largeFile": "Background exceeds 25MB — will not be loaded",
+      "notAnImage": "Background is not a valid image — will not be loaded"
+    }
+  },
   "downloadProgress": {
     "items": "items"
   }

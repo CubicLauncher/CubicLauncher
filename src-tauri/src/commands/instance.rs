@@ -1,7 +1,7 @@
 use crate::core::{AppEvent, PathManager, emit};
-use crate::services::{InstanceDto, InstanceManager, Launcher};
+use crate::services::{InstanceDto, InstanceManager, InstanceStatus, Launcher, signal_kill};
 use std::path::PathBuf;
-use tracing::error;
+use tracing::info;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Lifecycle
@@ -27,15 +27,15 @@ pub async fn launch(instance_id: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn kill_instance(uuid: String) -> Result<(), String> {
     let manager = InstanceManager::get();
-    let Some(handle) = manager.get_handle(&uuid).await else {
-        error!("Instancia no encontrada");
-        return Err("Instancia no encontrada".to_string());
-    };
+    let handle = manager
+        .get_handle(&uuid)
+        .await
+        .ok_or_else(|| "Instancia no encontrada".to_string())?;
 
-    if let Err(e) = handle.kill().await {
-        return Err(e.to_string());
+    if !signal_kill(&uuid) {
+        info!("Instancia {} no estaba corriendo, forzando Off", uuid);
+        handle.set_status(InstanceStatus::Off);
     }
-
     Ok(())
 }
 
@@ -82,9 +82,6 @@ pub async fn delete_instance(id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
-    let all = InstanceManager::get().get_all_dtos().await;
-    all.into_iter().find(|i| i.name == instance_name)?;
-
     let screenshots_dir = PathManager::get()
         .get_instance_dir()
         .join(&instance_name)
@@ -193,9 +190,10 @@ pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<()
     }
 
     if !path.exists()
-        && let Err(e) = std::fs::create_dir_all(&path) {
-            return Err(format!("No se pudo crear el directorio: {}", e));
-        }
+        && let Err(e) = tokio::fs::create_dir_all(&path).await
+    {
+        return Err(format!("No se pudo crear el directorio: {}", e));
+    }
 
     #[cfg(target_os = "windows")]
     {
@@ -257,9 +255,10 @@ pub async fn get_available_logos() -> Vec<String> {
         if let Ok(entries) = std::fs::read_dir(path) {
             for entry in entries.flatten() {
                 if let Some(name) = entry.file_name().to_str()
-                    && (name.ends_with(".ico") || name.ends_with(".png") || name.ends_with(".svg")) {
-                        logos.push(name.to_string());
-                    }
+                    && (name.ends_with(".ico") || name.ends_with(".png") || name.ends_with(".svg"))
+                {
+                    logos.push(name.to_string());
+                }
             }
             break;
         }
@@ -274,9 +273,10 @@ pub async fn get_installed_versions() -> Vec<String> {
     if let Ok(entries) = std::fs::read_dir(versions_dir) {
         for entry in entries.flatten() {
             if entry.path().is_dir()
-                && let Some(name) = entry.file_name().to_str() {
-                    versions.push(name.to_string());
-                }
+                && let Some(name) = entry.file_name().to_str()
+            {
+                versions.push(name.to_string());
+            }
         }
     }
     versions.sort_by(|a, b| b.cmp(a));
@@ -312,44 +312,55 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file()
-                && let Some(ext) = path.extension() {
-                    let ext_str = ext.to_string_lossy().to_lowercase();
-                    let Some(file_name) = path.file_name() else {
-                        continue;
+                && let Some(ext) = path.extension()
+            {
+                let ext_str = ext.to_string_lossy().to_lowercase();
+                let Some(file_name) = path.file_name() else {
+                    continue;
+                };
+                let file_name_str = file_name.to_string_lossy().to_lowercase();
+
+                let (is_mod, enabled) = if ext_str == "jar" || ext_str == "zip" {
+                    (true, true)
+                } else if ext_str == "disabled"
+                    && (file_name_str.ends_with(".jar.disabled")
+                        || file_name_str.ends_with(".zip.disabled"))
+                {
+                    (true, false)
+                } else {
+                    (false, false)
+                };
+
+                if is_mod {
+                    let filename = file_name.to_string_lossy().to_string();
+                    let display_name = match filename.strip_suffix(".disabled") {
+                        Some(stripped) => stripped.to_string(),
+                        None => filename.clone(),
                     };
-                    let file_name_str = file_name.to_string_lossy().to_lowercase();
 
-                    let (is_mod, enabled) = if ext_str == "jar" || ext_str == "zip" {
-                        (true, true)
-                    } else if ext_str == "disabled"
-                        && (file_name_str.ends_with(".jar.disabled")
-                            || file_name_str.ends_with(".zip.disabled"))
-                    {
-                        (true, false)
-                    } else {
-                        (false, false)
+                    let path_clone = path.clone();
+                    let metadata = tokio::task::spawn_blocking(move || {
+                        crate::services::AddonManager::get_mod_info(&path_clone)
+                    })
+                    .await
+                    .unwrap_or(None);
+
+                    let (md_name, md_version, md_desc, md_authors, md_icon) = match metadata {
+                        Some(m) => (m.name, m.version, m.description, m.authors, m.icon),
+                        None => (display_name, None, None, None, None),
                     };
 
-                    if is_mod {
-                        let filename = file_name.to_string_lossy().to_string();
-                        let display_name = match filename.strip_suffix(".disabled") {
-                            Some(stripped) => stripped.to_string(),
-                            None => filename.clone(),
-                        };
-
-                        let metadata = crate::services::AddonManager::get_mod_info(&path);
-
-                        mods.push(ModDto {
-                            name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(display_name),
-                            filename,
-                            version: metadata.as_ref().and_then(|m| m.version.clone()),
-                            description: metadata.as_ref().and_then(|m| m.description.clone()),
-                            authors: metadata.as_ref().and_then(|m| m.authors.clone()),
-                            icon: metadata.as_ref().and_then(|m| m.icon.clone()),
-                            enabled,
-                        });
-                    }
+                    mods.push(ModDto {
+                        name: md_name,
+                        filename,
+                        version: md_version,
+                        description: md_desc,
+                        authors: md_authors,
+                        icon: md_icon,
+                        enabled,
+                    });
                 }
+            }
         }
     }
     mods.sort_by_key(|a| a.name.to_lowercase());
@@ -379,11 +390,15 @@ pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> 
             .strip_suffix(".disabled")
             .ok_or("Error al procesar el nombre del archivo")?;
         let new_path = mods_dir.join(new_filename);
-        std::fs::rename(file_path, new_path).map_err(|e| e.to_string())?;
+        tokio::fs::rename(file_path, new_path)
+            .await
+            .map_err(|e| e.to_string())?;
     } else if !enable && !is_currently_disabled {
         let new_filename = format!("{}.disabled", filename);
         let new_path = mods_dir.join(new_filename);
-        std::fs::rename(file_path, new_path).map_err(|e| e.to_string())?;
+        tokio::fs::rename(file_path, new_path)
+            .await
+            .map_err(|e| e.to_string())?;
     }
 
     Ok(())
@@ -411,15 +426,25 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
                     continue;
                 };
                 let filename = file_name.to_string_lossy().to_string();
-                let metadata = crate::services::AddonManager::get_resourcepack_info(&path);
+                let path_clone = path.clone();
+                let metadata = tokio::task::spawn_blocking(move || {
+                    crate::services::AddonManager::get_resourcepack_info(&path_clone)
+                })
+                .await
+                .unwrap_or(None);
+
+                let (md_name, md_desc, md_icon) = match metadata {
+                    Some(m) => (m.name, m.description, m.icon),
+                    None => (filename.clone(), None, None),
+                };
 
                 resourcepacks.push(ModDto {
-                    name: metadata.as_ref().map(|m| m.name.clone()).unwrap_or(filename.clone()),
+                    name: md_name,
                     filename,
                     version: None,
-                    description: metadata.as_ref().and_then(|m| m.description.clone()),
+                    description: md_desc,
                     authors: None,
-                    icon: metadata.as_ref().and_then(|m| m.icon.clone()),
+                    icon: md_icon,
                     enabled: true,
                 });
             }
@@ -439,23 +464,28 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
     let Some(handle) = manager.get_handle(&id).await else {
         return Vec::new();
     };
-
     let logs_dir = handle.get_instance_dir().await.join("logs");
-
     let mut logs = Vec::new();
     if let Ok(entries) = std::fs::read_dir(logs_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file()
-                && let Some(file_name) = path.file_name() {
-                    logs.push(file_name.to_string_lossy().to_string());
-                }
+                && let Some(file_name) = path.file_name()
+                && let Some(ext) = path.extension()
+                // Mojang comprime en gzip los logs anteriores
+                // asi q nomas nos tendremos que quedar con el latest :/
+                //
+                // TODO: Podriamos hacer que enves de enviar el filename entero enviar un stream
+                // asi podriamos enviar un stream de datos descomprimidos
+                && ext == "log"
+            {
+                logs.push(file_name.to_string_lossy().to_string());
+            }
         }
     }
     logs.sort_by(|a, b| b.cmp(a));
     logs
 }
-
 #[tauri::command]
 pub async fn read_instance_log(id: String, filename: String) -> Result<String, String> {
     let manager = InstanceManager::get();
@@ -468,7 +498,9 @@ pub async fn read_instance_log(id: String, filename: String) -> Result<String, S
         return Err("Archivo de registro no encontrado".to_string());
     }
 
-    std::fs::read_to_string(log_path).map_err(|e| e.to_string())
+    tokio::fs::read_to_string(log_path)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -488,7 +520,9 @@ pub async fn delete_instance_file(
 
     let file_path = handle.get_instance_dir().await.join(sub_dir).join(filename);
     if file_path.exists() {
-        std::fs::remove_file(file_path).map_err(|e| e.to_string())?;
+        tokio::fs::remove_file(file_path)
+            .await
+            .map_err(|e| e.to_string())?;
     }
     Ok(())
 }
@@ -506,13 +540,17 @@ pub async fn add_instance_file(
 
     let dest_dir = handle.get_instance_dir().await.join(sub_dir);
     if !dest_dir.exists() {
-        std::fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
+        tokio::fs::create_dir_all(&dest_dir)
+            .await
+            .map_err(|e| e.to_string())?;
     }
 
     let src = PathBuf::from(source_path);
     let filename = src.file_name().ok_or("Ruta de origen inválida")?;
     let dest_path = dest_dir.join(filename);
 
-    std::fs::copy(src, dest_path).map_err(|e| e.to_string())?;
+    tokio::fs::copy(src, dest_path)
+        .await
+        .map_err(|e| e.to_string())?;
     Ok(())
 }

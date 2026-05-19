@@ -22,7 +22,7 @@
         pointer-events: none;
     }
 
-    .notification-container :global(.xmb-toast) {
+    .notification-container :global(.notification-toast) {
         pointer-events: all;
     }
 </style>

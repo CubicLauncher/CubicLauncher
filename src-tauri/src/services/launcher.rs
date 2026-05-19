@@ -1,6 +1,6 @@
 use crate::core::path_manager::PathManager;
 use crate::core::{AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, emit};
-use crate::services::instance_manager::{InstanceHandle, InstanceStatus};
+use crate::services::instance_manager::{register_kill_sender, unregister_kill_sender, InstanceHandle, InstanceStatus};
 use crate::services::SettingsManager;
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
@@ -150,7 +150,6 @@ impl DownloadHandle {
 pub struct DownloadQueue {
     sender: mpsc::Sender<String>,
     active: RwLock<HashMap<String, DownloadHandle>>,
-    app_handle: std::sync::Mutex<Option<tauri::AppHandle>>,
 }
 
 impl DownloadQueue {
@@ -158,14 +157,13 @@ impl DownloadQueue {
         DOWNLOAD_QUEUE.get().expect("DownloadQueue no inicializada")
     }
 
-    pub async fn init(app_handle: Option<tauri::AppHandle>) -> Arc<Self> {
+    pub async fn init(_app_handle: Option<tauri::AppHandle>) -> Arc<Self> {
         // Canal ilimitado en la práctica — las descargas no son tan frecuentes
         let (tx, rx) = mpsc::channel::<String>(64);
 
         let queue = Arc::new(Self {
             sender: tx,
             active: RwLock::new(HashMap::new()),
-            app_handle: std::sync::Mutex::new(app_handle),
         });
 
         let queue_clone = queue.clone();
@@ -273,11 +271,6 @@ impl DownloadQueue {
             let mut downloader = MinecraftDownloader::new(shared_dir, version_data);
 
             let (tx, mut progress_rx) = mpsc::channel::<DownloadProgress>(100);
-            let _app_handle = queue
-                .app_handle
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .clone();
             let handle_for_monitor = handle.clone();
             let version_for_monitor = version.clone();
 
@@ -286,18 +279,6 @@ impl DownloadQueue {
                     handle_for_monitor
                         .update_progress(progress.current as u64, progress.total as u64);
 
-                    // if let Some(ref app) = app_handle {
-                    //     use tauri::Emitter;
-                    //     let _ = app.emit(
-                    //         "download-progress",
-                    //         serde_json::json!({
-                    //             "version": version_for_monitor,
-                    //             "current": progress.current,
-                    //             "total":   progress.total,
-                    //             "type":    format!("{:?}", progress.download_type),
-                    //         }),
-                    //     );
-                    // }
                     emit(AppEvent::DProgress {
                         version: version_for_monitor.to_string(),
                         current: progress.current as u32,
@@ -470,8 +451,26 @@ impl Launcher {
             Ok(_) => {
                 info!("Handle {} lanzado", lw_handle.id().to_string());
                 handle.set_status(InstanceStatus::Started);
-                lw_handle.wait().await;
-                handle.set_status(InstanceStatus::Off);
+
+                let (kill_tx, kill_rx) = tokio::sync::oneshot::channel::<()>();
+                register_kill_sender(&handle.uuid, kill_tx);
+
+                let uuid = handle.uuid.clone();
+                let h = handle.clone();
+                tokio::spawn(async move {
+                    tokio::select! {
+                        _ = kill_rx => {
+                            info!("Kill signal received for {}", uuid);
+                            let _ = lw_handle.kill().await;
+                            lw_handle.wait().await;
+                        }
+                        result = lw_handle.wait() => {
+                            info!("Instance {} exited: {:?}", uuid, result);
+                            unregister_kill_sender(&uuid);
+                        }
+                    }
+                    h.set_status(InstanceStatus::Off);
+                });
             }
             Err(e) => {
                 error!("{}", e.to_string());

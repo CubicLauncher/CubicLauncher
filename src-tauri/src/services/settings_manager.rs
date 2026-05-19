@@ -213,7 +213,7 @@ impl SettingsManager {
             if !settings.dirty {
                 return Ok(());
             }
-            let content = serde_json::to_string_pretty(&*settings)
+            let content = serde_json::to_string(&*settings)
                 .map_err(|e| CoreError::Serialize(e.to_string()))?;
             settings.dirty = false;
             let path = PathManager::get().get_settings_dir().join("settings.cub");

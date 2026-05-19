@@ -10,7 +10,7 @@
         downloadUpdate,
         installUpdate,
     } from "$lib/api/updaterServices";
-    import { applyTheme, listThemes } from "$lib/api/themeManager";
+    import { listThemes } from "$lib/api/themeManager";
     import type { ThemeEntry } from "$lib/types/types";
 
     interface Props {
@@ -300,7 +300,6 @@
                         onchange={async () => {
                             try {
                                 await invoke("set_theme", { id: launcherStore.settings.theme });
-                                applyTheme(launcherStore.settings.theme);
                             } catch (e) {
                                 console.error("Error setting theme:", e);
                             }
