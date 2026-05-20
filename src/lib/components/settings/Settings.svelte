@@ -80,10 +80,12 @@
         { value: "en", label: "English" },
     ];
     let availableThemes = $state<ThemeEntry[]>([]);
-    let themeOptions = $derived(availableThemes.map((t: ThemeEntry) => ({
-        value: t.id,
-        label: t.name,
-    })));
+    let themeOptions = $derived(
+        availableThemes.map((t: ThemeEntry) => ({
+            value: t.id,
+            label: t.name,
+        })),
+    );
 
     async function loadThemes() {
         availableThemes = await listThemes();
@@ -96,7 +98,7 @@
             .map((i) => i.uuid),
     );
 
-    const currentVersion = "2604d (26.4.3)";
+    const currentVersion = "2605a (26.5.0)";
 </script>
 
 <div class="qm-root">
@@ -299,7 +301,9 @@
                         bind:value={launcherStore.settings.theme}
                         onchange={async () => {
                             try {
-                                await invoke("set_theme", { id: launcherStore.settings.theme });
+                                await invoke("set_theme", {
+                                    id: launcherStore.settings.theme,
+                                });
                             } catch (e) {
                                 console.error("Error setting theme:", e);
                             }
