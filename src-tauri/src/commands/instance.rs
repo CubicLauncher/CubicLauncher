@@ -244,27 +244,7 @@ pub async fn update_instance(
         .await
 }
 
-// ── Logos & Versiones ────────────────────────────────────────────────────────
-
-#[tauri::command]
-pub async fn get_available_logos() -> Vec<String> {
-    let mut logos = Vec::new();
-    let paths = ["static/images/instances", "../static/images/instances"];
-
-    for path in paths {
-        if let Ok(entries) = std::fs::read_dir(path) {
-            for entry in entries.flatten() {
-                if let Some(name) = entry.file_name().to_str()
-                    && (name.ends_with(".ico") || name.ends_with(".png") || name.ends_with(".svg"))
-                {
-                    logos.push(name.to_string());
-                }
-            }
-            break;
-        }
-    }
-    logos
-}
+// ── Versiones ────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub async fn get_installed_versions() -> Vec<String> {

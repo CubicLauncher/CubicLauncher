@@ -2,8 +2,8 @@
     import {
         createInstance,
         getInstalledVersions,
-        getAvailableLogos,
     } from "$lib/api/cubicApi";
+    import { INSTANCE_LOGOS } from "$lib/icons/logos";
     import Select from "$lib/components/layout/Select.svelte";
     import { t } from "$lib/i18n";
 
@@ -16,7 +16,7 @@
     let selectedVersion = $state("");
     let selectedIcon = $state<string | null>(null);
     let versions = $state<string[]>([]);
-    let availableIcons = $state<string[]>([]);
+    let availableIcons = $state<string[]>(INSTANCE_LOGOS);
     let versionOptions = $derived(versions.map((v) => ({ value: v, label: v })));
     let loading = $state(false);
     let error = $state<string | null>(null);
@@ -24,7 +24,6 @@
     $effect(() => {
         if (open) {
             fetchVersions();
-            fetchLogos();
         }
     });
 
@@ -41,10 +40,6 @@
         if (versions.length > 0 && !selectedVersion) {
             selectedVersion = versions[0];
         }
-    }
-
-    async function fetchLogos() {
-        availableIcons = await getAvailableLogos();
     }
 
     async function handleCreate() {

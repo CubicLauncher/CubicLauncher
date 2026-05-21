@@ -3,8 +3,8 @@
         createInstance,
         fetchAll,
         getInstalledVersions,
-        getAvailableLogos,
     } from "$lib/api/cubicApi";
+    import { INSTANCE_LOGOS } from "$lib/icons/logos";
     import {
         deleteInst,
         renameInst,
@@ -39,7 +39,7 @@
     let versionInput = $state("");
     let selectedIcon = $state<string | null>(null);
     let installedVersions = $state<string[]>([]);
-    let availableIcons = $state<string[]>([]);
+    let availableIcons = $state<string[]>(INSTANCE_LOGOS);
     let versionOptions = $derived(installedVersions.map((v) => ({ value: v, label: v })));
 
     async function openRenameModal(instance: InstanceDto) {
@@ -48,7 +48,6 @@
         versionInput = instance.version;
         selectedIcon = instance.icon;
         installedVersions = await getInstalledVersions();
-        availableIcons = await getAvailableLogos();
         showRenameModal = true;
     }
 

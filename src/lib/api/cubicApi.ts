@@ -183,15 +183,6 @@ export async function addToQueue(version: string): Promise<void> {
   }
 }
 
-export async function getAvailableLogos(): Promise<string[]> {
-  try {
-    return await invoke<string[]>("get_available_logos");
-  } catch (err) {
-    console.error("Error al obtener logos disponibles:", err);
-    return [];
-  }
-}
-
 export async function getFabricVersions(): Promise<any[]> {
   try {
     return await invoke<any[]>("get_fabric_versions");

@@ -785,6 +785,7 @@ body {
     color: var(--text-secondary);
     padding: 16px 4px;
     margin-right: 20px;
+    font-family: inherit;
     font-size: 0.85rem;
     font-weight: 600;
     text-transform: uppercase;

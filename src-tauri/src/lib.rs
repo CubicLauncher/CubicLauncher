@@ -19,7 +19,7 @@ pub fn run() {
             commands::instance::rename_instance,
             commands::instance::update_instance,
             commands::instance::get_installed_versions,
-            commands::instance::get_available_logos,
+
             commands::instance::get_instance_mods,
             commands::instance::toggle_instance_mod,
             commands::instance::get_instance_screenshot,
