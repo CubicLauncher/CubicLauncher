@@ -68,8 +68,6 @@ pub struct SettingsManager {
     #[serde(default)]
     pub show_alpha: bool,
     #[serde(default)]
-    pub force_gpu: bool,
-    #[serde(default)]
     pub jvm_args: String,
     #[serde(default)]
     pub env_vars: HashMap<String, String>,
@@ -96,7 +94,6 @@ impl Default for SettingsManager {
             close_launcher_on_play: true,
             show_snapshots: false,
             show_alpha: false,
-            force_gpu: false,
             jvm_args: String::new(),
             env_vars: HashMap::new(),
             theme: String::from("dark"),

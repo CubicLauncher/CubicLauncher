@@ -44,7 +44,6 @@ export const launcherStore = $state<LauncherState>({
         close_launcher_on_play: true,
         show_snapshots: false,
         show_alpha: false,
-        force_gpu: false,
         jvm_args: "",
         env_vars: {},
         theme: "dark",

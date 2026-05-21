@@ -35,8 +35,7 @@
       "maxRam": "Máxima (GB)",
       "optionsTitle": "Opciones de Minecraft",
       "showSnapshots": "Mostrar versiones Snapshots",
-      "showAlpha": "Mostrar versiones Alpha",
-      "forceGpu": "Forzar uso de la Gpu"
+      "showAlpha": "Mostrar versiones Alpha"
     },
     "java": {
       "configTitle": "Configuración de Java",

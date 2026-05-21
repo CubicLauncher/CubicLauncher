@@ -441,17 +441,6 @@
                         >{t("settings.minecraft.showAlpha")}</label
                     >
                 </div>
-                <div class="qm-field-checkbox">
-                    <input
-                        type="checkbox"
-                        id="force-gpu"
-                        bind:checked={launcherStore.settings.force_gpu}
-                        onchange={handleSave}
-                    />
-                    <label for="force-gpu"
-                        >{t("settings.minecraft.forceGpu")} (Linux)</label
-                    >
-                </div>
             </section>
         {/if}
 

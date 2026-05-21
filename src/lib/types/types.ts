@@ -46,7 +46,6 @@ export interface Settings {
   close_launcher_on_play: boolean;
   show_snapshots: boolean;
   show_alpha: boolean;
-  force_gpu: boolean;
   jvm_args: string;
   env_vars: Record<string, string>;
   theme: string;
