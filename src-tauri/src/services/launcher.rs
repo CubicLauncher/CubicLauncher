@@ -5,7 +5,7 @@ use crate::services::SettingsManager;
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
 use launchwerk::{auth::AccountType, auth::microsoft::MicrosoftAuth};
-use proton::{DownloadProgress, MinecraftDownloader, resolve_version_data};
+use aqua::{DownloadManager, DownloadProgress};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
@@ -241,13 +241,16 @@ impl DownloadQueue {
 
             handle.set_status(DownloadStatus::Downloading);
 
-            let version_data = match resolve_version_data(&version).await {
-                Ok(v) => v,
+            let shared_dir = PathManager::get().get_shared_dir().to_path_buf();
+            let manager = DownloadManager::new(shared_dir);
+
+            let download_handle = match manager.prepare(&version).await {
+                Ok(h) => h,
                 Err(_) => {
                     if version.starts_with("fabric-loader-") {
                         let game_version = version.split('-').next_back().unwrap_or("");
-                        match resolve_version_data(game_version).await {
-                            Ok(v) => v,
+                        match manager.prepare(game_version).await {
+                            Ok(h) => h,
                             Err(_) => {
                                 let msg = format!(
                                     "No se pudo resolver la versión base {} para Fabric",
@@ -267,9 +270,6 @@ impl DownloadQueue {
                 }
             };
 
-            let shared_dir = PathManager::get().get_shared_dir().to_path_buf();
-            let mut downloader = MinecraftDownloader::new(shared_dir, version_data);
-
             let (tx, mut progress_rx) = mpsc::channel::<DownloadProgress>(100);
             let handle_for_monitor = handle.clone();
             let version_for_monitor = version.clone();
@@ -288,7 +288,7 @@ impl DownloadQueue {
                 }
             });
 
-            match downloader.download_all(Some(tx)).await {
+            match download_handle.download_all(Some(tx)).await {
                 Ok(_) => {
                     info!("Versión {} descargada correctamente", version);
                     handle.set_status(DownloadStatus::Done);

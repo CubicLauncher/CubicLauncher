@@ -21,7 +21,7 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["protocol-asset"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-proton = { git = "https://github.com/CubicLauncher/Proton.git", branch="main"}
+aqua = { git = "https://github.com/CubicLauncher/Aqua.git" }
 claunch-rs = { git = "https://github.com/CubicLauncher/claunch-rs.git", branch ="debugging" }
 launchwerk = {git="https://github.com/CubicLauncher/Launchwerk.git", features= ["auth"] }
 directories = "6.0.0"
