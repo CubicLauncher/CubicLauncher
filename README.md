@@ -89,6 +89,20 @@ bun install
 bun run tauri build
 ```
 
+## Arch Linux
+
+Descargá solo el [PKGBUILD](dist/arch/PKGBUILD) y compilá (el PKGBUILD ya clona el repo automáticamente):
+
+```bash
+mkdir cubiclauncher-build && cd cubiclauncher-build
+wget https://raw.githubusercontent.com/CubicLauncher/CubicLauncher/main/dist/arch/PKGBUILD
+makepkg -si
+```
+
+> ⚠️ **Compilar localmente es obligatorio.** Los binarios generados por las CI de GitHub (Ubuntu) pueden no ser compatibles con Arch Linux debido a su modelo rolling release.
+
+> ⚠️ **Inestable** — Revisá `dist/arch/IMPORTANTE.md`.
+
 ## Licencia
 
 Este proyecto se distribuye bajo los términos de la [Licencia Pública General GNU v3.0](LICENSE).
