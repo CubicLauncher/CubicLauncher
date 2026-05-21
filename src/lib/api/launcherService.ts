@@ -7,6 +7,7 @@ import { applyTheme } from "./themeManager";
 import { invoke } from "@tauri-apps/api/core";
 
 let _listenerInitialized = false;
+let debounceTimer: ReturnType<typeof setTimeout>;
 
 export function initEventListeners(): void {
     if (_listenerInitialized) return;
@@ -23,7 +24,8 @@ export function initEventListeners(): void {
                 ];
                 break;
             case "InstanceEdited":
-                getVersions();
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => getVersions(), 100);
                 break;
             case "InstanceDeleted":
                 launcherStore.loadedInstances = launcherStore.loadedInstances.filter(

@@ -64,14 +64,26 @@
         );
         if (!updated) return;
 
-        const changed =
-            updated.name !== current.name ||
-            updated.version !== current.version ||
-            updated.status !== current.status ||
-            updated.icon !== current.icon;
-
-        if (changed) {
-            selectedInstance = updated;
+        if (updated.status !== current.status) {
+            current.status = updated.status;
+        }
+        if (updated.name !== current.name) {
+            current.name = updated.name;
+        }
+        if (updated.version !== current.version) {
+            current.version = updated.version;
+        }
+        if (updated.icon !== current.icon) {
+            current.icon = updated.icon;
+        }
+        if (updated.cover_image !== current.cover_image) {
+            current.cover_image = updated.cover_image;
+        }
+        if (updated.last_played !== current.last_played) {
+            current.last_played = updated.last_played;
+        }
+        if (updated.loader !== current.loader) {
+            current.loader = updated.loader;
         }
     });
 </script>

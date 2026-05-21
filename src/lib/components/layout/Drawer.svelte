@@ -27,49 +27,31 @@
 
     const isVertical = $derived(direction === "bottom" || direction === "top");
 
-    // --- Translate state (0 = open, ±100 = closed) ---
     let translatePct = $state(getClosedTranslate());
-    let animFrameId: number;
+    let transitionStyle = $state("");
+    let dismissed = $state(true);
 
     function getClosedTranslate(): number {
         return direction === "bottom" || direction === "right" ? 100 : -100;
     }
 
-    // Lightweight spring animation without svelte/motion
-    function animateTo(target: number, onDone?: () => void) {
-        cancelAnimationFrame(animFrameId);
-        const stiffness = 0.1;
-        const damping = 0.7;
-        let velocity = 0;
-
-        function step() {
-            const force = (target - translatePct) * stiffness;
-            velocity = (velocity + force) * damping;
-            translatePct += velocity;
-
-            if (
-                Math.abs(target - translatePct) < 0.1 &&
-                Math.abs(velocity) < 0.1
-            ) {
-                translatePct = target;
-                onDone?.();
-                return;
-            }
-            animFrameId = requestAnimationFrame(step);
-        }
-        animFrameId = requestAnimationFrame(step);
-    }
-
-    // --- React to open prop ---
     $effect(() => {
         if (open) {
-            animateTo(0);
+            dismissed = false;
+            transitionStyle = "none";
+            translatePct = getClosedTranslate();
+            // Wait for next frame so browser paints the closed position first,
+            // then CSS transitions animate it open
+            requestAnimationFrame(() => {
+                transitionStyle = "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)";
+                translatePct = 0;
+            });
         } else {
-            animateTo(getClosedTranslate());
+            transitionStyle = "transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)";
+            translatePct = getClosedTranslate();
         }
     });
 
-    // --- Derived styles ---
     const transformStyle = $derived(
         isVertical
             ? `translate3d(0, ${translatePct}%, 0)`
@@ -80,11 +62,6 @@
         Math.max(0, 1 - Math.abs(translatePct) / 100),
     );
 
-    const isVisible = $derived(
-        open || Math.abs(translatePct) < Math.abs(getClosedTranslate()),
-    );
-
-    // --- Drag ---
     let isDragging = false;
     let dragStart = 0;
     let drawerEl: HTMLDivElement = $state() as HTMLDivElement;
@@ -93,7 +70,7 @@
         if (!dismissible) return;
         isDragging = true;
         dragStart = isVertical ? e.clientY : e.clientX;
-        cancelAnimationFrame(animFrameId);
+        transitionStyle = "none";
         (e.target as HTMLElement).setPointerCapture(e.pointerId);
     }
 
@@ -124,7 +101,14 @@
         if ((delta * sign) / size > closeThreshold) {
             close();
         } else {
-            animateTo(0);
+            transitionStyle = "transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)";
+            translatePct = 0;
+        }
+    }
+
+    function onTransitionEnd(e: TransitionEvent) {
+        if (e.propertyName === "transform" && !open) {
+            dismissed = true;
         }
     }
 
@@ -134,7 +118,6 @@
         onclose?.();
     }
 
-    // --- Keyboard ---
     function onKeydown(e: KeyboardEvent) {
         if (e.key === "Escape" && open && dismissible) close();
     }
@@ -142,24 +125,21 @@
     onMount(() => window.addEventListener("keydown", onKeydown));
     onDestroy(() => {
         window.removeEventListener("keydown", onKeydown);
-        cancelAnimationFrame(animFrameId);
     });
 </script>
 
-{#if isVisible}
-    <!-- Overlay -->
+{#if !dismissed}
     <div
         class="drawer-overlay"
-        style="opacity: {overlayOpacity};"
+        style="opacity: {overlayOpacity}; transition: opacity 0.25s ease;"
         role="presentation"
         onclick={() => close()}
     ></div>
 
-    <!-- Drawer -->
     <div
         bind:this={drawerEl}
         class="drawer drawer--{direction} {className}"
-        style="transform: {transformStyle}; {style}"
+        style="transform: {transformStyle}; transition: {transitionStyle}; {style}"
         role="dialog"
         aria-modal="true"
         tabindex="-1"
@@ -167,6 +147,7 @@
         onpointermove={onPointerMove}
         onpointerup={onPointerUp}
         onpointercancel={onPointerUp}
+        ontransitionend={onTransitionEnd}
     >
         {@render children?.()}
     </div>
