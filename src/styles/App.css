@@ -1537,6 +1537,7 @@ body {
     border: 1px solid #444;
     padding: 12px;
     border-radius: 10px;
+    font-family: "Cantarell", system-ui, sans-serif;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -1859,6 +1860,7 @@ body {
     padding: 8px 16px;
     border-radius: 6px;
     font-size: 0.8rem;
+    font-family: "Cantarell", system-ui, sans-serif;
     font-weight: 700;
     cursor: pointer;
     transition: opacity 0.2s ease;
@@ -1875,6 +1877,7 @@ body {
     padding: 8px 16px;
     border-radius: 6px;
     font-size: 0.8rem;
+    font-family: "Cantarell", system-ui, sans-serif;
     font-weight: 600;
     cursor: pointer;
     transition:

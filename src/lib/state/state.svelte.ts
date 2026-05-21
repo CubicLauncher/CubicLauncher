@@ -46,6 +46,7 @@ export const launcherStore = $state<LauncherState>({
         show_alpha: false,
         force_gpu: false,
         jvm_args: "",
+        env_vars: {},
         theme: "dark",
     },
 });

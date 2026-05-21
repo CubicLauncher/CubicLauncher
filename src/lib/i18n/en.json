@@ -47,6 +47,8 @@
       "java21Path": "Java 21 Path",
       "java25Path": "Java 25 Path",
       "jvmArgs": "JVM Arguments",
+      "envVars": "Environment Variables",
+      "envVarsAdd": "Add",
       "saveBtn": "Save Settings",
       "saving": "Saving..."
     }

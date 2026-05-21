@@ -443,6 +443,12 @@ impl Launcher {
                 .user_type("msa");
         }
 
+        for (k, v) in &settings_m.env_vars {
+            if !k.is_empty() {
+                builder = builder.env(k, v);
+            }
+        }
+
         let options = builder.build();
 
         let lw_handle = self.lw.prepare(manifest, options, instance_dir);

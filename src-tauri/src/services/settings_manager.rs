@@ -1,6 +1,7 @@
 use crate::core::{AppError, CoreError, FsError, PathManager, emit};
 use launchwerk::auth::MinecraftUser;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, RwLock};
 use tokio::fs;
@@ -70,6 +71,8 @@ pub struct SettingsManager {
     pub force_gpu: bool,
     #[serde(default)]
     pub jvm_args: String,
+    #[serde(default)]
+    pub env_vars: HashMap<String, String>,
     #[serde(default = "default_theme")]
     pub theme: String,
     #[serde(skip)]
@@ -95,6 +98,7 @@ impl Default for SettingsManager {
             show_alpha: false,
             force_gpu: false,
             jvm_args: String::new(),
+            env_vars: HashMap::new(),
             theme: String::from("dark"),
             dirty: true,
         }

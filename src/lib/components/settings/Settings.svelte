@@ -25,6 +25,35 @@
     let downloading = $state(false);
     let installing = $state(false);
 
+    let envVarList = $state<Array<{ key: string; value: string }>>([]);
+
+    function initEnvVars() {
+      const record = launcherStore.settings.env_vars;
+      const entries = Object.entries(record);
+      envVarList = entries.length > 0
+        ? entries.map(([k, v]) => ({ key: k, value: v }))
+        : [{ key: "", value: "" }];
+    }
+
+    function syncEnvVars() {
+      const record: Record<string, string> = {};
+      for (const entry of envVarList) {
+        if (entry.key.trim() !== "") {
+          record[entry.key.trim()] = entry.value;
+        }
+      }
+      launcherStore.settings.env_vars = record;
+    }
+
+    function addEnvVar() {
+      envVarList = [...envVarList, { key: "", value: "" }];
+    }
+
+    function removeEnvVar(index: number) {
+      envVarList = envVarList.filter((_, i) => i !== index);
+      syncEnvVars();
+    }
+
     async function handleSave() {
         saving = true;
         await saveSettings();
@@ -91,7 +120,10 @@
         availableThemes = await listThemes();
     }
 
-    onMount(loadThemes);
+    onMount(() => {
+        loadThemes();
+        initEnvVars();
+    });
     let runningInstances = $derived(
         launcherStore.loadedInstances
             .filter((i) => i.status === "started" || i.status === "starting")
@@ -483,6 +515,43 @@
                         placeholder="-Xmx2G -Xms1G ..."
                         style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 60px;"
                     ></textarea>
+                </div>
+                <div class="qm-field">
+                    <span style="display: block; margin-bottom: 6px; color: var(--text-primary); font-size: 0.9rem;">{t("settings.java.envVars")}</span>
+                    {#each envVarList as entry, i}
+                        <div
+                            style="display: flex; gap: 4px; align-items: center; margin-bottom: 4px;"
+                        >
+                            <input
+                                type="text"
+                                bind:value={entry.key}
+                                placeholder="KEY"
+                                oninput={syncEnvVars}
+                                style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 6px; border-radius: 4px; font-size: 0.8rem; height: 28px;"
+                            />
+                            <span
+                                style="color: var(--text-secondary); font-size: 0.8rem; flex-shrink: 0;"
+                                >=</span
+                            >
+                            <input
+                                type="text"
+                                bind:value={entry.value}
+                                placeholder="VALUE"
+                                oninput={syncEnvVars}
+                                style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 6px; border-radius: 4px; font-size: 0.8rem; height: 28px;"
+                            />
+                            <button
+                                onclick={() => removeEnvVar(i)}
+                                style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 2px; font-size: 1rem; line-height: 1; flex-shrink: 0;"
+                                >✕</button
+                            >
+                        </div>
+                    {/each}
+                    <button
+                        onclick={addEnvVar}
+                        style="background: none; border: 1px dashed var(--border-color); color: var(--text-secondary); cursor: pointer; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; margin-top: 2px;"
+                        >+ {t("settings.java.envVarsAdd")}</button
+                    >
                 </div>
             </section>
         {/if}

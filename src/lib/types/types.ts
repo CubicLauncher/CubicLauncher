@@ -48,6 +48,7 @@ export interface Settings {
   show_alpha: boolean;
   force_gpu: boolean;
   jvm_args: string;
+  env_vars: Record<string, string>;
   theme: string;
 }
 

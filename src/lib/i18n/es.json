@@ -47,6 +47,8 @@
       "java21Path": "Ruta de Java 21",
       "java25Path": "Ruta de Java 25",
       "jvmArgs": "Argumentos JVM",
+      "envVars": "Variables de Entorno",
+      "envVarsAdd": "Añadir",
       "saveBtn": "Guardar Ajustes",
       "saving": "Guardando..."
     }
