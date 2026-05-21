@@ -175,6 +175,15 @@ export async function getAvailableVersions(): Promise<any> {
   }
 }
 
+export async function refreshAvailableVersions(): Promise<any> {
+  try {
+    return await invoke("refresh_versions");
+  } catch (err) {
+    console.error("Error al refrescar versiones:", err);
+    return null;
+  }
+}
+
 export async function addToQueue(version: string): Promise<void> {
   try {
     await invoke("add_to_queue", { version });

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, RwLock};
 use tokio::fs;
-use tracing::{error, warn};
+use tracing::{error, info, warn};
 
 // ── Static global ─────────────────────────────────────────────────────────────
 
@@ -239,6 +239,7 @@ impl SettingsManager {
                 source: e,
             })
         })?;
+        info!("Configuración guardada en {:?}", path);
         emit(crate::core::AppEvent::STChanged);
         Ok(())
     }
@@ -247,6 +248,7 @@ impl SettingsManager {
         let path = PathManager::get().get_settings_dir().join("settings.cub");
 
         if !path.exists() {
+            info!("No hay archivo de configuración, usando valores por defecto");
             return Self::default();
         }
 
@@ -261,6 +263,7 @@ impl SettingsManager {
         match serde_json::from_str::<Self>(&content) {
             Ok(mut settings) => {
                 settings.migrate();
+                info!("Configuración cargada desde {:?}", path);
                 settings
             }
             Err(e) => {

@@ -2,6 +2,7 @@ use crate::services::SettingsManager;
 use launchwerk::auth::{MinecraftUser, microsoft::MicrosoftAuth};
 use serde::Serialize;
 use tauri::command;
+use tracing::info;
 
 #[derive(Serialize)]
 pub struct DeviceCode {
@@ -14,6 +15,7 @@ pub struct DeviceCode {
 
 #[command]
 pub async fn get_device_code() -> Result<DeviceCode, String> {
+    info!("Obteniendo código de dispositivo de Microsoft");
     let res = tokio::task::spawn_blocking(|| {
         MicrosoftAuth::default()
             .get_device_code()
@@ -22,6 +24,7 @@ pub async fn get_device_code() -> Result<DeviceCode, String> {
     .await
     .map_err(|e| e.to_string())??;
 
+    info!("Código de dispositivo obtenido: user_code={}", res.user_code);
     Ok(DeviceCode {
         user_code: res.user_code,
         device_code: res.device_code,
@@ -37,7 +40,7 @@ pub async fn authenticate_with_device_code(
     interval: u64,
     expires_in: u64,
 ) -> Result<MinecraftUser, String> {
-    // 1. Wait for Microsoft Authentication
+    info!("Autenticando con código de dispositivo...");
     let user = tokio::task::spawn_blocking(move || {
         MicrosoftAuth::default()
             .authenticate_with_device_code(&device_code, interval, expires_in)
@@ -46,11 +49,11 @@ pub async fn authenticate_with_device_code(
     .await
     .map_err(|e| format!("Task failed: {}", e))??;
 
-    // 2. Securely store the authentication tokens
+    info!("Autenticación exitosa para {}", user.username);
+
     user.save_tokens()
         .map_err(|e| format!("Failed to save tokens securely: {}", e))?;
 
-    // 3. Update the global launcher settings
     SettingsManager::write(|settings| {
         settings.set_user(Some(user.clone()));
     })?;
@@ -61,6 +64,12 @@ pub async fn authenticate_with_device_code(
 #[command]
 pub fn get_current_user() -> Result<Option<MinecraftUser>, String> {
     let settings = SettingsManager::read();
+    let has_user = settings.user.is_some();
+    if has_user {
+        info!("Devolviendo usuario autenticado");
+    } else {
+        info!("No hay usuario autenticado");
+    }
     Ok(settings.user.as_ref().map(|user| {
         let mut u = user.clone();
         let _ = u.load_tokens();
@@ -70,13 +79,16 @@ pub fn get_current_user() -> Result<Option<MinecraftUser>, String> {
 
 #[command]
 pub async fn logout() -> Result<(), String> {
+    info!("Cerrando sesión de usuario");
     SettingsManager::write(|settings| {
         if let Some(user) = settings.user.as_ref() {
+            info!("Eliminando tokens para {}", user.username);
             let _ = user.delete_tokens();
         }
 
         settings.set_user(None);
     })?;
     SettingsManager::save().await?;
+    info!("Sesión cerrada exitosamente");
     Ok(())
 }

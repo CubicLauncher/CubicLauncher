@@ -2,6 +2,7 @@ use directories::UserDirs;
 use std::env::temp_dir;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
+use tracing::info;
 
 static PATH_MANAGER: LazyLock<PathManager> = LazyLock::new(PathManager::initialize);
 
@@ -42,10 +43,13 @@ impl PathManager {
         for dir in &dirs {
             if let Err(e) = std::fs::create_dir_all(dir) {
                 errors.push(format!("{}: {}", dir.display(), e));
+            } else {
+                info!("Directorio asegurado: {:?}", dir);
             }
         }
 
         if errors.is_empty() {
+            info!("Todos los directorios necesarios existen");
             Ok(())
         } else {
             Err(errors)
@@ -68,19 +72,25 @@ impl PathManager {
 fn resolve_base_dir() -> PathBuf {
     // con la lib normal
     if let Some(d) = UserDirs::new() {
-        return d.home_dir().to_path_buf();
+        let path = d.home_dir().to_path_buf();
+        info!("Directorio base resuelto: home dir {:?}", path);
+        return path;
     }
     // en el caso de que no obtenga path que use el path actual de donde se ejecuta el binario
     if let Ok(exe) = std::env::current_exe()
         && let Some(parent) = exe.parent()
     {
+        info!("Directorio base resuelto: exe dir {:?}", parent);
         return parent.to_path_buf();
     }
     // si eso no funciona
     // entonces dir de trabajo actual lpm
     if let Ok(cwd) = std::env::current_dir() {
+        info!("Directorio base resuelto: cwd {:?}", cwd);
         return cwd;
     }
     // si tampoco da entonces temp
-    temp_dir()
+    let tmp = temp_dir();
+    info!("Directorio base resuelto: temp dir {:?}", tmp);
+    tmp
 }

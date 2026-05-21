@@ -176,6 +176,7 @@
     "notFound": "No versions found",
     "installedTag": "Installed",
     "downloadBtn": "Download",
+    "refreshBtn": "Refresh cache",
     "filters": {
       "all": "All",
       "installedOnly": "Installed Only",

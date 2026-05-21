@@ -2,19 +2,23 @@ use crate::services::SettingsManager;
 use serde::Serialize;
 use std::path::Path;
 use tauri::command;
+use tracing::info;
 
 #[command]
 pub fn get_settings() -> Result<SettingsManager, String> {
+    info!("Accediendo a configuración actual");
     Ok(SettingsManager::snapshot())
 }
 
 #[command]
 pub async fn update_settings(new_settings: SettingsManager) -> Result<(), String> {
+    info!("Actualizando configuración");
     SettingsManager::write(|s| {
         *s = new_settings;
         s.dirty = true;
     })?;
     SettingsManager::save().await?;
+    info!("Configuración actualizada y guardada");
     Ok(())
 }
 
@@ -28,6 +32,7 @@ pub struct JavaPaths {
 
 #[command]
 pub fn detect_java_paths() -> Result<JavaPaths, String> {
+    info!("Detectando rutas de Java");
     let mut paths = JavaPaths {
         jre8: String::new(),
         jre17: String::new(),
@@ -83,6 +88,7 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
     {
         // Simple heuristic for Linux
         let base_dir = "/usr/lib/jvm";
+        info!("Escaneando {} en busca de JVMs", base_dir);
         if let Ok(entries) = std::fs::read_dir(base_dir) {
             for entry in entries.flatten() {
                 let path = entry.path();
@@ -142,5 +148,6 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
             }
     }
 
+    info!("Rutas Java detectadas: JRE8={}, JRE17={}, JRE21={}, JRE25={}", paths.jre8, paths.jre17, paths.jre21, paths.jre25);
     Ok(paths)
 }

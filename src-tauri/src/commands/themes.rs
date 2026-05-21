@@ -3,6 +3,7 @@ use crate::services::SettingsManager;
 use crate::theme_watcher::ThemeWatcher;
 use serde::{Deserialize, Serialize};
 use tauri::command;
+use tracing::{error, info, warn};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ThemeFile {
@@ -37,7 +38,10 @@ pub fn list_themes() -> Result<Vec<ThemeEntry>, String> {
 
     let entries = match std::fs::read_dir(&themes_dir) {
         Ok(e) => e,
-        Err(_) => return Ok(themes),
+        Err(_) => {
+            info!("Directorio de themes no encontrado: {:?}", themes_dir);
+            return Ok(themes);
+        }
     };
 
     for entry in entries.flatten() {
@@ -69,11 +73,13 @@ pub fn list_themes() -> Result<Vec<ThemeEntry>, String> {
         });
     }
 
+    info!("{} temas listados", themes.len());
     Ok(themes)
 }
 
 #[command]
 pub fn get_user_theme(id: String) -> Result<ThemeFile, String> {
+    info!("Leyendo theme '{}'", id);
     let theme_path = PathManager::get()
         .get_themes_dir()
         .join(&id)
@@ -95,12 +101,10 @@ pub fn get_user_theme(id: String) -> Result<ThemeFile, String> {
     }
 
     // Valida si un archivo pesa mas de 25MB
-    // Esto lo agregue ya que probe cargar un archivo
-    // el cual NO es una imagen llena de datos aleatorios
-    // y la app se colgo xD
     if let Some(ref bg) = theme.bg_image {
         if let Ok(meta) = std::fs::metadata(bg) {
             if meta.len() > 25 * 1024 * 1024 {
+                warn!("Theme '{}': bg_image demasiado grande ({} bytes), ignorando", id, meta.len());
                 theme.bg_image_warning_key = Some("themes.warning.largeFile".into());
                 theme.bg_image = None;
             }
@@ -120,16 +124,19 @@ pub fn get_user_theme(id: String) -> Result<ThemeFile, String> {
             .unwrap_or(false);
 
         if !is_image {
+            warn!("Theme '{}': bg_image no es una imagen válida", id);
             theme.bg_image_warning_key = Some("themes.warning.notAnImage".into());
             theme.bg_image = None;
         }
     }
 
+    info!("Theme '{}' cargado exitosamente", id);
     Ok(theme)
 }
 
 #[command]
 pub async fn set_theme(id: String) -> Result<(), String> {
+    info!("Cambiando tema a '{}'", id);
     SettingsManager::write(|s| {
         s.theme = id.clone();
         s.dirty = true;
@@ -138,33 +145,41 @@ pub async fn set_theme(id: String) -> Result<(), String> {
     SettingsManager::save().await?;
 
     if let Some(dir) = id.strip_prefix("user:") {
+        info!("Iniciando watcher para tema de usuario: {}", dir);
         ThemeWatcher::watch(Some(dir.to_string()));
     } else {
+        info!("Tema built-in seleccionado, deteniendo watcher");
         ThemeWatcher::watch(None);
     }
 
-    emit(AppEvent::ThemeChanged { id });
-
+    emit(AppEvent::ThemeChanged { id: id.clone() });
+    info!("Tema cambiado a '{}'", id);
     Ok(())
 }
 
 #[command]
 pub fn get_current_theme() -> Result<String, String> {
-    Ok(SettingsManager::read().theme.clone())
+    let theme = SettingsManager::read().theme.clone();
+    info!("Tema actual: '{}'", theme);
+    Ok(theme)
 }
 
 #[command]
 pub fn get_themes_dir_path() -> Result<String, String> {
-    Ok(PathManager::get()
+    let path = PathManager::get()
         .get_themes_dir()
         .to_string_lossy()
-        .to_string())
+        .to_string();
+    info!("Ruta de directorio de themes: {}", path);
+    Ok(path)
 }
 
 #[command]
 pub fn import_theme(source_path: String) -> Result<ThemeEntry, String> {
+    info!("Importando theme desde '{}'", source_path);
     let source = std::path::Path::new(&source_path);
     if !source.exists() {
+        error!("Archivo de theme no existe: {}", source_path);
         return Err("El archivo no existe".to_string());
     }
 
@@ -178,6 +193,7 @@ pub fn import_theme(source_path: String) -> Result<ThemeEntry, String> {
     let theme_dir = PathManager::get().get_themes_dir().join(&theme_id);
 
     if theme_dir.exists() {
+        error!("El theme '{}' ya existe", theme_file.name);
         return Err(format!(
             "Ya existe un theme con el nombre '{}'",
             theme_file.name
@@ -201,10 +217,12 @@ pub fn import_theme(source_path: String) -> Result<ThemeEntry, String> {
             && bg_src.exists()
         {
             let bg_dest = theme_dir.join(bg);
+            info!("Copiando bg_image a {:?}", bg_dest);
             let _ = std::fs::copy(&bg_src, &bg_dest);
         }
     }
 
+    info!("Theme importado: id='{}', name='{}'", theme_id, theme_file.name);
     Ok(ThemeEntry {
         id: theme_id,
         name: theme_file.name,
