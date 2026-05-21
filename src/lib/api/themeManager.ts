@@ -5,6 +5,7 @@ import { showWarning } from "$lib/state/state.svelte";
 
 const builtinThemes: ThemeEntry[] = [
   { id: "dark", name: "Oscuro", author: "CubicLauncher", type: "builtin" },
+  { id: "lima", name: "Lima", author: "CubicLauncher", type: "builtin" },
 ];
 
 export interface UserTheme {
@@ -39,7 +40,7 @@ export async function applyTheme(themeId: string) {
   let theme: UserTheme | null = null;
 
   if (builtinThemes.find((t) => t.id === themeId)) {
-    const res = await fetch(`/themes/${themeId}.json`);
+    const res = await fetch(`/themes/${themeId}/${themeId}.json`);
     if (!res.ok) return;
     theme = await res.json();
   } else if (themeId.startsWith("user:")) {
