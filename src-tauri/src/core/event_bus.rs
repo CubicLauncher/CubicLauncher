@@ -10,12 +10,6 @@ static APP: OnceLock<AppHandle> = OnceLock::new();
 #[derive(Clone, Serialize)]
 #[serde(tag = "type", content = "data")]
 pub enum AppEvent {
-    InstanceStarted {
-        id: String,
-    },
-    InstanceDeleted {
-        id: String,
-    },
     InstanceEdited {
         id: String,
     },

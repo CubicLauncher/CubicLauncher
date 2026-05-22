@@ -127,9 +127,6 @@ impl SettingsManager {
 
     // ── Getters ───────────────────────────────────────────────────────────────
 
-    pub fn get_username(&self) -> &str {
-        &self.username
-    }
     pub fn get_min_memory(&self) -> u32 {
         self.min_memory
     }
@@ -163,11 +160,6 @@ impl SettingsManager {
 
     // ── Setters ───────────────────────────────────────────────────────────────
 
-    pub fn set_username(&mut self, username: String) {
-        self.username = username;
-        self.dirty = true;
-    }
-
     pub fn set_user(&mut self, user: Option<MinecraftUser>) {
         if let Some(ref u) = user {
             self.username = u.username.clone();
@@ -176,39 +168,6 @@ impl SettingsManager {
         self.dirty = true;
     }
 
-    pub fn set_min_memory(&mut self, min_memory: u32) {
-        if min_memory > self.max_memory {
-            warn!(
-                "min_memory ({}) no puede ser mayor que max_memory ({}), ignorando",
-                min_memory, self.max_memory
-            );
-            return;
-        }
-        self.min_memory = min_memory;
-        self.dirty = true;
-    }
-
-    pub fn set_max_memory(&mut self, max_memory: u32) {
-        self.max_memory = max_memory;
-        self.dirty = true;
-    }
-
-    pub fn set_jre8_path(&mut self, path: PathBuf) {
-        self.jre8_path = path;
-        self.dirty = true;
-    }
-    pub fn set_jre17_path(&mut self, path: PathBuf) {
-        self.jre17_path = path;
-        self.dirty = true;
-    }
-    pub fn set_jre21_path(&mut self, path: PathBuf) {
-        self.jre21_path = path;
-        self.dirty = true;
-    }
-    pub fn set_jre25_path(&mut self, path: PathBuf) {
-        self.jre25_path = path;
-        self.dirty = true;
-    }
     // ── Persistencia ──────────────────────────────────────────────────────────
 
     /// Serializa y escribe a disco.
