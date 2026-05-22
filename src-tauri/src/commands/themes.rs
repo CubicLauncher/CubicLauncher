@@ -101,15 +101,13 @@ pub fn get_user_theme(id: String) -> Result<ThemeFile, String> {
     }
 
     // Valida si un archivo pesa mas de 25MB
-    if let Some(ref bg) = theme.bg_image {
-        if let Ok(meta) = std::fs::metadata(bg) {
-            if meta.len() > 25 * 1024 * 1024 {
+    if let Some(ref bg) = theme.bg_image
+        && let Ok(meta) = std::fs::metadata(bg)
+            && meta.len() > 25 * 1024 * 1024 {
                 warn!("Theme '{}': bg_image demasiado grande ({} bytes), ignorando", id, meta.len());
                 theme.bg_image_warning_key = Some("themes.warning.largeFile".into());
                 theme.bg_image = None;
             }
-        }
-    }
 
     // Validar magic bytes para asegurar que es una imagen
     if let Some(ref bg) = theme.bg_image {

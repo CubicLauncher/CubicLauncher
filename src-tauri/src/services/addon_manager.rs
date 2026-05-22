@@ -37,11 +37,10 @@ impl AddonManager {
 
         {
             let cache = ADDON_CACHE.lock().unwrap_or_else(|e| e.into_inner());
-            if let Some((cached_mtime, cached_result)) = cache.get(path) {
-                if *cached_mtime == mtime {
+            if let Some((cached_mtime, cached_result)) = cache.get(path)
+                && *cached_mtime == mtime {
                     return cached_result.clone();
                 }
-            }
         }
 
         let file = match File::open(path) {

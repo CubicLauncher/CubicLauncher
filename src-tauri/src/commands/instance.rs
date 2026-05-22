@@ -340,11 +340,10 @@ pub async fn update_instance(
 pub async fn get_installed_versions() -> Vec<String> {
     {
         let cache = installed_versions_cache().lock().unwrap_or_else(|e| e.into_inner());
-        if let Some((timestamp, cached)) = cache.as_ref() {
-            if timestamp.elapsed() < INSTALLED_VERSIONS_TTL {
+        if let Some((timestamp, cached)) = cache.as_ref()
+            && timestamp.elapsed() < INSTALLED_VERSIONS_TTL {
                 return cached.clone();
             }
-        }
     }
 
     let versions_dir = PathManager::get().get_shared_dir().join("versions");

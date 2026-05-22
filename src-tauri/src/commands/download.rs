@@ -125,21 +125,19 @@ fn read_cache_with_ttl<T: serde::de::DeserializeOwned>(
 ) -> Option<T> {
     let metadata = std::fs::metadata(path).ok()?;
     let modified = metadata.modified().ok()?;
-    if let Ok(age) = modified.elapsed() {
-        if age > ttl {
+    if let Ok(age) = modified.elapsed()
+        && age > ttl {
             return None;
         }
-    }
     let data = std::fs::read(path).ok()?;
     serde_json::from_slice(&data).ok()
 }
 
 fn write_cache<T: serde::Serialize>(path: &std::path::Path, value: &T) {
-    if let Ok(data) = serde_json::to_vec(value) {
-        if let Err(e) = std::fs::write(path, &data) {
+    if let Ok(data) = serde_json::to_vec(value)
+        && let Err(e) = std::fs::write(path, &data) {
             warn!("Error escribiendo caché en {:?}: {}", path, e);
         }
-    }
 }
 
 #[tauri::command]
@@ -259,11 +257,10 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         let exists = tokio::fs::try_exists(&dest_path).await.unwrap_or_default();
 
         if !exists {
-            if let Some(parent) = dest_path.parent() {
-                if let Err(e) = tokio::fs::create_dir_all(parent).await {
+            if let Some(parent) = dest_path.parent()
+                && let Err(e) = tokio::fs::create_dir_all(parent).await {
                     warn!("Error creando directorio {:?}: {}", parent, e);
                 }
-            }
 
             let download_url = format!("{}{}", lib.url, rel_path);
             if let Ok(res) = HTTP.get(&download_url).send().await

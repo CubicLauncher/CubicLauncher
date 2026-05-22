@@ -51,14 +51,13 @@ impl ThemeWatcher {
                         info!("ThemeWatcher: nuevo theme ID: {:?}", new_id);
                         current_id = new_id;
 
-                        if let Some(old) = watched_path.take() {
-                            if let Err(e) = watcher.unwatch(&old) {
+                        if let Some(old) = watched_path.take()
+                            && let Err(e) = watcher.unwatch(&old) {
                                 warn!(
                                     "ThemeWatcher: error al dejar de observar {:?}: {}",
                                     old, e
                                 );
                             }
-                        }
 
                         if let Some(ref id) = current_id {
                             let path = PathManager::get().get_themes_dir().join(id);
@@ -114,8 +113,8 @@ impl ThemeWatcher {
                     }
                 }
 
-                if let Some(le) = last_event {
-                    if le.elapsed() >= Duration::from_millis(DEBOUNCE_MS) {
+                if let Some(le) = last_event
+                    && le.elapsed() >= Duration::from_millis(DEBOUNCE_MS) {
                         if let Some(ref id) = current_id {
                             info!("ThemeWatcher: cambio confirmado en theme '{}'", id);
                             emit(AppEvent::ThemeChanged {
@@ -124,7 +123,6 @@ impl ThemeWatcher {
                         }
                         last_event = None;
                     }
-                }
             }
         });
     }
