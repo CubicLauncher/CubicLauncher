@@ -1,5 +1,8 @@
 #[tauri::command]
 pub fn open_url(url: String) -> Result<(), String> {
+    if !url.starts_with("https://") && !url.starts_with("http://") {
+        return Err("URL debe comenzar con http:// o https://".to_string());
+    }
     #[cfg(target_os = "windows")]
     {
         std::process::Command::new("cmd")

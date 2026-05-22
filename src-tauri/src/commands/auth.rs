@@ -2,7 +2,7 @@ use crate::services::SettingsManager;
 use launchwerk::auth::{MinecraftUser, microsoft::MicrosoftAuth};
 use serde::Serialize;
 use tauri::command;
-use tracing::info;
+use tracing::{info, warn};
 
 #[derive(Serialize)]
 pub struct DeviceCode {
@@ -72,7 +72,9 @@ pub fn get_current_user() -> Result<Option<MinecraftUser>, String> {
     }
     Ok(settings.user.as_ref().map(|user| {
         let mut u = user.clone();
-        let _ = u.load_tokens();
+        if let Err(e) = u.load_tokens() {
+            warn!("Error cargando tokens: {:?}", e);
+        }
         u
     }))
 }
@@ -83,7 +85,9 @@ pub async fn logout() -> Result<(), String> {
     SettingsManager::write(|settings| {
         if let Some(user) = settings.user.as_ref() {
             info!("Eliminando tokens para {}", user.username);
-            let _ = user.delete_tokens();
+            if let Err(e) = user.delete_tokens() {
+                warn!("Error eliminando tokens: {:?}", e);
+            }
         }
 
         settings.set_user(None);

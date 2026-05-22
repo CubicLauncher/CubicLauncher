@@ -2,7 +2,7 @@ use crate::services::SettingsManager;
 use serde::Serialize;
 use std::path::Path;
 use tauri::command;
-use tracing::info;
+use tracing::{info, warn};
 
 #[command]
 pub fn get_settings() -> Result<SettingsManager, String> {
@@ -13,6 +13,15 @@ pub fn get_settings() -> Result<SettingsManager, String> {
 #[command]
 pub async fn update_settings(new_settings: SettingsManager) -> Result<(), String> {
     info!("Actualizando configuración");
+    if new_settings.min_memory == 0 {
+        warn!("min_memory no puede ser 0, usando 1");
+    }
+    if new_settings.max_memory == 0 {
+        warn!("max_memory no puede ser 0, usando 2");
+    }
+    if new_settings.min_memory > new_settings.max_memory {
+        return Err("min_memory no puede ser mayor que max_memory".to_string());
+    }
     SettingsManager::write(|s| {
         *s = new_settings;
         s.dirty = true;

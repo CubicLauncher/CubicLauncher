@@ -2,7 +2,7 @@ use crate::core::{HTTP, PathManager};
 use crate::services::DownloadQueue;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
-use tracing::{info, error};
+use tracing::{error, info, warn};
 
 const MOJANG_MANIFEST_URL: &str = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
@@ -136,7 +136,9 @@ fn read_cache_with_ttl<T: serde::de::DeserializeOwned>(
 
 fn write_cache<T: serde::Serialize>(path: &std::path::Path, value: &T) {
     if let Ok(data) = serde_json::to_vec(value) {
-        let _ = std::fs::write(path, data);
+        if let Err(e) = std::fs::write(path, &data) {
+            warn!("Error escribiendo caché en {:?}: {}", path, e);
+        }
     }
 }
 
@@ -258,15 +260,20 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
 
         if !exists {
             if let Some(parent) = dest_path.parent() {
-                let _ = tokio::fs::create_dir_all(parent).await;
+                if let Err(e) = tokio::fs::create_dir_all(parent).await {
+                    warn!("Error creando directorio {:?}: {}", parent, e);
+                }
             }
 
             let download_url = format!("{}{}", lib.url, rel_path);
             if let Ok(res) = HTTP.get(&download_url).send().await
                 && let Ok(bytes) = res.bytes().await
             {
-                let _ = tokio::fs::write(dest_path, bytes).await;
-                downloaded += 1;
+                if let Err(e) = tokio::fs::write(&dest_path, bytes).await {
+                    warn!("Error escribiendo librería {:?}: {}", dest_path, e);
+                } else {
+                    downloaded += 1;
+                }
             } else {
                 error!("Error descargando librería: {}", lib.name);
             }

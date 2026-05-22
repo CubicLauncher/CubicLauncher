@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use std::sync::Mutex;
 use std::time::SystemTime;
-use tracing::debug;
+use tracing::{debug, warn};
 use zip::ZipArchive;
 use base64::{Engine as _, engine::general_purpose};
 
@@ -36,7 +36,7 @@ impl AddonManager {
         let mtime = std::fs::metadata(path).ok()?.modified().ok()?;
 
         {
-            let cache = ADDON_CACHE.lock().unwrap();
+            let cache = ADDON_CACHE.lock().unwrap_or_else(|e| e.into_inner());
             if let Some((cached_mtime, cached_result)) = cache.get(path) {
                 if *cached_mtime == mtime {
                     return cached_result.clone();
@@ -44,11 +44,23 @@ impl AddonManager {
             }
         }
 
-        let file = File::open(path).ok()?;
-        let mut archive = ZipArchive::new(file).ok()?;
+        let file = match File::open(path) {
+            Ok(f) => f,
+            Err(e) => {
+                debug!("No se pudo abrir {:?}: {}", path, e);
+                return None;
+            }
+        };
+        let mut archive = match ZipArchive::new(file) {
+            Ok(a) => a,
+            Err(e) => {
+                debug!("No se pudo leer ZIP {:?}: {}", path, e);
+                return None;
+            }
+        };
         let result = parse_fn(&mut archive);
 
-        let mut cache = ADDON_CACHE.lock().unwrap();
+        let mut cache = ADDON_CACHE.lock().unwrap_or_else(|e| e.into_inner());
         if cache.len() >= MAX_CACHE_ENTRIES {
             cache.clear();
         }
@@ -76,7 +88,7 @@ impl AddonManager {
                 debug!("Mod Forge (legacy): {:?}", path);
                 return Some(meta);
             }
-            debug!("No se pudo detectar tipo de mod: {:?}", path);
+            warn!("No se pudo detectar tipo de mod: {:?}", path);
             None
         })
     }

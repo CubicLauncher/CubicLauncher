@@ -52,7 +52,10 @@ impl AtomicStatus {
         match self.state.load(Ordering::Acquire) {
             STATUS_STARTING => InstanceStatus::Starting,
             STATUS_STARTED => InstanceStatus::Started,
-            STATUS_ERROR => InstanceStatus::Error(self.error.lock().unwrap().clone()),
+            STATUS_ERROR => {
+                let msg = self.error.lock().unwrap_or_else(|e| e.into_inner()).clone();
+                InstanceStatus::Error(msg)
+            }
             _ => InstanceStatus::Off,
         }
     }
@@ -64,7 +67,7 @@ impl AtomicStatus {
             InstanceStatus::Started => self.state.store(STATUS_STARTED, Ordering::Release),
             InstanceStatus::Error(e) => {
                 // Escribe el mensaje antes de cambiar el state
-                *self.error.lock().unwrap() = e.clone();
+                *self.error.lock().unwrap_or_else(|e| e.into_inner()) = e.clone();
                 self.state.store(STATUS_ERROR, Ordering::Release);
             }
         }
@@ -280,7 +283,7 @@ impl InstanceHandle {
         let mut data = self.data.write().await;
         data.last_played = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs();
         data.dirty = true;
     }
@@ -336,7 +339,7 @@ impl InstanceManager {
     pub fn get() -> &'static Arc<InstanceManager> {
         INSTANCE_MANAGER
             .get()
-            .expect("InstanceManager no inicializado")
+            .expect("BUG: InstanceManager usado antes de inicializar")
     }
 
     async fn sync_task() {
@@ -433,7 +436,8 @@ impl InstanceManager {
 
         let dir = handle.get_instance_dir().await;
         if dir.exists() {
-            fs::remove_dir_all(&dir)
+            tokio_fs::remove_dir_all(&dir)
+                .await
                 .map_err(|e| format!("Error al eliminar el directorio: {}", e))?;
         }
         Ok(())
@@ -500,16 +504,16 @@ static KILL_SENDERS: LazyLock<Mutex<HashMap<String, oneshot::Sender<()>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub fn register_kill_sender(uuid: &str, tx: oneshot::Sender<()>) {
-    KILL_SENDERS.lock().unwrap().insert(uuid.to_string(), tx);
+    KILL_SENDERS.lock().unwrap_or_else(|e| e.into_inner()).insert(uuid.to_string(), tx);
 }
 
 pub fn unregister_kill_sender(uuid: &str) {
-    KILL_SENDERS.lock().unwrap().remove(uuid);
+    KILL_SENDERS.lock().unwrap_or_else(|e| e.into_inner()).remove(uuid);
 }
 
 /// Envía la señal de kill. Retorna `true` si el proceso estaba corriendo.
 pub fn signal_kill(uuid: &str) -> bool {
-    let tx = KILL_SENDERS.lock().unwrap().remove(uuid);
+    let tx = KILL_SENDERS.lock().unwrap_or_else(|e| e.into_inner()).remove(uuid);
     tx.is_some_and(|tx| tx.send(()).is_ok())
 }
 
@@ -542,6 +546,13 @@ fn validate_instance_name(name: &str) -> Result<(), String> {
             "El nombre de la instancia no puede superar {} caracteres.",
             MAX_LEN
         ));
+    }
+    if name.contains('/')
+        || name.contains('\\')
+        || name.contains('\0')
+        || name.contains("..")
+    {
+        return Err("El nombre contiene caracteres no permitidos (/, \\, .., \\0).".into());
     }
     Ok(())
 }

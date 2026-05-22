@@ -1,8 +1,10 @@
+use std::path::PathBuf;
 use std::sync::mpsc;
 use std::sync::OnceLock;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::core::{AppEvent, PathManager, emit};
+use notify::{Event, EventKind, RecursiveMode, Watcher};
 use tracing::{info, warn};
 
 static WATCHER_TX: OnceLock<mpsc::Sender<Option<String>>> = OnceLock::new();
@@ -18,73 +20,111 @@ impl ThemeWatcher {
     }
 
     pub async fn start() {
-        info!("ThemeWatcher: iniciando");
-        let (tx, rx) = mpsc::channel();
-        let _ = WATCHER_TX.set(tx);
+        info!("ThemeWatcher: iniciando (notify)");
+
+        let (cmd_tx, cmd_rx) = mpsc::channel::<Option<String>>();
+        let _ = WATCHER_TX.set(cmd_tx);
 
         tokio::task::spawn_blocking(move || {
+            let (notify_tx, notify_rx) = mpsc::channel::<Result<Event, notify::Error>>();
+
+            let mut watcher: notify::RecommendedWatcher = match notify::recommended_watcher(
+                move |res| {
+                    let _ = notify_tx.send(res);
+                },
+            ) {
+                Ok(w) => w,
+                Err(e) => {
+                    warn!("ThemeWatcher: error al crear watcher: {}", e);
+                    return;
+                }
+            };
+
             let mut current_id: Option<String> = None;
-            let mut last_mtime: Option<std::time::SystemTime> = None;
+            let mut watched_path: Option<PathBuf> = None;
+            let mut last_event: Option<Instant> = None;
+            const DEBOUNCE_MS: u64 = 200;
 
             loop {
-                // Drenar cambios de theme pendientes
-                loop {
-                    match rx.try_recv() {
-                        Ok(opt) => {
-                            info!("ThemeWatcher: nuevo theme ID: {:?}", opt);
-                            current_id = opt;
-                            last_mtime = current_id.as_ref().and_then(|id| {
-                                let f = PathManager::get().get_themes_dir().join(id).join("theme.json");
-                                std::fs::metadata(&f).ok()?.modified().ok()
-                            });
-                            if let Some(mtime) = last_mtime {
-                                info!("ThemeWatcher: theme '{}' última modificación: {:?}", current_id.as_deref().unwrap_or("?"), mtime);
+                match cmd_rx.try_recv() {
+                    Ok(new_id) => {
+                        info!("ThemeWatcher: nuevo theme ID: {:?}", new_id);
+                        current_id = new_id;
+
+                        if let Some(old) = watched_path.take() {
+                            if let Err(e) = watcher.unwatch(&old) {
+                                warn!(
+                                    "ThemeWatcher: error al dejar de observar {:?}: {}",
+                                    old, e
+                                );
                             }
                         }
-                        Err(mpsc::TryRecvError::Disconnected) => {
-                            warn!("ThemeWatcher: canal desconectado, deteniendo");
-                            return;
-                        }
-                        Err(mpsc::TryRecvError::Empty) => break,
-                    }
-                }
 
-                // Polling del theme activo
-                if let Some(ref id) = current_id {
-                    let theme_file =
-                        PathManager::get().get_themes_dir().join(id).join("theme.json");
-                    match std::fs::metadata(&theme_file) {
-                        Ok(meta) => {
-                            if let Ok(mtime) = meta.modified()
-                                && last_mtime != Some(mtime) {
-                                    // Debounce: esperar 200ms y confirmar que el mtime se estabilizó
-                                    std::thread::sleep(Duration::from_millis(200));
-                                    if let Ok(meta2) = std::fs::metadata(&theme_file) {
-                                        if let Ok(mtime2) = meta2.modified() {
-                                            if mtime2 == mtime {
-                                                info!("ThemeWatcher: cambio detectado en theme '{}'", id);
-                                                last_mtime = Some(mtime);
-                                                emit(AppEvent::ThemeChanged {
-                                                    id: format!("user:{}", id),
-                                                });
-                                                continue;
-                                            }
-                                        }
-                                    }
+                        if let Some(ref id) = current_id {
+                            let path = PathManager::get().get_themes_dir().join(id);
+                            if path.exists() {
+                                info!("ThemeWatcher: observando {:?}", path);
+                                if let Err(e) =
+                                    watcher.watch(&path, RecursiveMode::NonRecursive)
+                                {
+                                    warn!(
+                                        "ThemeWatcher: error al observar {:?}: {}",
+                                        path, e
+                                    );
+                                } else {
+                                    watched_path = Some(path);
                                 }
+                            } else {
+                                warn!("ThemeWatcher: el directorio {:?} no existe", path);
+                            }
                         }
-                        Err(_) => {
-                            // El directorio fue eliminado
-                            if last_mtime.is_some() {
-                                warn!("ThemeWatcher: directorio del theme '{}' eliminado", id);
-                                last_mtime = None;
-                                current_id = None;
+                        last_event = None;
+                    }
+                    Err(mpsc::TryRecvError::Disconnected) => {
+                        warn!("ThemeWatcher: canal desconectado, deteniendo");
+                        return;
+                    }
+                    Err(mpsc::TryRecvError::Empty) => {}
+                }
+
+                match notify_rx.recv_timeout(Duration::from_millis(100)) {
+                    Ok(Ok(event)) => {
+                        if matches!(
+                            event.kind,
+                            EventKind::Modify(_) | EventKind::Create(_)
+                        ) {
+                            let is_theme_json = event.paths.iter().any(|p| {
+                                p.file_name()
+                                    .map(|n| n == "theme.json")
+                                    .unwrap_or(false)
+                            });
+                            if is_theme_json {
+                                info!("ThemeWatcher: cambio detectado en theme.json");
+                                last_event = Some(Instant::now());
                             }
                         }
                     }
+                    Ok(Err(e)) => {
+                        warn!("ThemeWatcher: error de notify: {:?}", e);
+                    }
+                    Err(mpsc::RecvTimeoutError::Timeout) => {}
+                    Err(mpsc::RecvTimeoutError::Disconnected) => {
+                        warn!("ThemeWatcher: notify desconectado");
+                        return;
+                    }
                 }
 
-                std::thread::sleep(Duration::from_secs(1));
+                if let Some(le) = last_event {
+                    if le.elapsed() >= Duration::from_millis(DEBOUNCE_MS) {
+                        if let Some(ref id) = current_id {
+                            info!("ThemeWatcher: cambio confirmado en theme '{}'", id);
+                            emit(AppEvent::ThemeChanged {
+                                id: format!("user:{}", id),
+                            });
+                        }
+                        last_event = None;
+                    }
+                }
             }
         });
     }

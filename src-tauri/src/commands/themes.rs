@@ -218,7 +218,9 @@ pub fn import_theme(source_path: String) -> Result<ThemeEntry, String> {
         {
             let bg_dest = theme_dir.join(bg);
             info!("Copiando bg_image a {:?}", bg_dest);
-            let _ = std::fs::copy(&bg_src, &bg_dest);
+            if let Err(e) = std::fs::copy(&bg_src, &bg_dest) {
+                warn!("Error copiando bg_image a {:?}: {}", bg_dest, e);
+            }
         }
     }
 

@@ -154,7 +154,7 @@ pub struct DownloadQueue {
 
 impl DownloadQueue {
     pub fn get() -> &'static Arc<DownloadQueue> {
-        DOWNLOAD_QUEUE.get().expect("DownloadQueue no inicializada")
+        DOWNLOAD_QUEUE.get().expect("BUG: DownloadQueue usado antes de inicializar")
     }
 
     pub async fn init(_app_handle: Option<tauri::AppHandle>) -> Arc<Self> {
@@ -324,7 +324,7 @@ pub struct Launcher {
 
 impl Launcher {
     pub fn get() -> &'static Arc<Launcher> {
-        LAUNCHER.get().expect("Launcher no inicializado")
+        LAUNCHER.get().expect("BUG: Launcher usado antes de inicializar")
     }
 
     pub fn init() -> Arc<Self> {
@@ -412,7 +412,9 @@ impl Launcher {
                 Ok(new_user) => {
                     info!("Token refrescado para {}", new_user.username);
                     user = new_user;
-                    let _ = user.save_tokens();
+                    if let Err(e) = user.save_tokens() {
+                        warn!("Error guardando tokens: {:?}", e);
+                    }
                     SettingsManager::write(|settings| {
                         settings.set_user(Some(user.clone()));
                     })?;
@@ -467,7 +469,9 @@ impl Launcher {
                     tokio::select! {
                         _ = kill_rx => {
                             info!("Kill signal received for {}", uuid);
-                            let _ = lw_handle.kill().await;
+                            if let Err(e) = lw_handle.kill().await {
+                                warn!("Error al matar proceso {}: {:?}", uuid, e);
+                            }
                             lw_handle.wait().await;
                         }
                         result = lw_handle.wait() => {

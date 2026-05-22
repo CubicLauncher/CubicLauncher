@@ -1,10 +1,27 @@
 use crate::core::{AppEvent, PathManager, emit};
 use crate::services::{InstanceDto, InstanceManager, InstanceStatus, Launcher, signal_kill};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::time::Instant;
 use tracing::{error, info, warn};
+
+fn validate_uuid(uuid: &str) -> Result<(), String> {
+    uuid::Uuid::parse_str(uuid).map_err(|_| format!("UUID inválido: '{}'", uuid))?;
+    Ok(())
+}
+
+fn sanitize_sub_path(instance_dir: &Path, sub_path: &Path) -> Result<PathBuf, String> {
+    if sub_path.is_absolute() {
+        return Err("La ruta no puede ser absoluta".to_string());
+    }
+    for component in sub_path.components() {
+        if matches!(component, std::path::Component::ParentDir) {
+            return Err("La ruta no puede contener '..'".to_string());
+        }
+    }
+    Ok(instance_dir.join(sub_path))
+}
 
 const INSTALLED_VERSIONS_TTL: std::time::Duration = std::time::Duration::from_secs(30);
 
@@ -21,6 +38,7 @@ fn installed_versions_cache() -> &'static Mutex<Option<InstalledVersionsCache>> 
 
 #[tauri::command]
 pub async fn launch(instance_id: String) -> Result<(), String> {
+    validate_uuid(&instance_id)?;
     info!("Lanzando instancia {}", instance_id);
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&instance_id).await else {
@@ -44,6 +62,7 @@ pub async fn launch(instance_id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn kill_instance(uuid: String) -> Result<(), String> {
+    validate_uuid(&uuid)?;
     info!("Matando instancia {}", uuid);
     let manager = InstanceManager::get();
     let handle = manager
@@ -97,6 +116,7 @@ pub async fn create_instance(
 
 #[tauri::command]
 pub async fn delete_instance(id: String) -> Result<(), String> {
+    validate_uuid(&id)?;
     info!("Eliminando instancia {}", id);
     let result = InstanceManager::get().delete_instance(&id).await;
     if let Err(ref e) = result {
@@ -175,11 +195,17 @@ pub async fn get_all_instance_screenshots(instance_name: String) -> Vec<String> 
 
 #[tauri::command]
 pub async fn set_instance_cover_image(instance_id: String, path: String) {
+    if let Err(e) = validate_uuid(&instance_id) {
+        warn!("{}", e);
+        return;
+    }
     info!("Estableciendo cover image para instancia {}: {}", instance_id, path);
     let manager = InstanceManager::get();
     if let Some(handle) = manager.get_handle(&instance_id).await {
         handle.set_cover_image(Some(PathBuf::from(path))).await;
-        let _ = handle.save_if_dirty().await;
+        if let Err(e) = handle.save_if_dirty().await {
+            warn!("Error guardando cover image de instancia {}: {:?}", instance_id, e);
+        }
     } else {
         warn!("Instancia {} no encontrada para establecer cover image", instance_id);
     }
@@ -187,11 +213,17 @@ pub async fn set_instance_cover_image(instance_id: String, path: String) {
 
 #[tauri::command]
 pub async fn reset_instance_cover_image(instance_id: String) {
+    if let Err(e) = validate_uuid(&instance_id) {
+        warn!("{}", e);
+        return;
+    }
     info!("Reseteando cover image para instancia {}", instance_id);
     let manager = InstanceManager::get();
     if let Some(handle) = manager.get_handle(&instance_id).await {
         handle.set_cover_image(None).await;
-        let _ = handle.save_if_dirty().await;
+        if let Err(e) = handle.save_if_dirty().await {
+            warn!("Error guardando reset cover image de instancia {}: {:?}", instance_id, e);
+        }
     } else {
         warn!("Instancia {} no encontrada para resetear cover image", instance_id);
     }
@@ -199,6 +231,9 @@ pub async fn reset_instance_cover_image(instance_id: String) {
 
 #[tauri::command]
 pub async fn get_instance_banner(instance_id: String) -> Option<String> {
+    if validate_uuid(&instance_id).is_err() {
+        return None;
+    }
     let manager = InstanceManager::get();
     let handle = manager.get_handle(&instance_id).await?;
 
@@ -215,17 +250,19 @@ pub async fn get_instance_banner(instance_id: String) -> Option<String> {
 
 #[tauri::command]
 pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<(), String> {
+    validate_uuid(&id)?;
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
         warn!("Intento de abrir directorio de instancia {} no encontrada", id);
         return Err("Instancia no encontrada".to_string());
     };
 
-    let mut path = handle.get_instance_dir().await;
+    let instance_dir = handle.get_instance_dir().await;
 
-    if let Some(ref sub) = sub_dir {
-        path = path.join(sub);
-    }
+    let path = match sub_dir {
+        Some(ref sub) => sanitize_sub_path(&instance_dir, Path::new(sub))?,
+        None => instance_dir,
+    };
 
     info!("Abriendo directorio: {:?}", path);
 
@@ -268,6 +305,7 @@ pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<()
 
 #[tauri::command]
 pub async fn rename_instance(id: String, new_name: String) -> Result<(), String> {
+    validate_uuid(&id)?;
     info!("Renombrando instancia {} a '{}'", id, new_name);
     let result = InstanceManager::get()
         .update_instance(&id, Some(new_name), None, None)
@@ -285,6 +323,7 @@ pub async fn update_instance(
     new_version: Option<String>,
     new_icon: Option<Option<String>>,
 ) -> Result<(), String> {
+    validate_uuid(&id)?;
     info!("Actualizando instancia {}: name={:?}, version={:?}, icon={:?}", id, new_name, new_version, new_icon);
     let result = InstanceManager::get()
         .update_instance(&id, new_name, new_version, new_icon)
@@ -300,7 +339,7 @@ pub async fn update_instance(
 #[tauri::command]
 pub async fn get_installed_versions() -> Vec<String> {
     {
-        let cache = installed_versions_cache().lock().unwrap();
+        let cache = installed_versions_cache().lock().unwrap_or_else(|e| e.into_inner());
         if let Some((timestamp, cached)) = cache.as_ref() {
             if timestamp.elapsed() < INSTALLED_VERSIONS_TTL {
                 return cached.clone();
@@ -321,7 +360,7 @@ pub async fn get_installed_versions() -> Vec<String> {
     }
     versions.sort_by(|a, b| b.cmp(a));
 
-    let mut cache = installed_versions_cache().lock().unwrap();
+    let mut cache = installed_versions_cache().lock().unwrap_or_else(|e| e.into_inner());
     *cache = Some((Instant::now(), versions.clone()));
     info!("Versiones instaladas actualizadas ({} versiones)", versions.len());
     versions
@@ -344,6 +383,10 @@ pub struct ModDto {
 
 #[tauri::command]
 pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
+    if let Err(e) = validate_uuid(&id) {
+        warn!("{}", e);
+        return Vec::new();
+    }
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
         warn!("Instancia {} no encontrada para listar mods", id);
@@ -418,6 +461,7 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
 
 #[tauri::command]
 pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> Result<(), String> {
+    validate_uuid(&id)?;
     info!("Cambiando estado del mod '{}' en instancia {}: enable={}", filename, id, enable);
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
@@ -462,6 +506,10 @@ pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> 
 
 #[tauri::command]
 pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
+    if let Err(e) = validate_uuid(&id) {
+        warn!("{}", e);
+        return Vec::new();
+    }
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
         warn!("Instancia {} no encontrada para listar resourcepacks", id);
@@ -514,6 +562,10 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
 
 #[tauri::command]
 pub async fn get_instance_logs(id: String) -> Vec<String> {
+    if let Err(e) = validate_uuid(&id) {
+        warn!("{}", e);
+        return Vec::new();
+    }
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
         warn!("Instancia {} no encontrada para listar logs", id);
@@ -544,6 +596,7 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
 }
 #[tauri::command]
 pub async fn read_instance_log(id: String, filename: String) -> Result<String, String> {
+    validate_uuid(&id)?;
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
         warn!("Instancia {} no encontrada para leer log", id);
@@ -575,13 +628,16 @@ pub async fn delete_instance_file(
     sub_dir: String,
     filename: String,
 ) -> Result<(), String> {
+    validate_uuid(&id)?;
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
         warn!("Instancia {} no encontrada para eliminar archivo", id);
         return Err("Instancia no encontrada".to_string());
     };
 
-    let file_path = handle.get_instance_dir().await.join(sub_dir).join(&filename);
+    let instance_dir = handle.get_instance_dir().await;
+    let sub_path = sanitize_sub_path(&instance_dir, Path::new(&sub_dir))?;
+    let file_path = sub_path.join(&filename);
     info!("Eliminando archivo {:?} de instancia {}", file_path, id);
     if file_path.exists() {
         tokio::fs::remove_file(&file_path)
@@ -602,13 +658,15 @@ pub async fn add_instance_file(
     sub_dir: String,
     source_path: String,
 ) -> Result<(), String> {
+    validate_uuid(&id)?;
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
         warn!("Instancia {} no encontrada para agregar archivo", id);
         return Err("Instancia no encontrada".to_string());
     };
 
-    let dest_dir = handle.get_instance_dir().await.join(&sub_dir);
+    let instance_dir = handle.get_instance_dir().await;
+    let dest_dir = sanitize_sub_path(&instance_dir, Path::new(&sub_dir))?;
     info!("Agregando archivo '{}' a instancia {} en sub_dir '{}'", source_path, id, sub_dir);
     if !dest_dir.exists() {
         tokio::fs::create_dir_all(&dest_dir)

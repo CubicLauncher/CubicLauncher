@@ -19,7 +19,6 @@ pub fn run() {
             commands::instance::rename_instance,
             commands::instance::update_instance,
             commands::instance::get_installed_versions,
-
             commands::instance::get_instance_mods,
             commands::instance::toggle_instance_mod,
             commands::instance::get_instance_screenshot,
@@ -59,7 +58,8 @@ pub fn run() {
                 use tauri_plugin_dialog::DialogExt;
                 let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {
-                    handle.dialog()
+                    handle
+                        .dialog()
                         .message(format!(
                             "No se pudieron crear los directorios necesarios:\n{}",
                             errors.join("\n")
@@ -75,9 +75,13 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 tokio::join!(
                     services::DownloadQueue::init(Some(handle.clone())),
-                    async { services::Launcher::init().set_handle(handle.clone()); },
+                    async {
+                        services::Launcher::init().set_handle(handle.clone());
+                    },
                     InstanceManager::init(),
-                    async { core::init(handle.clone()); },
+                    async {
+                        core::init(handle.clone());
+                    },
                     theme_watcher::ThemeWatcher::start(),
                 );
                 let theme = services::SettingsManager::read().theme.clone();

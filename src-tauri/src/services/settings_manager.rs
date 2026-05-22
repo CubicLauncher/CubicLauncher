@@ -104,7 +104,10 @@ impl Default for SettingsManager {
 
 impl SettingsManager {
     pub fn read() -> std::sync::RwLockReadGuard<'static, SettingsManager> {
-        SETTINGS.read().unwrap_or_else(|e| e.into_inner())
+        SETTINGS.read().unwrap_or_else(|e| {
+            warn!("Lock de configuración envenenado, recuperando con datos posiblemente corruptos");
+            e.into_inner()
+        })
     }
 
     pub fn write(f: impl FnOnce(&mut SettingsManager)) -> Result<(), CoreError> {
@@ -116,7 +119,10 @@ impl SettingsManager {
     }
 
     pub fn snapshot() -> SettingsManager {
-        SETTINGS.read().unwrap_or_else(|e| e.into_inner()).clone()
+        SETTINGS.read().unwrap_or_else(|e| {
+            warn!("Lock de configuración envenenado en snapshot, recuperando con datos posiblemente corruptos");
+            e.into_inner()
+        }).clone()
     }
 
     // ── Getters ───────────────────────────────────────────────────────────────
@@ -146,7 +152,9 @@ impl SettingsManager {
         match &self.user {
             Some(user) => {
                 let mut u = user.clone();
-                let _ = u.load_tokens();
+                if let Err(e) = u.load_tokens() {
+                    warn!("Error cargando tokens: {:?}", e);
+                }
                 u
             }
             None => MinecraftUser::cracked(&self.username),
@@ -255,7 +263,7 @@ impl SettingsManager {
         let content = match std::fs::read_to_string(&path) {
             Ok(c) => c,
             Err(e) => {
-                error!("Error al leer la configuración: {}", e);
+                error!("Error al leer la configuración desde {:?}: {}", path, e);
                 return Self::default();
             }
         };
@@ -267,8 +275,10 @@ impl SettingsManager {
                 settings
             }
             Err(e) => {
-                error!("Configuración inválida ({}), creando backup", e);
-                let _ = std::fs::copy(&path, path.with_extension("cub.bak"));
+                error!("Configuración inválida en {:?} ({}), creando backup", path, e);
+                if let Err(e) = std::fs::copy(&path, path.with_extension("cub.bak")) {
+                    warn!("Error creando backup de configuración {:?}: {}", path, e);
+                }
                 Self::default()
             }
         }
