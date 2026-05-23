@@ -1,7 +1,6 @@
 <div align="center">
   <img src="static/images/cubic.svg" width="120" alt="CubicLauncher" />
   <h1>CubicLauncher</h1>
-  <p>Lanzador de Minecraft rápido, ligero y de código abierto.</p>
 
   ![License](https://img.shields.io/badge/Licence-GPL--3.0-blue)
   [![dependency status](https://deps.rs/repo/github/cubiclauncher/cubiclauncher/status.svg?path=src-tauri)](https://deps.rs/repo/github/cubiclauncher/cubiclauncher?path=src-tauri)
@@ -11,83 +10,163 @@
 
 ---
 
-CubicLauncher es un lanzador de Minecraft de escritorio multiplataforma pensado para ser rápido y sencillo de usar. Permite administrar varias instancias de juego de forma independiente, cada una con su propia versión, loader de mods y configuración.
+## Descripción
 
-## Comunidad/Soporte
+**CubicLauncher** es un launcher de Minecraft multiplataforma construido sobre [Tauri v2](https://tauri.app) + [SvelteKit](https://kit.svelte.dev/) (frontend) y [Rust](https://www.rust-lang.org/) (backend nativo). Gestiona instancias aisladas de Minecraft con soporte para múltiples versiones, loaders de mods (Vanilla, Fabric), autenticación mediante OAuth 2.0 (código de dispositivo de Microsoft) y un sistema modular de comandos Tauri.
 
-| Servidor | URL |
-|----------|-----|
-| CubicLauncher | [https://discord.gg/7VaqSrPukm](https://discord.gg/7VaqSrPukm) |
+El proyecto está estructurado como un **monorepo** no convencional —el frontend SvelteKit y el backend Tauri coexisten en el mismo repositorio, compartiendo configuración y pipeline de build sin un workspace manager formal.
 
-## Funcionalidades
+## Stack tecnológico
 
-### Gestión de instancias
+| Capa       | Tecnología                                          |
+|------------|-----------------------------------------------------|
+| Shell nativo | [Tauri v2](https://tauri.app) + Rust              |
+| Frontend   | [Svelte 5](https://svelte.dev/) + [SvelteKit](https://kit.svelte.dev/) + TypeScript |
+| Bundler    | [Vite 6](https://vite.dev/)                         |
+| Backend    | Rust (edition 2024)                                 |
+| Runtime JS | [Bun](https://bun.sh/)                              |
+| Auth       | OAuth 2.0 — flujo de código de dispositivo (Microsoft) |
+| Addons     | Modrinth API (consumo desde Rust)                   |
+| UI         | Componentes nativos Svelte 5 (sin framework CSS)    |
 
-- Crea instancias de Minecraft con Vanilla, Fabric u otros loaders.
-- Renombra, actualiza o elimina instancias cuando quieras.
-- Cada instancia tiene su propio directorio aislado de juego.
-- Personaliza el ícono y la imagen de portada de cada instancia usando tus propias capturas de pantalla.
-- Consulta la fecha y hora de la última vez que jugaste en cada instancia.
+## Arquitectura
 
-### Mods
+```
+┌─────────────────────────────────────────────────┐
+│                  Tauri Shell                      │
+│  ┌──────────────────┐  ┌──────────────────────┐  │
+│  │   Frontend (JS)   │  │   Backend (Rust)      │  │
+│  │   SvelteKit + Vite│  │   src-tauri/src/      │  │
+│  │                   │  │   ├── commands/       │  │
+│  │   state.svelte.ts │◄─┤   ├── services/      │  │
+│  │   (reactividad)   │  │   ├── core/           │  │
+│  └──────────────────┘  │   └── theme_watcher/  │  │
+│         │ Tauri IPC     └──────────────────────┘  │
+│         ▼                                          │
+│  ┌──────────────────────────────────────────────┐ │
+│  │          Sistema de archivos local             │ │
+│  │  (instancias, config, capturas, mods, etc.)   │ │
+│  └──────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```
 
-- Activa o desactiva mods individualmente por instancia sin tener que borrarlos.
-- El soporte de mods está disponible en instancias con Fabric u otros loaders compatibles.
+El frontend se comunica con el backend Rust exclusivamente mediante **Tauri Commands** (IPC). El estado global reactivo se maneja del lado del frontend con `state.svelte.ts` (runas de Svelte 5). El backend orquesta el ciclo de vida de las instancias (descarga, lanzamiento, gestión de mods) y expone una API de comandos tipados.
 
-### Capturas de pantalla
+## Estructura del proyecto
 
-- Visualiza las capturas de pantalla de cada instancia directamente desde el lanzador.
-- Selecciona cualquier captura para usarla como imagen de portada de la instancia.
+```
+cubiclauncher/
+├── src/                          # Frontend SvelteKit
+│   ├── app.html                  # Template HTML raíz
+│   ├── routes/
+│   │   ├── +layout.ts            # Layout global
+│   │   └── +page.svelte          # Página principal
+│   └── lib/
+│       ├── api/                  # Capa de comunicación con Tauri
+│       ├── components/           # Componentes Svelte 5
+│       ├── i18n/                 # Internacionalización (es/en)
+│       ├── icons/                # Iconos SVG
+│       ├── state/
+│       │   └── state.svelte.ts   # Estado global reactivo (runas)
+│       ├── types/
+│       │   └── types.ts          # Tipos TypeScript compartidos
+│       └── Logo.svelte
+├── src-tauri/                    # Backend Rust
+│   ├── Cargo.toml                # Manifiesto Rust
+│   ├── tauri.conf.json           # Configuración de Tauri
+│   ├── build.rs                  # Script de build de Tauri
+│   ├── capabilities/             # Permisos Tauri
+│   ├── icons/                    # Íconos de la app
+│   └── src/
+│       ├── main.rs               # Entry point binario
+│       ├── lib.rs                # Biblioteca compartida
+│       ├── commands/             # Comandos Tauri IPC
+│       │   ├── auth.rs           #   Autenticación Microsoft
+│       │   ├── download.rs       #   Descarga de versiones
+│       │   ├── instance.rs       #   CRUD de instancias
+│       │   ├── modrinth.rs       #   Integración Modrinth
+│       │   ├── others.rs         #   Utilidades varias
+│       │   ├── settings.rs       #   Configuración global
+│       │   └── themes.rs         #   Temas visuales
+│       ├── services/             # Lógica de negocio
+│       │   ├── instance_manager.rs
+│       │   ├── launcher.rs       #   Lanzador del proceso Java
+│       │   ├── settings_manager.rs
+│       │   └── addon_manager.rs  #   Gestión de mods
+│       ├── core/                 # Infraestructura
+│       │   ├── errors/           #   Sistema de errores
+│       │   ├── event_bus.rs      #   Bus de eventos interno
+│       │   ├── http_client.rs    #   Cliente HTTP compartido
+│       │   └── path_manager.rs   #   Resolución de rutas
+│       └── theme_watcher/        # Watcher de temas del SO
+├── dist/                         # Distribuciones auxiliares
+│   └── arch/                     # PKGBUILD para Arch Linux
+├── static/                       # Archivos estáticos
+│   └── images/
+├── build/                        # Output de build
+├── vite.config.js                # Configuración de Vite
+├── svelte.config.js              # Configuración de SvelteKit
+├── tsconfig.json                 # TypeScript config
+└── package.json                  # Dependencias y scripts JS
+```
 
-### Autenticación
+## Primeros pasos
 
-- Inicia sesión con tu cuenta de Microsoft mediante el flujo de código de dispositivo.
-- El lanzador guarda la sesión de forma segura para que no tengas que autenticarte en cada inicio.
+### Prerrequisitos
 
-### Configuración
+- [Bun](https://bun.sh/) ≥ 1.x
+- [Rust](https://www.rust-lang.org/tools/install) ≥ 1.85 (edition 2024)
+- [Tauri CLI v2](https://v2.tauri.app/start/prerequisites/)
 
-**Lanzador**
-- Selección de idioma (Español / English).
-- Opción para cerrar el lanzador automáticamente al iniciar el juego.
-- Actualizaciones automáticas.
-
-**Minecraft**
-- Ajuste de memoria RAM mínima y máxima asignada al juego.
-- Opción para mostrar versiones snapshot y alpha en el selector de versiones.
-- Forzado de GPU discreta.
-
-**Java**
-- Rutas configurables para Java 8, 17 y 21.
-- Detección automática de instalaciones de Java en el sistema.
-- Argumentos personalizados de la JVM.
-
-### Descarga de versiones
-
-- Descarga versiones de Minecraft desde los repositorios oficiales de Mojang.
-- Soporte para instalar Fabric en instancias existentes.
-
-## Instalación
-
-Descarga el instalador correspondiente a tu sistema operativo desde la sección de [Releases](https://github.com/CubicLauncher/CubicLauncher/releases).
-
-| Sistema operativo | Formato        |
-|-------------------|----------------|
-| Windows           | `.msi` / `.exe`|
-| Linux             | `.deb` / `.AppImage` |
-| macOS             | `.dmg`         |
-
-## Compilar desde el código fuente
-
-Si prefieres compilar el lanzador manualmente, consulta la [guía de compilación](https://www.cubiclauncher.com/docs/main.html#desarrollo/compilacion).
-
-Requisitos mínimos: [Bun](https://bun.sh/), [Rust](https://www.rust-lang.org/tools/install) 2021+ y [Tauri CLI v2](https://tauri.app/start/prerequisites/).
+### Instalación
 
 ```bash
 git clone https://github.com/CubicLauncher/CubicLauncher.git
 cd CubicLauncher
 bun install
+```
+
+### Desarrollo
+
+```bash
+# Inicia el servidor de desarrollo Vite + Tauri
+bun run tauri dev
+```
+
+### Scripts disponibles
+
+| Comando                    | Descripción                                   |
+|----------------------------|-----------------------------------------------|
+| `bun run dev`              | Servidor de desarrollo Vite (solo frontend)   |
+| `bun run build`            | Build de producción del frontend              |
+| `bun run preview`          | Preview del build de frontend                 |
+| `bun run check`            | Type-check con `svelte-check`                 |
+| `bun run tauri dev`        | Entorno de desarrollo Tauri (frontend + Rust) |
+| `bun run tauri build`      | Build completo de la aplicación Tauri         |
+
+### Dependencias clave
+
+**Rust (Cargo)**:
+- `tauri` v2 — shell nativo multiplataforma
+- `launchwerk` — lanzamiento y autenticación de Minecraft [REPO](https://github.com/CubicLauncher/Launchwerk)
+- `aqua` — utilidades compartidas internas [REPO](https://github.com/CubicLauncher/Aqua)
+- `reqwest` + `tokio` — async HTTP y runtime
+- `serde` / `serde_json` — serialización
+- `notify` — file system watcher (tema del SO)
+
+**JavaScript**:
+- `@sveltejs/kit` + `svelte` v5 — framework reactivo
+- `vite` v6 — bundler y HMR
+- `@tauri-apps/api` v2 — bridge IPC
+- `@tauri-apps/plugin-dialog`, `plugin-process`, `plugin-updater`
+
+## Compilación
+
+```bash
 bun run tauri build
 ```
+
+El binario compilado se genera en `src-tauri/target/release/`. Consulta la [documentación oficial](https://www.cubiclauncher.com/docs/main.html#desarrollo/compilacion) para builds específicos por plataforma.
 
 ## Arch Linux
 
@@ -103,6 +182,12 @@ makepkg -si
 
 > ⚠️ **Inestable** — Revisá `dist/arch/IMPORTANTE.md`.
 
+## Comunidad
+
+| Plataforma  | URL                                                |
+|-------------|----------------------------------------------------|
+| Discord     | [https://discord.gg/7VaqSrPukm](https://discord.gg/7VaqSrPukm) |
+
 ## Licencia
 
-Este proyecto se distribuye bajo los términos de la [Licencia Pública General GNU v3.0](LICENSE).
+Distribuido bajo [GNU General Public License v3.0](LICENSE).
