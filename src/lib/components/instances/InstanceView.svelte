@@ -4,6 +4,7 @@
     import InstanceDetails from "./InstanceDetails.svelte";
     import { launchInstance } from "$lib/api/cubicApi";
     import ModsRow from "./ModsRow.svelte";
+    import DownloadMods from "./DownloadMods.svelte";
     import ResourcePacksTab from "./ResourcePacksTab.svelte";
     import ScreenshotsTab from "./ScreenshotsTab.svelte";
     import LogsTab from "./LogsTab.svelte";
@@ -240,6 +241,13 @@
             {t("instanceView.tabs.mods")}
         </button>
         <button
+            class="tab-item {activeTab === 'download_mods' ? 'active' : ''}"
+            onclick={() => supportsMods && (activeTab = "download_mods")}
+            disabled={!supportsMods}
+        >
+            {t("instanceView.tabs.downloadMods") || "Get Mods"}
+        </button>
+        <button
             class="tab-item {activeTab === 'resources' ? 'active' : ''}"
             onclick={() => (activeTab = "resources")}
         >
@@ -267,6 +275,10 @@
         {:else if activeTab === "mods"}
             <div class="tab-pane">
                 <ModsRow instanceId={selectedInstance.uuid} />
+            </div>
+        {:else if activeTab === "download_mods"}
+            <div class="tab-pane">
+                <DownloadMods instance={selectedInstance} />
             </div>
         {:else if activeTab === "resources"}
             <div class="tab-pane">

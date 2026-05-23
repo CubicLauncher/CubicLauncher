@@ -119,7 +119,8 @@
       "resources": "Recursos",
       "screenshots": "Capturas",
       "logs": "Logs",
-      "options": "Opciones"
+      "options": "Opciones",
+      "downloadMods": "Obtener Mods"
     },
     "details": {
       "title": "Detalles",
@@ -154,6 +155,44 @@
     "screenshots": {
       "title": "Capturas de Pantalla",
       "empty": "No hay capturas de pantalla"
+    },
+    "downloadMods": {
+      "sectionLabel": "Mod Manager",
+      "reviewTitle": "Revisar & Descargar",
+      "back": "← Volver",
+      "resolvingDeps": "Resolviendo dependencias...",
+      "allInstalled": "✓ Todas las dependencias ya están instaladas.",
+      "allInstalledSub": "No hay archivos nuevos que descargar.",
+      "filesToDownload_one": "{count} archivo para descargar:",
+      "filesToDownload_other": "{count} archivos para descargar:",
+      "confirmDownload": "Confirmar descarga",
+      "downloading": "Descargando...",
+      "file_one": "archivo",
+      "file_other": "archivos",
+      "categoriesLabel": "Categorías",
+      "allCategories": "Todas",
+      "sortLabel": "Ordenar por",
+      "sortDownloads": "Más descargados",
+      "sortRelevance": "Relevancia",
+      "sortNewest": "Más nuevos",
+      "sortUpdated": "Actualizados",
+      "selectionLabel": "Selección",
+      "selectionDesc": "Mods listos para instalar",
+      "reviewBtn": "Revisar & Descargar",
+      "searchPlaceholder": "Buscar mods en Modrinth...",
+      "resultsFound": "{count} mods encontrados",
+      "searching": "Buscando mods...",
+      "loadingMore": "Cargando más mods...",
+      "endOfResults": "— Fin de los resultados ({count} mods) —",
+      "noResults": "No se encontraron mods",
+      "clearFilters": "Limpiar filtros",
+      "select": "Seleccionar",
+      "selected": "✓ Seleccionado",
+      "closeDetails": "Cerrar detalles",
+      "downloads": "Descargas",
+      "removeSelection": "Quitar selección",
+      "selectToDownload": "Seleccionar para descargar",
+      "by": "by"
     }
   },
   "createInstance": {

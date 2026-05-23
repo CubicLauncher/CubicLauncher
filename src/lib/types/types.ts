@@ -136,3 +136,22 @@ export interface ThemeEntry {
   author: string;
   type: string;
 }
+
+export interface ModrinthProject {
+  project_id: string;
+  slug: string;
+  author: string;
+  title: string;
+  description: string;
+  categories: string[];
+  versions: string[];
+  downloads: number;
+  icon_url: string | null;
+}
+
+export interface ModrinthSearchResult {
+  hits: ModrinthProject[];
+  offset: number;
+  limit: number;
+  total_hits: number;
+}
