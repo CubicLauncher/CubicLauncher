@@ -77,17 +77,18 @@
     $effect(() => {
         // Tracking both selectedInstance.uuid and bannerVersion ensures we re-fetch
         // whenever the instance changes OR when the banner is manually updated/reset.
-        selectedInstance.uuid;
         bannerVersion;
         fetchScreenshot();
     });
-    const formatter = $derived(new Intl.DateTimeFormat(t("id"), {
-        year: "numeric",
-        month: "long",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-    }));
+    const formatter = $derived(
+        new Intl.DateTimeFormat(t("id"), {
+            year: "numeric",
+            month: "long",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        }),
+    );
 
     function formatDate(unix_date: number): string {
         if (unix_date < 1) {

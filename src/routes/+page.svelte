@@ -2,7 +2,11 @@
     import { onMount } from "svelte";
     import "../styles/App.css";
     import { launcherStore } from "$lib/state/state.svelte";
-    import { getVersions, syncSettings, initEventListeners } from "$lib/api/launcherService";
+    import {
+        getVersions,
+        syncSettings,
+        initEventListeners,
+    } from "$lib/api/launcherService";
     import type { InstanceDto } from "$lib/types/types";
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
     import InstanceView from "$lib/components/instances/InstanceView.svelte";
@@ -56,35 +60,12 @@
     });
 
     $effect(() => {
-        const current = selectedInstance;
-        if (!current) return;
-
-        const updated = launcherStore.loadedInstances.find(
-            (i) => i.uuid === current.uuid,
+        let selectedInstanceId = $state<string | null>(null);
+        const selectedInstance = $derived(
+            launcherStore.loadedInstances.find(
+                (i) => i.uuid === selectedInstanceId,
+            ) ?? null,
         );
-        if (!updated) return;
-
-        if (updated.status !== current.status) {
-            current.status = updated.status;
-        }
-        if (updated.name !== current.name) {
-            current.name = updated.name;
-        }
-        if (updated.version !== current.version) {
-            current.version = updated.version;
-        }
-        if (updated.icon !== current.icon) {
-            current.icon = updated.icon;
-        }
-        if (updated.cover_image !== current.cover_image) {
-            current.cover_image = updated.cover_image;
-        }
-        if (updated.last_played !== current.last_played) {
-            current.last_played = updated.last_played;
-        }
-        if (updated.loader !== current.loader) {
-            current.loader = updated.loader;
-        }
     });
 </script>
 
@@ -120,7 +101,9 @@
 </Drawer>
 
 <Drawer bind:open={versionDownloaderOpen} direction="right">
-    <VersionDownloaderComponent onclose={() => (versionDownloaderOpen = false)} />
+    <VersionDownloaderComponent
+        onclose={() => (versionDownloaderOpen = false)}
+    />
 </Drawer>
 
 <CreateInstanceModalComponent bind:open={openCreateModal} />
