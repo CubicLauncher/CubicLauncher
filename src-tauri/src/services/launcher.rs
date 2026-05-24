@@ -1,11 +1,13 @@
 use crate::core::path_manager::PathManager;
 use crate::core::{AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, emit};
-use crate::services::instance_manager::{register_kill_sender, unregister_kill_sender, InstanceHandle, InstanceStatus};
 use crate::services::SettingsManager;
+use crate::services::instance_manager::{
+    InstanceHandle, InstanceStatus, register_kill_sender, unregister_kill_sender,
+};
+use aqua::{DownloadManager, DownloadProgress};
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
 use launchwerk::{auth::AccountType, auth::microsoft::MicrosoftAuth};
-use aqua::{DownloadManager, DownloadProgress};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
@@ -154,7 +156,9 @@ pub struct DownloadQueue {
 
 impl DownloadQueue {
     pub fn get() -> &'static Arc<DownloadQueue> {
-        DOWNLOAD_QUEUE.get().expect("BUG: DownloadQueue usado antes de inicializar")
+        DOWNLOAD_QUEUE
+            .get()
+            .expect("BUG: DownloadQueue usado antes de inicializar")
     }
 
     pub async fn init(_app_handle: Option<tauri::AppHandle>) -> Arc<Self> {
@@ -270,15 +274,42 @@ impl DownloadQueue {
             let version_for_monitor = version.clone();
 
             let monitor_task = tokio::spawn(async move {
-                while let Some(progress) = progress_rx.recv().await {
-                    handle_for_monitor
-                        .update_progress(progress.current as u64, progress.total as u64);
+                let mut interval = tokio::time::interval(std::time::Duration::from_millis(150));
+                interval.tick().await;
+                let mut latest: Option<DownloadProgress> = None;
 
+                loop {
+                    tokio::select! {
+                        biased;
+                        _ = interval.tick() => {
+                            if let Some(ref p) = latest {
+                                emit(AppEvent::DProgress {
+                                    version: version_for_monitor.to_string(),
+                                    current: p.current as u32,
+                                    total: p.total as u32,
+                                    d_type: format!("{:?}", p.download_type),
+                                });
+                            }
+                        }
+                        maybe = progress_rx.recv() => {
+                            match maybe {
+                                Some(progress) => {
+                                    handle_for_monitor
+                                        .update_progress(progress.current as u64, progress.total as u64);
+                                    latest = Some(progress);
+                                }
+                                None => break,
+                            }
+                        }
+                    }
+                }
+
+                if let Some(p) = latest {
                     emit(AppEvent::DProgress {
                         version: version_for_monitor.to_string(),
-                        current: progress.current as u32,
-                        total: progress.total as u32,
-                        d_type: format!("{:?}", progress.download_type),
+                        current: p.current as u32,
+                        total: p.total as u32,
+                        d_type: format!("{:?}", p.download_type),
                     });
                 }
             });
@@ -319,7 +350,9 @@ pub struct Launcher {
 
 impl Launcher {
     pub fn get() -> &'static Arc<Launcher> {
-        LAUNCHER.get().expect("BUG: Launcher usado antes de inicializar")
+        LAUNCHER
+            .get()
+            .expect("BUG: Launcher usado antes de inicializar")
     }
 
     pub fn init() -> Arc<Self> {

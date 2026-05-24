@@ -1,8 +1,5 @@
 <script lang="ts">
-    import {
-        createInstance,
-        getInstalledVersions,
-    } from "$lib/api/cubicApi";
+    import { createInstance, getInstalledVersions } from "$lib/api/cubicApi";
     import { INSTANCE_LOGOS } from "$lib/icons/logos";
     import Select from "$lib/components/layout/Select.svelte";
     import { t } from "$lib/i18n";
@@ -17,7 +14,9 @@
     let selectedIcon = $state<string | null>(null);
     let versions = $state<string[]>([]);
     let availableIcons = $state<string[]>(INSTANCE_LOGOS);
-    let versionOptions = $derived(versions.map((v) => ({ value: v, label: v })));
+    let versionOptions = $derived(
+        versions.map((v) => ({ value: v, label: v })),
+    );
     let loading = $state(false);
     let error = $state<string | null>(null);
 
@@ -102,36 +101,90 @@
         >
             <div class="modal-header">
                 <span class="modal-title">{t("createInstance.title")}</span>
-                <button class="action-btn" onclick={close} title="Cerrar" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+                <button
+                    class="action-btn"
+                    onclick={close}
+                    title="Cerrar"
+                    style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary);"
+                    >&times;</button
+                >
             </div>
 
             <div class="modal-body" style="padding: 4px 0;">
                 <div style="display: flex; gap: 20px;">
                     <!-- Left: Logo Selection -->
-                    <div style="display: flex; flex-direction: column; gap: 12px; width: 100px; align-items: center; flex-shrink: 0;">
-                        <span class="input-label" style="margin: 0; text-align: center;">Logo</span>
+                    <div
+                        style="display: flex; flex-direction: column; gap: 12px; width: 100px; align-items: center; flex-shrink: 0;"
+                    >
+                        <span
+                            class="input-label"
+                            style="margin: 0; text-align: center;">Logo</span
+                        >
                         <!-- Large Logo Preview -->
-                        <div style="width: 80px; height: 80px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; padding: 12px; transition: all 0.2s; position: relative; overflow: hidden;">
+                        <div
+                            style="width: 80px; height: 80px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; padding: 12px; transition: all 0.2s; position: relative; overflow: hidden;"
+                        >
                             {#if selectedIcon}
-                                <img src={selectedIcon} alt="Logo" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));" />
-                                <button type="button" style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); border: none; color: white; opacity: 0; cursor: pointer; transition: opacity 0.2s; font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; justify-content: center;" onmouseenter={(e) => e.currentTarget.style.opacity = '1'} onmouseleave={(e) => e.currentTarget.style.opacity = '0'} onclick={() => selectedIcon = null}>Limpiar</button>
+                                <img
+                                    src={selectedIcon}
+                                    alt="Logo"
+                                    style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"
+                                />
+                                <button
+                                    type="button"
+                                    style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); border: none; color: white; opacity: 0; cursor: pointer; transition: opacity 0.2s; font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; justify-content: center;"
+                                    onmouseenter={(e) =>
+                                        (e.currentTarget.style.opacity = "1")}
+                                    onmouseleave={(e) =>
+                                        (e.currentTarget.style.opacity = "0")}
+                                    onclick={() => (selectedIcon = null)}
+                                    >Limpiar</button
+                                >
                             {:else}
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-secondary); opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <svg
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    style="color: var(--text-secondary); opacity: 0.5;"
+                                    ><rect
+                                        x="3"
+                                        y="3"
+                                        width="18"
+                                        height="18"
+                                        rx="2"
+                                        ry="2"
+                                    ></rect><circle cx="8.5" cy="8.5" r="1.5"
+                                    ></circle><polyline
+                                        points="21 15 16 10 5 21"
+                                    ></polyline></svg
+                                >
                             {/if}
                         </div>
                     </div>
 
                     <!-- Right: Details -->
-                    <div style="display: flex; flex-direction: column; gap: 16px; flex: 1;">
+                    <div
+                        style="display: flex; flex-direction: column; gap: 16px; flex: 1;"
+                    >
                         <div class="input-group">
-                            <span class="input-label">{t("createInstance.nameLabel")}</span>
+                            <span class="input-label"
+                                >{t("createInstance.nameLabel")}</span
+                            >
                             <input
                                 type="text"
                                 class="text-input"
                                 bind:value={name}
-                                placeholder={t("createInstance.namePlaceholder")}
+                                placeholder={t(
+                                    "createInstance.namePlaceholder",
+                                )}
                                 disabled={loading}
-                                onkeydown={(e) => e.key === "Enter" && handleCreate()}
+                                onkeydown={(e) =>
+                                    e.key === "Enter" && handleCreate()}
                                 style="font-size: 1rem; padding: 12px;"
                             />
                         </div>
@@ -148,12 +201,18 @@
                     </div>
                 </div>
 
-                <div class="divider" style="height: 1px; background: var(--border); margin: 16px 0 12px;"></div>
+                <div
+                    class="divider"
+                    style="height: 1px; background: var(--border); margin: 16px 0 12px;"
+                ></div>
 
                 <!-- Logo Picker Grid -->
                 <div class="input-group">
                     <span class="input-label">Seleccionar Icono</span>
-                    <div class="icon-selector" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; margin-top: 4px; max-height: 110px; overflow-y: auto; padding-right: 4px; padding-bottom: 4px;">
+                    <div
+                        class="icon-selector"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; margin-top: 4px; max-height: 110px; overflow-y: auto; padding-right: 4px; padding-bottom: 4px;"
+                    >
                         {#each availableIcons as iconName (iconName)}
                             {@const iconPath = `/images/instances/${iconName}`}
                             <button
@@ -183,7 +242,10 @@
                 {/if}
             </div>
 
-            <div class="modal-footer" style="margin-top: 8px; border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: flex-end; gap: 12px;">
+            <div
+                class="modal-footer"
+                style="margin-top: 8px; border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: flex-end; gap: 12px;"
+            >
                 <button
                     class="btn-secondary"
                     onclick={close}

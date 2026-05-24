@@ -1,9 +1,6 @@
 use crate::core::{AppEvent, PathManager, emit};
 use crate::services::{InstanceDto, InstanceManager, InstanceStatus, Launcher, signal_kill};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
-use std::sync::OnceLock;
-use std::time::Instant;
 use tracing::{error, info, warn};
 
 fn validate_uuid(uuid: &str) -> Result<(), String> {
@@ -21,15 +18,6 @@ fn sanitize_sub_path(instance_dir: &Path, sub_path: &Path) -> Result<PathBuf, St
         }
     }
     Ok(instance_dir.join(sub_path))
-}
-
-const INSTALLED_VERSIONS_TTL: std::time::Duration = std::time::Duration::from_secs(30);
-
-type InstalledVersionsCache = (Instant, Vec<String>);
-
-fn installed_versions_cache() -> &'static Mutex<Option<InstalledVersionsCache>> {
-    static CACHE: OnceLock<Mutex<Option<InstalledVersionsCache>>> = OnceLock::new();
-    CACHE.get_or_init(|| Mutex::new(None))
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -338,14 +326,6 @@ pub async fn update_instance(
 
 #[tauri::command]
 pub async fn get_installed_versions() -> Vec<String> {
-    {
-        let cache = installed_versions_cache().lock().unwrap_or_else(|e| e.into_inner());
-        if let Some((timestamp, cached)) = cache.as_ref()
-            && timestamp.elapsed() < INSTALLED_VERSIONS_TTL {
-                return cached.clone();
-            }
-    }
-
     let versions_dir = PathManager::get().get_shared_dir().join("versions");
     let mut versions = Vec::new();
     if let Ok(entries) = std::fs::read_dir(versions_dir) {
@@ -358,10 +338,6 @@ pub async fn get_installed_versions() -> Vec<String> {
         }
     }
     versions.sort_by(|a, b| b.cmp(a));
-
-    let mut cache = installed_versions_cache().lock().unwrap_or_else(|e| e.into_inner());
-    *cache = Some((Instant::now(), versions.clone()));
-    info!("Versiones instaladas actualizadas ({} versiones)", versions.len());
     versions
 }
 
