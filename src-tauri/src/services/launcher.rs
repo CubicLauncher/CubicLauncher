@@ -213,11 +213,6 @@ impl DownloadQueue {
             .collect()
     }
 
-    /// Devuelve el handle de una versión específica si existe.
-    pub async fn get_handle(&self, version: &str) -> Option<DownloadHandle> {
-        self.active.read().await.get(version).cloned()
-    }
-
     // ── Worker ────────────────────────────────────────────────────────────────
     //
     // Loop independiente — nadie lo lockea desde afuera.
