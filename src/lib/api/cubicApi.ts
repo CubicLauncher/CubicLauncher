@@ -349,6 +349,44 @@ export async function searchModrinth(
   }
 }
 
+export async function searchModrinthAll(
+  query: string,
+  loader: string,
+  category: string | null = null,
+  index: string = "downloads",
+  limit: number = 24,
+  offset: number = 0
+): Promise<ModrinthSearchResult | null> {
+  try {
+    const facets = [];
+    if (loader.toLowerCase() !== "vanilla") {
+        facets.push([`categories:${loader.toLowerCase()}`]);
+    }
+    facets.push(["project_type:mod"]);
+    
+    if (category) {
+        facets.push([`categories:${category.toLowerCase()}`]);
+    }
+
+    const url = new URL("https://api.modrinth.com/v2/search");
+    url.searchParams.append("query", query);
+    url.searchParams.append("facets", JSON.stringify(facets));
+    url.searchParams.append("index", index);
+    url.searchParams.append("limit", limit.toString());
+    url.searchParams.append("offset", offset.toString());
+
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+        throw new Error(`Modrinth API error: ${res.status}`);
+    }
+    return await res.json() as ModrinthSearchResult;
+  } catch (err) {
+    console.error("Error searching Modrinth:", err);
+    showError("Modrinth Error", `Could not search for mods: ${err}`);
+    return null;
+  }
+}
+
 export async function getModrinthProjectVersions(
     projectId: string,
     loader: string,
@@ -373,9 +411,31 @@ export async function getModrinthProjectVersions(
     }
 }
 
+export async function getModrinthProjectVersionsAll(
+    projectId: string,
+    loader: string
+): Promise<any[]> {
+    try {
+        const loadersJson = JSON.stringify([loader.toLowerCase()]);
+        const url = new URL(`https://api.modrinth.com/v2/project/${projectId}/version`);
+        url.searchParams.append("loaders", loadersJson);
+
+        const res = await fetch(url.toString());
+        if (!res.ok) {
+            throw new Error(`Modrinth API error: ${res.status}`);
+        }
+        return await res.json();
+    } catch (err) {
+        console.error(`Error getting all versions for ${projectId}:`, err);
+        return [];
+    }
+}
+
 export interface ModDownloadInfo {
     url: string;
     filename: string;
+    projectTitle?: string;
+    iconUrl?: string;
 }
 
 export async function downloadMods(

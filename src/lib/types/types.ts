@@ -137,6 +137,29 @@ export interface ThemeEntry {
   type: string;
 }
 
+export interface ModrinthFile {
+  url: string;
+  filename: string;
+  primary: boolean;
+}
+
+export interface ModrinthDependency {
+  dependency_type: string;
+  project_id: string | null;
+  version_id: string | null;
+}
+
+export interface ModrinthVersion {
+  id: string;
+  name: string;
+  version_number: string;
+  game_versions: string[];
+  loaders: string[];
+  date_published: string;
+  files: ModrinthFile[];
+  dependencies: ModrinthDependency[];
+}
+
 export interface ModrinthProject {
   project_id: string;
   slug: string;
