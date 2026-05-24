@@ -192,7 +192,15 @@
       "downloads": "Downloads",
       "removeSelection": "Remove from Selection",
       "selectToDownload": "Select for Download",
-      "by": "by"
+      "by": "by",
+      "noVersionCompat": "No {version}",
+      "versionLabel": "Version",
+      "anyVersion": "Latest",
+      "compatible": "✓ Compatible",
+      "noCompatibleVersions": "No versions for {version}",
+      "noCompatibleDesc": "This mod has no versions compatible with your game version and loader.",
+      "loadingVersions": "Loading versions...",
+      "installed": "Installed"
     }
   },
   "createInstance": {

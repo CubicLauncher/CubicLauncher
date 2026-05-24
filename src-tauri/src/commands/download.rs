@@ -29,7 +29,7 @@ pub struct LatestVersions {
     pub snapshot: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FabricGameVersion {
     pub version: String,
     pub stable: bool,
@@ -69,7 +69,8 @@ pub async fn download_manifest() -> Result<Vec<MinecraftVersion>, String> {
         .join("manifest_cache.cub");
 
     info!("Descargando manifiesto de versiones desde Mojang");
-    let response = HTTP.get(MOJANG_MANIFEST_URL)
+    let response = HTTP
+        .get(MOJANG_MANIFEST_URL)
         .send()
         .await
         .map_err(|e| format!("Error al obtener el manifiesto: {e}"))?;
@@ -79,7 +80,10 @@ pub async fn download_manifest() -> Result<Vec<MinecraftVersion>, String> {
         .await
         .map_err(|e| format!("Error al leer bytes del manifiesto: {e}"))?;
 
-    info!("Manifiesto descargado ({} bytes), cacheando en disco", bytes.len());
+    info!(
+        "Manifiesto descargado ({} bytes), cacheando en disco",
+        bytes.len()
+    );
     fs::write(&path, &bytes)
         .await
         .map_err(|e| format!("Error al escribir manifiesto al disco: {e}"))?;
@@ -87,7 +91,10 @@ pub async fn download_manifest() -> Result<Vec<MinecraftVersion>, String> {
     let manifest: MinecraftManifest =
         serde_json::from_slice(&bytes).map_err(|e| format!("Error parseando JSON: {e}"))?;
 
-    info!("Manifiesto parseado: {} versiones disponibles", manifest.versions.len());
+    info!(
+        "Manifiesto parseado: {} versiones disponibles",
+        manifest.versions.len()
+    );
     Ok(manifest.versions)
 }
 
@@ -119,41 +126,41 @@ pub async fn get_available_versions() -> Result<Vec<MinecraftVersion>, String> {
 
 const FABRIC_CACHE_TTL: std::time::Duration = std::time::Duration::from_secs(3600);
 
-fn read_cache_with_ttl<T: serde::de::DeserializeOwned>(
-    path: &std::path::Path,
-    ttl: std::time::Duration,
-) -> Option<T> {
-    let metadata = std::fs::metadata(path).ok()?;
-    let modified = metadata.modified().ok()?;
-    if let Ok(age) = modified.elapsed()
-        && age > ttl {
-            return None;
-        }
-    let data = std::fs::read(path).ok()?;
-    serde_json::from_slice(&data).ok()
-}
-
-fn write_cache<T: serde::Serialize>(path: &std::path::Path, value: &T) {
-    if let Ok(data) = serde_json::to_vec(value)
-        && let Err(e) = std::fs::write(path, &data) {
-            warn!("Error escribiendo caché en {:?}: {}", path, e);
-        }
-}
-
 #[tauri::command]
 pub async fn get_fabric_versions() -> Result<Vec<FabricGameVersion>, String> {
     let cache_path = PathManager::get()
         .get_settings_dir()
         .join("fabric_versions_cache.cub");
 
-    if let Some(cached) = read_cache_with_ttl::<Vec<FabricGameVersion>>(&cache_path, FABRIC_CACHE_TTL) {
-        info!("Usando caché de versiones de Fabric ({} versiones)", cached.len());
-        return Ok(cached);
+    let cached = tokio::task::spawn_blocking({
+        let path = cache_path.clone();
+        move || -> Option<Vec<FabricGameVersion>> {
+            let metadata = std::fs::metadata(&path).ok()?;
+            let modified = metadata.modified().ok()?;
+            if let Ok(age) = modified.elapsed()
+                && age > FABRIC_CACHE_TTL
+            {
+                return None;
+            }
+            let data = std::fs::read(&path).ok()?;
+            serde_json::from_slice(&data).ok()
+        }
+    })
+    .await
+    .unwrap_or(None);
+
+    if let Some(versions) = cached {
+        info!(
+            "Usando caché de versiones de Fabric ({} versiones)",
+            versions.len()
+        );
+        return Ok(versions);
     }
 
     info!("Cache de Fabric expirado o ausente, descargando desde meta.fabricmc.net");
     let url = "https://meta.fabricmc.net/v2/versions/game";
-    let response = HTTP.get(url)
+    let response = HTTP
+        .get(url)
         .send()
         .await
         .map_err(|e| format!("Error al obtener versiones de Fabric: {}", e))?;
@@ -163,23 +170,44 @@ pub async fn get_fabric_versions() -> Result<Vec<FabricGameVersion>, String> {
         .await
         .map_err(|e| format!("Error al parsear versiones de Fabric: {}", e))?;
 
-    info!("{} versiones de Fabric obtenidas, cacheando en disco", versions.len());
-    write_cache(&cache_path, &versions);
+    info!(
+        "{} versiones de Fabric obtenidas, cacheando en disco",
+        versions.len()
+    );
+
+    let write_path = cache_path;
+    let write_versions = versions.clone();
+    tokio::task::spawn_blocking(move || {
+        if let Ok(data) = serde_json::to_vec(&write_versions)
+            && let Err(e) = std::fs::write(&write_path, &data)
+        {
+            warn!("Error escribiendo caché en {:?}: {}", write_path, e);
+        }
+    })
+    .await
+    .ok();
 
     Ok(versions)
 }
 
 #[tauri::command]
 pub async fn download_fabric(game_version: String) -> Result<(), String> {
-    info!("Iniciando descarga de Fabric para Minecraft {}", game_version);
+    info!(
+        "Iniciando descarga de Fabric para Minecraft {}",
+        game_version
+    );
 
     // 1. Obtener el último loader estable para esa versión
-    info!("Obteniendo último loader de Fabric para versión {}", game_version);
+    info!(
+        "Obteniendo último loader de Fabric para versión {}",
+        game_version
+    );
     let loader_url = format!(
         "https://meta.fabricmc.net/v2/versions/loader/{}",
         game_version
     );
-    let response = HTTP.get(&loader_url)
+    let response = HTTP
+        .get(&loader_url)
         .send()
         .await
         .map_err(|e| format!("Error al obtener loaders: {}", e))?;
@@ -195,7 +223,10 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
 
     let loader_version = &latest_loader.loader.version;
     let fabric_version_id = format!("fabric-loader-{}-{}", loader_version, game_version);
-    info!("Loader seleccionado: {}, ID: {}", loader_version, fabric_version_id);
+    info!(
+        "Loader seleccionado: {}, ID: {}",
+        loader_version, fabric_version_id
+    );
 
     // 2. Descargar el perfil JSON
     info!("Descargando perfil JSON de Fabric");
@@ -204,7 +235,8 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
         game_version, loader_version
     );
 
-    let profile_response = HTTP.get(&profile_url)
+    let profile_response = HTTP
+        .get(&profile_url)
         .send()
         .await
         .map_err(|e| format!("Error al descargar el perfil de Fabric: {}", e))?;
@@ -217,7 +249,10 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
     let profile: FabricProfile = serde_json::from_str(&profile_json)
         .map_err(|e| format!("Error al parsear el JSON del perfil: {}", e))?;
 
-    info!("Perfil JSON parseado: {} librerías declaradas", profile.libraries.len());
+    info!(
+        "Perfil JSON parseado: {} librerías declaradas",
+        profile.libraries.len()
+    );
 
     // 3. Guardar el JSON en shared/versions/ID/ID.json
     let shared_dir = PathManager::get().get_shared_dir();
@@ -258,9 +293,10 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
 
         if !exists {
             if let Some(parent) = dest_path.parent()
-                && let Err(e) = tokio::fs::create_dir_all(parent).await {
-                    warn!("Error creando directorio {:?}: {}", parent, e);
-                }
+                && let Err(e) = tokio::fs::create_dir_all(parent).await
+            {
+                warn!("Error creando directorio {:?}: {}", parent, e);
+            }
 
             let download_url = format!("{}{}", lib.url, rel_path);
             if let Ok(res) = HTTP.get(&download_url).send().await
@@ -278,7 +314,10 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
             skipped += 1;
         }
     }
-    info!("Librerías de Fabric: {} descargadas, {} ya existentes/saltadas", downloaded, skipped);
+    info!(
+        "Librerías de Fabric: {} descargadas, {} ya existentes/saltadas",
+        downloaded, skipped
+    );
 
     {
         let d_queue = crate::services::DownloadQueue::get();
@@ -296,9 +335,9 @@ pub async fn refresh_versions() -> Result<Vec<MinecraftVersion>, String> {
         .join("manifest_cache.cub");
 
     if path.exists() {
-        tokio::fs::remove_file(&path).await.map_err(|e| {
-            format!("Error al eliminar la caché del manifiesto: {}", e)
-        })?;
+        tokio::fs::remove_file(&path)
+            .await
+            .map_err(|e| format!("Error al eliminar la caché del manifiesto: {}", e))?;
         info!("Caché de manifiesto eliminado: {:?}", path);
     }
 

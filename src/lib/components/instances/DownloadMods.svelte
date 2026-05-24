@@ -1,7 +1,8 @@
 <script lang="ts">
     import {
-        searchModrinth,
+        searchModrinthAll,
         getModrinthProjectVersions,
+        getModrinthProjectVersionsAll,
         downloadMods,
         getInstanceMods,
         type ModDownloadInfo,
@@ -13,7 +14,8 @@
     } from "$lib/types/types";
     import { t } from "$lib/i18n";
     import Loading from "../../icons/Loading.svelte";
-    import { onMount, tick } from "svelte";
+    import Dropdown from "../layout/Dropdown.svelte";
+    import VirtualList from "../layout/VirtualList.svelte";
 
     let { instance } = $props<{ instance: InstanceDto }>();
 
@@ -40,9 +42,14 @@
     let downloading = $state(false);
     let downloadQueue = $state<ModDownloadInfo[]>([]);
 
-    // Intersection observer sentinel
-    let sentinel = $state<HTMLElement | null>(null);
-    let observer: IntersectionObserver | null = null;
+    // Version selection state
+    let selectedModVersions = $state<any[]>([]);
+    let selectedVersionId = $state<string>("");
+    let loadingVersions = $state(false);
+    let versionSelection = $state<Map<string, string>>(new Map());
+
+    // Installed mods tracking
+    let installedModNames = $state<Set<string>>(new Set());
 
     const categories = [
         "Adventure",
@@ -61,8 +68,11 @@
     ]);
 
     function getGameVersion(versionStr: string): string {
-        const match = versionStr.match(/1\.\d+(\.\d+)?/);
-        return match ? match[0] : versionStr;
+        const segments = versionStr.split('-');
+        if (segments.length > 1) {
+            return segments[segments.length - 1];
+        }
+        return versionStr;
     }
 
     const gameVersion = $derived(getGameVersion(instance.version));
@@ -78,10 +88,9 @@
         }
 
         try {
-            const result = await searchModrinth(
+            const result = await searchModrinthAll(
                 query,
                 instance.loader,
-                gameVersion,
                 activeCategory,
                 sortIndex,
                 PAGE_SIZE,
@@ -100,36 +109,45 @@
         }
     }
 
-    function setupObserver() {
-        if (observer) observer.disconnect();
-        if (!sentinel) return;
-
-        observer = new IntersectionObserver(
-            async (entries) => {
-                if (
-                    entries[0].isIntersecting &&
-                    !loadingMore &&
-                    !searching &&
-                    allHits.length < totalHits
-                ) {
-                    await performSearch(false);
-                }
-            },
-            { rootMargin: "100px" },
-        );
-
-        observer.observe(sentinel);
+    function handleNearEnd() {
+        if (!loadingMore && !searching && allHits.length < totalHits) {
+            performSearch(false);
+        }
     }
 
-    $effect(() => {
-        if (sentinel) {
-            setupObserver();
-        }
-    });
+    function resetState() {
+        query = "";
+        allHits = [];
+        totalHits = 0;
+        currentOffset = 0;
+        searching = true;
+        loadingMore = false;
+        activeCategory = null;
+        sortIndex = "downloads";
+        basket = new Map();
+        selectedMod = null;
+        reviewing = false;
+        resolvingDeps = false;
+        downloading = false;
+        downloadQueue = [];
+        selectedModVersions = [];
+        selectedVersionId = "";
+        loadingVersions = false;
+        versionSelection = new Map();
+        installedModNames = new Set();
+    }
 
-    onMount(() => {
+    let pendingInstanceId: string | null = null;
+
+    $effect(() => {
+        const id = instance.uuid;
+        pendingInstanceId = id;
+        resetState();
+        getInstanceMods(id).then((mods) => {
+            if (pendingInstanceId !== id) return;
+            installedModNames = new Set(mods.map((m) => m.name.toLowerCase()));
+        });
         performSearch();
-        return () => observer?.disconnect();
     });
 
     function handleCategoryClick(cat: string | null) {
@@ -139,12 +157,18 @@
 
     function toggleBasket(project: ModrinthProject) {
         let newBasket = new Map(basket);
+        let newVersionSelection = new Map(versionSelection);
         if (newBasket.has(project.project_id)) {
             newBasket.delete(project.project_id);
+            newVersionSelection.delete(project.project_id);
         } else {
             newBasket.set(project.project_id, project);
+            if (selectedVersionId) {
+                newVersionSelection.set(project.project_id, selectedVersionId);
+            }
         }
         basket = newBasket;
+        versionSelection = newVersionSelection;
     }
 
     async function startReview() {
@@ -167,21 +191,30 @@
                     gameVersion,
                 );
                 if (versions && versions.length > 0) {
-                    const latest = versions[0];
+                    let targetVersion;
+                    const storedVersionId = versionSelection.get(id);
+                    if (storedVersionId) {
+                        targetVersion = versions.find(v => v.id === storedVersionId);
+                    }
+                    if (!targetVersion) {
+                        targetVersion = versions[0];
+                    }
                     const primaryFile =
-                        latest.files.find((f: any) => f.primary) ||
-                        latest.files[0];
+                        targetVersion.files.find((f: any) => f.primary) ||
+                        targetVersion.files[0];
                     if (
                         !queue.find((q) => q.filename === primaryFile.filename)
                     ) {
                         queue.push({
                             url: primaryFile.url,
                             filename: primaryFile.filename,
+                            projectTitle: project.title,
+                            iconUrl: project.icon_url || undefined,
                         });
                     }
 
-                    if (latest.dependencies) {
-                        for (const dep of latest.dependencies) {
+                    if (targetVersion.dependencies) {
+                        for (const dep of targetVersion.dependencies) {
                             if (
                                 dep.dependency_type === "required" &&
                                 dep.project_id
@@ -241,6 +274,62 @@
         if (num > 1000) return (num / 1000).toFixed(1) + "K";
         return num.toString();
     }
+
+    function isVersionCompatible(version: any): boolean {
+        return version.game_versions?.some((gv: string) => getGameVersion(gv) === gameVersion);
+    }
+
+    function isModCompatible(project: ModrinthProject): boolean {
+        return project.versions.some(v => v === gameVersion);
+    }
+
+    function isModInstalled(project: ModrinthProject): boolean {
+        return installedModNames.has(project.title.toLowerCase());
+    }
+
+    async function loadVersions(projectId: string) {
+        loadingVersions = true;
+        selectedModVersions = [];
+        selectedVersionId = "";
+        try {
+            const versions = await getModrinthProjectVersionsAll(projectId, instance.loader);
+            selectedModVersions = versions;
+            if (versions.length > 0) {
+                const stored = versionSelection.get(projectId);
+                if (stored && versions.find(v => v.id === stored)) {
+                    selectedVersionId = stored;
+                }
+            }
+        } finally {
+            loadingVersions = false;
+        }
+    }
+
+    function onVersionChange() {
+        let newVersionSelection = new Map(versionSelection);
+        if (selectedVersionId) {
+            newVersionSelection.set(selectedMod!.project_id, selectedVersionId);
+        } else {
+            newVersionSelection.delete(selectedMod!.project_id);
+        }
+        versionSelection = newVersionSelection;
+    }
+
+    const versionDropdownOptions = $derived(
+        selectedModVersions.map((v) => ({
+            value: v.id,
+            label: v.version_number,
+            subtitle: isVersionCompatible(v)
+                ? t('instanceView.downloadMods.compatible')
+                : v.game_versions?.slice(0, 2).join(", "),
+        })),
+    );
+
+    $effect(() => {
+        if (selectedMod && !reviewing) {
+            loadVersions(selectedMod.project_id);
+        }
+    });
 </script>
 
 <div class="dm-root">
@@ -283,10 +372,17 @@
                         <div class="dm-queue-list">
                             {#each downloadQueue as item}
                                 <div class="dm-queue-item">
-                                    <span class="dm-queue-icon">📦</span>
-                                    <span class="dm-queue-filename"
-                                        >{item.filename}</span
-                                    >
+                                    {#if item.iconUrl}
+                                        <img src={item.iconUrl} alt="" class="dm-queue-icon-img" />
+                                    {:else}
+                                        <span class="dm-queue-icon">📦</span>
+                                    {/if}
+                                    <div class="dm-queue-item-info">
+                                        {#if item.projectTitle}
+                                            <span class="dm-queue-title">{item.projectTitle}</span>
+                                        {/if}
+                                        <span class="dm-queue-filename">{item.filename}</span>
+                                    </div>
                                 </div>
                             {/each}
                         </div>
@@ -342,16 +438,12 @@
                 </div>
 
                 <div class="dm-sidebar-middle">
-                    <span class="dm-section-label">{t('instanceView.downloadMods.sortLabel')}</span>
-                    <select
-                        class="dm-sort-select"
+                    <Dropdown
+                        label={t('instanceView.downloadMods.sortLabel')}
                         bind:value={sortIndex}
+                        options={sortOptions}
                         onchange={() => performSearch(true)}
-                    >
-                        {#each sortOptions as opt}
-                            <option value={opt.value}>{opt.label}</option>
-                        {/each}
-                    </select>
+                    />
                 </div>
 
                 <div class="dm-basket-card">
@@ -419,19 +511,23 @@
                             <p>{t('instanceView.downloadMods.searching')}</p>
                         </div>
                     {:else if allHits.length > 0}
-                        <div class="dm-grid">
-                            {#each allHits as project (project.project_id)}
-                                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                <div
-                                    class="dm-mod-card {selectedMod?.project_id ===
-                                    project.project_id
-                                        ? 'selected'
-                                        : ''}"
-                                    onclick={() => (selectedMod = project)}
-                                >
-                                    <div class="dm-card-top">
-                                        <div class="dm-mod-icon">
+                        <div class="dm-vlist-wrap">
+                            <VirtualList
+                                items={allHits}
+                                itemHeight={130}
+                                onNearEnd={handleNearEnd}
+                            >
+                                {#snippet children(project)}
+                                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                    <div
+                                        class="dm-mod-card-v {selectedMod?.project_id ===
+                                        project.project_id
+                                            ? 'selected'
+                                            : ''}"
+                                        onclick={() => (selectedMod = project)}
+                                    >
+                                        <div class="dm-mod-icon-v">
                                             {#if project.icon_url}
                                                 <img
                                                     src={project.icon_url}
@@ -439,62 +535,49 @@
                                                     loading="lazy"
                                                 />
                                             {:else}
-                                                <span
-                                                    class="dm-mod-icon-placeholder"
-                                                    >📦</span
-                                                >
+                                                <span class="dm-mod-icon-placeholder">📦</span>
                                             {/if}
                                         </div>
-                                        <div class="dm-mod-meta">
-                                            <h4
-                                                class="dm-mod-title"
-                                                title={project.title}
+                                        <div class="dm-mod-body-v">
+                                            <div class="dm-mod-top-v">
+                                                <h4 class="dm-mod-title-v" title={project.title}>
+                                                    {project.title}
+                                                </h4>
+                                                <div class="dm-mod-badges-v">
+                                                    {#if isModInstalled(project)}
+                                                        <span class="dm-installed-badge">{t('instanceView.downloadMods.installed')}</span>
+                                                    {/if}
+                                                    {#if !isModCompatible(project)}
+                                                        <span class="dm-incompat-badge" title={t('instanceView.downloadMods.noCompatibleVersions').replace('{version}', gameVersion)}>{t('instanceView.downloadMods.noVersionCompat').replace('{version}', gameVersion)}</span>
+                                                    {/if}
+                                                </div>
+                                            </div>
+                                            <span class="dm-mod-author-v">
+                                                {t('instanceView.downloadMods.by')} {project.author}
+                                            </span>
+                                            <p class="dm-mod-desc-v">{project.description}</p>
+                                        </div>
+                                        <div class="dm-mod-actions-v">
+                                            <span class="dm-mod-stat">↓ {formatNumber(project.downloads)}</span>
+                                            <button
+                                                class="dm-select-btn {basket.has(project.project_id) ? 'selected' : ''}"
+                                                onclick={(e) => { e.stopPropagation(); toggleBasket(project); }}
                                             >
-                                                {project.title}
-                                            </h4>
-                                            <span class="dm-mod-author"
-                                                >{t('instanceView.downloadMods.by')} {project.author}</span
-                                            >
+                                                {basket.has(project.project_id) ? t('instanceView.downloadMods.selected') : t('instanceView.downloadMods.select')}
+                                            </button>
                                         </div>
                                     </div>
-                                    <p class="dm-mod-desc">
-                                        {project.description}
-                                    </p>
-                                    <div class="dm-card-bottom">
-                                        <span class="dm-mod-stat"
-                                            >↓ {formatNumber(
-                                                project.downloads,
-                                            )}</span
-                                        >
-                                        <button
-                                            class="dm-select-btn {basket.has(
-                                                project.project_id,
-                                            )
-                                                ? 'selected'
-                                                : ''}"
-                                            onclick={(e) => {
-                                                e.stopPropagation();
-                                                toggleBasket(project);
-                                            }}
-                                        >
-                                            {basket.has(project.project_id)
-                                                ? t('instanceView.downloadMods.selected')
-                                                : t('instanceView.downloadMods.select')}
-                                        </button>
-                                    </div>
-                                </div>
-                            {/each}
-                        </div>
-
-                        <!-- Sentinel for infinite scroll -->
-                        <div bind:this={sentinel} class="dm-sentinel">
+                                {/snippet}
+                            </VirtualList>
                             {#if loadingMore}
-                                <Loading />
-                                <span>{t('instanceView.downloadMods.loadingMore')}</span>
-                            {:else if allHits.length >= totalHits}
-                                <span class="dm-end-label"
-                                    >— {t('instanceView.downloadMods.endOfResults').replace('{count}', allHits.length.toString())} —</span
-                                >
+                                <div class="dm-vlist-loading">
+                                    <Loading class="dm-spinning" />
+                                    <span>{t('instanceView.downloadMods.loadingMore')}</span>
+                                </div>
+                            {:else if allHits.length >= totalHits && totalHits > 0}
+                                <div class="dm-vlist-end">
+                                    <span class="dm-end-label">— {t('instanceView.downloadMods.endOfResults').replace('{count}', allHits.length.toString())} —</span>
+                                </div>
                             {/if}
                         </div>
                     {:else}
@@ -563,6 +646,24 @@
                             {#each selectedMod.categories.slice(0, 4) as cat}
                                 <span class="dm-tag">{cat}</span>
                             {/each}
+                        </div>
+
+                        <!-- Version Selector -->
+                        <div class="dm-details-version-row">
+                            <span class="dm-details-version-label">{t('instanceView.downloadMods.versionLabel')}</span>
+                            {#if loadingVersions}
+                                <span class="dm-loading-versions">{t('instanceView.downloadMods.loadingVersions')}</span>
+                            {:else if selectedModVersions.length === 0}
+                                <span class="dm-no-versions-msg">{t('instanceView.downloadMods.noCompatibleVersions').replace('{version}', gameVersion)}</span>
+                                <span class="dm-loading-versions">{t('instanceView.downloadMods.noCompatibleDesc')}</span>
+                            {:else}
+                                <Dropdown
+                                    bind:value={selectedVersionId}
+                                    options={versionDropdownOptions}
+                                    placeholder={t('instanceView.downloadMods.anyVersion')}
+                                    onchange={onVersionChange}
+                                />
+                            {/if}
                         </div>
 
                         <p class="dm-details-desc">{selectedMod.description}</p>

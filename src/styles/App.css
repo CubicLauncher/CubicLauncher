@@ -2015,6 +2015,160 @@ body {
     border-radius: 10px;
 }
 
+/* ─── 11.1.5 DROPDOWN ──────────────────────────────────────────── */
+
+.dd-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.dd-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+}
+
+.dd-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+    outline: none;
+}
+
+.dd-trigger:hover:not(.dd-disabled) {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dd-trigger.dd-open {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.02);
+}
+
+.dd-trigger.dd-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dd-selected {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dd-chevron {
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.dd-trigger.dd-open .dd-chevron {
+    transform: rotate(180deg);
+}
+
+.dd-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: #121212;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 6px;
+    backdrop-filter: blur(10px);
+}
+
+.dd-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 2px;
+}
+
+.dd-option:last-child {
+    margin-bottom: 0;
+}
+
+.dd-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.dd-option.dd-selected {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dd-option-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.dd-option-label {
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dd-option-subtitle {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dd-check {
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.dd-dropdown::-webkit-scrollbar {
+    width: 4px;
+}
+
+.dd-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dd-dropdown::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
 /* ─── 11.2 USER MENU (PROFILE MODAL) ─────────────────────────
    Modal de perfil del jugador (UserMenu.svelte)
    ─────────────────────────────────────────────────────────── */
@@ -3528,7 +3682,8 @@ body {
 .dm-root {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: calc(100% + 64px);
+    margin: -32px -40px;
     background: var(--bg-main);
     color: var(--text-primary);
     font-family: "Cantarell", system-ui, sans-serif;
@@ -3604,24 +3759,6 @@ body {
 .dm-cat-icon {
     font-size: 0.85rem;
     opacity: 0.8;
-}
-
-.dm-sort-select {
-    width: 100%;
-    padding: 7px 10px;
-    background: var(--bg-item-active);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    border-radius: 6px;
-    outline: none;
-    cursor: pointer;
-    font-size: 0.82rem;
-    font-family: "Cantarell", system-ui, sans-serif;
-    transition: border-color 0.2s;
-}
-
-.dm-sort-select:focus {
-    border-color: var(--accent);
 }
 
 /* Basket */
@@ -3728,50 +3865,69 @@ body {
 
 .dm-results-area {
     flex: 1;
-    overflow-y: auto;
-    padding: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-/* ── Mod Grid ── */
-.dm-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+/* ── Virtual List Wrap ── */
+.dm-vlist-wrap {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 20px 16px;
+}
+
+.dm-vlist-loading,
+.dm-vlist-end {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 10px;
+    padding: 16px 0 8px;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    flex-shrink: 0;
 }
 
-.dm-mod-card {
+.dm-end-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ── Virtual List Card ── */
+.dm-mod-card-v {
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+    padding: 14px 16px;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
     cursor: pointer;
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    height: calc(100% - 6px);
+    margin: 3px 0;
+    box-sizing: border-box;
 }
 
-.dm-mod-card:hover {
+.dm-mod-card-v:hover {
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.dm-mod-card.selected {
+.dm-mod-card-v.selected {
     border-color: var(--accent);
     background: rgba(255, 255, 255, 0.04);
 }
 
-.dm-card-top {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-}
-
-.dm-mod-icon {
-    width: 44px;
-    height: 44px;
+.dm-mod-icon-v {
+    width: 56px;
+    height: 56px;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border);
@@ -3780,57 +3936,75 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    align-self: center;
 }
 
-.dm-mod-icon img {
+.dm-mod-icon-v img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     image-rendering: pixelated;
 }
 
-.dm-mod-icon-placeholder {
-    font-size: 1.2rem;
-    opacity: 0.5;
+.dm-mod-body-v {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    overflow: hidden;
 }
 
-.dm-mod-meta {
-    flex: 1;
+.dm-mod-top-v {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     min-width: 0;
 }
 
-.dm-mod-title {
-    font-size: 0.88rem;
+.dm-mod-title-v {
+    font-size: 0.85rem;
     font-weight: 700;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin: 0 0 3px 0;
-}
-
-.dm-mod-author {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-}
-
-.dm-mod-desc {
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    line-height: 1.45;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    flex: 1;
     margin: 0;
 }
 
-.dm-card-bottom {
+.dm-mod-badges-v {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: auto;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.dm-mod-author-v {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dm-mod-desc-v {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.dm-mod-actions-v {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .dm-mod-stat {
@@ -3840,6 +4014,7 @@ body {
     border: 1px solid var(--border);
     padding: 2px 7px;
     border-radius: 4px;
+    white-space: nowrap;
 }
 
 .dm-select-btn {
@@ -3867,22 +4042,21 @@ body {
     color: var(--bg-main);
 }
 
-/* ── Sentinel / Infinite Scroll ── */
-.dm-sentinel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 24px 0 8px 0;
-    color: var(--text-secondary);
-    font-size: 0.78rem;
+.dm-installed-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    padding: 1px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
 }
 
-.dm-end-label {
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.dm-spinning {
+    animation: spin 0.8s linear infinite;
 }
 
 /* ── Details Panel ── */
@@ -4023,6 +4197,65 @@ body {
     margin: 0;
 }
 
+/* ── Version Selector ── */
+.dm-details-version-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dm-details-version-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+}
+
+
+
+.dm-no-versions-msg {
+    font-size: 0.75rem;
+    color: #f87171;
+    text-align: center;
+    padding: 8px;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    border-radius: 6px;
+    background: rgba(248, 113, 113, 0.06);
+}
+
+.dm-loading-versions {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* ── Incompatibility Badge ── */
+.dm-incompat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* ── Queue Icon Image ── */
+.dm-queue-icon-img {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
 /* ── Review Pane ── */
 .dm-review {
     display: flex;
@@ -4088,6 +4321,22 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.dm-queue-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+}
+
+.dm-queue-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dm-queue-icon {

@@ -7,9 +7,10 @@
         children: import("svelte").Snippet<[any, number]>;
         class?: string;
         padding?: number;
+        onNearEnd?: () => void;
     }
 
-    let { items, itemHeight, children, class: className = "", padding = 20 }: Props = $props();
+    let { items, itemHeight, children, class: className = "", padding = 20, onNearEnd }: Props = $props();
 
     let container: HTMLDivElement = $state() as HTMLDivElement;
     let scrollTop = $state(0);
@@ -36,7 +37,11 @@
     );
 
     function handleScroll(e: Event) {
-        scrollTop = (e.target as HTMLDivElement).scrollTop;
+        const target = e.target as HTMLDivElement;
+        scrollTop = target.scrollTop;
+        if (target.scrollHeight - scrollTop - containerHeight < 500) {
+            onNearEnd?.();
+        }
     }
 
     onMount(() => {

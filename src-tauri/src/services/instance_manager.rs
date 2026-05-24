@@ -3,13 +3,13 @@ use crate::core::{AppEvent, FsError, InstanceError, emit};
 use crate::services::SettingsManager;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::io;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, OnceLock};
-use std::{fs, io};
 use tokio::fs as tokio_fs;
-use tokio::sync::oneshot;
 use tokio::sync::RwLock;
+use tokio::sync::oneshot;
 use tokio::time::{self, Duration};
 use tracing::{error, info};
 
@@ -312,16 +312,19 @@ impl InstanceManager {
             _sync_handle: tokio::spawn(Self::sync_task()),
         });
 
-        let guard = manager.instances.write().await;
-        let names: Vec<String> = match fs::read_dir(PathManager::get().get_instance_dir()) {
-            Ok(entries) => entries
-                .flatten()
-                .filter(|e| e.path().is_dir())
-                .map(|e| e.file_name().to_string_lossy().to_string())
-                .collect(),
-            Err(_) => Vec::new(),
-        };
-        drop(guard);
+        let base_dir = PathManager::get().get_instance_dir().to_path_buf();
+        let names = tokio::task::spawn_blocking(move || -> Vec<String> {
+            match std::fs::read_dir(&base_dir) {
+                Ok(entries) => entries
+                    .flatten()
+                    .filter(|e| e.path().is_dir())
+                    .map(|e| e.file_name().to_string_lossy().to_string())
+                    .collect(),
+                Err(_) => Vec::new(),
+            }
+        })
+        .await
+        .unwrap_or_default();
 
         let handles: Vec<Option<InstanceHandle>> =
             futures::future::join_all(names.iter().map(|name| InstanceHandle::load(name))).await;
@@ -504,16 +507,25 @@ static KILL_SENDERS: LazyLock<Mutex<HashMap<String, oneshot::Sender<()>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub fn register_kill_sender(uuid: &str, tx: oneshot::Sender<()>) {
-    KILL_SENDERS.lock().unwrap_or_else(|e| e.into_inner()).insert(uuid.to_string(), tx);
+    KILL_SENDERS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(uuid.to_string(), tx);
 }
 
 pub fn unregister_kill_sender(uuid: &str) {
-    KILL_SENDERS.lock().unwrap_or_else(|e| e.into_inner()).remove(uuid);
+    KILL_SENDERS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .remove(uuid);
 }
 
 /// Envía la señal de kill. Retorna `true` si el proceso estaba corriendo.
 pub fn signal_kill(uuid: &str) -> bool {
-    let tx = KILL_SENDERS.lock().unwrap_or_else(|e| e.into_inner()).remove(uuid);
+    let tx = KILL_SENDERS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .remove(uuid);
     tx.is_some_and(|tx| tx.send(()).is_ok())
 }
 
@@ -547,11 +559,7 @@ fn validate_instance_name(name: &str) -> Result<(), String> {
             MAX_LEN
         ));
     }
-    if name.contains('/')
-        || name.contains('\\')
-        || name.contains('\0')
-        || name.contains("..")
-    {
+    if name.contains('/') || name.contains('\\') || name.contains('\0') || name.contains("..") {
         return Err("El nombre contiene caracteres no permitidos (/, \\, .., \\0).".into());
     }
     Ok(())

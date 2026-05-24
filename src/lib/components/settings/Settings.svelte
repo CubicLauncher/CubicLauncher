@@ -130,7 +130,7 @@
             .map((i) => i.uuid),
     );
 
-    const currentVersion = "2605c (26.5.2)";
+    const currentVersion = "2605d (26.5.3)";
 </script>
 
 <div class="qm-root">
