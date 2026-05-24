@@ -21,13 +21,13 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["protocol-asset"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-aqua = { git = "https://github.com/CubicLauncher/Aqua.git" }
-launchwerk = {git="https://github.com/CubicLauncher/Launchwerk.git", features= ["auth"] }
+aqua = { path = "../crates/aqua" }
+launchwerk = { path = "../crates/launchwerk", features = ["auth"] }
 directories = "6.0.0"
 tokio = {version = "1.52.3", features = ["sync", "rt-multi-thread", "macros"] }
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.13", features = ["json"] }
 uuid = { version = "1.23.1", features = ["v4"] }
 tauri-plugin-updater = "2.10.1"
 tauri-plugin-process = "2"
@@ -38,14 +38,8 @@ zip = "8.6.0"
 toml = "1.1.2"
 base64 = "0.22.1"
 infer = "0.19.0"
-notify = "6"
+notify = "8"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
 
-[profile.release]
-panic = "abort" # Strip expensive panic clean-up logic
-codegen-units = 1 # Compile crates one after another so the compiler can optimize better
-lto = true # Enables link time optimizations
-opt-level = "s" # Optimize for binary size
-strip = true # Remove debug symbols

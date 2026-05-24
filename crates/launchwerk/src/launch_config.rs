@@ -1,0 +1,129 @@
+// Copyright (C) 2025 Santiagolxx, CubicLauncher contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+/// All parameters needed to launch a Minecraft instance.
+#[derive(Debug, Clone)]
+pub struct LaunchConfig {
+    /// Path to the Java binary.
+    pub java_path: PathBuf,
+    /// Player username (cracked / offline mode).
+    pub username: String,
+    /// Minimum JVM heap (e.g. "512M").
+    pub min_ram: String,
+    /// Maximum JVM heap (e.g. "2G").
+    pub max_ram: String,
+    /// Window width in pixels.
+    pub width: u32,
+    /// Window height in pixels.
+    pub height: u32,
+    /// Offline / cracked mode: routes auth endpoints to an invalid host.
+    pub cracked: bool,
+    /// Optional demo mode flag.
+    pub demo_mode: bool,
+    /// Additional environment variables passed to the game process.
+    pub env: HashMap<String, String>,
+    /// Optional Quick Play target.
+    pub quick_play: Option<QuickPlay>,
+    /// Minecraft access token (real token for premium users, "0" for offline).
+    pub access_token: Option<String>,
+    /// Player UUID (real UUID for premium users, random for offline).
+    pub auth_uuid: Option<String>,
+    /// User type ("mojang" for Mojang accounts, "msa" for Microsoft, "legacy" for offline).
+    pub user_type: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub enum QuickPlay {
+    Singleplayer(String),
+    Multiplayer(String),
+    Realms(String),
+}
+
+impl Default for LaunchConfig {
+    fn default() -> Self {
+        Self {
+            java_path: PathBuf::from("java"),
+            username: "Player".to_string(),
+            min_ram: "512M".to_string(),
+            max_ram: "2G".to_string(),
+            width: 854,
+            height: 480,
+            cracked: false,
+            demo_mode: false,
+            env: HashMap::new(),
+            quick_play: None,
+            access_token: None,
+            auth_uuid: None,
+            user_type: None,
+        }
+    }
+}
+
+impl LaunchConfig {
+    pub fn builder() -> LaunchConfigBuilder {
+        LaunchConfigBuilder::new()
+    }
+}
+
+/// Fluent builder for `LaunchConfig`.
+#[derive(Default)]
+pub struct LaunchConfigBuilder(LaunchConfig);
+
+impl LaunchConfigBuilder {
+    pub fn new() -> Self {
+        Self(LaunchConfig::default())
+    }
+
+    pub fn java_path(mut self, p: impl Into<PathBuf>) -> Self {
+        self.0.java_path = p.into();
+        self
+    }
+    pub fn username(mut self, u: impl Into<String>) -> Self {
+        self.0.username = u.into();
+        self
+    }
+    pub fn ram(mut self, min: impl Into<String>, max: impl Into<String>) -> Self {
+        self.0.min_ram = min.into();
+        self.0.max_ram = max.into();
+        self
+    }
+    pub fn resolution(mut self, w: u32, h: u32) -> Self {
+        self.0.width = w;
+        self.0.height = h;
+        self
+    }
+    pub fn cracked(mut self, c: bool) -> Self {
+        self.0.cracked = c;
+        self
+    }
+    pub fn demo(mut self, d: bool) -> Self {
+        self.0.demo_mode = d;
+        self
+    }
+    pub fn env(mut self, key: impl Into<String>, val: impl Into<String>) -> Self {
+        self.0.env.insert(key.into(), val.into());
+        self
+    }
+    pub fn quick_play(mut self, qp: QuickPlay) -> Self {
+        self.0.quick_play = Some(qp);
+        self
+    }
+    pub fn access_token(mut self, t: impl Into<String>) -> Self {
+        self.0.access_token = Some(t.into());
+        self
+    }
+    pub fn auth_uuid(mut self, u: impl Into<String>) -> Self {
+        self.0.auth_uuid = Some(u.into());
+        self
+    }
+    pub fn user_type(mut self, t: impl Into<String>) -> Self {
+        self.0.user_type = Some(t.into());
+        self
+    }
+    pub fn build(self) -> LaunchConfig {
+        self.0
+    }
+}

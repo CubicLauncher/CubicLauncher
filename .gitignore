@@ -4,3 +4,5 @@ deno.lock
 build/
 *.snt
 *.lock
+!Cargo.lock
+target/
