@@ -119,7 +119,8 @@
       "resources": "Resources",
       "screenshots": "Screenshots",
       "logs": "Logs",
-      "options": "Options"
+      "options": "Options",
+      "downloadMods": "Get Mods"
     },
     "details": {
       "title": "Details",
@@ -154,6 +155,44 @@
     "screenshots": {
       "title": "Screenshots",
       "empty": "No screenshots found"
+    },
+    "downloadMods": {
+      "sectionLabel": "Mod Manager",
+      "reviewTitle": "Review & Download",
+      "back": "← Back",
+      "resolvingDeps": "Resolving dependencies...",
+      "allInstalled": "✓ All dependencies are already installed.",
+      "allInstalledSub": "There are no new files to download.",
+      "filesToDownload_one": "{count} file to download:",
+      "filesToDownload_other": "{count} files to download:",
+      "confirmDownload": "Confirm Download",
+      "downloading": "Downloading...",
+      "file_one": "file",
+      "file_other": "files",
+      "categoriesLabel": "Categories",
+      "allCategories": "All",
+      "sortLabel": "Sort By",
+      "sortDownloads": "Most Downloaded",
+      "sortRelevance": "Relevance",
+      "sortNewest": "Newest",
+      "sortUpdated": "Recently Updated",
+      "selectionLabel": "Selection",
+      "selectionDesc": "Mods ready to install",
+      "reviewBtn": "Review & Download",
+      "searchPlaceholder": "Search for mods on Modrinth...",
+      "resultsFound": "{count} mods found",
+      "searching": "Searching mods...",
+      "loadingMore": "Loading more mods...",
+      "endOfResults": "— End of results ({count} mods) —",
+      "noResults": "No mods found",
+      "clearFilters": "Clear Filters",
+      "select": "Select",
+      "selected": "✓ Selected",
+      "closeDetails": "Close details",
+      "downloads": "Downloads",
+      "removeSelection": "Remove from Selection",
+      "selectToDownload": "Select for Download",
+      "by": "by"
     }
   },
   "createInstance": {
