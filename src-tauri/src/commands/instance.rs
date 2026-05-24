@@ -20,6 +20,36 @@ fn sanitize_sub_path(instance_dir: &Path, sub_path: &Path) -> Result<PathBuf, St
     Ok(instance_dir.join(sub_path))
 }
 
+async fn read_screenshots_dir(instance_name: &str) -> Vec<PathBuf> {
+    let screenshots_dir = PathManager::get()
+        .get_instance_dir()
+        .join(instance_name)
+        .join("screenshots");
+
+    tokio::task::spawn_blocking(move || {
+        let mut screenshots: Vec<_> = match std::fs::read_dir(&screenshots_dir) {
+            Ok(entries) => entries
+                .flatten()
+                .filter(|e| {
+                    e.path()
+                        .extension()
+                        .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
+                })
+                .collect(),
+            Err(_) => return Vec::new(),
+        };
+
+        screenshots.sort_by_key(|e| match e.metadata().and_then(|m| m.modified()) {
+            Ok(t) => t,
+            Err(_) => std::time::SystemTime::UNIX_EPOCH,
+        });
+
+        screenshots.into_iter().map(|e| e.path()).collect()
+    })
+    .await
+    .unwrap_or_default()
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Lifecycle
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -121,64 +151,18 @@ pub async fn delete_instance(id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_instance_screenshot(instance_name: String) -> Option<String> {
-    let screenshots_dir = PathManager::get()
-        .get_instance_dir()
-        .join(&instance_name)
-        .join("screenshots");
-
-    if let Ok(entries) = std::fs::read_dir(screenshots_dir) {
-        let mut screenshots: Vec<_> = entries
-            .flatten()
-            .filter(|e| {
-                e.path()
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
-            })
-            .collect();
-
-        screenshots.sort_by_key(|e| match e.metadata().and_then(|m| m.modified()) {
-            Ok(t) => t,
-            Err(_) => std::time::SystemTime::UNIX_EPOCH,
-        });
-
-        if let Some(latest) = screenshots.last() {
-            return Some(latest.path().to_string_lossy().to_string());
-        }
-    }
-    None
+    let screenshots = read_screenshots_dir(&instance_name).await;
+    screenshots.last().map(|p| p.to_string_lossy().to_string())
 }
 
 #[tauri::command]
 pub async fn get_all_instance_screenshots(instance_name: String) -> Vec<String> {
-    let screenshots_dir = PathManager::get()
-        .get_instance_dir()
-        .join(&instance_name)
-        .join("screenshots");
-
-    let mut result = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(screenshots_dir) {
-        let mut screenshots: Vec<_> = entries
-            .flatten()
-            .filter(|e| {
-                e.path()
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("png"))
-            })
-            .collect();
-
-        screenshots.sort_by_key(|e| {
-            let time = match e.metadata().and_then(|m| m.modified()) {
-                Ok(t) => t,
-                Err(_) => std::time::SystemTime::UNIX_EPOCH,
-            };
-            std::cmp::Reverse(time)
-        });
-
-        for e in screenshots {
-            result.push(e.path().to_string_lossy().to_string());
-        }
-    }
-    result
+    let screenshots = read_screenshots_dir(&instance_name).await;
+    screenshots
+        .into_iter()
+        .rev()
+        .map(|p| p.to_string_lossy().to_string())
+        .collect()
 }
 
 #[tauri::command]
@@ -327,16 +311,18 @@ pub async fn update_instance(
 #[tauri::command]
 pub async fn get_installed_versions() -> Vec<String> {
     let versions_dir = PathManager::get().get_shared_dir().join("versions");
-    let mut versions = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(versions_dir) {
-        for entry in entries.flatten() {
-            if entry.path().is_dir()
-                && let Some(name) = entry.file_name().to_str()
-            {
-                versions.push(name.to_string());
-            }
+    let mut versions = tokio::task::spawn_blocking(move || -> Vec<String> {
+        match std::fs::read_dir(&versions_dir) {
+            Ok(entries) => entries
+                .flatten()
+                .filter(|e| e.path().is_dir())
+                .filter_map(|e| e.file_name().to_str().map(|s| s.to_string()))
+                .collect(),
+            Err(_) => Vec::new(),
         }
-    }
+    })
+    .await
+    .unwrap_or_default();
     versions.sort_by(|a, b| b.cmp(a));
     versions
 }
@@ -371,60 +357,65 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
     let mods_dir = handle.get_instance_dir().await.join("mods");
     info!("Listando mods de instancia {} en {:?}", id, mods_dir);
 
+    let mod_paths = tokio::task::spawn_blocking(move || -> Vec<PathBuf> {
+        match std::fs::read_dir(&mods_dir) {
+            Ok(entries) => entries
+                .flatten()
+                .filter(|e| e.path().is_file())
+                .map(|e| e.path())
+                .collect(),
+            Err(_) => Vec::new(),
+        }
+    })
+    .await
+    .unwrap_or_default();
+
     let mut mods = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(mods_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_file()
-                && let Some(ext) = path.extension()
-            {
-                let ext_str = ext.to_string_lossy().to_lowercase();
-                let Some(file_name) = path.file_name() else {
-                    continue;
-                };
-                let file_name_str = file_name.to_string_lossy().to_lowercase();
+    for path in mod_paths {
+        let Some(ext) = path.extension() else { continue };
+        let ext_str = ext.to_string_lossy().to_lowercase();
+        let Some(file_name) = path.file_name() else { continue };
+        let file_name_str = file_name.to_string_lossy().to_lowercase();
 
-                let (is_mod, enabled) = if ext_str == "jar" || ext_str == "zip" {
-                    (true, true)
-                } else if ext_str == "disabled"
-                    && (file_name_str.ends_with(".jar.disabled")
-                        || file_name_str.ends_with(".zip.disabled"))
-                {
-                    (true, false)
-                } else {
-                    (false, false)
-                };
+        let (is_mod, enabled) = if ext_str == "jar" || ext_str == "zip" {
+            (true, true)
+        } else if ext_str == "disabled"
+            && (file_name_str.ends_with(".jar.disabled")
+                || file_name_str.ends_with(".zip.disabled"))
+        {
+            (true, false)
+        } else {
+            (false, false)
+        };
 
-                if is_mod {
-                    let filename = file_name.to_string_lossy().to_string();
-                    let display_name = match filename.strip_suffix(".disabled") {
-                        Some(stripped) => stripped.to_string(),
-                        None => filename.clone(),
-                    };
+        if is_mod {
+            let filename = file_name.to_string_lossy().to_string();
+            let display_name = match filename.strip_suffix(".disabled") {
+                Some(stripped) => stripped.to_string(),
+                None => filename.clone(),
+            };
 
-                    let path_clone = path.clone();
-                    let metadata = tokio::task::spawn_blocking(move || {
-                        crate::services::AddonManager::get_mod_info(&path_clone)
-                    })
-                    .await
-                    .unwrap_or(None);
+            let path_clone = path.clone();
+            let metadata = tokio::task::spawn_blocking(move || {
+                crate::services::AddonManager::get_mod_info(&path_clone)
+            })
+            .await
+            .unwrap_or(None);
 
-                    let (md_name, md_version, md_desc, md_authors, md_icon) = match metadata {
-                        Some(m) => (m.name, m.version, m.description, m.authors, m.icon),
-                        None => (display_name, None, None, None, None),
-                    };
+            let (md_name, md_version, md_desc, md_authors, md_icon) = match metadata {
+                Some(m) => (m.name, m.version, m.description, m.authors, m.icon),
+                None => (display_name, None, None, None, None),
+            };
 
-                    mods.push(ModDto {
-                        name: md_name,
-                        filename,
-                        version: md_version,
-                        description: md_desc,
-                        authors: md_authors,
-                        icon: md_icon,
-                        enabled,
-                    });
-                }
-            }
+            mods.push(ModDto {
+                name: md_name,
+                filename,
+                version: md_version,
+                description: md_desc,
+                authors: md_authors,
+                icon: md_icon,
+                enabled,
+            });
         }
     }
     mods.sort_by_key(|a| a.name.to_lowercase());
@@ -493,38 +484,44 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
 
     let resourcepacks_dir = handle.get_instance_dir().await.join("resourcepacks");
 
-    let mut resourcepacks = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(resourcepacks_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_file() {
-                let Some(file_name) = path.file_name() else {
-                    continue;
-                };
-                let filename = file_name.to_string_lossy().to_string();
-                let path_clone = path.clone();
-                let metadata = tokio::task::spawn_blocking(move || {
-                    crate::services::AddonManager::get_resourcepack_info(&path_clone)
-                })
-                .await
-                .unwrap_or(None);
-
-                let (md_name, md_desc, md_icon) = match metadata {
-                    Some(m) => (m.name, m.description, m.icon),
-                    None => (filename.clone(), None, None),
-                };
-
-                resourcepacks.push(ModDto {
-                    name: md_name,
-                    filename,
-                    version: None,
-                    description: md_desc,
-                    authors: None,
-                    icon: md_icon,
-                    enabled: true,
-                });
-            }
+    let rp_paths = tokio::task::spawn_blocking(move || -> Vec<PathBuf> {
+        match std::fs::read_dir(&resourcepacks_dir) {
+            Ok(entries) => entries
+                .flatten()
+                .filter(|e| e.path().is_file())
+                .map(|e| e.path())
+                .collect(),
+            Err(_) => Vec::new(),
         }
+    })
+    .await
+    .unwrap_or_default();
+
+    let mut resourcepacks = Vec::new();
+    for path in rp_paths {
+        let Some(file_name) = path.file_name() else { continue };
+        let filename = file_name.to_string_lossy().to_string();
+        let path_clone = path.clone();
+        let metadata = tokio::task::spawn_blocking(move || {
+            crate::services::AddonManager::get_resourcepack_info(&path_clone)
+        })
+        .await
+        .unwrap_or(None);
+
+        let (md_name, md_desc, md_icon) = match metadata {
+            Some(m) => (m.name, m.description, m.icon),
+            None => (filename.clone(), None, None),
+        };
+
+        resourcepacks.push(ModDto {
+            name: md_name,
+            filename,
+            version: None,
+            description: md_desc,
+            authors: None,
+            icon: md_icon,
+            enabled: true,
+        });
     }
     resourcepacks.sort_by_key(|a| a.name.to_lowercase());
     info!("{} resourcepacks encontrados en instancia {}", resourcepacks.len(), id);
@@ -547,24 +544,21 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
         return Vec::new();
     };
     let logs_dir = handle.get_instance_dir().await.join("logs");
-    let mut logs = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(logs_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_file()
-                && let Some(file_name) = path.file_name()
-                && let Some(ext) = path.extension()
-                // Mojang comprime en gzip los logs anteriores
-                // asi q nomas nos tendremos que quedar con el latest :/
-                //
-                // TODO: Podriamos hacer que enves de enviar el filename entero enviar un stream
-                // asi podriamos enviar un stream de datos descomprimidos
-                && ext == "log"
-            {
-                logs.push(file_name.to_string_lossy().to_string());
-            }
+    let mut logs = tokio::task::spawn_blocking(move || -> Vec<String> {
+        match std::fs::read_dir(&logs_dir) {
+            Ok(entries) => entries
+                .flatten()
+                .filter(|e| {
+                    e.path().is_file()
+                        && e.path().extension().is_some_and(|ext| ext == "log")
+                })
+                .filter_map(|e| e.file_name().to_str().map(|s| s.to_string()))
+                .collect(),
+            Err(_) => Vec::new(),
         }
-    }
+    })
+    .await
+    .unwrap_or_default();
     logs.sort_by(|a, b| b.cmp(a));
     info!("{} archivos de log encontrados en instancia {}", logs.len(), id);
     logs
