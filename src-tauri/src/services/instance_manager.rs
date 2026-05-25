@@ -313,15 +313,17 @@ impl InstanceManager {
         });
 
         let base_dir = PathManager::get().get_instance_dir().to_path_buf();
-        let mut dir = tokio::fs::read_dir(&base_dir)
-            .await
-            .unwrap_or_else(|_| todo!());
-        let mut names = Vec::new();
-        while let Ok(Some(entry)) = dir.next_entry().await {
-            if entry.path().is_dir() {
-                names.push(entry.file_name().to_string_lossy().to_string());
+        let names = if let Ok(mut dir) = tokio::fs::read_dir(&base_dir).await {
+            let mut names = Vec::new();
+            while let Ok(Some(entry)) = dir.next_entry().await {
+                if entry.path().is_dir() {
+                    names.push(entry.file_name().to_string_lossy().to_string());
+                }
             }
-        }
+            names
+        } else {
+            Vec::new()
+        };
 
         let handles: Vec<Option<InstanceHandle>> =
             futures::future::join_all(names.iter().map(|name| InstanceHandle::load(name))).await;
