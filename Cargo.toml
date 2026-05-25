@@ -7,8 +7,10 @@ members = [
 ]
 
 [profile.release]
-panic = "abort"
-codegen-units = 1
-lto = true
 opt-level = 3
-strip = true
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+debug-assertions = false
+overflow-checks = false
