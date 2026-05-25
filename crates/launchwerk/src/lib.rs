@@ -7,8 +7,8 @@
 //!
 //! # Example
 //! ```no_run
-//! use claunch::{Launchwerk, LaunchConfig};
-//! use claunch::models::VersionManifest;
+//! use launchwerk::{Launchwerk, LaunchConfig};
+//! use launchwerk::models::VersionManifest;
 //! use std::path::PathBuf;
 //!
 //! #[tokio::main]
@@ -16,7 +16,7 @@
 //!     let lw = Launchwerk::new(PathBuf::from("/home/user/.cubic"));
 //!     let manifest = VersionManifest::from_file("versions/1.21/1.21.json").unwrap();
 //!     let config = LaunchConfig::default();
-//!     let handle = lw.prepare(manifest, config).await.unwrap();
+//!     let handle = lw.prepare(manifest, config, PathBuf::from("/home/user/.cubic/instances/1.21"));
 //!     handle.launch().await.unwrap();
 //! }
 //! ```

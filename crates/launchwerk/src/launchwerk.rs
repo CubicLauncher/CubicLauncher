@@ -13,8 +13,8 @@ use uuid::Uuid;
 ///
 /// # Example
 /// ```no_run
-/// # use claunch::{Launchwerk, LaunchConfig};
-/// # use claunch::models::VersionManifest;
+/// # use launchwerk::{Launchwerk, LaunchConfig};
+/// # use launchwerk::models::VersionManifest;
 /// # use std::path::PathBuf;
 /// # #[tokio::main] async fn main() {
 /// let lw = Launchwerk::new(PathBuf::from("/home/user/.cubic/shared"));
