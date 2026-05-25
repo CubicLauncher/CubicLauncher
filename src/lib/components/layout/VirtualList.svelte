@@ -15,6 +15,7 @@
     let container: HTMLDivElement = $state() as HTMLDivElement;
     let scrollTop = $state(0);
     let containerHeight = $state(0);
+    let ticking = false;
 
     const viewportHeight = $derived(containerHeight);
     const totalHeight = $derived(items.length * itemHeight + padding);
@@ -38,9 +39,15 @@
 
     function handleScroll(e: Event) {
         const target = e.target as HTMLDivElement;
-        scrollTop = target.scrollTop;
-        if (target.scrollHeight - scrollTop - containerHeight < 500) {
-            onNearEnd?.();
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                scrollTop = target.scrollTop;
+                if (target.scrollHeight - scrollTop - containerHeight < 500) {
+                    onNearEnd?.();
+                }
+                ticking = false;
+            });
+            ticking = true;
         }
     }
 
@@ -66,7 +73,7 @@
         {#each visibleItems as { item, index, top } (index)}
             <div
                 class="virtual-list-item-wrapper"
-                style="position: absolute; top: {top}px; left: 0; width: 100%; height: {itemHeight}px;"
+                style="position: absolute; transform: translateY({top}px); left: 0; width: 100%; height: {itemHeight}px;"
             >
                 {@render children(item, index)}
             </div>
