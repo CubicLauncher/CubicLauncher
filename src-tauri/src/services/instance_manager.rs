@@ -313,18 +313,15 @@ impl InstanceManager {
         });
 
         let base_dir = PathManager::get().get_instance_dir().to_path_buf();
-        let names = tokio::task::spawn_blocking(move || -> Vec<String> {
-            match std::fs::read_dir(&base_dir) {
-                Ok(entries) => entries
-                    .flatten()
-                    .filter(|e| e.path().is_dir())
-                    .map(|e| e.file_name().to_string_lossy().to_string())
-                    .collect(),
-                Err(_) => Vec::new(),
+        let mut dir = tokio::fs::read_dir(&base_dir)
+            .await
+            .unwrap_or_else(|_| todo!());
+        let mut names = Vec::new();
+        while let Ok(Some(entry)) = dir.next_entry().await {
+            if entry.path().is_dir() {
+                names.push(entry.file_name().to_string_lossy().to_string());
             }
-        })
-        .await
-        .unwrap_or_default();
+        }
 
         let handles: Vec<Option<InstanceHandle>> =
             futures::future::join_all(names.iter().map(|name| InstanceHandle::load(name))).await;
@@ -347,6 +344,7 @@ impl InstanceManager {
 
     async fn sync_task() {
         let mut interval = time::interval(Duration::from_secs(SYNC_INTERVAL_SECS));
+        interval.tick().await;
         loop {
             interval.tick().await;
             info!("Ejecutando tarea de sincronizacion");
@@ -696,7 +694,10 @@ mod tests {
     fn test_atomic_status_error() {
         let s = AtomicStatus::new();
         s.set(InstanceStatus::Error("something went wrong".into()));
-        assert_eq!(s.get(), InstanceStatus::Error("something went wrong".into()));
+        assert_eq!(
+            s.get(),
+            InstanceStatus::Error("something went wrong".into())
+        );
     }
 
     /// Verifica que el estado pueda transicionar Off → Starting → Off
