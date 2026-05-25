@@ -46,6 +46,8 @@
         "connect-src": [
           "'self'",
           "https://minotar.net",
+          "https://api.modrinth.com",
+          "https://cdn.modrinth.com",
           "ipc://localhost",
           "http://localhost:*",
           "https://tauri.localhost"
