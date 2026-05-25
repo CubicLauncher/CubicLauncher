@@ -10,39 +10,39 @@ let _listenerInitialized = false;
 let debounceTimer: ReturnType<typeof setTimeout>;
 
 export function initEventListeners(): void {
-    if (_listenerInitialized) return;
-    _listenerInitialized = true;
+  if (_listenerInitialized) return;
+  _listenerInitialized = true;
 
-    listen<AppEvent>("app-event", (event) => {
-        const payload = event.payload;
+  listen<AppEvent>("app-event", (event) => {
+    const payload = event.payload;
 
-        switch (payload.type) {
-            case "InstanceCreated":
-                launcherStore.loadedInstances = [
-                    ...launcherStore.loadedInstances,
-                    payload.data.dto,
-                ];
-                break;
-            case "InstanceEdited":
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => getVersions(), 100);
-                break;
-            case "InstanceDeleted":
-                launcherStore.loadedInstances = launcherStore.loadedInstances.filter(
-                    (i) => i.uuid !== payload.data.id,
-                );
-                break;
-            case "STChanged":
-                syncSettings();
-                break;
-            case "ThemeChanged":
-                console.log("ThemeChanged event:", payload.data.id);
-                if (payload.data.id === launcherStore.settings.theme) {
-                    applyTheme(payload.data.id);
-                }
-                break;
+    switch (payload.type) {
+      case "InstanceCreated":
+        launcherStore.loadedInstances = [
+          ...launcherStore.loadedInstances,
+          payload.data.dto,
+        ];
+        break;
+      case "InstanceEdited":
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => getVersions(), 100);
+        break;
+      case "InstanceDeleted":
+        launcherStore.loadedInstances = launcherStore.loadedInstances.filter(
+          (i) => i.uuid !== payload.data.id,
+        );
+        break;
+      case "STChanged":
+        syncSettings();
+        break;
+      case "ThemeChanged":
+        console.log("ThemeChanged event:", payload.data.id);
+        if (payload.data.id === launcherStore.settings.theme) {
+          applyTheme(payload.data.id);
         }
-    });
+        break;
+    }
+  });
 }
 
 export async function syncSettings(): Promise<void> {
@@ -122,5 +122,5 @@ export async function updateInst(
 export async function getVersions(): Promise<void> {
   const instances: InstanceDto[] = await invoke("get_instances");
 
-    launcherStore.loadedInstances = instances;
+  launcherStore.loadedInstances = instances;
 }
