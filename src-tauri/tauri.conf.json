@@ -33,6 +33,7 @@
           "https://asset.localhost",
           "https://minotar.net",
           "http://localhost:*",
+          "https://cdn.modrinth.com",
           "data:"
         ],
         "style-src": [
