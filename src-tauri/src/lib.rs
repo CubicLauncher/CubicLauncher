@@ -27,8 +27,6 @@ pub fn run() {
             commands::instance::set_instance_cover_image,
             commands::instance::reset_instance_cover_image,
             commands::instance::get_instance_resourcepacks,
-            commands::instance::get_instance_logs,
-            commands::instance::read_instance_log,
             commands::instance::delete_instance_file,
             commands::instance::add_instance_file,
             commands::download::add_to_queue,

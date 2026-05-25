@@ -111,7 +111,7 @@
     "status": {
       "starting": "Starting",
       "started": "The version has been started",
-      "idle": "Puto el que lo lea"
+      "idle": "Idle"
     },
     "tabs": {
       "details": "Details",
@@ -155,6 +155,11 @@
     "screenshots": {
       "title": "Screenshots",
       "empty": "No screenshots found"
+    },
+    "console": {
+      "placeholder": "Launch the instance to see console output",
+      "waiting": "Waiting for output...",
+      "title": "Console"
     },
     "downloadMods": {
       "sectionLabel": "Mod Manager",

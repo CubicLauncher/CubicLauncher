@@ -7,7 +7,6 @@
     import DownloadMods from "./DownloadMods.svelte";
     import ResourcePacksTab from "./ResourcePacksTab.svelte";
     import ScreenshotsTab from "./ScreenshotsTab.svelte";
-    import LogsTab from "./LogsTab.svelte";
     import Loading from "../../icons/Loading.svelte";
     import Check from "../../icons/Check.svelte";
     import { t } from "$lib/i18n";
@@ -260,12 +259,6 @@
         >
             {t("instanceView.tabs.screenshots")}
         </button>
-        <button
-            class="tab-item {activeTab === 'logs' ? 'active' : ''}"
-            onclick={() => (activeTab = "logs")}
-        >
-            {t("instanceView.tabs.logs")}
-        </button>
     </div>
 
     <div class="tab-content">
@@ -288,10 +281,6 @@
         {:else if activeTab === "screenshots"}
             <div class="tab-pane">
                 <ScreenshotsTab instance={selectedInstance} />
-            </div>
-        {:else if activeTab === "logs"}
-            <div class="tab-pane">
-                <LogsTab instanceId={selectedInstance.uuid} />
             </div>
         {/if}
     </div>

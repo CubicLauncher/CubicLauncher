@@ -111,7 +111,7 @@
     "status": {
       "starting": "Iniciando",
       "started": "Version iniciada",
-      "Idle": "Puto el que lo lea"
+      "idle": "Inactivo"
     },
     "tabs": {
       "details": "Detalles",
@@ -155,6 +155,11 @@
     "screenshots": {
       "title": "Capturas de Pantalla",
       "empty": "No hay capturas de pantalla"
+    },
+    "console": {
+      "placeholder": "Inicia la instancia para ver la salida de la consola",
+      "waiting": "Esperando salida...",
+      "title": "Consola"
     },
     "downloadMods": {
       "sectionLabel": "Mod Manager",

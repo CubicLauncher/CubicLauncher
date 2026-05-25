@@ -248,27 +248,6 @@ export async function getInstanceResourcePacks(id: string): Promise<ModDto[]> {
   }
 }
 
-export async function getInstanceLogs(id: string): Promise<string[]> {
-  try {
-    return await invoke<string[]>("get_instance_logs", { id });
-  } catch (err) {
-    console.error(`Error al obtener logs de instancia ${id}:`, err);
-    return [];
-  }
-}
-
-export async function readInstanceLog(
-  id: string,
-  filename: string,
-): Promise<string> {
-  try {
-    return await invoke<string>("read_instance_log", { id, filename });
-  } catch (err) {
-    console.error(`Error al leer log ${filename}:`, err);
-    return "";
-  }
-}
-
 export async function deleteInstanceFile(
   id: string,
   subDir: string,

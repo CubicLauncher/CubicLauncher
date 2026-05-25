@@ -11,6 +11,7 @@ use launchwerk::{auth::AccountType, auth::microsoft::MicrosoftAuth};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
+use tauri::Emitter;
 use tokio::fs;
 use tokio::sync::{RwLock, mpsc};
 use tracing::{error, info, trace, warn};
@@ -487,6 +488,58 @@ impl Launcher {
             Ok(_) => {
                 info!("Handle {} lanzado", lw_handle.id().to_string());
                 handle.set_status(InstanceStatus::Started);
+
+                {
+                    let guard = self.app_handle.lock().unwrap_or_else(|e| e.into_inner());
+                    if let Some(ref app) = *guard {
+                        let stdout_rx = lw_handle.subscribe_stdout();
+                        let stderr_rx = lw_handle.subscribe_stderr();
+                        let id = handle.uuid.clone();
+
+                        let app_stdout = app.clone();
+                        let id_stdout = id.clone();
+                        tokio::spawn(async move {
+                            let mut rx = stdout_rx;
+                            while let Ok(line) = rx.recv().await {
+                                if app_stdout
+                                    .emit(
+                                        "instance-console-output",
+                                        serde_json::json!({
+                                            "id": id_stdout,
+                                            "line": line,
+                                            "stream": "stdout"
+                                        }),
+                                    )
+                                    .is_err()
+                                {
+                                    break;
+                                }
+                            }
+                        });
+
+                        let app_stderr = app.clone();
+                        tokio::spawn(async move {
+                            let mut rx = stderr_rx;
+                            while let Ok(line) = rx.recv().await {
+                                if app_stderr
+                                    .emit(
+                                        "instance-console-output",
+                                        serde_json::json!({
+                                            "id": id,
+                                            "line": line,
+                                            "stream": "stderr"
+                                        }),
+                                    )
+                                    .is_err()
+                                {
+                                    break;
+                                }
+                            }
+                        });
+                    } else {
+                        warn!("AppHandle no disponible, no se reenviará stdout/stderr");
+                    }
+                }
 
                 let (kill_tx, kill_rx) = tokio::sync::oneshot::channel::<()>();
                 register_kill_sender(&handle.uuid, kill_tx);

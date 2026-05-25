@@ -855,7 +855,6 @@ body {
 
 .details-panel {
     padding: 0;
-    overflow-y: auto;
 }
 
 .instance-dashboard {

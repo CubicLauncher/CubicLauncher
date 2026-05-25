@@ -587,45 +587,6 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
     resourcepacks
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Logs
-// ═══════════════════════════════════════════════════════════════════════════════
-
-#[tauri::command]
-pub async fn get_instance_logs(id: String) -> Vec<String> {
-    if let Err(e) = validate_uuid(&id) {
-        warn!("{}", e);
-        return Vec::new();
-    }
-    let manager = InstanceManager::get();
-    let Some(handle) = manager.get_handle(&id).await else {
-        warn!("Instancia {} no encontrada para listar logs", id);
-        return Vec::new();
-    };
-    let logs_dir = handle.get_instance_dir().await.join("logs");
-    let mut logs = tokio::task::spawn_blocking(move || -> Vec<String> {
-        match std::fs::read_dir(&logs_dir) {
-            Ok(entries) => entries
-                .flatten()
-                .filter(|e| {
-                    e.path().is_file() && e.path().extension().is_some_and(|ext| ext == "log")
-                })
-                .filter_map(|e| e.file_name().to_str().map(|s| s.to_string()))
-                .collect(),
-            Err(_) => Vec::new(),
-        }
-    })
-    .await
-    .unwrap_or_default();
-    logs.sort_by(|a, b| b.cmp(a));
-    info!(
-        "{} archivos de log encontrados en instancia {}",
-        logs.len(),
-        id
-    );
-    logs
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -696,30 +657,6 @@ mod tests {
         let result = sanitize_sub_path(&base, Path::new("screenshots/2025-01-01"));
         assert_eq!(result.unwrap(), base.join("screenshots/2025-01-01"));
     }
-}
-#[tauri::command]
-pub async fn read_instance_log(id: String, filename: String) -> Result<String, String> {
-    validate_uuid(&id)?;
-    let manager = InstanceManager::get();
-    let Some(handle) = manager.get_handle(&id).await else {
-        warn!("Instancia {} no encontrada para leer log", id);
-        return Err("Instancia no encontrada".to_string());
-    };
-
-    let log_path = handle.get_instance_dir().await.join("logs").join(&filename);
-    if !log_path.exists() {
-        warn!(
-            "Archivo de log '{}' no encontrado en instancia {}",
-            filename, id
-        );
-        return Err("Archivo de registro no encontrado".to_string());
-    }
-
-    info!("Leyendo log '{}' de instancia {}", filename, id);
-    tokio::fs::read_to_string(log_path).await.map_err(|e| {
-        error!("Error leyendo log '{}': {}", filename, e);
-        e.to_string()
-    })
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

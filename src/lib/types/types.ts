@@ -130,6 +130,12 @@ export type AppEvent =
       };
     };
 
+export interface ConsoleOutputPayload {
+  id: string;
+  line: string;
+  stream: "stdout" | "stderr";
+}
+
 export interface ThemeEntry {
   id: string;
   name: string;
