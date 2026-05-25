@@ -563,6 +563,78 @@ pub async fn get_instance_logs(id: String) -> Vec<String> {
     info!("{} archivos de log encontrados en instancia {}", logs.len(), id);
     logs
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    // ── validate_uuid ─────────────────────────────────────────────────────
+
+    /// Un UUID válido en formato estándar debe pasar la validación.
+    #[test]
+    fn test_validate_uuid_valid() {
+        assert!(validate_uuid("550e8400-e29b-41d4-a716-446655440000").is_ok());
+    }
+
+    /// Un string que no es un UUID debe ser rechazado.
+    /// Previene errores silenciosos aguas abajo.
+    #[test]
+    fn test_validate_uuid_invalid() {
+        assert!(validate_uuid("not-a-uuid").is_err());
+    }
+
+    /// Un string vacío no es un UUID válido.
+    #[test]
+    fn test_validate_uuid_empty() {
+        assert!(validate_uuid("").is_err());
+    }
+
+    // ── sanitize_sub_path ─────────────────────────────────────────────────
+
+    /// Una ruta absoluta debe ser rechazada para prevenir path traversal.
+    /// El usuario no debería poder acceder a `/etc/passwd` usando este argumento.
+    #[test]
+    fn test_sanitize_absolute_path() {
+        let base = Path::new("/tmp/instances/test");
+        let result = sanitize_sub_path(base, Path::new("/etc/passwd"));
+        assert!(result.is_err());
+    }
+
+    /// `../` debe ser rechazado para prevenir salir del directorio de la instancia.
+    #[test]
+    fn test_sanitize_parent_dir() {
+        let base = Path::new("/tmp/instances/test");
+        let result = sanitize_sub_path(base, Path::new("../malicious"));
+        assert!(result.is_err());
+    }
+
+    /// `../` anidado en medio de una ruta también debe ser rechazado.
+    /// `mods/../../secrets` sigue siendo path traversal aunque no empiece con `..`.
+    #[test]
+    fn test_sanitize_dotdot_nested() {
+        let base = Path::new("/tmp/instances/test");
+        let result = sanitize_sub_path(base, Path::new("mods/../../secrets"));
+        assert!(result.is_err());
+    }
+
+    /// Un subdirectorio simple como `mods` debe concatenarse correctamente
+    /// con el directorio base de la instancia.
+    #[test]
+    fn test_sanitize_valid_sub_path() {
+        let base = PathBuf::from("/tmp/instances/test");
+        let result = sanitize_sub_path(&base, Path::new("mods"));
+        assert_eq!(result.unwrap(), base.join("mods"));
+    }
+
+    /// Rutas anidadas válidas (sin `..`) deben funcionar correctamente.
+    #[test]
+    fn test_sanitize_nested_valid() {
+        let base = PathBuf::from("/tmp/instances/test");
+        let result = sanitize_sub_path(&base, Path::new("screenshots/2025-01-01"));
+        assert_eq!(result.unwrap(), base.join("screenshots/2025-01-01"));
+    }
+}
 #[tauri::command]
 pub async fn read_instance_log(id: String, filename: String) -> Result<String, String> {
     validate_uuid(&id)?;

@@ -518,3 +518,118 @@ impl Launcher {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── AtomicDownloadStatus ──────────────────────────────────────────────
+
+    /// Un `AtomicDownloadStatus` recién creado debe estar en `Pending`.
+    #[test]
+    fn test_download_status_pending() {
+        let s = AtomicDownloadStatus::new();
+        assert_eq!(s.get(), DownloadStatus::Pending);
+    }
+
+    /// Después de `set(Downloading)`, `get()` debe devolver `Downloading`.
+    #[test]
+    fn test_download_status_downloading() {
+        let s = AtomicDownloadStatus::new();
+        s.set(DownloadStatus::Downloading);
+        assert_eq!(s.get(), DownloadStatus::Downloading);
+    }
+
+    /// Después de `set(Done)`, `get()` debe devolver `Done`.
+    #[test]
+    fn test_download_status_done() {
+        let s = AtomicDownloadStatus::new();
+        s.set(DownloadStatus::Done);
+        assert_eq!(s.get(), DownloadStatus::Done);
+    }
+
+    /// Después de `set(Error("network failure"))`, `get()` debe devolver
+    /// el mismo mensaje de error, verificando que el Mutex interno
+    /// almacene correctamente el texto del error.
+    #[test]
+    fn test_download_status_error() {
+        let s = AtomicDownloadStatus::new();
+        s.set(DownloadStatus::Error("network failure".into()));
+        assert_eq!(s.get(), DownloadStatus::Error("network failure".into()));
+    }
+
+    /// Verifica que el estado pueda transicionar en ciclo completo
+    /// Pending → Downloading → Done → Pending sin estados inconsistentes.
+    #[test]
+    fn test_download_status_cycle() {
+        let s = AtomicDownloadStatus::new();
+        assert_eq!(s.get(), DownloadStatus::Pending);
+        s.set(DownloadStatus::Downloading);
+        assert_eq!(s.get(), DownloadStatus::Downloading);
+        s.set(DownloadStatus::Done);
+        assert_eq!(s.get(), DownloadStatus::Done);
+        s.set(DownloadStatus::Pending);
+        assert_eq!(s.get(), DownloadStatus::Pending);
+    }
+
+    // ── AtomicProgress ────────────────────────────────────────────────────
+
+    /// Un `AtomicProgress` recién creado debe tener current=0 y total=0.
+    #[test]
+    fn test_progress_default() {
+        let p = AtomicProgress::new();
+        assert_eq!(p.get(), (0, 0));
+    }
+
+    /// Después de `update(50, 100)`, `get()` debe devolver `(50, 100)`.
+    #[test]
+    fn test_progress_update() {
+        let p = AtomicProgress::new();
+        p.update(50, 100);
+        assert_eq!(p.get(), (50, 100));
+    }
+
+    /// Verifica que `update()` sobrescriba valores anteriores correctamente.
+    #[test]
+    fn test_progress_overwrite() {
+        let p = AtomicProgress::new();
+        p.update(10, 20);
+        p.update(100, 200);
+        assert_eq!(p.get(), (100, 200));
+    }
+
+    // ── DownloadHandle ────────────────────────────────────────────────────
+
+    /// Un `DownloadHandle` en estado `Pending` debe considerarse activo.
+    #[test]
+    fn test_download_handle_is_active_pending() {
+        let h = DownloadHandle::new("1.21".into());
+        assert!(h.is_active());
+    }
+
+    /// Un `DownloadHandle` en estado `Downloading` debe considerarse activo.
+    #[test]
+    fn test_download_handle_is_active_downloading() {
+        let h = DownloadHandle::new("1.21".into());
+        h.set_status(DownloadStatus::Downloading);
+        assert!(h.is_active());
+    }
+
+    /// Un `DownloadHandle` en estado `Done` NO debe considerarse activo.
+    /// La descarga terminó, el frontend ya no debe mostrarlo como pendiente.
+    #[test]
+    fn test_download_handle_not_active_done() {
+        let h = DownloadHandle::new("1.21".into());
+        h.set_status(DownloadStatus::Done);
+        assert!(!h.is_active());
+    }
+
+    /// Un `DownloadHandle` en estado `Error` NO debe considerarse activo.
+    /// La descarga falló, no debe reintentarse automáticamente desde acá.
+    #[test]
+    fn test_download_handle_not_active_error() {
+        let h = DownloadHandle::new("1.21".into());
+        h.set_status(DownloadStatus::Error("err".into()));
+        assert!(!h.is_active());
+    }
+}

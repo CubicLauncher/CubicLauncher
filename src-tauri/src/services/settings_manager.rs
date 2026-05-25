@@ -256,3 +256,107 @@ impl SettingsManager {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// La función `default_username()` debe devolver el string `"steve"`.
+    #[test]
+    fn test_default_username() {
+        assert_eq!(default_username(), "steve");
+    }
+
+    /// `SettingsManager::default()` debe inicializar todos los campos con
+    /// los valores por defecto definidos en las funciones `default_*`.
+    /// Verifica: username, min_memory, max_memory, language, auto_updates,
+    /// close_launcher_on_play, show_snapshots, show_alpha, theme, dirty,
+    /// env_vars y jvm_args.
+    #[test]
+    fn test_default_values() {
+        let s = SettingsManager::default();
+        assert_eq!(s.username, "steve");
+        assert_eq!(s.min_memory, 1);
+        assert_eq!(s.max_memory, 2);
+        assert_eq!(s.language, "es");
+        assert!(s.auto_updates);
+        assert!(s.close_launcher_on_play);
+        assert!(!s.show_snapshots);
+        assert!(!s.show_alpha);
+        assert_eq!(s.theme, "dark");
+        assert!(s.dirty);
+        assert!(s.env_vars.is_empty());
+        assert!(s.jvm_args.is_empty());
+    }
+
+    /// Cuando los valores ya están en GB (min=2, max=4), `migrate()` no debe
+    /// modificarlos y debe dejar `dirty` como `false`.
+    #[test]
+    fn test_migrate_noop_when_already_gb() {
+        let mut s = SettingsManager::default();
+        s.min_memory = 2;
+        s.max_memory = 4;
+        s.dirty = false;
+        s.migrate();
+        assert_eq!(s.min_memory, 2);
+        assert_eq!(s.max_memory, 4);
+        assert!(!s.dirty);
+    }
+
+    /// Valores en MB (min=2048, max=4096) deben convertirse a GB (min=2,
+    /// max=4) y marcar `dirty` como `true` para forzar el guardado.
+    /// Esta migración existe porque en versiones anteriores del launcher
+    /// la memoria se almacenaba en MB y ahora se almacena en GB.
+    #[test]
+    fn test_migrate_converts_mb_to_gb() {
+        let mut s = SettingsManager::default();
+        s.min_memory = 2048;
+        s.max_memory = 4096;
+        s.dirty = false;
+        s.migrate();
+        assert_eq!(s.min_memory, 2);
+        assert_eq!(s.max_memory, 4);
+        assert!(s.dirty);
+    }
+
+    /// Un valor impar en MB como 1500 debe convertirse a 1 GB
+    /// (1500 / 1024 = 1.46, `max(1)` asegura que no quede en 0).
+    #[test]
+    fn test_migrate_converts_odd_mb() {
+        let mut s = SettingsManager::default();
+        s.min_memory = 1500;
+        s.dirty = false;
+        s.migrate();
+        assert_eq!(s.min_memory, 1);
+    }
+
+    /// Un valor de max_memory = 128 NO debe convertirse porque la condición
+    /// del `if` es `> 128`. Esto evita falsos positivos con valores
+    /// pequeños que casualmente están en el rango MB pero son válidos en GB.
+    #[test]
+    fn test_migrate_does_not_touch_normal_values() {
+        let mut s = SettingsManager::default();
+        s.min_memory = 2;
+        s.max_memory = 128;
+        s.dirty = false;
+        s.migrate();
+        assert_eq!(s.min_memory, 2);
+        assert_eq!(s.max_memory, 128);
+    }
+
+    /// Serializar y deserializar un `SettingsManager` con serde_json debe
+    /// preservar todos los campos públicos. El campo `dirty` tiene
+    /// `#[serde(skip)]` por lo que siempre se deserializa como `false`.
+    #[test]
+    fn test_serde_roundtrip() {
+        let s = SettingsManager::default();
+        let json = serde_json::to_string(&s).unwrap();
+        let deserialized: SettingsManager = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.username, s.username);
+        assert_eq!(deserialized.min_memory, s.min_memory);
+        assert_eq!(deserialized.max_memory, s.max_memory);
+        assert_eq!(deserialized.language, s.language);
+        assert_eq!(deserialized.theme, s.theme);
+        assert!(!deserialized.dirty);
+    }
+}

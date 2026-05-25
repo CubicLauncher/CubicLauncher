@@ -564,3 +564,150 @@ fn validate_instance_name(name: &str) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── validate_instance_name ────────────────────────────────────────────
+
+    /// Verifica que un nombre vacío sea rechazado.
+    /// No se puede crear una instancia sin nombre porque se usaría como
+    /// nombre de directorio en disco.
+    #[test]
+    fn test_validate_name_empty() {
+        assert!(validate_instance_name("").is_err());
+    }
+
+    /// Verifica que caracteres no ASCII sean rechazados.
+    /// El sistema de archivos puede no soportar UTF-8 en todas las plataformas
+    /// y el nombre se usa como nombre de directorio.
+    #[test]
+    fn test_validate_name_non_ascii() {
+        assert!(validate_instance_name("ñoña").is_err());
+    }
+
+    /// Verifica que un nombre que excede MAX_LEN (16) sea rechazado.
+    /// Evita paths demasiado largos y problemas de compatibilidad.
+    #[test]
+    fn test_validate_name_too_long() {
+        assert!(validate_instance_name("a".repeat(MAX_LEN as usize + 1).as_str()).is_err());
+    }
+
+    /// Verifica que '/' en el nombre sea rechazado (path traversal).
+    /// Podría crear subdirectorios no deseados dentro del directorio de instancias.
+    #[test]
+    fn test_validate_name_with_slash() {
+        assert!(validate_instance_name("a/b").is_err());
+    }
+
+    /// Verifica que '\\' en el nombre sea rechazado (path traversal en Windows).
+    /// Misma lógica que slash, pero para separador de Windows.
+    #[test]
+    fn test_validate_name_with_backslash() {
+        assert!(validate_instance_name("a\\b").is_err());
+    }
+
+    /// Verifica que el byte nulo sea rechazado.
+    /// Puede causar truncamiento en operaciones con CString/Fs.
+    #[test]
+    fn test_validate_name_with_null() {
+        assert!(validate_instance_name("a\0b").is_err());
+    }
+
+    /// Verifica que ".." sea rechazado (path traversal).
+    /// Permitiría salir del directorio de la instancia hacia arriba.
+    #[test]
+    fn test_validate_name_with_dotdot() {
+        assert!(validate_instance_name("..").is_err());
+    }
+
+    /// Caso feliz: un nombre ASCII común debe ser aceptado.
+    #[test]
+    fn test_validate_name_valid() {
+        assert!(validate_instance_name("MyInstance").is_ok());
+    }
+
+    /// Verifica que el límite exacto de MAX_LEN caracteres funcione.
+    #[test]
+    fn test_validate_name_max_length() {
+        assert!(validate_instance_name("a".repeat(MAX_LEN as usize).as_str()).is_ok());
+    }
+
+    // ── InstanceData::get_loader ──────────────────────────────────────────
+
+    /// Una versión que contiene "fabric" debe devolver `"Fabric"`.
+    #[test]
+    fn test_get_loader_fabric() {
+        let data = InstanceData::new("test".into(), "1.21-fabric".into(), None);
+        assert_eq!(data.get_loader(), "Fabric");
+    }
+
+    /// Una versión que contiene "forge" debe devolver `"Forge"`.
+    #[test]
+    fn test_get_loader_forge() {
+        let data = InstanceData::new("test".into(), "1.20.1-forge".into(), None);
+        assert_eq!(data.get_loader(), "Forge");
+    }
+
+    /// Una versión que contiene "quilt" debe devolver `"Quilt"`.
+    #[test]
+    fn test_get_loader_quilt() {
+        let data = InstanceData::new("test".into(), "1.19-quilt".into(), None);
+        assert_eq!(data.get_loader(), "Quilt");
+    }
+
+    /// Una versión sin loader conocido (Vanilla) debe devolver `"Vanilla"`.
+    #[test]
+    fn test_get_loader_vanilla() {
+        let data = InstanceData::new("test".into(), "1.21".into(), None);
+        assert_eq!(data.get_loader(), "Vanilla");
+    }
+
+    // ── AtomicStatus ──────────────────────────────────────────────────────
+
+    /// Un `AtomicStatus` recién creado debe estar en `Off`.
+    #[test]
+    fn test_atomic_status_off() {
+        let s = AtomicStatus::new();
+        assert_eq!(s.get(), InstanceStatus::Off);
+    }
+
+    /// Después de `set(Starting)`, `get()` debe devolver `Starting`.
+    #[test]
+    fn test_atomic_status_starting() {
+        let s = AtomicStatus::new();
+        s.set(InstanceStatus::Starting);
+        assert_eq!(s.get(), InstanceStatus::Starting);
+    }
+
+    /// Después de `set(Started)`, `get()` debe devolver `Started`.
+    #[test]
+    fn test_atomic_status_started() {
+        let s = AtomicStatus::new();
+        s.set(InstanceStatus::Started);
+        assert_eq!(s.get(), InstanceStatus::Started);
+    }
+
+    /// Después de `set(Error("msg"))`, `get()` debe devolver `Error("msg")`.
+    /// Verifica que el mensaje de error se persista correctamente en el Mutex
+    /// interno y se lea con el ordenamiento Release/Acquire correcto.
+    #[test]
+    fn test_atomic_status_error() {
+        let s = AtomicStatus::new();
+        s.set(InstanceStatus::Error("something went wrong".into()));
+        assert_eq!(s.get(), InstanceStatus::Error("something went wrong".into()));
+    }
+
+    /// Verifica que el estado pueda transicionar Off → Starting → Off
+    /// sin problemas ni estados inconsistentes.
+    #[test]
+    fn test_atomic_status_cycle() {
+        let s = AtomicStatus::new();
+        assert_eq!(s.get(), InstanceStatus::Off);
+        s.set(InstanceStatus::Starting);
+        assert_eq!(s.get(), InstanceStatus::Starting);
+        s.set(InstanceStatus::Off);
+        assert_eq!(s.get(), InstanceStatus::Off);
+    }
+}
