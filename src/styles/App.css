@@ -1657,6 +1657,148 @@ body {
     border-radius: 10px;
 }
 
+.qm-card {
+    background: #151515;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.qm-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 12px;
+}
+
+.qm-section-header .qm-section-label {
+    margin-bottom: 0;
+}
+
+.qm-textarea {
+    width: 100%;
+    background: #111;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, background 0.2s;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 80px;
+    font-family: monospace;
+}
+
+.qm-textarea:focus {
+    outline: none;
+    border-color: #555;
+    background: #151515;
+}
+
+.env-var-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.env-var-input {
+    flex: 1;
+    min-width: 0;
+    background: #111;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    height: 38px;
+    transition: border-color 0.2s, background 0.2s;
+    font-family: monospace;
+    box-sizing: border-box;
+}
+
+.env-var-input:focus {
+    outline: none;
+    border-color: #555;
+    background: #151515;
+}
+
+.env-var-btn {
+    background: rgba(255, 68, 68, 0.05);
+    color: #ff4444;
+    border: 1px solid rgba(255, 68, 68, 0.2);
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.env-var-btn:hover {
+    background: rgba(255, 68, 68, 0.2);
+    border-color: rgba(255, 68, 68, 0.4);
+    color: #fff;
+}
+
+.env-var-add {
+    background: transparent;
+    border: 1px dashed #444;
+    color: #888;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.env-var-add:hover {
+    border-color: #666;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.save-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #222;
+    background: #0a0a0a;
+    z-index: 10;
+}
+
+.detect-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #333;
+    color: #eee;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.detect-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: #555;
+}
+
 /* ─── 10. COMPONENTS: OVERLAYS (DRAWER & MODAL) ─────────── */
 
 .drawer-overlay {
