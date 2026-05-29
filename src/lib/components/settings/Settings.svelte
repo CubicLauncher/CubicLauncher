@@ -12,6 +12,7 @@
     } from "$lib/api/updaterServices";
     import { listThemes } from "$lib/api/themeManager";
     import type { ThemeEntry } from "$lib/types/types";
+    import UpdateSection from "./UpdateSection.svelte";
 
     interface Props {
         onclose?: () => void;
@@ -94,7 +95,6 @@
     async function handleInstall() {
         installing = true;
         await installUpdate();
-        // If we get here, install failed (relaunch would have fired)
         installing = false;
     }
 
@@ -160,33 +160,31 @@
                 <span class="qm-section-label"
                     >{t("settings.launcher.activeInstancesTitle")}</span
                 >
-                <div class="qm-card">
-                    {#each runningInstances as uuid}
-                        {@const inst = launcherStore.loadedInstances.find(
-                            (i) => i.uuid === uuid,
-                        )}
-                        {#if inst}
-                            <div class="qm-active-card" style="margin-bottom: 0;">
-                                <div class="qm-status-dot running"></div>
-                                <div class="qm-active-info">
-                                    <span class="qm-active-name">{inst.name}</span>
-                                    <span class="qm-active-sub"
-                                        >{inst.version} - {inst.loader}</span
-                                    >
-                                </div>
-                                <button
-                                    class="qm-kill-btn"
-                                    onclick={() => killInst(inst.uuid)}
-                                    >{t("settings.launcher.killInstance")}</button
+                {#each runningInstances as uuid}
+                    {@const inst = launcherStore.loadedInstances.find(
+                        (i) => i.uuid === uuid,
+                    )}
+                    {#if inst}
+                        <div class="qm-active-card">
+                            <div class="qm-status-dot running"></div>
+                            <div class="qm-active-info">
+                                <span class="qm-active-name">{inst.name}</span>
+                                <span class="qm-active-sub"
+                                    >{inst.version} - {inst.loader}</span
                                 >
                             </div>
-                        {/if}
-                    {:else}
-                        <div class="qm-empty-state" style="padding: 0;">
-                            {t("settings.launcher.noInstances")}
+                            <button
+                                class="qm-kill-btn"
+                                onclick={() => killInst(inst.uuid)}
+                                >{t("settings.launcher.killInstance")}</button
+                            >
                         </div>
-                    {/each}
-                </div>
+                    {/if}
+                {:else}
+                    <div class="qm-empty-state">
+                        {t("settings.launcher.noInstances")}
+                    </div>
+                {/each}
             </section>
 
             <!-- Updates section -->
@@ -194,159 +192,38 @@
                 <span class="qm-section-label"
                     >{t("settings.launcher.updatesTitle")}</span
                 >
-                <div class="qm-card">
-                    <!-- Version info row -->
-                    <div class="update-version-row" style="margin-bottom: 0;">
-                        <div class="update-version-info">
-                            <span class="update-version-label"
-                                >{t("settings.launcher.currentVersion")}</span
-                            >
-                            <span class="update-version-value"
-                                >v{currentVersion}</span
-                            >
-                        </div>
-                        {#if launcherStore.pendingUpdate}
-                            <div class="update-version-info">
-                                <span class="update-version-label"
-                                    >{t("settings.launcher.available")}</span
-                                >
-                                <span class="update-version-value update-available"
-                                    >v{launcherStore.pendingUpdate.version}</span
-                                >
-                            </div>
-                        {:else}
-                            <div class="update-version-info">
-                                <span class="update-version-label"
-                                    >{t("settings.launcher.status")}</span
-                                >
-                                <span class="update-version-value update-ok"
-                                    >{t("settings.launcher.updateOk")}</span
-                                >
-                            </div>
-                        {/if}
-                    </div>
-
-                    {#if launcherStore.pendingUpdate?.body}
-                        <div class="update-notes" style="margin-bottom: 0;">
-                            <span class="update-notes-label"
-                                >{t("settings.launcher.notes")}</span
-                            >
-                            <p class="update-notes-text">
-                                {launcherStore.pendingUpdate.body}
-                            </p>
-                        </div>
-                    {/if}
-
-                    <!-- Progress bar (visible while downloading) -->
-                    {#if launcherStore.updateProgress > 0 && launcherStore.updateProgress < 100}
-                        <div class="update-progress-wrap" style="margin-bottom: 0;">
-                            <div class="update-progress-track">
-                                <div
-                                    class="update-progress-fill"
-                                    style="width: {launcherStore.updateProgress}%"
-                                ></div>
-                            </div>
-                            <span class="update-progress-pct"
-                                >{launcherStore.updateProgress}%</span
-                            >
-                        </div>
-                    {/if}
-
-                    <!-- Action buttons -->
-                    <div class="update-actions">
-                        <!-- Check for updates -->
-                        <button
-                            class="update-btn secondary"
-                            onclick={handleCheckForUpdates}
-                            disabled={checking || downloading || installing}
-                        >
-                            {#if checking}
-                                <span class="update-btn-spinner"></span>
-                                {t("settings.launcher.checking")}
-                            {:else}
-                                {t("settings.launcher.searchBtn")}
-                            {/if}
-                        </button>
-
-                        {#if launcherStore.pendingUpdate}
-                            {#if !launcherStore.updateDownloaded}
-                                <!-- Download only -->
-                                <button
-                                    class="update-btn secondary"
-                                    onclick={handleDownload}
-                                    disabled={checking || downloading || installing}
-                                >
-                                    {#if downloading}
-                                        <span class="update-btn-spinner"></span>
-                                        Descargando...
-                                    {:else}
-                                        Solo descargar
-                                    {/if}
-                                </button>
-
-                                <!-- Download + Install -->
-                                <button
-                                    class="update-btn primary"
-                                    onclick={async () => {
-                                        await handleDownload();
-                                        if (launcherStore.updateDownloaded)
-                                            await handleInstall();
-                                    }}
-                                    disabled={checking || downloading || installing}
-                                >
-                                    {#if downloading || installing}
-                                        <span class="update-btn-spinner light"
-                                        ></span>
-                                        {downloading
-                                            ? t("settings.launcher.downloading")
-                                            : t("settings.launcher.installing")}
-                                    {:else}
-                                        {t("settings.launcher.downloadInstallBtn")}
-                                    {/if}
-                                </button>
-                            {:else}
-                                <!-- Already downloaded, just install -->
-                                <button
-                                    class="update-btn primary"
-                                    onclick={handleInstall}
-                                    disabled={installing}
-                                >
-                                    {#if installing}
-                                        <span class="update-btn-spinner light"
-                                        ></span>
-                                        {t("settings.launcher.installing")}
-                                    {:else}
-                                        {t("settings.launcher.installUpdateBtn")}
-                                    {/if}
-                                </button>
-                            {/if}
-                        {/if}
-                    </div>
-                </div>
+                <UpdateSection
+                    {currentVersion}
+                    pendingUpdate={launcherStore.pendingUpdate}
+                    updateProgress={launcherStore.updateProgress}
+                    updateDownloaded={launcherStore.updateDownloaded}
+                    {checking}
+                    {downloading}
+                    {installing}
+                    onCheck={handleCheckForUpdates}
+                    onDownload={handleDownload}
+                    onInstall={handleInstall}
+                />
             </section>
 
             <!-- Themes -->
             <section class="qm-section">
                 <span class="qm-section-label">Temas</span>
-                <div class="qm-card">
-                    <div class="qm-field" style="margin-bottom: 0;">
-                        <Select
-                            id="theme"
-                            label="Tema activo"
-                            options={themeOptions}
-                            bind:value={launcherStore.settings.theme}
-                            onchange={async () => {
-                                try {
-                                    await invoke("set_theme", {
-                                        id: launcherStore.settings.theme,
-                                    });
-                                } catch (e) {
-                                    console.error("Error setting theme:", e);
-                                }
-                            }}
-                        />
-                    </div>
-                </div>
+                <Select
+                    id="theme"
+                    label="Tema activo"
+                    options={themeOptions}
+                    bind:value={launcherStore.settings.theme}
+                    onchange={async () => {
+                        try {
+                            await invoke("set_theme", {
+                                id: launcherStore.settings.theme,
+                            });
+                        } catch (e) {
+                            console.error("Error setting theme:", e);
+                        }
+                    }}
+                />
             </section>
 
             <!-- General Settings -->
@@ -354,42 +231,37 @@
                 <span class="qm-section-label"
                     >{t("settings.launcher.generalTitle")}</span
                 >
-                <div class="qm-card">
-                    <div class="qm-field" style="margin-bottom: 0;">
-                        <Select
-                            id="language"
-                            label={t("settings.launcher.language")}
-                            options={languageOptions}
-                            bind:value={launcherStore.settings.language}
-                            onchange={handleSave}
-                        />
-                    </div>
-                    <div class="qm-field-checkbox" style="margin-bottom: 0;">
-                        <input
-                            type="checkbox"
-                            id="auto-updates"
-                            bind:checked={launcherStore.settings.auto_updates}
-                            onchange={handleSave}
-                        />
-                        <label for="auto-updates"
-                            >{t("settings.launcher.autoUpdates")}</label
-                        >
-                    </div>
-                    <div class="qm-field-checkbox" style="margin-bottom: 0;">
-                        <input
-                            type="checkbox"
-                            id="close-on-play"
-                            bind:checked={
-                                launcherStore.settings.close_launcher_on_play
-                            }
-                            onchange={handleSave}
-                        />
-                        <label for="close-on-play"
-                            >{t("settings.launcher.closeOnPlay")}</label
-                        >
-                    </div>
+                <Select
+                    id="language"
+                    label={t("settings.launcher.language")}
+                    options={languageOptions}
+                    bind:value={launcherStore.settings.language}
+                    onchange={handleSave}
+                />
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="auto-updates"
+                        bind:checked={launcherStore.settings.auto_updates}
+                        onchange={handleSave}
+                    />
+                    <label for="auto-updates"
+                        >{t("settings.launcher.autoUpdates")}</label
+                    >
                 </div>
-                <div style="height: 30px;"></div> <!-- Bottom padding -->
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="close-on-play"
+                        bind:checked={
+                            launcherStore.settings.close_launcher_on_play
+                        }
+                        onchange={handleSave}
+                    />
+                    <label for="close-on-play"
+                        >{t("settings.launcher.closeOnPlay")}</label
+                    >
+                </div>
             </section>
         {/if}
 
@@ -399,28 +271,26 @@
                 <span class="qm-section-label"
                     >{t("settings.minecraft.perfTitle")}</span
                 >
-                <div class="qm-card">
-                    <div class="qm-field-group">
-                        <div class="qm-field" style="margin-bottom: 0;">
-                            <label for="min-mem"
-                                >{t("settings.minecraft.minRam")}</label
-                            >
-                            <input
-                                type="number"
-                                id="min-mem"
-                                bind:value={launcherStore.settings.min_memory}
-                            />
-                        </div>
-                        <div class="qm-field" style="margin-bottom: 0;">
-                            <label for="max-mem"
-                                >{t("settings.minecraft.maxRam")}</label
-                            >
-                            <input
-                                type="number"
-                                id="max-mem"
-                                bind:value={launcherStore.settings.max_memory}
-                            />
-                        </div>
+                <div class="qm-field-group">
+                    <div class="qm-field">
+                        <label for="min-mem"
+                            >{t("settings.minecraft.minRam")}</label
+                        >
+                        <input
+                            type="number"
+                            id="min-mem"
+                            bind:value={launcherStore.settings.min_memory}
+                        />
+                    </div>
+                    <div class="qm-field">
+                        <label for="max-mem"
+                            >{t("settings.minecraft.maxRam")}</label
+                        >
+                        <input
+                            type="number"
+                            id="max-mem"
+                            bind:value={launcherStore.settings.max_memory}
+                        />
                     </div>
                 </div>
             </section>
@@ -429,135 +299,131 @@
                 <span class="qm-section-label"
                     >{t("settings.minecraft.optionsTitle")}</span
                 >
-                <div class="qm-card">
-                    <div class="qm-field-checkbox" style="margin-bottom: 0;">
-                        <input
-                            type="checkbox"
-                            id="show-snapshots"
-                            bind:checked={launcherStore.settings.show_snapshots}
-                            onchange={handleSave}
-                        />
-                        <label for="show-snapshots"
-                            >{t("settings.minecraft.showSnapshots")}</label
-                        >
-                    </div>
-                    <div class="qm-field-checkbox" style="margin-bottom: 0;">
-                        <input
-                            type="checkbox"
-                            id="show-alpha"
-                            bind:checked={launcherStore.settings.show_alpha}
-                            onchange={handleSave}
-                        />
-                        <label for="show-alpha"
-                            >{t("settings.minecraft.showAlpha")}</label
-                        >
-                    </div>
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="show-snapshots"
+                        bind:checked={launcherStore.settings.show_snapshots}
+                        onchange={handleSave}
+                    />
+                    <label for="show-snapshots"
+                        >{t("settings.minecraft.showSnapshots")}</label
+                    >
                 </div>
-                <div style="height: 30px;"></div> <!-- Bottom padding -->
+                <div class="qm-field-checkbox">
+                    <input
+                        type="checkbox"
+                        id="show-alpha"
+                        bind:checked={launcherStore.settings.show_alpha}
+                        onchange={handleSave}
+                    />
+                    <label for="show-alpha"
+                        >{t("settings.minecraft.showAlpha")}</label
+                    >
+                </div>
             </section>
         {/if}
 
         {#if currentTab === "java"}
             <!-- Java Paths -->
             <section class="qm-section">
-                <div class="qm-section-header">
-                    <span class="qm-section-label">{t("settings.java.runtimesTitle")}</span>
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"
+                >
+                    <span class="qm-section-label" style="margin: 0;"
+                        >{t("settings.java.runtimesTitle")}</span
+                    >
                     <button
                         class="detect-btn"
                         onclick={autoDetectJava}
                         >{t("settings.java.detectPathsBtn")}</button
                     >
                 </div>
-                <div class="qm-card">
-                    <div class="qm-field" style="margin-bottom: 0;">
-                        <label for="jre8">{t("settings.java.java8Path")}</label>
-                        <input
-                            type="text"
-                            id="jre8"
-                            bind:value={launcherStore.settings.jre8_path}
-                            placeholder="Path to javaw.exe"
-                        />
-                    </div>
-                    <div class="qm-field" style="margin-bottom: 0;">
-                        <label for="jre17">{t("settings.java.java17Path")}</label>
-                        <input
-                            type="text"
-                            id="jre17"
-                            bind:value={launcherStore.settings.jre17_path}
-                            placeholder="Path to javaw.exe"
-                        />
-                    </div>
-                    <div class="qm-field" style="margin-bottom: 0;">
-                        <label for="jre21">{t("settings.java.java21Path")}</label>
-                        <input
-                            type="text"
-                            id="jre21"
-                            bind:value={launcherStore.settings.jre21_path}
-                            placeholder="Path to javaw.exe"
-                        />
-                    </div>
-                    <div class="qm-field" style="margin-bottom: 0;">
-                        <label for="jre25">{t("settings.java.java25Path")}</label>
-                        <input
-                            type="text"
-                            id="jre25"
-                            bind:value={launcherStore.settings.jre25_path}
-                            placeholder="Path to javaw.exe"
-                        />
-                    </div>
+                <div class="qm-field">
+                    <label for="jre8">{t("settings.java.java8Path")}</label>
+                    <input
+                        type="text"
+                        id="jre8"
+                        bind:value={launcherStore.settings.jre8_path}
+                        placeholder="Path to javaw.exe"
+                    />
+                </div>
+                <div class="qm-field">
+                    <label for="jre17">{t("settings.java.java17Path")}</label>
+                    <input
+                        type="text"
+                        id="jre17"
+                        bind:value={launcherStore.settings.jre17_path}
+                        placeholder="Path to javaw.exe"
+                    />
+                </div>
+                <div class="qm-field">
+                    <label for="jre21">{t("settings.java.java21Path")}</label>
+                    <input
+                        type="text"
+                        id="jre21"
+                        bind:value={launcherStore.settings.jre21_path}
+                        placeholder="Path to javaw.exe"
+                    />
+                </div>
+                <div class="qm-field">
+                    <label for="jre25">{t("settings.java.java25Path")}</label>
+                    <input
+                        type="text"
+                        id="jre25"
+                        bind:value={launcherStore.settings.jre25_path}
+                        placeholder="Path to javaw.exe"
+                    />
                 </div>
             </section>
-            
+
             <section class="qm-section">
                 <span class="qm-section-label">Avanzado</span>
-                <div class="qm-card">
-                    <div class="qm-field" style="margin-bottom: 0;">
-                        <label for="jvm-args">{t("settings.java.jvmArgs")}</label>
-                        <textarea
-                            id="jvm-args"
-                            class="qm-textarea"
-                            bind:value={launcherStore.settings.jvm_args}
-                            placeholder="-Xmx2G -Xms1G ..."
-                        ></textarea>
-                    </div>
-                    <div class="qm-field" style="margin-bottom: 0; margin-top: 5px;">
-                        <span style="display: block; margin-bottom: 10px; color: #aaa; font-size: 0.8rem;">{t("settings.java.envVars")}</span>
-                        {#each envVarList as entry, i}
-                            <div class="env-var-row">
-                                <input
-                                    type="text"
-                                    class="env-var-input"
-                                    bind:value={entry.key}
-                                    placeholder="KEY"
-                                    oninput={syncEnvVars}
-                                />
-                                <span style="color: #666; font-size: 0.9rem; font-weight: 600;">=</span>
-                                <input
-                                    type="text"
-                                    class="env-var-input"
-                                    bind:value={entry.value}
-                                    placeholder="VALUE"
-                                    oninput={syncEnvVars}
-                                />
-                                <button
-                                    class="env-var-btn"
-                                    onclick={() => removeEnvVar(i)}
-                                    >✕</button
-                                >
-                            </div>
-                        {/each}
-                        <button
-                            class="env-var-add"
-                            onclick={addEnvVar}
-                            >+ {t("settings.java.envVarsAdd")}</button
-                        >
-                    </div>
+                <div class="qm-field">
+                    <label for="jvm-args">{t("settings.java.jvmArgs")}</label>
+                    <textarea
+                        id="jvm-args"
+                        bind:value={launcherStore.settings.jvm_args}
+                        placeholder="-Xmx2G -Xms1G ..."
+                        style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 10px; border-radius: var(--border-radius-sm); font-size: 0.85rem; resize: vertical; min-height: 60px; font-family: monospace; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
+                    ></textarea>
                 </div>
-                <div style="height: 30px;"></div> <!-- Bottom padding -->
+                <div class="qm-field">
+                    <span style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.8rem;">{t("settings.java.envVars")}</span>
+                    {#each envVarList as entry, i}
+                        <div style="display: flex; gap: 4px; align-items: center; margin-bottom: 4px;">
+                            <input
+                                type="text"
+                                bind:value={entry.key}
+                                placeholder="KEY"
+                                oninput={syncEnvVars}
+                                style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 8px; border-radius: var(--border-radius-sm); font-size: 0.8rem; height: 28px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
+                            />
+                            <span style="color: var(--text-muted); font-size: 0.8rem; flex-shrink: 0;">=</span>
+                            <input
+                                type="text"
+                                bind:value={entry.value}
+                                placeholder="VALUE"
+                                oninput={syncEnvVars}
+                                style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 8px; border-radius: var(--border-radius-sm); font-size: 0.8rem; height: 28px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
+                            />
+                            <button
+                                onclick={() => removeEnvVar(i)}
+                                style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; font-size: 1rem; line-height: 1; flex-shrink: 0;"
+                                >✕</button
+                            >
+                        </div>
+                    {/each}
+                    <button
+                        onclick={addEnvVar}
+                        style="background: none; border: 1px dashed var(--border-color); color: var(--text-secondary); cursor: pointer; padding: 4px 10px; border-radius: var(--border-radius-sm); font-size: 0.8rem; margin-top: 2px;"
+                        >+ {t("settings.java.envVarsAdd")}</button
+                    >
+                </div>
             </section>
         {/if}
     </div>
-    
+
     <div class="save-footer">
         <button class="qm-save-btn" onclick={handleSave} disabled={saving}>
             {saving

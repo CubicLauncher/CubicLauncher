@@ -629,4 +629,14 @@
         0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
         40% { transform: scale(1); opacity: 1; }
     }
+
+    @media (max-width: 550px) {
+        .details-header {
+            flex-direction: column;
+        }
+
+        .path-text {
+            max-width: 180px;
+        }
+    }
 </style>
