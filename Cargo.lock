@@ -745,11 +745,13 @@ version = "26.5.3"
 dependencies = [
  "aqua",
  "base64 0.22.1",
+ "dashmap",
  "directories",
  "futures",
  "infer",
  "launchwerk",
  "notify",
+ "parking_lot",
  "reqwest",
  "serde",
  "serde_json",

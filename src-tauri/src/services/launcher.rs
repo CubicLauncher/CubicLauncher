@@ -5,15 +5,15 @@ use crate::services::instance_manager::{
     InstanceHandle, InstanceStatus, register_kill_sender, unregister_kill_sender,
 };
 use aqua::{DownloadManager, DownloadProgress};
+use dashmap::DashMap;
 use launchwerk::models::VersionManifest;
 use launchwerk::{LaunchConfig, Launchwerk};
 use launchwerk::{auth::AccountType, auth::microsoft::MicrosoftAuth};
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
 use tauri::Emitter;
 use tokio::fs;
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::mpsc;
 use tracing::{error, info, trace, warn};
 // ── Statics ───────────────────────────────────────────────────────────────────
 
@@ -152,7 +152,7 @@ impl DownloadHandle {
 
 pub struct DownloadQueue {
     sender: mpsc::Sender<String>,
-    active: RwLock<HashMap<String, DownloadHandle>>,
+    active: DashMap<String, DownloadHandle>,
 }
 
 impl DownloadQueue {
@@ -168,7 +168,7 @@ impl DownloadQueue {
 
         let queue = Arc::new(Self {
             sender: tx,
-            active: RwLock::new(HashMap::new()),
+            active: DashMap::new(),
         });
 
         let queue_clone = queue.clone();
@@ -186,8 +186,7 @@ impl DownloadQueue {
     /// Si ya está activa (pending o downloading), la ignora silenciosamente.
     pub async fn enqueue(&self, version: String) {
         {
-            let active = self.active.read().await;
-            if let Some(handle) = active.get(&version)
+            if let Some(handle) = self.active.get(&version)
                 && handle.is_active()
             {
                 warn!("La version {} ya está en cola o descargándose", version);
@@ -200,21 +199,18 @@ impl DownloadQueue {
         // Registrar el handle antes de enviar al worker
         // para que get_active_downloads() refleje el estado inmediatamente
         let handle = DownloadHandle::new(version.clone());
-        self.active.write().await.insert(version.clone(), handle);
+        self.active.insert(version.clone(), handle);
 
         if let Err(e) = self.sender.send(version).await {
             error!("Error al encolar descarga: {}", e);
         }
     }
 
-    /// Devuelve todos los handles activos (pending o downloading).
     pub async fn get_active_downloads(&self) -> Vec<DownloadHandle> {
         self.active
-            .read()
-            .await
-            .values()
-            .filter(|h| h.is_active())
-            .cloned()
+            .iter()
+            .filter(|r| r.value().is_active())
+            .map(|r| r.value().clone())
             .collect()
     }
 
@@ -229,8 +225,7 @@ impl DownloadQueue {
     ) -> Result<(), AppError> {
         while let Some(version) = rx.recv().await {
             let handle = {
-                let active = queue.active.read().await;
-                match active.get(&version) {
+                match queue.active.get(&version) {
                     Some(h) => h.clone(),
                     None => {
                         error!("Handle no encontrado para versión {}, saltando", version);
@@ -331,7 +326,7 @@ impl DownloadQueue {
 
             let _ = monitor_task.await;
 
-            queue.active.write().await.retain(|_, h| h.is_active());
+            queue.active.retain(|_, h| h.is_active());
         }
 
         error!("Worker de descargas terminó inesperadamente — el channel fue cerrado");

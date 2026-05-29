@@ -1,9 +1,10 @@
 use crate::core::{AppError, CoreError, FsError, PathManager, emit};
 use launchwerk::auth::MinecraftUser;
+use parking_lot::{RwLock, RwLockReadGuard};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{LazyLock, RwLock};
+use std::sync::LazyLock;
 use tokio::fs;
 use tracing::{error, info, warn};
 
@@ -103,26 +104,18 @@ impl Default for SettingsManager {
 }
 
 impl SettingsManager {
-    pub fn read() -> std::sync::RwLockReadGuard<'static, SettingsManager> {
-        SETTINGS.read().unwrap_or_else(|e| {
-            warn!("Lock de configuración envenenado, recuperando con datos posiblemente corruptos");
-            e.into_inner()
-        })
+    pub fn read() -> RwLockReadGuard<'static, SettingsManager> {
+        SETTINGS.read()
     }
 
     pub fn write(f: impl FnOnce(&mut SettingsManager)) -> Result<(), CoreError> {
-        let mut settings = SETTINGS
-            .write()
-            .map_err(|e| CoreError::LockPoisoned(e.to_string()))?;
+        let mut settings = SETTINGS.write();
         f(&mut settings);
         Ok(())
     }
 
     pub fn snapshot() -> SettingsManager {
-        SETTINGS.read().unwrap_or_else(|e| {
-            warn!("Lock de configuración envenenado en snapshot, recuperando con datos posiblemente corruptos");
-            e.into_inner()
-        }).clone()
+        SETTINGS.read().clone()
     }
 
     // ── Getters ───────────────────────────────────────────────────────────────
@@ -174,19 +167,21 @@ impl SettingsManager {
     /// Extrae el contenido con el Mutex tomado, luego escribe fuera del scope
     /// para minimizar el tiempo que el lock bloquea otros hilos.
     pub async fn save() -> Result<(), AppError> {
-        let (content, path) = {
-            let mut settings = SETTINGS
-                .write()
-                .map_err(|e| CoreError::LockPoisoned(e.to_string()))?;
+        let (content, path, was_dirty) = {
+            let settings = SETTINGS.read();
             if !settings.dirty {
-                return Ok(());
+                (String::new(), PathBuf::new(), false)
+            } else {
+                let content = serde_json::to_string(&*settings)
+                    .map_err(|e| CoreError::Serialize(e.to_string()))?;
+                let path = PathManager::get().get_settings_dir().join("settings.cub");
+                (content, path, true)
             }
-            let content = serde_json::to_string(&*settings)
-                .map_err(|e| CoreError::Serialize(e.to_string()))?;
-            settings.dirty = false;
-            let path = PathManager::get().get_settings_dir().join("settings.cub");
-            (content, path)
         };
+
+        if !was_dirty {
+            return Ok(());
+        }
 
         let parent = path.parent().ok_or_else(|| {
             AppError::CoreError(CoreError::Serialize(format!(
@@ -194,18 +189,27 @@ impl SettingsManager {
                 path.display()
             )))
         })?;
+
         fs::create_dir_all(parent).await.map_err(|e| {
             AppError::Fs(FsError::CreateDir {
                 path: parent.to_string_lossy().to_string(),
                 source: e,
             })
         })?;
+
         fs::write(&path, content).await.map_err(|e| {
             AppError::Fs(FsError::WriteFile {
                 path: path.to_string_lossy().to_string(),
                 source: e,
             })
         })?;
+
+        // Esto solo se ejecuta si la operacion de escritura paso sin errores.
+        {
+            let mut settings = SETTINGS.write();
+            settings.dirty = false;
+        }
+
         info!("Configuración guardada en {:?}", path);
         emit(crate::core::AppEvent::STChanged);
         Ok(())
@@ -234,7 +238,10 @@ impl SettingsManager {
                 settings
             }
             Err(e) => {
-                error!("Configuración inválida en {:?} ({}), creando backup", path, e);
+                error!(
+                    "Configuración inválida en {:?} ({}), creando backup",
+                    path, e
+                );
                 if let Err(e) = std::fs::copy(&path, path.with_extension("cub.bak")) {
                     warn!("Error creando backup de configuración {:?}: {}", path, e);
                 }
