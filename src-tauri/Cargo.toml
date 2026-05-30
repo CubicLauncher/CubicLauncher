@@ -41,6 +41,6 @@ infer = "0.19.0"
 notify = "8"
 dashmap = "6.2.1"
 parking_lot = "0.12.5"
-
+communicator = {path="../crates/Communicator"}
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"

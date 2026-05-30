@@ -74,6 +74,8 @@ pub struct SettingsManager {
     pub env_vars: HashMap<String, String>,
     #[serde(default = "default_theme")]
     pub theme: String,
+    #[serde(default = "default_true")]
+    pub discord_presence: bool,
     #[serde(skip)]
     pub dirty: bool,
 }
@@ -98,6 +100,7 @@ impl Default for SettingsManager {
             jvm_args: String::new(),
             env_vars: HashMap::new(),
             theme: String::from("dark"),
+            discord_presence: true,
             dirty: true,
         }
     }

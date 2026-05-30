@@ -49,6 +49,7 @@ export interface Settings {
 	jvm_args: string;
 	env_vars: Record<string, string>;
 	theme: string;
+	discord_presence: boolean;
 }
 
 export type AccountType = "Cracked" | "Microsoft";

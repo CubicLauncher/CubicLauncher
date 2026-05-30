@@ -15,6 +15,7 @@
 			"language": "Idioma",
 			"autoUpdates": "Actualizaciones Automáticas",
 			"closeOnPlay": "Cerrar el launcher al abrir el juego",
+			"discordPresence": "Presencia de Discord",
 			"updatesTitle": "Actualizaciones",
 			"currentVersion": "Versión Actual",
 			"available": "Actualización Disponible",

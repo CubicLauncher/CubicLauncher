@@ -1,7 +1,12 @@
 import { launcherStore, showError } from "../state/state.svelte";
 import { listen } from "@tauri-apps/api/event";
 import type { AppEvent, InstanceDto } from "../types/types";
-import { killInstance, getSettings, updateSettings } from "./cubicApi";
+import {
+	killInstance,
+	getSettings,
+	updateSettings,
+	initDiscordPresence,
+} from "./cubicApi";
 import { applyTheme } from "./themeManager";
 
 import { invoke } from "@tauri-apps/api/core";
@@ -54,7 +59,11 @@ export async function syncSettings(): Promise<void> {
 }
 
 export async function saveSettings(): Promise<void> {
+	const prev = launcherStore.settings.discord_presence;
 	await updateSettings(launcherStore.settings);
+	if (launcherStore.settings.discord_presence && !prev) {
+		await initDiscordPresence();
+	}
 }
 
 export async function killInst(uuid: string): Promise<void> {

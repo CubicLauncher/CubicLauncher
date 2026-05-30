@@ -1,5 +1,6 @@
 use crate::core::path_manager::PathManager;
 use crate::core::{AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, emit};
+use crate::services::discord_presence;
 use crate::services::SettingsManager;
 use crate::services::instance_manager::{
     InstanceHandle, InstanceStatus, register_kill_sender, unregister_kill_sender,
@@ -479,10 +480,21 @@ impl Launcher {
 
         let lw_handle = self.lw.prepare(manifest, options, instance_dir);
         handle.update_last_played().await;
+        let instance_name = name.clone();
+        let instance_version = version.clone();
+
         match lw_handle.launch().await {
             Ok(_) => {
                 info!("Handle {} lanzado", lw_handle.id().to_string());
                 handle.set_status(InstanceStatus::Started);
+
+                let loader = handle.to_dto().await.loader;
+                discord_presence::on_instance_start(
+                    instance_name.clone(),
+                    instance_version.clone(),
+                    loader,
+                )
+                .await;
 
                 {
                     let guard = self.app_handle.lock().unwrap_or_else(|e| e.into_inner());
@@ -541,6 +553,7 @@ impl Launcher {
 
                 let uuid = handle.uuid.clone();
                 let h = handle.clone();
+                let inst_name = instance_name.clone();
                 tokio::spawn(async move {
                     tokio::select! {
                         _ = kill_rx => {
@@ -555,6 +568,7 @@ impl Launcher {
                             unregister_kill_sender(&uuid);
                         }
                     }
+                    discord_presence::on_instance_stop(&inst_name).await;
                     h.set_status(InstanceStatus::Off);
                 });
             }

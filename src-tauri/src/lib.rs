@@ -50,6 +50,7 @@ pub fn run() {
             commands::themes::import_theme,
             commands::themes::get_themes_dir_path,
             commands::modrinth::download_mods,
+            commands::discord::init_discord_presence,
         ])
         .plugin(tauri_plugin_process::init())
         .setup(|app| {

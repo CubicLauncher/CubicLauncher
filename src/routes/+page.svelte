@@ -13,6 +13,7 @@
 	import InstanceView from "$lib/components/instances/InstanceView.svelte";
 	import Drawer from "$lib/components/layout/Drawer.svelte";
 	import NotificationContainer from "$lib/components/ui/NotificationContainer.svelte";
+	import { initDiscordPresence } from "$lib/api/cubicApi";
 	import { t } from "$lib/i18n";
 	import { applyTheme } from "$lib/api/themeManager";
 	import { checkForUpdates } from "$lib/api/updaterServices";
@@ -47,6 +48,8 @@
 		}
 
 		applyTheme(launcherStore.settings.theme);
+
+		initDiscordPresence();
 
 		if (launcherStore.settings.auto_updates) {
 			setTimeout(() => checkForUpdates(true), 2000);

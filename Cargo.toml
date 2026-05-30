@@ -4,6 +4,7 @@ members = [
     "src-tauri",
     "crates/aqua",
     "crates/launchwerk",
+    "crates/Communicator",
 ]
 
 [profile.release]

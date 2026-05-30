@@ -238,6 +238,14 @@ export async function logout(): Promise<void> {
 	await invoke("logout");
 }
 
+export async function initDiscordPresence(): Promise<void> {
+	try {
+		await invoke("init_discord_presence");
+	} catch (err) {
+		console.error("Error al iniciar Discord Presence:", err);
+	}
+}
+
 export async function openUrl(url: string): Promise<void> {
 	await invoke("open_url", { url });
 }

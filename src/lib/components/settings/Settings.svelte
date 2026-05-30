@@ -263,6 +263,17 @@
 						>{t("settings.launcher.closeOnPlay")}</label
 					>
 				</div>
+				<div class="qm-field-checkbox">
+					<input
+						type="checkbox"
+						id="discord-presence"
+						bind:checked={launcherStore.settings.discord_presence}
+						onchange={handleSave}
+					/>
+					<label for="discord-presence"
+						>{t("settings.launcher.discordPresence")}</label
+					>
+				</div>
 			</section>
 		{/if}
 
