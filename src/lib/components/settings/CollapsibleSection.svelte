@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { slide } from "svelte/transition";
+	import type { Snippet } from "svelte";
 
 	let {
 		title,
@@ -12,7 +13,7 @@
 		iconSrc?: string;
 		storageKey?: string;
 		defaultOpen?: boolean;
-		children: import("svelte").Snippet;
+		children: Snippet;
 	} = $props();
 
 	function loadSaved(key: string | undefined, fallback: boolean): boolean {
