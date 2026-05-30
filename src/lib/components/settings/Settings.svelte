@@ -133,6 +133,314 @@
     const currentVersion = "2605d (26.5.3)";
 </script>
 
+<style>
+    .qm-root {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #0a0a0a;
+        color: #eee;
+        font-family: "Cantarell", sans-serif;
+    }
+
+    .qm-header {
+        padding: 20px 20px 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #0f0f0f;
+    }
+
+    .qm-tabs {
+        display: flex;
+        padding: 0 10px;
+        background: #0f0f0f;
+        border-bottom: 1px solid #222;
+        gap: 4px;
+    }
+
+    .qm-tab-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        color: #666;
+        padding: 8px 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .qm-tab-btn.active {
+        color: #fff;
+        border-bottom-color: #eee;
+    }
+
+    .qm-label {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .qm-close-btn {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: color 0.2s;
+    }
+
+    .qm-close-btn:hover {
+        color: #fff;
+    }
+
+    .qm-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 20px;
+    }
+
+    :global(.qm-scroll::-webkit-scrollbar) {
+        width: 4px;
+    }
+
+    :global(.qm-scroll::-webkit-scrollbar-track) {
+        background: transparent;
+    }
+
+    :global(.qm-scroll::-webkit-scrollbar-thumb) {
+        background: #222;
+        border-radius: 10px;
+    }
+
+    .qm-section {
+        margin-top: 25px;
+    }
+
+    .qm-section-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #555;
+        margin-bottom: 12px;
+        letter-spacing: 0.05em;
+    }
+
+    .qm-active-card {
+        background: var(--bg-card);
+        border-radius: var(--border-radius-sm);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        margin-bottom: 6px;
+    }
+
+    .qm-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .qm-status-dot.running {
+        background: #4caf50;
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+    }
+
+    .qm-active-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .qm-active-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .qm-active-sub {
+        font-size: 0.75rem;
+        color: #888;
+    }
+
+    .qm-kill-btn {
+        background: rgba(255, 68, 68, 0.1);
+        color: #ff4444;
+        border: 1px solid rgba(255, 68, 68, 0.2);
+        padding: 4px 10px;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .qm-kill-btn:hover {
+        background: #ff4444;
+        color: #fff;
+    }
+
+    .qm-empty-state {
+        color: #444;
+        font-size: 0.85rem;
+        padding: 10px 0;
+    }
+
+    .qm-field {
+        margin-bottom: 15px;
+    }
+
+    .qm-field label {
+        display: block;
+        font-size: 0.8rem;
+        color: #aaa;
+        margin-bottom: 6px;
+    }
+
+    .qm-field input {
+        width: 100%;
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 8px 10px;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.85rem;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .qm-field input:focus {
+        outline: none;
+        border-color: var(--text-muted);
+    }
+
+    .qm-field-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .qm-save-btn {
+        width: 100%;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        padding: 10px 12px;
+        border-radius: var(--border-radius-sm);
+        font-family: "Cantarell", system-ui, sans-serif;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .qm-save-btn:hover:not(:disabled) {
+        background: var(--bg-item-active);
+        border-color: var(--border-color);
+    }
+
+    .qm-save-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .qm-footer {
+        padding: 15px 20px;
+        background: #070707;
+        border-top: 1px solid #111;
+        display: flex;
+        justify-content: center;
+    }
+
+    .qm-version {
+        font-size: 0.7rem;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .save-footer {
+        padding: 12px 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .detect-btn {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 6px 12px;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.7rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s;
+    }
+
+    .detect-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--text-muted);
+    }
+
+    .qm-field-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        margin-top: 8px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .qm-field-checkbox input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        background: #111;
+        border: 1px solid #333;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s;
+    }
+
+    .qm-field-checkbox input[type="checkbox"]:checked {
+        background: #fff;
+        border-color: #fff;
+    }
+
+    .qm-field-checkbox input[type="checkbox"]:checked::after {
+        content: "✓";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #000;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .qm-field-checkbox label {
+        font-size: 0.85rem;
+        color: #aaa;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .qm-field-checkbox:hover label {
+        color: #fff;
+    }
+
+    .qm-field-checkbox input[type="checkbox"]:hover {
+        border-color: #555;
+    }
+</style>
+
 <div class="qm-root">
     <!-- Header -->
     <div class="qm-header">

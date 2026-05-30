@@ -22,11 +22,14 @@
       "updateOk": "Up to date",
       "notes": "Release Notes",
       "checking": "Checking...",
+      "checkingBtn": "Checking for updates",
       "searchBtn": "Check for Updates",
       "downloading": "Downloading...",
+      "downloadingBtn": "Downloading update",
       "downloadOnly": "Download Only",
       "downloadInstallBtn": "Download and Install",
       "installing": "Installing...",
+      "installingBtn": "Installing update",
       "installUpdateBtn": "Install Update"
     },
     "minecraft": {

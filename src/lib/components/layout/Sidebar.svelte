@@ -247,6 +247,234 @@
     </div>
 </aside>
 
+<style>
+    .sidebar {
+        width: var(--sidebar-width);
+        flex-shrink: 0;
+        background-color: var(--bg-sidebar);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 18px 16px;
+        z-index: 10;
+        user-select: none;
+    }
+
+    .sidebar-header {
+        padding-bottom: 14px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-header h1 {
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .section-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+        padding: 6px 0;
+    }
+
+    .instance-list {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .instance-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-primary);
+        width: 100%;
+        text-align: left;
+        font-family: "Cantarell", system-ui, sans-serif;
+    }
+
+    .instance-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .instance-item.active {
+        background: var(--bg-item-active);
+        border-color: var(--border);
+    }
+
+    .instance-icon {
+        width: 22px;
+        height: 22px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+    }
+
+    .instance-info-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .instance-name {
+        font-weight: 500;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .instance-actions {
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .instance-item:hover .instance-actions {
+        opacity: 1;
+    }
+
+    .sidebar-footer {
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .footer-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        padding: 8px 12px;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.78rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.15s ease, color 0.15s ease;
+        font-family: "Cantarell", system-ui, sans-serif;
+    }
+
+    .footer-btn:hover {
+        background: var(--bg-item-active);
+        color: var(--text-primary);
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0 0;
+        margin-top: 5px;
+        border-top: 1px solid var(--border);
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--border-radius-sm);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        gap: 2px;
+    }
+
+    .user-name {
+        font-size: 0.82rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .user-name-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .user-edit-icon {
+        opacity: 0;
+        filter: invert(1);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        transform: translateX(-4px);
+        pointer-events: none;
+    }
+
+    .user-profile:hover .user-edit-icon {
+        opacity: 0.5;
+        transform: translateX(0);
+    }
+
+    .user-status {
+        font-size: 0.68rem;
+        color: var(--text-secondary);
+        letter-spacing: 0.3px;
+        transition: color 0.2s ease;
+    }
+
+    .user-status.premium {
+        color: var(--accent);
+        font-weight: 600;
+    }
+
+    @media (max-width: 650px) {
+        .sidebar {
+            width: 70px;
+            padding: 15px 10px;
+        }
+
+        .sidebar-header h1,
+        .instance-name,
+        .footer-btn,
+        .user-info {
+            display: none;
+        }
+
+        .instance-item {
+            justify-content: center;
+            padding: 12px 0;
+        }
+    }
+</style>
+
 <UserMenu bind:open={showUserMenu} />
 
 <ModalBase bind:open={showRenameModal} title={t("sidebar.modals.editTitle")}>

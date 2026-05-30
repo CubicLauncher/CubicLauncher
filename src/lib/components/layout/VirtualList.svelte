@@ -62,6 +62,22 @@
     });
 </script>
 
+<style>
+    .virtual-list-container {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+    }
+
+    .virtual-list-container:global(::-webkit-scrollbar) {
+        width: 6px;
+    }
+
+    .virtual-list-container:global(::-webkit-scrollbar-thumb) {
+        background: var(--border);
+        border-radius: 10px;
+    }
+</style>
+
 <div
     bind:this={container}
     class="virtual-list-container {className}"

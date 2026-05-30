@@ -48,6 +48,150 @@
     }
 </script>
 
+<style>
+    .resources-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .add-btn {
+        padding: 0.5rem 1rem;
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        font-weight: 500;
+        transition: opacity 0.2s;
+    }
+
+    .add-btn:hover { opacity: 0.9; }
+
+    .packs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .pack-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-sm);
+        padding: 14px;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .pack-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .pack-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .pack-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        image-rendering: pixelated;
+    }
+
+    .pack-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .pack-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pack-description {
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.4;
+        margin-top: 4px;
+    }
+
+    .delete-btn {
+        background: transparent;
+        border: none;
+        color: #ff4444;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .delete-btn:hover {
+        background: rgba(255, 68, 68, 0.1);
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: var(--border-radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 700px) {
+        .packs-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    }
+
+    @media (max-width: 550px) {
+        .packs-grid { grid-template-columns: 1fr; gap: 8px; }
+    }
+
+    @media (max-width: 400px) {
+        .packs-grid { grid-template-columns: 1fr; gap: 6px; }
+    }
+</style>
+
 <div class="resources-section">
     <div class="section-header">
         <span class="section-title">{t('instanceView.resources.title')} ({packs.length})</span>

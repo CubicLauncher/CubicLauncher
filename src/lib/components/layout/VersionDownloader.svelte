@@ -196,6 +196,107 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        .qm-root {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+            color: #eee;
+            font-family: "Cantarell", sans-serif;
+        }
+
+        .qm-header {
+            padding: 20px 20px 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f0f0f;
+        }
+
+        .qm-tabs {
+            display: flex;
+            padding: 0 10px;
+            background: #0f0f0f;
+            border-bottom: 1px solid #222;
+            gap: 4px;
+        }
+
+        .qm-tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #666;
+            padding: 8px 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .qm-tab-btn.active {
+            color: #fff;
+            border-bottom-color: #eee;
+        }
+
+        .qm-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .qm-close-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+
+        .qm-close-btn:hover {
+            color: #fff;
+        }
+
+        .qm-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px;
+        }
+
+        :global(.qm-scroll::-webkit-scrollbar) {
+            width: 4px;
+        }
+
+        :global(.qm-scroll::-webkit-scrollbar-track) {
+            background: transparent;
+        }
+
+        :global(.qm-scroll::-webkit-scrollbar-thumb) {
+            background: #222;
+            border-radius: 10px;
+        }
+
+        .qm-empty-state {
+            color: #444;
+            font-size: 0.85rem;
+            padding: 10px 0;
+        }
+
+        .qm-footer {
+            padding: 15px 20px;
+            background: #070707;
+            border-top: 1px solid #111;
+            display: flex;
+            justify-content: center;
+        }
+
+        .qm-version {
+            font-size: 0.7rem;
+            color: #333;
+            font-weight: 500;
+        }
     </style>
 
     <div class="qm-tabs">
