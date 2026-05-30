@@ -12,12 +12,12 @@ mod tests {
         );
 
         let json = serde_json::to_string(&user).unwrap();
-        
+
         // El JSON no debería contener los tokens
         assert!(!json.contains("secret_token"));
         assert!(!json.contains("refresh_token"));
         assert!(!json.contains("access_token"));
-        
+
         // Al deserializar, los tokens deberían estar vacíos (o por defecto)
         let deserialized: MinecraftUser = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.access_token, "");

@@ -10,17 +10,19 @@ pub struct ModDownloadInfo {
 }
 
 #[tauri::command]
-pub async fn download_mods(
-    instance_id: String,
-    mods: Vec<ModDownloadInfo>,
-) -> Result<(), String> {
+pub async fn download_mods(instance_id: String, mods: Vec<ModDownloadInfo>) -> Result<(), String> {
     let manager = InstanceManager::get();
-    let handle = manager.get_handle(&instance_id).await.ok_or("Instancia no encontrada")?;
+    let handle = manager
+        .get_handle(&instance_id)
+        .await
+        .ok_or("Instancia no encontrada")?;
     let instance_dir = handle.get_instance_dir().await;
     let mods_dir = instance_dir.join("mods");
 
     if !mods_dir.exists() {
-        tokio::fs::create_dir_all(&mods_dir).await.map_err(|e| e.to_string())?;
+        tokio::fs::create_dir_all(&mods_dir)
+            .await
+            .map_err(|e| e.to_string())?;
     }
 
     for mod_info in mods {
@@ -28,7 +30,10 @@ pub async fn download_mods(
         let filename = &mod_info.filename;
         let dest_path = mods_dir.join(filename);
 
-        info!("Descargando {} desde {} a {:?}", filename, file_url, dest_path);
+        info!(
+            "Descargando {} desde {} a {:?}",
+            filename, file_url, dest_path
+        );
 
         let mut response = match HTTP.get(file_url).send().await {
             Ok(res) => res,
@@ -39,7 +44,11 @@ pub async fn download_mods(
         };
 
         if !response.status().is_success() {
-            error!("Error HTTP al descargar mod {}: {}", filename, response.status());
+            error!(
+                "Error HTTP al descargar mod {}: {}",
+                filename,
+                response.status()
+            );
             continue;
         }
 
@@ -61,7 +70,7 @@ pub async fn download_mods(
                         failed = true;
                         break;
                     }
-                },
+                }
                 Ok(None) => break,
                 Err(e) => {
                     error!("Error de red descargando {}: {}", filename, e);

@@ -137,6 +137,9 @@ mod tests {
     #[test]
     fn test_download_error_into_string() {
         let s: String = DownloadError::NoFabricLoader.into();
-        assert_eq!(s, "No se encontró ningún loader de Fabric para esta versión");
+        assert_eq!(
+            s,
+            "No se encontró ningún loader de Fabric para esta versión"
+        );
     }
 }

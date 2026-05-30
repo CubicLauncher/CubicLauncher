@@ -80,7 +80,10 @@ pub enum ArgumentValue {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum Argument {
-    WithRule { rules: Vec<Rule>, value: ArgumentValue },
+    WithRule {
+        rules: Vec<Rule>,
+        value: ArgumentValue,
+    },
     Plain(String),
 }
 

@@ -8,7 +8,7 @@ pub use manifest::{
     LibraryDownloads, Natives, OsRule, Rule, RuleAction, VersionArgType, VersionDownloads,
     VersionManifest,
 };
-pub use version::{parse_version, MCVersion};
+pub use version::{MCVersion, parse_version};
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

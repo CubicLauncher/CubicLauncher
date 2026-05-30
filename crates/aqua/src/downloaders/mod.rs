@@ -1,13 +1,14 @@
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use futures::stream::{FuturesUnordered, StreamExt};
 use log::info;
-use tokio::sync::{Mutex, Semaphore};
 use tokio::sync::mpsc::Sender;
+use tokio::sync::{Mutex, Semaphore};
 use tokio::task::JoinHandle;
 
+use crate::ProtonError;
 use crate::manifest::{resolve_asset_index, resolve_version_data};
 use crate::natives::natives_subdir;
 use crate::types::MCVersion;
@@ -18,7 +19,6 @@ use crate::types::{
 use crate::utilities::download_file;
 #[cfg(feature = "extract-natives")]
 use crate::utilities::extract_native;
-use crate::ProtonError;
 
 const DEFAULT_MAX_HANDLES: usize = 2;
 const DEFAULT_DOWNLOADS_PER_HANDLE: usize = 128;
@@ -120,7 +120,9 @@ impl DownloadHandle {
     ) -> Result<(), ProtonError> {
         let mut slot = self.inner.join_handle.lock().await;
         if slot.is_some() {
-            return Err(ProtonError::Other("Download already in progress or completed".into()));
+            return Err(ProtonError::Other(
+                "Download already in progress or completed".into(),
+            ));
         }
 
         let inner = Arc::clone(&self.inner);
@@ -168,7 +170,11 @@ async fn run_download(
     inner: Arc<DownloadInner>,
     progress_tx: Option<Sender<DownloadProgress>>,
 ) -> Result<(), ProtonError> {
-    let dirs = compute_dirs(&inner.game_path, &inner.version.id, &inner.version.parsed_version);
+    let dirs = compute_dirs(
+        &inner.game_path,
+        &inner.version.id,
+        &inner.version.parsed_version,
+    );
 
     tokio::fs::create_dir_all(&dirs.natives_dir).await?;
     tokio::fs::create_dir_all(&dirs.objects_dir).await?;
@@ -181,10 +187,7 @@ async fn run_download(
 
     let grand_total = {
         let asset_index = resolve_asset_index(&inner.version).await?;
-        inner.version.libraries.len()
-            + inner.version.natives.len()
-            + 1
-            + asset_index.len()
+        inner.version.libraries.len() + inner.version.natives.len() + 1 + asset_index.len()
     };
     inner.total_items.store(grand_total, Ordering::Relaxed);
 
@@ -225,10 +228,7 @@ async fn run_download(
 
 // ─── Manifest JSON ────────────────────────────────────────────────────────────
 
-async fn download_manifest_json(
-    inner: &DownloadInner,
-    dirs: &DirPaths,
-) -> Result<(), ProtonError> {
+async fn download_manifest_json(inner: &DownloadInner, dirs: &DirPaths) -> Result<(), ProtonError> {
     use crate::utilities::HTTP_CLIENT;
 
     let path = dirs.versions_dir.join(format!("{}.json", inner.version.id));
@@ -318,7 +318,15 @@ async fn download_libraries(
             }
             download_file(&url, &lib_path, &sha1).await?;
             let count = c.fetch_add(1, Ordering::Relaxed) + 1;
-            report_progress(&tx, count, ti.load(Ordering::Relaxed), DownloadProgressType::Library, &vid, name).await;
+            report_progress(
+                &tx,
+                count,
+                ti.load(Ordering::Relaxed),
+                DownloadProgressType::Library,
+                &vid,
+                name,
+            )
+            .await;
             Ok::<_, ProtonError>(())
         }));
     }
@@ -384,7 +392,15 @@ async fn download_natives(
             let _p = s.acquire_owned().await;
             download_file(&url, &temp_path, &sha1).await?;
             let count = c.fetch_add(1, Ordering::Relaxed) + 1;
-            report_progress(&tx, count, ti.load(Ordering::Relaxed), DownloadProgressType::Native, &vid, name).await;
+            report_progress(
+                &tx,
+                count,
+                ti.load(Ordering::Relaxed),
+                DownloadProgressType::Native,
+                &vid,
+                name,
+            )
+            .await;
             Ok::<_, ProtonError>(())
         }));
     }
@@ -459,7 +475,15 @@ async fn download_assets(
             }
             download_file(&url, &path, &hash_for_verify).await?;
             let count = c.fetch_add(1, Ordering::Relaxed) + 1;
-            report_progress(&tx, count, ti.load(Ordering::Relaxed), DownloadProgressType::Asset, &vid, name).await;
+            report_progress(
+                &tx,
+                count,
+                ti.load(Ordering::Relaxed),
+                DownloadProgressType::Asset,
+                &vid,
+                name,
+            )
+            .await;
             Ok::<_, ProtonError>(())
         }));
     }
