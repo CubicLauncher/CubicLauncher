@@ -3,6 +3,7 @@
 	import { invoke } from "@tauri-apps/api/core";
 	import { launcherStore } from "$lib/state/state.svelte";
 	import { killInst, saveSettings } from "$lib/api/launcherService";
+	import { openUrl } from "$lib/api/cubicApi";
 	import { t } from "$lib/i18n";
 	import Select from "$lib/components/layout/Select.svelte";
 	import {
@@ -216,13 +217,13 @@
 				</CollapsibleSection>
 
 				<CollapsibleSection
-					title="Temas"
+					title={t("settings.launcher.themes")}
 					iconSrc="/images/icons/pencil.svg"
 					storageKey="section_themes"
 				>
 					<Select
 						id="theme"
-						label="Tema activo"
+						label={t("settings.launcher.themesActive")}
 						options={themeOptions}
 						bind:value={launcherStore.settings.theme}
 						onchange={async () => {
@@ -235,6 +236,19 @@
 							}
 						}}
 					/>
+					<span
+						class="qm-themes-hint"
+						onclick={() =>
+							openUrl("https://github.com/CubicLauncher/Themes")}
+						role="link"
+						tabindex="0"
+						onkeydown={(e) => {
+							if (e.key === "Enter")
+								openUrl(
+									"https://github.com/CubicLauncher/Themes",
+								);
+						}}>{t("settings.launcher.themesSpan")}</span
+					>
 				</CollapsibleSection>
 
 				<CollapsibleSection
@@ -802,5 +816,19 @@
 
 	.qm-field-checkbox input[type="checkbox"]:hover {
 		border-color: #555;
+	}
+
+	.qm-themes-hint {
+		display: block;
+		margin-top: 8px;
+		font-size: 0.75rem;
+		color: #888;
+		line-height: 1.4;
+		cursor: pointer;
+		transition: color 0.2s;
+	}
+
+	.qm-themes-hint:hover {
+		color: #fff;
 	}
 </style>
