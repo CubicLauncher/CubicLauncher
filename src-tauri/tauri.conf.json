@@ -4,9 +4,9 @@
   "version": "26.5.3",
   "identifier": "com.cubiclauncher.launcher",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "deno run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "deno run build",
     "frontendDist": "../build"
   },
   "app": {

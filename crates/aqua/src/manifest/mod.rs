@@ -1,9 +1,9 @@
+use crate::ProtonError;
 use crate::types::{
-    AssetMeta, Downloadable, LibraryFile, NormalizedArguments, NormalizedVersion, VersionAssets,
-    VersionManifest, MOJANG_MANIFEST_URL,
+    AssetMeta, Downloadable, LibraryFile, MOJANG_MANIFEST_URL, NormalizedArguments,
+    NormalizedVersion, VersionAssets, VersionManifest,
 };
 use crate::utilities::HTTP_CLIENT;
-use crate::ProtonError;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -107,6 +107,9 @@ fn resolve_normalized(version: VersionManifest) -> Result<NormalizedVersion, Pro
 
             // Check for legacy native (natives field + classifiers)
             if let Some(native_artifact) = lib.native_artifact() {
+                if !lib.is_correct_arch() {
+                    continue;
+                }
                 let path = native_artifact.path.clone();
                 let url = native_artifact.url.clone().unwrap_or_default();
                 let sha1 = native_artifact.sha1.clone().unwrap_or_default();
@@ -123,6 +126,9 @@ fn resolve_normalized(version: VersionManifest) -> Result<NormalizedVersion, Pro
 
             // Check for modern native (Maven coordinate has :natives-)
             if lib.is_native() {
+                if !lib.is_correct_arch() {
+                    continue;
+                }
                 if let Some(artifact) = lib.downloads.as_ref().and_then(|d| d.artifact.as_ref()) {
                     let path = artifact.path.clone();
                     let url = artifact.url.clone().unwrap_or_default();
@@ -207,7 +213,9 @@ fn resolve_normalized(version: VersionManifest) -> Result<NormalizedVersion, Pro
     })
 }
 
-pub async fn resolve_asset_index(version: &NormalizedVersion) -> Result<VersionAssets, ProtonError> {
+pub async fn resolve_asset_index(
+    version: &NormalizedVersion,
+) -> Result<VersionAssets, ProtonError> {
     let res = HTTP_CLIENT
         .get(&version.asset_index.url)
         .send()
@@ -227,7 +235,14 @@ mod tests {
     }
 
     async fn fetch_and_parse_version(url: &str) -> VersionManifest {
-        let bytes = HTTP_CLIENT.get(url).send().await.unwrap().bytes().await.unwrap();
+        let bytes = HTTP_CLIENT
+            .get(url)
+            .send()
+            .await
+            .unwrap()
+            .bytes()
+            .await
+            .unwrap();
         VersionManifest::from_bytes(&bytes).unwrap()
     }
 
@@ -237,7 +252,10 @@ mod tests {
 
         let mut by_type: HashMap<String, Vec<&ManifestEntry>> = HashMap::new();
         for entry in &manifest.versions {
-            by_type.entry(entry.version_type.clone()).or_default().push(entry);
+            by_type
+                .entry(entry.version_type.clone())
+                .or_default()
+                .push(entry);
         }
 
         let interesting_types = ["release", "snapshot", "old_alpha", "old_beta"];
@@ -253,7 +271,11 @@ mod tests {
 
             let version = fetch_and_parse_version(&entry.url).await;
 
-            assert!(!version.id_raw.is_empty(), "id_raw empty for type {}", entry.version_type);
+            assert!(
+                !version.id_raw.is_empty(),
+                "id_raw empty for type {}",
+                entry.version_type
+            );
             assert!(
                 version.main_class.is_some(),
                 "main_class missing for {} ({})",
@@ -267,7 +289,11 @@ mod tests {
                 entry.version_type
             );
             if let Some(dl) = &version.downloads {
-                assert!(!dl.client.url.is_empty(), "client url empty for {}", entry.id);
+                assert!(
+                    !dl.client.url.is_empty(),
+                    "client url empty for {}",
+                    entry.id
+                );
             }
             assert!(
                 version.asset_index.is_some(),
@@ -279,7 +305,12 @@ mod tests {
             tested.insert(entry.version_type.as_str());
         }
 
-        assert_eq!(tested.len(), 4, "Not all release types were tested: {:?}", tested);
+        assert_eq!(
+            tested.len(),
+            4,
+            "Not all release types were tested: {:?}",
+            tested
+        );
     }
 
     #[tokio::test]
@@ -302,11 +333,20 @@ mod tests {
 
             assert!(!normalized.id.is_empty(), "normalized id empty");
             assert!(!normalized.main_class.is_empty(), "main_class empty");
-            assert!(normalized.java_version >= 6, "java_version too low: {}", normalized.java_version);
+            assert!(
+                normalized.java_version >= 6,
+                "java_version too low: {}",
+                normalized.java_version
+            );
 
             tested.insert(entry.version_type.as_str());
         }
 
-        assert_eq!(tested.len(), 4, "Not all release types were tested: {:?}", tested);
+        assert_eq!(
+            tested.len(),
+            4,
+            "Not all release types were tested: {:?}",
+            tested
+        );
     }
 }
