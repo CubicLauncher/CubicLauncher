@@ -4,6 +4,9 @@ import sveltePlugin from "eslint-plugin-svelte";
 import globals from "globals";
 
 export default [
+	{
+		ignores: ["target/**", "crates/**", "src-tauri/**", "**/node_modules/**", "build/**"],
+	},
 	js.configs.recommended,
 	...tseslint.configs.recommended,
 	...sveltePlugin.configs["flat/recommended"],
