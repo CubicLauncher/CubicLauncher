@@ -259,6 +259,22 @@
             color: #fff;
         }
 
+        .download-btn {
+            background: #eee;
+            color: #0a0a0a;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: #fff;
+        }
+
         .qm-scroll {
             flex: 1;
             overflow-y: auto;
@@ -372,7 +388,7 @@
         </div>
     </div>
 
-    <div class="qm-scroll" style="overflow: hidden; padding: 0;">
+    <div class="qm-scroll" style="padding: 0;">
         {#if loading || isCurrentManifestLoading}
             <div class="qm-empty-state">{t('versionDownloader.loading')}</div>
         {:else if filteredVersions.length === 0}
@@ -441,7 +457,6 @@
                                 <button
                                     class="download-btn"
                                     onclick={() => handleDownload(filter === 'fabric' ? version.version : version.id)}
-                                    style="background: var(--accent); color: var(--accent-text); border: none; padding: 6px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
                                 >
                                     {t('versionDownloader.downloadBtn')}
                                 </button>
