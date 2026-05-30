@@ -543,6 +543,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "communicator"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "winapi",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -745,11 +759,14 @@ version = "26.5.3"
 dependencies = [
  "aqua",
  "base64 0.22.1",
+ "communicator",
+ "dashmap",
  "directories",
  "futures",
  "infer",
  "launchwerk",
  "notify",
+ "parking_lot",
  "reqwest",
  "serde",
  "serde_json",

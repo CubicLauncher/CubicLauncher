@@ -5,9 +5,9 @@ use crate::types::{MCVersion, VersionManifest};
 use crate::utilities::extract_native_jar_sync;
 
 #[cfg(feature = "extract-natives")]
-use log::warn;
-#[cfg(feature = "extract-natives")]
 use crate::ProtonError;
+#[cfg(feature = "extract-natives")]
+use log::warn;
 
 pub fn natives_subdir(version: &MCVersion) -> &'static str {
     if version.major > 26 || (version.major == 26 && version.minor >= 2) {
@@ -54,8 +54,6 @@ pub fn extract_natives(
     }
     Ok(())
 }
-
-
 
 #[allow(dead_code)]
 pub fn list_native_jars(manifest: &VersionManifest, lib_dir: &Path) -> Vec<PathBuf> {

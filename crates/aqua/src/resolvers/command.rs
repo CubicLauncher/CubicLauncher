@@ -3,10 +3,10 @@ use std::path::{Path, PathBuf};
 
 use log::info;
 
-use crate::resolvers::ClasspathResolver;
-use crate::natives::natives_subdir;
-use crate::types::{Argument, QuickPlay, VersionManifest};
 use crate::ProtonError;
+use crate::natives::natives_subdir;
+use crate::resolvers::ClasspathResolver;
+use crate::types::{Argument, QuickPlay, VersionManifest};
 use uuid::Uuid;
 
 pub struct CommandBuilder<'a> {
@@ -175,7 +175,13 @@ impl<'a> CommandBuilder<'a> {
             .clone()
             .unwrap_or_else(|| Uuid::new_v4().to_string());
 
-        let vars = self.build_vars(&assets_dir, &natives_dir, &uuid, &classpath, &final_manifest);
+        let vars = self.build_vars(
+            &assets_dir,
+            &natives_dir,
+            &uuid,
+            &classpath,
+            &final_manifest,
+        );
 
         let mut cmd: Vec<String> = Vec::new();
         cmd.push(self.config.java_path.to_string_lossy().to_string());

@@ -2,10 +2,11 @@
   <img src="static/images/cubic.svg" width="120" alt="CubicLauncher" />
   <h1>CubicLauncher</h1>
 
-  ![License](https://img.shields.io/badge/Licence-GPL--3.0-blue)
-  [![dependency status](https://deps.rs/repo/github/cubiclauncher/cubiclauncher/status.svg?path=src-tauri)](https://deps.rs/repo/github/cubiclauncher/cubiclauncher?path=src-tauri)
-  ![Discord](https://img.shields.io/discord/1366945511273398342)
-  ![Website](https://img.shields.io/website/https/www.cubiclauncher.com)
+![License](https://img.shields.io/badge/Licence-GPL--3.0-blue)
+[![dependency status](https://deps.rs/repo/github/cubiclauncher/cubiclauncher/status.svg?path=src-tauri)](https://deps.rs/repo/github/cubiclauncher/cubiclauncher?path=src-tauri)
+![Discord](https://img.shields.io/discord/1366945511273398342)
+![Website](https://img.shields.io/website/https/www.cubiclauncher.com)
+
 </div>
 
 ---
@@ -18,16 +19,16 @@ El proyecto está estructurado como un **monorepo** no convencional —el fronte
 
 ## Stack tecnológico
 
-| Capa       | Tecnología                                          |
-|------------|-----------------------------------------------------|
-| Shell nativo | [Tauri v2](https://tauri.app) + Rust              |
-| Frontend   | [Svelte 5](https://svelte.dev/) + [SvelteKit](https://kit.svelte.dev/) + TypeScript |
-| Bundler    | [Vite 6](https://vite.dev/)                         |
-| Backend    | Rust (edition 2024)                                 |
-| Runtime JS | [Bun](https://bun.sh/)                              |
-| Auth       | OAuth 2.0 — flujo de código de dispositivo (Microsoft) |
-| Addons     | Modrinth API (consumo desde Rust)                   |
-| UI         | Componentes nativos Svelte 5 (sin framework CSS)    |
+| Capa         | Tecnología                                                                          |
+| ------------ | ----------------------------------------------------------------------------------- |
+| Shell nativo | [Tauri v2](https://tauri.app) + Rust                                                |
+| Frontend     | [Svelte 5](https://svelte.dev/) + [SvelteKit](https://kit.svelte.dev/) + TypeScript |
+| Bundler      | [Vite 6](https://vite.dev/)                                                         |
+| Backend      | Rust (edition 2024)                                                                 |
+| Runtime JS   | [Bun](https://bun.sh/)                                                              |
+| Auth         | OAuth 2.0 — flujo de código de dispositivo (Microsoft)                              |
+| Addons       | Modrinth API (consumo desde Rust)                                                   |
+| UI           | Componentes nativos Svelte 5 (sin framework CSS)                                    |
 
 ## Arquitectura
 
@@ -135,18 +136,19 @@ bun run tauri dev
 
 ### Scripts disponibles
 
-| Comando                    | Descripción                                   |
-|----------------------------|-----------------------------------------------|
-| `bun run dev`              | Servidor de desarrollo Vite (solo frontend)   |
-| `bun run build`            | Build de producción del frontend              |
-| `bun run preview`          | Preview del build de frontend                 |
-| `bun run check`            | Type-check con `svelte-check`                 |
-| `bun run tauri dev`        | Entorno de desarrollo Tauri (frontend + Rust) |
-| `bun run tauri build`      | Build completo de la aplicación Tauri         |
+| Comando               | Descripción                                   |
+| --------------------- | --------------------------------------------- |
+| `bun run dev`         | Servidor de desarrollo Vite (solo frontend)   |
+| `bun run build`       | Build de producción del frontend              |
+| `bun run preview`     | Preview del build de frontend                 |
+| `bun run check`       | Type-check con `svelte-check`                 |
+| `bun run tauri dev`   | Entorno de desarrollo Tauri (frontend + Rust) |
+| `bun run tauri build` | Build completo de la aplicación Tauri         |
 
 ### Dependencias clave
 
 **Rust (Cargo)**:
+
 - `tauri` v2 — shell nativo multiplataforma
 - `launchwerk` — lanzamiento y autenticación de Minecraft [REPO](https://github.com/CubicLauncher/Launchwerk)
 - `aqua` — utilidades compartidas internas [REPO](https://github.com/CubicLauncher/Aqua)
@@ -155,6 +157,7 @@ bun run tauri dev
 - `notify` — file system watcher (tema del SO)
 
 **JavaScript**:
+
 - `@sveltejs/kit` + `svelte` v5 — framework reactivo
 - `vite` v6 — bundler y HMR
 - `@tauri-apps/api` v2 — bridge IPC
@@ -184,9 +187,9 @@ makepkg -si
 
 ## Comunidad
 
-| Plataforma  | URL                                                |
-|-------------|----------------------------------------------------|
-| Discord     | [https://discord.gg/7VaqSrPukm](https://discord.gg/7VaqSrPukm) |
+| Plataforma | URL                                                            |
+| ---------- | -------------------------------------------------------------- |
+| Discord    | [https://discord.gg/7VaqSrPukm](https://discord.gg/7VaqSrPukm) |
 
 ## Licencia
 

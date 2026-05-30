@@ -1,254 +1,263 @@
 {
-  "id": "en-US",
-  "settings": {
-    "title": "Settings",
-    "tabs": {
-      "launcher": "Launcher",
-      "minecraft": "Minecraft",
-      "java": "Java"
-    },
-    "launcher": {
-      "activeInstancesTitle": "Active Instances",
-      "killInstance": "Kill",
-      "noInstances": "No instances running",
-      "generalTitle": "General",
-      "language": "Language",
-      "autoUpdates": "Automatic Updates",
-      "closeOnPlay": "Close launcher when starting game",
-      "updatesTitle": "Launcher Updates",
-      "currentVersion": "Current Version",
-      "available": "Update Available",
-      "status": "Status",
-      "updateOk": "Up to date",
-      "notes": "Release Notes",
-      "checking": "Checking...",
-      "searchBtn": "Check for Updates",
-      "downloading": "Downloading...",
-      "downloadOnly": "Download Only",
-      "downloadInstallBtn": "Download and Install",
-      "installing": "Installing...",
-      "installUpdateBtn": "Install Update"
-    },
-    "minecraft": {
-      "perfTitle": "Performance (RAM)",
-      "minRam": "Minimum (GB)",
-      "maxRam": "Maximum (GB)",
-      "optionsTitle": "Minecraft Options",
-      "showSnapshots": "Show Snapshot versions",
-      "showAlpha": "Show Alpha versions"
-    },
-    "java": {
-      "configTitle": "Java Configuration",
-      "runtimesTitle": "Java Runtimes",
-      "detectPathsBtn": "Detect Paths",
-      "java8Path": "Java 8 Path",
-      "java17Path": "Java 17 Path",
-      "java21Path": "Java 21 Path",
-      "java25Path": "Java 25 Path",
-      "jvmArgs": "JVM Arguments",
-      "envVars": "Environment Variables",
-      "envVarsAdd": "Add",
-      "saveBtn": "Save Settings",
-      "saving": "Saving..."
-    }
-  },
-  "main": {
-    "noInstanceTitle": "No instance selected",
-    "noInstanceDesc": "Choose an instance from the sidebar to begin"
-  },
-  "sidebar": {
-    "yourInstances": "Your Instances",
-    "rename": "Rename",
-    "delete": "Delete",
-    "noInstances": "No instances",
-    "createInstance": "Create Instance",
-    "downloadVersions": "Download Versions",
-    "settings": "Settings",
-    "modals": {
-      "editTitle": "Edit Instance",
-      "nameLabel": "Name",
-      "versionLabel": "Version",
-      "iconLabel": "Instance Logo",
-      "cancel": "Cancel",
-      "save": "Save",
-      "deleteTitle": "Delete Instance",
-      "deleteDesc1": "Are you sure you want to delete the instance",
-      "deleteDesc2": "? This action cannot be undone.",
-      "deleteBtn": "Delete"
-    }
-  },
-  "userMenu": {
-    "title": "User Profile",
-    "usernameLabel": "Username",
-    "usernamePlaceholder": "Username",
-    "offline": "Offline",
-    "cancel": "Cancel",
-    "save": "Save",
-    "changeNameBtn": "Change Name",
-    "loginMicrosoft": "Login with Microsoft",
-    "logout": "Logout",
-    "premium": "Premium Account",
-    "authModal": {
-      "title": "Microsoft Login",
-      "instruction": "To login with your Microsoft account, copy the following link and enter the code shown below:",
-      "copyLink": "Copy link",
-      "linkCopied": "Link copied!",
-      "loading": "Connecting to Microsoft...",
-      "waiting": "Waiting for authentication...",
-      "success": "Logged in successfully!",
-      "error": "Failed to login: {error}"
-    }
-  },
-  "instanceView": {
-    "neverPlayed": "Never played",
-    "lastPlayed": "Last played: {date}",
-    "playBtn": "Play",
-    "close": "Kill",
-    "pickBannerTitle": "Select Banner",
-    "noScreenshots": "No screenshots available",
-    "changeBanner": "Change",
-    "changeBannerTitle": "Change Banner",
-    "status": {
-      "starting": "Starting",
-      "started": "The version has been started",
-      "idle": "Puto el que lo lea"
-    },
-    "tabs": {
-      "details": "Details",
-      "mods": "Mods",
-      "resources": "Resources",
-      "screenshots": "Screenshots",
-      "logs": "Logs",
-      "options": "Options",
-      "downloadMods": "Get Mods"
-    },
-    "details": {
-      "title": "Details",
-      "version": "Version",
-      "loader": "Loader",
-      "location": "Location"
-    },
-    "options": {
-      "title": "Quick Options",
-      "folder": "Open Folder",
-      "resources": "Resources",
-      "screenshots": "Screenshots",
-      "logs": "Logs"
-    },
-    "mods": {
-      "title": "Installed Mods",
-      "jarFile": ".JAR File",
-      "empty": "No mods installed in this instance",
-      "authors": "Authors",
-      "noDescription": "No description available"
-    },
-    "resources": {
-      "title": "Resource Packs",
-      "addBtn": "Add Pack",
-      "empty": "No resource packs installed"
-    },
-    "logs": {
-      "title": "Instance Logs",
-      "empty": "No log files found",
-      "selectLog": "Select a log file to view its content"
-    },
-    "screenshots": {
-      "title": "Screenshots",
-      "empty": "No screenshots found"
-    },
-    "downloadMods": {
-      "sectionLabel": "Mod Manager",
-      "reviewTitle": "Review & Download",
-      "back": "← Back",
-      "resolvingDeps": "Resolving dependencies...",
-      "allInstalled": "✓ All dependencies are already installed.",
-      "allInstalledSub": "There are no new files to download.",
-      "filesToDownload_one": "{count} file to download:",
-      "filesToDownload_other": "{count} files to download:",
-      "confirmDownload": "Confirm Download",
-      "downloading": "Downloading...",
-      "file_one": "file",
-      "file_other": "files",
-      "categoriesLabel": "Categories",
-      "allCategories": "All",
-      "sortLabel": "Sort By",
-      "sortDownloads": "Most Downloaded",
-      "sortRelevance": "Relevance",
-      "sortNewest": "Newest",
-      "sortUpdated": "Recently Updated",
-      "selectionLabel": "Selection",
-      "selectionDesc": "Mods ready to install",
-      "reviewBtn": "Review & Download",
-      "searchPlaceholder": "Search for mods on Modrinth...",
-      "resultsFound": "{count} mods found",
-      "searching": "Searching mods...",
-      "loadingMore": "Loading more mods...",
-      "endOfResults": "— End of results ({count} mods) —",
-      "noResults": "No mods found",
-      "clearFilters": "Clear Filters",
-      "select": "Select",
-      "selected": "✓ Selected",
-      "closeDetails": "Close details",
-      "downloads": "Downloads",
-      "removeSelection": "Remove from Selection",
-      "selectToDownload": "Select for Download",
-      "by": "by",
-      "noVersionCompat": "No {version}",
-      "versionLabel": "Version",
-      "anyVersion": "Latest",
-      "compatible": "✓ Compatible",
-      "noCompatibleVersions": "No versions for {version}",
-      "noCompatibleDesc": "This mod has no versions compatible with your game version and loader.",
-      "loadingVersions": "Loading versions...",
-      "installed": "Installed"
-    }
-  },
-  "createInstance": {
-    "title": "Create New Instance",
-    "emptyNameErr": "Name cannot be empty",
-    "createErr": "Error creating instance",
-    "nameLabel": "Instance Name",
-    "namePlaceholder": "E.g. My Instance",
-    "versionLabel": "Version",
-    "iconLabel": "Instance Logo",
-    "noVersionsErr": "No downloaded versions found",
-    "cancel": "Cancel",
-    "createBtn": "Create",
-    "creatingBtn": "Creating..."
-  },
-  "versionDownloader": {
-    "title": "Download Versions",
-    "searchPlaceholder": "Search version...",
-    "loading": "Loading versions...",
-    "notFound": "No versions found",
-    "installedTag": "Installed",
-    "downloadBtn": "Download",
-    "refreshBtn": "Refresh cache",
-    "filters": {
-      "all": "All",
-      "installedOnly": "Installed Only",
-      "notInstalledOnly": "Not Installed",
-      "stableOnly": "Stable Only",
-      "unstableOnly": "Unstable Only",
-      "installStatus": "Status",
-      "majorVersion": "Major Version",
-      "fabricStability": "Stability"
-    },
-    "tabs": {
-      "releases": "Releases",
-      "snapshots": "Snapshots",
-      "alphas": "Alphas",
-      "fabric": "Fabric"
-    }
-  },
-  "themes": {
-    "warning": {
-      "title": "Theme Background",
-      "largeFile": "Background exceeds 25MB — will not be loaded",
-      "notAnImage": "Background is not a valid image — will not be loaded"
-    }
-  },
-  "downloadProgress": {
-    "items": "items"
-  }
+	"id": "en-US",
+	"settings": {
+		"title": "Settings",
+		"tabs": {
+			"launcher": "Launcher",
+			"minecraft": "Minecraft",
+			"java": "Java"
+		},
+		"launcher": {
+			"activeInstancesTitle": "Active Instances",
+			"killInstance": "Kill",
+			"noInstances": "No instances running",
+			"generalTitle": "General",
+			"language": "Language",
+			"autoUpdates": "Automatic Updates",
+			"closeOnPlay": "Close launcher when starting game",
+			"discordPresence": "Discord Rich Presence",
+			"updatesTitle": "Launcher Updates",
+			"currentVersion": "Current Version",
+			"available": "Update Available",
+			"status": "Status",
+			"updateOk": "Up to date",
+			"notes": "Release Notes",
+			"checking": "Checking...",
+			"checkingBtn": "Checking for updates",
+			"searchBtn": "Check for Updates",
+			"downloading": "Downloading...",
+			"downloadingBtn": "Downloading update",
+			"downloadOnly": "Download Only",
+			"downloadInstallBtn": "Download and Install",
+			"installing": "Installing...",
+			"installingBtn": "Installing update",
+			"installUpdateBtn": "Install Update"
+		},
+		"minecraft": {
+			"perfTitle": "Performance (RAM)",
+			"minRam": "Minimum (GB)",
+			"maxRam": "Maximum (GB)",
+			"optionsTitle": "Minecraft Options",
+			"showSnapshots": "Show Snapshot versions",
+			"showAlpha": "Show Alpha versions"
+		},
+		"java": {
+			"configTitle": "Java Configuration",
+			"runtimesTitle": "Java Runtimes",
+			"detectPathsBtn": "Detect Paths",
+			"java8Path": "Java 8 Path",
+			"java17Path": "Java 17 Path",
+			"java21Path": "Java 21 Path",
+			"java25Path": "Java 25 Path",
+			"jvmArgs": "JVM Arguments",
+			"envVars": "Environment Variables",
+			"envVarsAdd": "Add",
+			"saveBtn": "Save Settings",
+			"saving": "Saving..."
+		}
+	},
+	"main": {
+		"noInstanceTitle": "No instance selected",
+		"noInstanceDesc": "Choose an instance from the sidebar to begin"
+	},
+	"sidebar": {
+		"yourInstances": "Your Instances",
+		"rename": "Rename",
+		"delete": "Delete",
+		"noInstances": "No instances",
+		"createInstance": "Create Instance",
+		"downloadVersions": "Download Versions",
+		"settings": "Settings",
+		"modals": {
+			"editTitle": "Edit Instance",
+			"nameLabel": "Name",
+			"versionLabel": "Version",
+			"iconLabel": "Instance Logo",
+			"cancel": "Cancel",
+			"save": "Save",
+			"deleteTitle": "Delete Instance",
+			"deleteDesc1": "Are you sure you want to delete the instance",
+			"deleteDesc2": "? This action cannot be undone.",
+			"deleteBtn": "Delete"
+		}
+	},
+	"userMenu": {
+		"title": "User Profile",
+		"usernameLabel": "Username",
+		"usernamePlaceholder": "Username",
+		"offline": "Offline",
+		"cancel": "Cancel",
+		"save": "Save",
+		"changeNameBtn": "Change Name",
+		"loginMicrosoft": "Login with Microsoft",
+		"logout": "Logout",
+		"premium": "Premium Account",
+		"authModal": {
+			"title": "Microsoft Login",
+			"instruction": "To login with your Microsoft account, copy the following link and enter the code shown below:",
+			"copyLink": "Copy link",
+			"linkCopied": "Link copied!",
+			"loading": "Connecting to Microsoft...",
+			"waiting": "Waiting for authentication...",
+			"success": "Logged in successfully!",
+			"error": "Failed to login: {error}"
+		}
+	},
+	"instanceView": {
+		"neverPlayed": "Never played",
+		"lastPlayed": "Last played: {date}",
+		"playBtn": "Play",
+		"close": "Kill",
+		"pickBannerTitle": "Select Banner",
+		"noScreenshots": "No screenshots available",
+		"changeBanner": "Change",
+		"changeBannerTitle": "Change Banner",
+		"status": {
+			"starting": "Starting",
+			"started": "The version has been started",
+			"idle": "Idle"
+		},
+		"tabs": {
+			"details": "Details",
+			"mods": "Mods",
+			"resources": "Resources",
+			"screenshots": "Screenshots",
+			"logs": "Logs",
+			"options": "Options",
+			"downloadMods": "Get Mods"
+		},
+		"details": {
+			"title": "Details",
+			"version": "Version",
+			"loader": "Loader",
+			"location": "Location"
+		},
+		"options": {
+			"title": "Quick Options",
+			"folder": "Open Folder",
+			"resources": "Resources",
+			"screenshots": "Screenshots",
+			"logs": "Logs"
+		},
+		"mods": {
+			"title": "Installed Mods",
+			"jarFile": ".JAR File",
+			"empty": "No mods installed in this instance",
+			"authors": "Authors",
+			"noDescription": "No description available"
+		},
+		"resources": {
+			"title": "Resource Packs",
+			"addBtn": "Add Pack",
+			"empty": "No resource packs installed"
+		},
+		"logs": {
+			"title": "Instance Logs",
+			"empty": "No log files found",
+			"selectLog": "Select a log file to view its content"
+		},
+		"screenshots": {
+			"title": "Screenshots",
+			"empty": "No screenshots found"
+		},
+		"console": {
+			"placeholder": "Launch the instance to see console output",
+			"waiting": "Waiting for output...",
+			"title": "Console"
+		},
+		"downloadMods": {
+			"sectionLabel": "Mod Manager",
+			"reviewTitle": "Review & Download",
+			"back": "← Back",
+			"resolvingDeps": "Resolving dependencies...",
+			"allInstalled": "✓ All dependencies are already installed.",
+			"allInstalledSub": "There are no new files to download.",
+			"filesToDownload_one": "{count} file to download:",
+			"filesToDownload_other": "{count} files to download:",
+			"confirmDownload": "Confirm Download",
+			"downloading": "Downloading...",
+			"file_one": "file",
+			"file_other": "files",
+			"categoriesLabel": "Categories",
+			"allCategories": "All",
+			"sortLabel": "Sort By",
+			"sortDownloads": "Most Downloaded",
+			"sortRelevance": "Relevance",
+			"sortNewest": "Newest",
+			"sortUpdated": "Recently Updated",
+			"selectionLabel": "Selection",
+			"selectionDesc": "Mods ready to install",
+			"reviewBtn": "Review & Download",
+			"searchPlaceholder": "Search for mods on Modrinth...",
+			"resultsFound": "{count} mods found",
+			"searching": "Searching mods...",
+			"loadingMore": "Loading more mods...",
+			"endOfResults": "— End of results ({count} mods) —",
+			"noResults": "No mods found",
+			"clearFilters": "Clear Filters",
+			"select": "Select",
+			"selected": "✓ Selected",
+			"closeDetails": "Close details",
+			"downloads": "Downloads",
+			"removeSelection": "Remove from Selection",
+			"selectToDownload": "Select for Download",
+			"by": "by",
+			"noVersionCompat": "No {version}",
+			"versionLabel": "Version",
+			"anyVersion": "Latest",
+			"compatible": "✓ Compatible",
+			"noCompatibleVersions": "No versions for {version}",
+			"noCompatibleDesc": "This mod has no versions compatible with your game version and loader.",
+			"loadingVersions": "Loading versions...",
+			"installed": "Installed"
+		}
+	},
+	"createInstance": {
+		"title": "Create New Instance",
+		"emptyNameErr": "Name cannot be empty",
+		"createErr": "Error creating instance",
+		"nameLabel": "Instance Name",
+		"namePlaceholder": "E.g. My Instance",
+		"versionLabel": "Version",
+		"iconLabel": "Instance Logo",
+		"noVersionsErr": "No downloaded versions found",
+		"cancel": "Cancel",
+		"createBtn": "Create",
+		"creatingBtn": "Creating..."
+	},
+	"versionDownloader": {
+		"title": "Download Versions",
+		"searchPlaceholder": "Search version...",
+		"loading": "Loading versions...",
+		"notFound": "No versions found",
+		"installedTag": "Installed",
+		"downloadBtn": "Download",
+		"refreshBtn": "Refresh cache",
+		"filters": {
+			"all": "All",
+			"installedOnly": "Installed Only",
+			"notInstalledOnly": "Not Installed",
+			"stableOnly": "Stable Only",
+			"unstableOnly": "Unstable Only",
+			"installStatus": "Status",
+			"majorVersion": "Major Version",
+			"fabricStability": "Stability"
+		},
+		"tabs": {
+			"releases": "Releases",
+			"snapshots": "Snapshots",
+			"alphas": "Alphas",
+			"fabric": "Fabric"
+		}
+	},
+	"themes": {
+		"warning": {
+			"title": "Theme Background",
+			"largeFile": "Background exceeds 25MB — will not be loaded",
+			"notAnImage": "Background is not a valid image — will not be loaded"
+		}
+	},
+	"downloadProgress": {
+		"items": "items"
+	}
 }

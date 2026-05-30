@@ -139,24 +139,23 @@ pub fn detect_java_paths() -> Result<JavaPaths, String> {
         }
 
         // Fallbacks if not found
-        if paths.jre8.is_empty()
-            && Path::new("/usr/bin/java").exists() {
-                paths.jre8 = "/usr/bin/java".to_string();
-            }
-        if paths.jre17.is_empty()
-            && Path::new("/usr/bin/java").exists() {
-                paths.jre17 = "/usr/bin/java".to_string();
-            }
-        if paths.jre21.is_empty()
-            && Path::new("/usr/bin/java").exists() {
-                paths.jre21 = "/usr/bin/java".to_string();
-            }
-        if paths.jre25.is_empty()
-            && Path::new("/usr/bin/java").exists() {
-                paths.jre25 = "/usr/bin/java".to_string();
-            }
+        if paths.jre8.is_empty() && Path::new("/usr/bin/java").exists() {
+            paths.jre8 = "/usr/bin/java".to_string();
+        }
+        if paths.jre17.is_empty() && Path::new("/usr/bin/java").exists() {
+            paths.jre17 = "/usr/bin/java".to_string();
+        }
+        if paths.jre21.is_empty() && Path::new("/usr/bin/java").exists() {
+            paths.jre21 = "/usr/bin/java".to_string();
+        }
+        if paths.jre25.is_empty() && Path::new("/usr/bin/java").exists() {
+            paths.jre25 = "/usr/bin/java".to_string();
+        }
     }
 
-    info!("Rutas Java detectadas: JRE8={}, JRE17={}, JRE21={}, JRE25={}", paths.jre8, paths.jre17, paths.jre21, paths.jre25);
+    info!(
+        "Rutas Java detectadas: JRE8={}, JRE17={}, JRE21={}, JRE25={}",
+        paths.jre8, paths.jre17, paths.jre21, paths.jre25
+    );
     Ok(paths)
 }

@@ -64,13 +64,10 @@ pub async fn launch(instance_id: String) -> Result<(), String> {
         return Err("Instancia no encontrada".to_string());
     };
 
-    Launcher::get()
-        .launch(handle.clone())
-        .await
-        .map_err(|e| {
-            error!("Error lanzando instancia {}: {}", instance_id, e);
-            e.to_string()
-        })?;
+    Launcher::get().launch(handle.clone()).await.map_err(|e| {
+        error!("Error lanzando instancia {}: {}", instance_id, e);
+        e.to_string()
+    })?;
 
     info!("Instancia {} lanzada exitosamente", instance_id);
     Ok(())
@@ -112,7 +109,10 @@ pub async fn create_instance(
     version: String,
     icon: Option<String>,
 ) -> Result<(), String> {
-    info!("Creando instancia: name={}, version={}, icon={:?}", name, version, icon);
+    info!(
+        "Creando instancia: name={}, version={}, icon={:?}",
+        name, version, icon
+    );
     match InstanceManager::get()
         .create_instance(name, version, icon)
         .await
@@ -171,15 +171,24 @@ pub async fn set_instance_cover_image(instance_id: String, path: String) {
         warn!("{}", e);
         return;
     }
-    info!("Estableciendo cover image para instancia {}: {}", instance_id, path);
+    info!(
+        "Estableciendo cover image para instancia {}: {}",
+        instance_id, path
+    );
     let manager = InstanceManager::get();
     if let Some(handle) = manager.get_handle(&instance_id).await {
         handle.set_cover_image(Some(PathBuf::from(path))).await;
         if let Err(e) = handle.save_if_dirty().await {
-            warn!("Error guardando cover image de instancia {}: {:?}", instance_id, e);
+            warn!(
+                "Error guardando cover image de instancia {}: {:?}",
+                instance_id, e
+            );
         }
     } else {
-        warn!("Instancia {} no encontrada para establecer cover image", instance_id);
+        warn!(
+            "Instancia {} no encontrada para establecer cover image",
+            instance_id
+        );
     }
 }
 
@@ -194,10 +203,16 @@ pub async fn reset_instance_cover_image(instance_id: String) {
     if let Some(handle) = manager.get_handle(&instance_id).await {
         handle.set_cover_image(None).await;
         if let Err(e) = handle.save_if_dirty().await {
-            warn!("Error guardando reset cover image de instancia {}: {:?}", instance_id, e);
+            warn!(
+                "Error guardando reset cover image de instancia {}: {:?}",
+                instance_id, e
+            );
         }
     } else {
-        warn!("Instancia {} no encontrada para resetear cover image", instance_id);
+        warn!(
+            "Instancia {} no encontrada para resetear cover image",
+            instance_id
+        );
     }
 }
 
@@ -225,7 +240,10 @@ pub async fn open_instance_dir(id: String, sub_dir: Option<String>) -> Result<()
     validate_uuid(&id)?;
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
-        warn!("Intento de abrir directorio de instancia {} no encontrada", id);
+        warn!(
+            "Intento de abrir directorio de instancia {} no encontrada",
+            id
+        );
         return Err("Instancia no encontrada".to_string());
     };
 
@@ -296,7 +314,10 @@ pub async fn update_instance(
     new_icon: Option<Option<String>>,
 ) -> Result<(), String> {
     validate_uuid(&id)?;
-    info!("Actualizando instancia {}: name={:?}, version={:?}, icon={:?}", id, new_name, new_version, new_icon);
+    info!(
+        "Actualizando instancia {}: name={:?}, version={:?}, icon={:?}",
+        id, new_name, new_version, new_icon
+    );
     let result = InstanceManager::get()
         .update_instance(&id, new_name, new_version, new_icon)
         .await;
@@ -370,54 +391,83 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
     .await
     .unwrap_or_default();
 
-    let mut mods = Vec::new();
-    for path in mod_paths {
-        let Some(ext) = path.extension() else { continue };
-        let ext_str = ext.to_string_lossy().to_lowercase();
-        let Some(file_name) = path.file_name() else { continue };
-        let file_name_str = file_name.to_string_lossy().to_lowercase();
+    // Filtrar y preparar la info básica de cada path (síncrono, barato)
+    struct ModEntry {
+        path: PathBuf,
+        filename: String,
+        display_name: String,
+        enabled: bool,
+    }
 
-        let (is_mod, enabled) = if ext_str == "jar" || ext_str == "zip" {
-            (true, true)
-        } else if ext_str == "disabled"
-            && (file_name_str.ends_with(".jar.disabled")
-                || file_name_str.ends_with(".zip.disabled"))
-        {
-            (true, false)
-        } else {
-            (false, false)
-        };
+    let entries: Vec<ModEntry> = mod_paths
+        .into_iter()
+        .filter_map(|path| {
+            let ext = path.extension()?.to_string_lossy().to_lowercase();
+            let file_name = path.file_name()?.to_string_lossy().to_string();
+            let file_name_lower = file_name.to_lowercase();
 
-        if is_mod {
-            let filename = file_name.to_string_lossy().to_string();
-            let display_name = match filename.strip_suffix(".disabled") {
-                Some(stripped) => stripped.to_string(),
-                None => filename.clone(),
+            let (is_mod, enabled) = if ext == "jar" || ext == "zip" {
+                (true, true)
+            } else if ext == "disabled"
+                && (file_name_lower.ends_with(".jar.disabled")
+                    || file_name_lower.ends_with(".zip.disabled"))
+            {
+                (true, false)
+            } else {
+                (false, false)
             };
 
-            let path_clone = path.clone();
-            let metadata = tokio::task::spawn_blocking(move || {
-                crate::services::AddonManager::get_mod_info(&path_clone)
-            })
-            .await
-            .unwrap_or(None);
+            if !is_mod {
+                return None;
+            }
 
+            let display_name = file_name
+                .strip_suffix(".disabled")
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| file_name.clone());
+
+            Some(ModEntry {
+                path,
+                filename: file_name,
+                display_name,
+                enabled,
+            })
+        })
+        .collect();
+
+    // Parsear todos los ZIPs en paralelo
+    let handles: Vec<_> = entries
+        .iter()
+        .map(|e| {
+            let path = e.path.clone();
+            tokio::task::spawn_blocking(move || crate::services::AddonManager::get_mod_info(&path))
+        })
+        .collect();
+
+    let metadatas = futures::future::join_all(handles).await;
+
+    // Combinar resultados
+    let mut mods: Vec<ModDto> = entries
+        .into_iter()
+        .zip(metadatas)
+        .map(|(entry, meta_result)| {
+            let metadata = meta_result.unwrap_or(None);
             let (md_name, md_version, md_desc, md_authors, md_icon) = match metadata {
                 Some(m) => (m.name, m.version, m.description, m.authors, m.icon),
-                None => (display_name, None, None, None, None),
+                None => (entry.display_name, None, None, None, None),
             };
-
-            mods.push(ModDto {
+            ModDto {
                 name: md_name,
-                filename,
+                filename: entry.filename,
                 version: md_version,
                 description: md_desc,
                 authors: md_authors,
                 icon: md_icon,
-                enabled,
-            });
-        }
-    }
+                enabled: entry.enabled,
+            }
+        })
+        .collect();
+
     mods.sort_by_key(|a| a.name.to_lowercase());
     info!("{} mods encontrados en instancia {}", mods.len(), id);
     mods
@@ -428,7 +478,10 @@ pub async fn get_instance_mods(id: String) -> Vec<ModDto> {
 #[tauri::command]
 pub async fn toggle_instance_mod(id: String, filename: String, enable: bool) -> Result<(), String> {
     validate_uuid(&id)?;
-    info!("Cambiando estado del mod '{}' en instancia {}: enable={}", filename, id, enable);
+    info!(
+        "Cambiando estado del mod '{}' en instancia {}: enable={}",
+        filename, id, enable
+    );
     let manager = InstanceManager::get();
     let Some(handle) = manager.get_handle(&id).await else {
         error!("Instancia {} no encontrada para toggle mod", id);
@@ -499,7 +552,9 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
 
     let mut resourcepacks = Vec::new();
     for path in rp_paths {
-        let Some(file_name) = path.file_name() else { continue };
+        let Some(file_name) = path.file_name() else {
+            continue;
+        };
         let filename = file_name.to_string_lossy().to_string();
         let path_clone = path.clone();
         let metadata = tokio::task::spawn_blocking(move || {
@@ -524,44 +579,12 @@ pub async fn get_instance_resourcepacks(id: String) -> Vec<ModDto> {
         });
     }
     resourcepacks.sort_by_key(|a| a.name.to_lowercase());
-    info!("{} resourcepacks encontrados en instancia {}", resourcepacks.len(), id);
+    info!(
+        "{} resourcepacks encontrados en instancia {}",
+        resourcepacks.len(),
+        id
+    );
     resourcepacks
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Logs
-// ═══════════════════════════════════════════════════════════════════════════════
-
-#[tauri::command]
-pub async fn get_instance_logs(id: String) -> Vec<String> {
-    if let Err(e) = validate_uuid(&id) {
-        warn!("{}", e);
-        return Vec::new();
-    }
-    let manager = InstanceManager::get();
-    let Some(handle) = manager.get_handle(&id).await else {
-        warn!("Instancia {} no encontrada para listar logs", id);
-        return Vec::new();
-    };
-    let logs_dir = handle.get_instance_dir().await.join("logs");
-    let mut logs = tokio::task::spawn_blocking(move || -> Vec<String> {
-        match std::fs::read_dir(&logs_dir) {
-            Ok(entries) => entries
-                .flatten()
-                .filter(|e| {
-                    e.path().is_file()
-                        && e.path().extension().is_some_and(|ext| ext == "log")
-                })
-                .filter_map(|e| e.file_name().to_str().map(|s| s.to_string()))
-                .collect(),
-            Err(_) => Vec::new(),
-        }
-    })
-    .await
-    .unwrap_or_default();
-    logs.sort_by(|a, b| b.cmp(a));
-    info!("{} archivos de log encontrados en instancia {}", logs.len(), id);
-    logs
 }
 
 #[cfg(test)]
@@ -635,29 +658,6 @@ mod tests {
         assert_eq!(result.unwrap(), base.join("screenshots/2025-01-01"));
     }
 }
-#[tauri::command]
-pub async fn read_instance_log(id: String, filename: String) -> Result<String, String> {
-    validate_uuid(&id)?;
-    let manager = InstanceManager::get();
-    let Some(handle) = manager.get_handle(&id).await else {
-        warn!("Instancia {} no encontrada para leer log", id);
-        return Err("Instancia no encontrada".to_string());
-    };
-
-    let log_path = handle.get_instance_dir().await.join("logs").join(&filename);
-    if !log_path.exists() {
-        warn!("Archivo de log '{}' no encontrado en instancia {}", filename, id);
-        return Err("Archivo de registro no encontrado".to_string());
-    }
-
-    info!("Leyendo log '{}' de instancia {}", filename, id);
-    tokio::fs::read_to_string(log_path)
-        .await
-        .map_err(|e| {
-            error!("Error leyendo log '{}': {}", filename, e);
-            e.to_string()
-        })
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // File Operations
@@ -681,12 +681,10 @@ pub async fn delete_instance_file(
     let file_path = sub_path.join(&filename);
     info!("Eliminando archivo {:?} de instancia {}", file_path, id);
     if file_path.exists() {
-        tokio::fs::remove_file(&file_path)
-            .await
-            .map_err(|e| {
-                error!("Error eliminando archivo {:?}: {}", file_path, e);
-                e.to_string()
-            })?;
+        tokio::fs::remove_file(&file_path).await.map_err(|e| {
+            error!("Error eliminando archivo {:?}: {}", file_path, e);
+            e.to_string()
+        })?;
     } else {
         warn!("Archivo {:?} no existe, nada que eliminar", file_path);
     }
@@ -708,7 +706,10 @@ pub async fn add_instance_file(
 
     let instance_dir = handle.get_instance_dir().await;
     let dest_dir = sanitize_sub_path(&instance_dir, Path::new(&sub_dir))?;
-    info!("Agregando archivo '{}' a instancia {} en sub_dir '{}'", source_path, id, sub_dir);
+    info!(
+        "Agregando archivo '{}' a instancia {} en sub_dir '{}'",
+        source_path, id, sub_dir
+    );
     if !dest_dir.exists() {
         tokio::fs::create_dir_all(&dest_dir)
             .await
@@ -719,12 +720,10 @@ pub async fn add_instance_file(
     let filename = src.file_name().ok_or("Ruta de origen inválida")?;
     let dest_path = dest_dir.join(filename);
 
-    tokio::fs::copy(&src, &dest_path)
-        .await
-        .map_err(|e| {
-            error!("Error copiando archivo a {:?}: {}", dest_path, e);
-            e.to_string()
-        })?;
+    tokio::fs::copy(&src, &dest_path).await.map_err(|e| {
+        error!("Error copiando archivo a {:?}: {}", dest_path, e);
+        e.to_string()
+    })?;
     info!("Archivo copiado a {:?}", dest_path);
     Ok(())
 }

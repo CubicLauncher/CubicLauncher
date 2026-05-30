@@ -6,29 +6,30 @@ import { launcherStore } from "$lib/state/state.svelte";
 let cachedUpdate: Update | null = null;
 
 export async function checkForUpdates(silent = false) {
-  try {
-    const update = await check();
+	try {
+		const update = await check();
 
-    if (!update) {
-      launcherStore.pendingUpdate = null;
-      cachedUpdate = null;
-      if (!silent) showInfo("Actualizaciones", "Ya tenés la última versión.");
-      return;
-    }
+		if (!update) {
+			launcherStore.pendingUpdate = null;
+			cachedUpdate = null;
+			if (!silent)
+				showInfo("Actualizaciones", "Ya tenés la última versión.");
+			return;
+		}
 
-    cachedUpdate = update;
-    launcherStore.pendingUpdate = {
-      version: update.version,
-      body: update.body ?? null,
-    };
+		cachedUpdate = update;
+		launcherStore.pendingUpdate = {
+			version: update.version,
+			body: update.body ?? undefined,
+		};
 
-    showInfo(
-      `Update disponible: v${update.version}`,
-      "Podés descargarlo desde Ajustes.",
-    );
-  } catch (err) {
-    if (!silent) showError("Error al buscar updates", `${err}`);
-  }
+		showInfo(
+			`Update disponible: v${update.version}`,
+			"Podés descargarlo desde Ajustes.",
+		);
+	} catch (err) {
+		if (!silent) showError("Error al buscar updates", `${err}`);
+	}
 }
 
 /**
@@ -36,61 +37,61 @@ export async function checkForUpdates(silent = false) {
  * Does NOT install — call installUpdate() for that.
  */
 export async function downloadUpdate() {
-  if (!cachedUpdate) {
-    showError("Sin update", "No hay ninguna actualización disponible.");
-    return;
-  }
+	if (!cachedUpdate) {
+		showError("Sin update", "No hay ninguna actualización disponible.");
+		return;
+	}
 
-  try {
-    launcherStore.updateProgress = 0;
-    launcherStore.updateDownloaded = false;
+	try {
+		launcherStore.updateProgress = 0;
+		launcherStore.updateDownloaded = false;
 
-    let downloaded = 0;
-    let total = 0;
+		let downloaded = 0;
+		let total = 0;
 
-    await cachedUpdate.download((event) => {
-      switch (event.event) {
-        case "Started":
-          total = event.data.contentLength ?? 0;
-          break;
-        case "Progress":
-          downloaded += event.data.chunkLength;
-          launcherStore.updateProgress = total
-            ? Math.round((downloaded / total) * 100)
-            : 0;
-          break;
-        case "Finished":
-          launcherStore.updateProgress = 100;
-          launcherStore.updateDownloaded = true;
-          break;
-      }
-    });
+		await cachedUpdate.download((event) => {
+			switch (event.event) {
+				case "Started":
+					total = event.data.contentLength ?? 0;
+					break;
+				case "Progress":
+					downloaded += event.data.chunkLength;
+					launcherStore.updateProgress = total
+						? Math.round((downloaded / total) * 100)
+						: 0;
+					break;
+				case "Finished":
+					launcherStore.updateProgress = 100;
+					launcherStore.updateDownloaded = true;
+					break;
+			}
+		});
 
-    showSuccess(
-      "Descarga completa",
-      "La actualización está lista para instalar.",
-    );
-  } catch (err) {
-    showError("Error de descarga", `${err}`);
-    launcherStore.updateProgress = 0;
-  }
+		showSuccess(
+			"Descarga completa",
+			"La actualización está lista para instalar.",
+		);
+	} catch (err) {
+		showError("Error de descarga", `${err}`);
+		launcherStore.updateProgress = 0;
+	}
 }
 
 /**
  * Installs the already-downloaded update and relaunches.
  */
 export async function installUpdate() {
-  if (!cachedUpdate) {
-    showError("Sin update", "No hay ninguna actualización descargada.");
-    return;
-  }
+	if (!cachedUpdate) {
+		showError("Sin update", "No hay ninguna actualización descargada.");
+		return;
+	}
 
-  try {
-    await cachedUpdate.install();
-    await relaunch();
-  } catch (err) {
-    showError("Error al instalar", `${err}`);
-  }
+	try {
+		await cachedUpdate.install();
+		await relaunch();
+	} catch (err) {
+		showError("Error al instalar", `${err}`);
+	}
 }
 
 /**
@@ -98,8 +99,8 @@ export async function installUpdate() {
  * kept for convenience but no longer called on startup).
  */
 export async function downloadAndInstall() {
-  await downloadUpdate();
-  if (launcherStore.updateDownloaded) {
-    await installUpdate();
-  }
+	await downloadUpdate();
+	if (launcherStore.updateDownloaded) {
+		await installUpdate();
+	}
 }

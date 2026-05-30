@@ -4,11 +4,14 @@ members = [
     "src-tauri",
     "crates/aqua",
     "crates/launchwerk",
+    "crates/Communicator",
 ]
 
 [profile.release]
-panic = "abort"
+opt-level = 3
+lto = "fat"
 codegen-units = 1
-lto = true
-opt-level = "s"
-strip = true
+panic = "abort"
+strip = "symbols"
+debug-assertions = false
+overflow-checks = false

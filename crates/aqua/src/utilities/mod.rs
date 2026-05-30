@@ -19,11 +19,7 @@ pub static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(|| {
 
 const MAX_DOWNLOAD_ATTEMPTS: usize = 3;
 
-pub async fn download_file(
-    url: &str,
-    path: &Path,
-    expected_hash: &str,
-) -> Result<(), ProtonError> {
+pub async fn download_file(url: &str, path: &Path, expected_hash: &str) -> Result<(), ProtonError> {
     if url.is_empty() {
         return Err(ProtonError::Other("Empty download URL".into()));
     }
@@ -65,19 +61,29 @@ pub async fn download_file(
         let response = match HTTP_CLIENT.get(url).send().await {
             Ok(r) if r.status().is_success() => r,
             Ok(r) => {
-                warn!("HTTP {} on attempt {}/{}", r.status(), attempt, MAX_DOWNLOAD_ATTEMPTS);
+                warn!(
+                    "HTTP {} on attempt {}/{}",
+                    r.status(),
+                    attempt,
+                    MAX_DOWNLOAD_ATTEMPTS
+                );
                 if attempt == MAX_DOWNLOAD_ATTEMPTS {
                     return Err(ProtonError::Other(format!("HTTP {}", r.status())));
                 }
-                tokio::time::sleep(std::time::Duration::from_millis(100 * (1 << (attempt - 1)))).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100 * (1 << (attempt - 1))))
+                    .await;
                 continue;
             }
             Err(e) => {
-                warn!("Request failed attempt {}/{}: {}", attempt, MAX_DOWNLOAD_ATTEMPTS, e);
+                warn!(
+                    "Request failed attempt {}/{}: {}",
+                    attempt, MAX_DOWNLOAD_ATTEMPTS, e
+                );
                 if attempt == MAX_DOWNLOAD_ATTEMPTS {
                     return Err(ProtonError::RequestError(e));
                 }
-                tokio::time::sleep(std::time::Duration::from_millis(100 * (1 << (attempt - 1)))).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100 * (1 << (attempt - 1))))
+                    .await;
                 continue;
             }
         };
@@ -177,9 +183,8 @@ pub(crate) fn extract_native_jar_sync(jar_path: &Path, destino: &Path) -> Result
     std::fs::create_dir_all(destino)?;
 
     let file = std::fs::File::open(jar_path)?;
-    let mut archive = zip::ZipArchive::new(file).map_err(|e| {
-        ProtonError::Other(format!("Failed to open ZIP: {}", e))
-    })?;
+    let mut archive = zip::ZipArchive::new(file)
+        .map_err(|e| ProtonError::Other(format!("Failed to open ZIP: {}", e)))?;
 
     for i in 0..archive.len() {
         let mut entry = match archive.by_index(i) {
@@ -206,9 +211,7 @@ pub(crate) fn extract_native_jar_sync(jar_path: &Path, destino: &Path) -> Result
         }
 
         let out_path = destino.join(&file_name);
-        if out_path.exists()
-            && out_path.metadata().map(|m| m.len()).unwrap_or(0) == entry.size()
-        {
+        if out_path.exists() && out_path.metadata().map(|m| m.len()).unwrap_or(0) == entry.size() {
             debug!("Native already extracted: {}", out_path.display());
             continue;
         }
@@ -227,8 +230,7 @@ pub async fn extract_native(jar_path: &Path, destino: &Path) -> Result<(), Proto
     let jar_path = jar_path.to_path_buf();
     let destino = destino.to_path_buf();
 
-    tokio::task::spawn_blocking(move || extract_native_jar_sync(&jar_path, &destino))
-        .await?
+    tokio::task::spawn_blocking(move || extract_native_jar_sync(&jar_path, &destino)).await?
 }
 
 #[cfg(feature = "extract-natives")]
@@ -251,8 +253,6 @@ fn hex_encode(bytes: &[u8]) -> String {
     }
     s
 }
-
-
 
 #[cfg(test)]
 mod tests {

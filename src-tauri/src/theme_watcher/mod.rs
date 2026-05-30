@@ -1,6 +1,6 @@
 use std::path::PathBuf;
-use std::sync::mpsc;
 use std::sync::OnceLock;
+use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 use crate::core::{AppEvent, PathManager, emit};
@@ -28,17 +28,16 @@ impl ThemeWatcher {
         tokio::task::spawn_blocking(move || {
             let (notify_tx, notify_rx) = mpsc::channel::<Result<Event, notify::Error>>();
 
-            let mut watcher: notify::RecommendedWatcher = match notify::recommended_watcher(
-                move |res| {
+            let mut watcher: notify::RecommendedWatcher =
+                match notify::recommended_watcher(move |res| {
                     let _ = notify_tx.send(res);
-                },
-            ) {
-                Ok(w) => w,
-                Err(e) => {
-                    warn!("ThemeWatcher: error al crear watcher: {}", e);
-                    return;
-                }
-            };
+                }) {
+                    Ok(w) => w,
+                    Err(e) => {
+                        warn!("ThemeWatcher: error al crear watcher: {}", e);
+                        return;
+                    }
+                };
 
             let mut current_id: Option<String> = None;
             let mut watched_path: Option<PathBuf> = None;
@@ -52,24 +51,17 @@ impl ThemeWatcher {
                         current_id = new_id;
 
                         if let Some(old) = watched_path.take()
-                            && let Err(e) = watcher.unwatch(&old) {
-                                warn!(
-                                    "ThemeWatcher: error al dejar de observar {:?}: {}",
-                                    old, e
-                                );
-                            }
+                            && let Err(e) = watcher.unwatch(&old)
+                        {
+                            warn!("ThemeWatcher: error al dejar de observar {:?}: {}", old, e);
+                        }
 
                         if let Some(ref id) = current_id {
                             let path = PathManager::get().get_themes_dir().join(id);
                             if path.exists() {
                                 info!("ThemeWatcher: observando {:?}", path);
-                                if let Err(e) =
-                                    watcher.watch(&path, RecursiveMode::NonRecursive)
-                                {
-                                    warn!(
-                                        "ThemeWatcher: error al observar {:?}: {}",
-                                        path, e
-                                    );
+                                if let Err(e) = watcher.watch(&path, RecursiveMode::NonRecursive) {
+                                    warn!("ThemeWatcher: error al observar {:?}: {}", path, e);
                                 } else {
                                     watched_path = Some(path);
                                 }
@@ -88,15 +80,11 @@ impl ThemeWatcher {
 
                 match notify_rx.recv_timeout(Duration::from_millis(100)) {
                     Ok(Ok(event)) => {
-                        if matches!(
-                            event.kind,
-                            EventKind::Modify(_) | EventKind::Create(_)
-                        ) {
-                            let is_theme_json = event.paths.iter().any(|p| {
-                                p.file_name()
-                                    .map(|n| n == "theme.json")
-                                    .unwrap_or(false)
-                            });
+                        if matches!(event.kind, EventKind::Modify(_) | EventKind::Create(_)) {
+                            let is_theme_json = event
+                                .paths
+                                .iter()
+                                .any(|p| p.file_name().map(|n| n == "theme.json").unwrap_or(false));
                             if is_theme_json {
                                 info!("ThemeWatcher: cambio detectado en theme.json");
                                 last_event = Some(Instant::now());
@@ -114,15 +102,16 @@ impl ThemeWatcher {
                 }
 
                 if let Some(le) = last_event
-                    && le.elapsed() >= Duration::from_millis(DEBOUNCE_MS) {
-                        if let Some(ref id) = current_id {
-                            info!("ThemeWatcher: cambio confirmado en theme '{}'", id);
-                            emit(AppEvent::ThemeChanged {
-                                id: format!("user:{}", id),
-                            });
-                        }
-                        last_event = None;
+                    && le.elapsed() >= Duration::from_millis(DEBOUNCE_MS)
+                {
+                    if let Some(ref id) = current_id {
+                        info!("ThemeWatcher: cambio confirmado en theme '{}'", id);
+                        emit(AppEvent::ThemeChanged {
+                            id: format!("user:{}", id),
+                        });
                     }
+                    last_event = None;
+                }
             }
         });
     }

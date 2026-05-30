@@ -1,0 +1,90 @@
+@font-face {
+	font-family: "Cantarell";
+	src: url("/fonts/Cantarell-Regular.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Cantarell";
+	src: url("/fonts/Cantarell-Italic.woff2") format("woff2");
+	font-weight: 400;
+	font-style: italic;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Cantarell";
+	src: url("/fonts/Cantarell-Bold.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Cantarell";
+	src: url("/fonts/Cantarell-BoldItalic.woff2") format("woff2");
+	font-weight: 700;
+	font-style: italic;
+	font-display: swap;
+}
+
+:root {
+	--bg-main: #0c0c0c;
+	--bg-sidebar: #0f1010;
+	--bg-item-active: #1c1d1d;
+	--bg-card: #111;
+	--bg-input: #0a0a0a;
+	--text-primary: #d8d8d8;
+	--text-secondary: #606060;
+	--text-muted: #444;
+	--accent: #ffffff;
+	--border: #242424;
+	--border-color: #222;
+	--sidebar-width: 260px;
+	--border-radius-sm: 4px;
+	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: "Cantarell", system-ui, sans-serif;
+	background-color: var(--bg-main);
+	color: var(--text-primary);
+	overflow: hidden;
+	height: 100vh;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+input,
+textarea,
+[contenteditable],
+.line-text {
+	-webkit-user-select: text;
+	user-select: text;
+}
+
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--border);
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--text-secondary);
+}

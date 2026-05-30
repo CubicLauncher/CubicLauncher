@@ -9,7 +9,11 @@ pub struct MCVersion {
 
 impl MCVersion {
     pub fn new(major: u8, minor: u8, patch: Option<u8>) -> Self {
-        Self { major, minor, patch }
+        Self {
+            major,
+            minor,
+            patch,
+        }
     }
 }
 
@@ -32,7 +36,8 @@ impl<'de> Deserialize<'de> for MCVersion {
 pub fn parse_version(s: &str) -> Option<MCVersion> {
     let s = s.trim();
 
-    let digits: Vec<&str> = s.split(|c: char| !c.is_ascii_digit() && c != '.')
+    let digits: Vec<&str> = s
+        .split(|c: char| !c.is_ascii_digit() && c != '.')
         .next()
         .map(|part| part.split('.').collect())
         .unwrap_or_default();
@@ -43,7 +48,11 @@ pub fn parse_version(s: &str) -> Option<MCVersion> {
     let major = digits[0].parse::<u8>().ok()?;
     let minor = digits[1].parse::<u8>().ok()?;
     let patch = digits.get(2).and_then(|p| p.parse().ok());
-    Some(MCVersion { major, minor, patch })
+    Some(MCVersion {
+        major,
+        minor,
+        patch,
+    })
 }
 
 #[cfg(test)]
@@ -53,7 +62,10 @@ mod tests {
     #[test]
     fn parses_standard() {
         assert_eq!(parse_version("1.21").unwrap(), MCVersion::new(1, 21, None));
-        assert_eq!(parse_version("1.20.6").unwrap(), MCVersion::new(1, 20, Some(6)));
+        assert_eq!(
+            parse_version("1.20.6").unwrap(),
+            MCVersion::new(1, 20, Some(6))
+        );
     }
 
     #[test]

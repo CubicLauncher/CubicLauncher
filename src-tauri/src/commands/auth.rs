@@ -24,7 +24,10 @@ pub async fn get_device_code() -> Result<DeviceCode, String> {
     .await
     .map_err(|e| e.to_string())??;
 
-    info!("Código de dispositivo obtenido: user_code={}", res.user_code);
+    info!(
+        "Código de dispositivo obtenido: user_code={}",
+        res.user_code
+    );
     Ok(DeviceCode {
         user_code: res.user_code,
         device_code: res.device_code,

@@ -27,8 +27,6 @@ pub fn run() {
             commands::instance::set_instance_cover_image,
             commands::instance::reset_instance_cover_image,
             commands::instance::get_instance_resourcepacks,
-            commands::instance::get_instance_logs,
-            commands::instance::read_instance_log,
             commands::instance::delete_instance_file,
             commands::instance::add_instance_file,
             commands::download::add_to_queue,
@@ -52,6 +50,7 @@ pub fn run() {
             commands::themes::import_theme,
             commands::themes::get_themes_dir_path,
             commands::modrinth::download_mods,
+            commands::discord::init_discord_presence,
         ])
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
