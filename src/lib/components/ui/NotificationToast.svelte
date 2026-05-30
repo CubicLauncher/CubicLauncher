@@ -18,7 +18,7 @@
 
 	// Si el toast tiene progreso externo (0-100) lo refleja reactivamente
 	$effect(() => {
-		const p = (notification as any).progress;
+		const p = notification.progress;
 		if (typeof p === "number") {
 			ringOffset = CIRC * (1 - p / 100);
 			if (p >= 100) handleComplete();
@@ -52,8 +52,7 @@
 	let rafId: number;
 
 	onMount(() => {
-		const hasExternalProgress =
-			typeof (notification as any).progress === "number";
+		const hasExternalProgress = typeof notification.progress === "number";
 
 		if (
 			!hasExternalProgress &&
@@ -80,9 +79,9 @@
 
 	// ── Sub-texto para toasts de progreso ─────────────────────────────
 	const progressSub = $derived(() => {
-		const p = (notification as any).progress as number | undefined;
+		const p = notification.progress;
 		if (typeof p !== "number") return null;
-		const total = (notification as any).totalMb as number | undefined;
+		const total = notification.totalMb;
 		if (total)
 			return `${Math.round(p)}% · ${Math.round((p / 100) * total)} / ${total} MB`;
 		return `${Math.round(p)}%`;

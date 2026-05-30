@@ -77,6 +77,21 @@ export interface Notification {
 	title: string;
 	message: string;
 	timeout?: number;
+	progress?: number;
+	totalMb?: number;
+}
+
+export interface MinecraftVersion {
+	id: string;
+	type: string;
+	url: string;
+	time: string;
+	releaseTime: string;
+}
+
+export interface FabricGameVersion {
+	version: string;
+	stable: boolean;
 }
 
 export type AppEvent =

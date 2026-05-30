@@ -5,7 +5,14 @@ import globals from "globals";
 
 export default [
 	{
-		ignores: ["target/**", "crates/**", "src-tauri/**", "**/node_modules/**", "build/**"],
+		ignores: [
+			"target/**",
+			"crates/**",
+			"src-tauri/**",
+			"**/node_modules/**",
+			"build/**",
+			".svelte-kit",
+		],
 	},
 	js.configs.recommended,
 	...tseslint.configs.recommended,

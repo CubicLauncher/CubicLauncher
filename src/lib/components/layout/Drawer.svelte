@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from "svelte";
+	import type { Snippet } from "svelte";
 
 	type Direction = "bottom" | "top" | "left" | "right";
 
@@ -11,7 +12,7 @@
 		closeThreshold?: number;
 		class?: string;
 		style?: string;
-		children?: import("svelte").Snippet;
+		children?: Snippet;
 	}
 
 	let {

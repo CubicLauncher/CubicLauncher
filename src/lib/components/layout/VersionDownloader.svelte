@@ -8,6 +8,7 @@
 		downloadFabric,
 		refreshAvailableVersions,
 	} from "$lib/api/cubicApi";
+	import type { MinecraftVersion, FabricGameVersion } from "$lib/types/types";
 	import VirtualList from "./VirtualList.svelte";
 	import Select from "./Select.svelte";
 	import { launcherStore } from "$lib/state/state.svelte";
@@ -21,8 +22,8 @@
 	let { onclose }: Props = $props();
 
 	let loading = $state(true);
-	let manifest = $state<any>(null);
-	let fabricManifest = $state<any[]>([]);
+	let manifest = $state<MinecraftVersion[] | null>(null);
+	let fabricManifest = $state<FabricGameVersion[]>([]);
 	let installedVersions = $state<string[]>([]);
 	let fabricInstalledSet = $derived.by(
 		() =>
@@ -50,7 +51,7 @@
 
 	async function refreshFabric() {
 		refreshing = true;
-		fabricManifest = await refreshAvailableVersions();
+		fabricManifest = await getFabricVersions();
 		refreshing = false;
 	}
 
@@ -89,8 +90,11 @@
 		const source = filter === "fabric" ? fabricManifest : manifest;
 		if (!source) return [];
 		const versions = new SvelteSet<string>();
-		source.forEach((v: any) => {
-			const vid = filter === "fabric" ? v.version : v.id;
+		source.forEach((v: MinecraftVersion | FabricGameVersion) => {
+			const vid =
+				filter === "fabric"
+					? (v as FabricGameVersion).version
+					: (v as MinecraftVersion).id;
 			const match = vid.match(/^1\.\d+/);
 			if (match) {
 				versions.add(match[0]);
@@ -109,55 +113,61 @@
 	]);
 
 	const filteredVersions = $derived(
-		(filter === "fabric" ? fabricManifest : manifest)?.filter((v: any) => {
-			const versionId = filter === "fabric" ? v.version : v.id;
+		(filter === "fabric" ? fabricManifest : manifest)?.filter(
+			(v: MinecraftVersion | FabricGameVersion) => {
+				const versionId =
+					filter === "fabric"
+						? (v as FabricGameVersion).version
+						: (v as MinecraftVersion).id;
 
-			// Installed filter
-			const isInstalled =
-				installedVersions.includes(versionId) ||
-				(filter === "fabric" && fabricInstalledSet.has(versionId));
+				const isInstalled =
+					installedVersions.includes(versionId) ||
+					(filter === "fabric" && fabricInstalledSet.has(versionId));
 
-			if (installStatusFilter === "installed" && !isInstalled)
-				return false;
-			if (installStatusFilter === "not_installed" && isInstalled)
-				return false;
-
-			// Major Version Filter
-			if (
-				majorVersionFilter !== "all" &&
-				!versionId.startsWith(majorVersionFilter)
-			)
-				return false;
-
-			if (filter === "fabric") {
-				if (fabricStabilityFilter === "stable" && !v.stable)
+				if (installStatusFilter === "installed" && !isInstalled)
 					return false;
-				if (fabricStabilityFilter === "unstable" && v.stable)
+				if (installStatusFilter === "not_installed" && isInstalled)
 					return false;
-			} else {
+
 				if (
-					!launcherStore.settings.show_snapshots &&
-					v.type === "snapshot"
+					majorVersionFilter !== "all" &&
+					!versionId.startsWith(majorVersionFilter)
 				)
 					return false;
-				if (
-					!launcherStore.settings.show_alpha &&
-					(v.type === "old_alpha" || v.type === "old_beta")
-				)
-					return false;
-			}
 
-			const matchesFilter =
-				filter === "fabric" ||
-				v.type === filter ||
-				(filter === "alpha" &&
-					(v.type === "old_alpha" || v.type === "old_beta"));
+				if (filter === "fabric") {
+					const fv = v as FabricGameVersion;
+					if (fabricStabilityFilter === "stable" && !fv.stable)
+						return false;
+					if (fabricStabilityFilter === "unstable" && fv.stable)
+						return false;
+				} else {
+					const mv = v as MinecraftVersion;
+					if (
+						!launcherStore.settings.show_snapshots &&
+						mv.type === "snapshot"
+					)
+						return false;
+					if (
+						!launcherStore.settings.show_alpha &&
+						(mv.type === "old_alpha" || mv.type === "old_beta")
+					)
+						return false;
+				}
 
-			const matchesSearch = versionId
-				.toLowerCase()
-				.includes(search.toLowerCase());
-			return matchesFilter && matchesSearch;
-		}) || [],
+				const matchesFilter =
+					filter === "fabric" ||
+					(v as MinecraftVersion).type === filter ||
+					(filter === "alpha" &&
+						((v as MinecraftVersion).type === "old_alpha" ||
+							(v as MinecraftVersion).type === "old_beta"));
+
+				const matchesSearch = versionId
+					.toLowerCase()
+					.includes(search.toLowerCase());
+				return matchesFilter && matchesSearch;
+			},
+		) || [],
 	);
 
 	$effect(() => {

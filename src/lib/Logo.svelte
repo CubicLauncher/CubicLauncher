@@ -1,21 +1,19 @@
-<script>
-	/** Color de relleno principal */
-	export let color = "#24292e";
-
-	/** Opacidad del relleno (0–1) */
-	export let opacity = 1;
-
-	/** Ancho del SVG (cualquier unidad CSS válida) */
-	export let width = "1rem";
-
-	/** Alto del SVG (cualquier unidad CSS válida) */
-	export let height = "1rem";
-
-	/** Clases CSS adicionales */
-	export let className = "";
-
-	/** Atributo aria-label para accesibilidad */
-	export let label = "Polyhedron icon";
+<script lang="ts">
+	let {
+		color = "#24292e",
+		opacity = 1,
+		width = "1rem",
+		height = "1rem",
+		className = "",
+		label = "Polyhedron icon",
+	}: {
+		color?: string;
+		opacity?: number;
+		width?: string;
+		height?: string;
+		className?: string;
+		label?: string;
+	} = $props();
 </script>
 
 <svg

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 	import { deleteInstanceFile } from "$lib/api/cubicApi";
+	import type { InstanceDto } from "$lib/types/types";
 	import { t } from "$lib/i18n";
 
-	let { instance } = $props<{ instance: any }>();
+	let { instance } = $props<{ instance: InstanceDto }>();
 	let screenshots = $state<string[]>([]);
 	let selectedImage = $state<string | null>(null);
 

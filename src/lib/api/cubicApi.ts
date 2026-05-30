@@ -4,7 +4,10 @@ import {
 	type DeviceCode,
 	type MinecraftUser,
 	type Settings,
+	type MinecraftVersion,
+	type FabricGameVersion,
 	type ModrinthSearchResult,
+	type ModrinthVersion,
 } from "../types/types";
 import { invoke } from "@tauri-apps/api/core";
 import { showError } from "../state/state.svelte";
@@ -167,21 +170,21 @@ export async function updateSettings(settings: Settings): Promise<void> {
 		console.error("Error al actualizar settings:", err);
 	}
 }
-export async function getAvailableVersions(): Promise<any> {
+export async function getAvailableVersions(): Promise<MinecraftVersion[]> {
 	try {
-		return await invoke("get_available_versions");
+		return await invoke<MinecraftVersion[]>("get_available_versions");
 	} catch (err) {
 		console.error("Error al obtener versiones disponibles:", err);
-		return null;
+		return [];
 	}
 }
 
-export async function refreshAvailableVersions(): Promise<any> {
+export async function refreshAvailableVersions(): Promise<MinecraftVersion[]> {
 	try {
-		return await invoke("refresh_versions");
+		return await invoke<MinecraftVersion[]>("refresh_versions");
 	} catch (err) {
 		console.error("Error al refrescar versiones:", err);
-		return null;
+		return [];
 	}
 }
 
@@ -193,9 +196,9 @@ export async function addToQueue(version: string): Promise<void> {
 	}
 }
 
-export async function getFabricVersions(): Promise<any[]> {
+export async function getFabricVersions(): Promise<FabricGameVersion[]> {
 	try {
-		return await invoke<any[]>("get_fabric_versions");
+		return await invoke<FabricGameVersion[]>("get_fabric_versions");
 	} catch (err) {
 		console.error("Error al obtener versiones de Fabric:", err);
 		return [];
@@ -373,7 +376,7 @@ export async function getModrinthProjectVersions(
 	projectId: string,
 	loader: string,
 	gameVersion: string,
-): Promise<any[]> {
+): Promise<ModrinthVersion[]> {
 	try {
 		const loadersJson = JSON.stringify([loader.toLowerCase()]);
 		const gameVersionsJson = JSON.stringify([gameVersion]);
@@ -388,7 +391,7 @@ export async function getModrinthProjectVersions(
 		if (!res.ok) {
 			throw new Error(`Modrinth API error: ${res.status}`);
 		}
-		return await res.json();
+		return (await res.json()) as ModrinthVersion[];
 	} catch (err) {
 		console.error(`Error getting versions for ${projectId}:`, err);
 		return [];
@@ -398,7 +401,7 @@ export async function getModrinthProjectVersions(
 export async function getModrinthProjectVersionsAll(
 	projectId: string,
 	loader: string,
-): Promise<any[]> {
+): Promise<ModrinthVersion[]> {
 	try {
 		const loadersJson = JSON.stringify([loader.toLowerCase()]);
 		const url = new URL(
@@ -410,7 +413,7 @@ export async function getModrinthProjectVersionsAll(
 		if (!res.ok) {
 			throw new Error(`Modrinth API error: ${res.status}`);
 		}
-		return await res.json();
+		return (await res.json()) as ModrinthVersion[];
 	} catch (err) {
 		console.error(`Error getting all versions for ${projectId}:`, err);
 		return [];

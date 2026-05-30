@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import type { Component } from "svelte";
 	import "../styles/App.css";
 	import { launcherStore } from "$lib/state/state.svelte";
 	import {
@@ -21,10 +22,16 @@
 	let versionDownloaderOpen = $state(false);
 	let openCreateModal = $state(false);
 
-	let SettingsComponent = $state<any>(null);
-	let CreateInstanceModalComponent = $state<any>(null);
-	let VersionDownloaderComponent = $state<any>(null);
-	let DownloadProgressBarComponent = $state<any>(null);
+	let SettingsComponent = $state<Component<{ onclose: () => void }> | null>(
+		null,
+	);
+	let CreateInstanceModalComponent = $state<Component<{
+		open: boolean;
+	}> | null>(null);
+	let VersionDownloaderComponent = $state<Component<{
+		onclose?: () => void;
+	}> | null>(null);
+	let DownloadProgressBarComponent = $state<Component | null>(null);
 
 	onMount(async () => {
 		initEventListeners();

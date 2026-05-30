@@ -1,10 +1,11 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 	import { onMount } from "svelte";
+	import type { Snippet } from "svelte";
 
 	interface Props {
-		items: any[];
+		items: T[];
 		itemHeight: number;
-		children: import("svelte").Snippet<[any, number]>;
+		children: Snippet<[T, number]>;
 		class?: string;
 		padding?: number;
 		onNearEnd?: () => void;

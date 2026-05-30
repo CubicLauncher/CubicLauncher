@@ -4,12 +4,13 @@
 		getDeviceCode,
 		authenticateWithDeviceCode,
 	} from "$lib/api/cubicApi";
+	import type { DeviceCode } from "$lib/types/types";
 	import { launcherStore } from "$lib/state/state.svelte";
 	import ModalBase from "./ModalBase.svelte";
 
 	let { open = $bindable(false) } = $props<{ open: boolean }>();
 
-	let deviceCode = $state<any>(null);
+	let deviceCode = $state<DeviceCode | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let success = $state(false);
@@ -37,9 +38,9 @@
 			setTimeout(() => {
 				open = false;
 			}, 2000);
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error("Auth error:", e);
-			error = e.toString();
+			error = String(e);
 			loading = false;
 		}
 	}
