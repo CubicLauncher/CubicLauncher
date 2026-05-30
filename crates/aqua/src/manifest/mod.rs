@@ -107,6 +107,9 @@ fn resolve_normalized(version: VersionManifest) -> Result<NormalizedVersion, Pro
 
             // Check for legacy native (natives field + classifiers)
             if let Some(native_artifact) = lib.native_artifact() {
+                if !lib.is_correct_arch() {
+                    continue;
+                }
                 let path = native_artifact.path.clone();
                 let url = native_artifact.url.clone().unwrap_or_default();
                 let sha1 = native_artifact.sha1.clone().unwrap_or_default();
@@ -123,6 +126,9 @@ fn resolve_normalized(version: VersionManifest) -> Result<NormalizedVersion, Pro
 
             // Check for modern native (Maven coordinate has :natives-)
             if lib.is_native() {
+                if !lib.is_correct_arch() {
+                    continue;
+                }
                 if let Some(artifact) = lib.downloads.as_ref().and_then(|d| d.artifact.as_ref()) {
                     let path = artifact.path.clone();
                     let url = artifact.url.clone().unwrap_or_default();
