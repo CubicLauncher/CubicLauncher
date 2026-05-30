@@ -20,12 +20,13 @@ trait Evaluable {
             Some(r) => r,
             None => return true,
         };
+        let mut result = false;
         for rule in rules {
             if let Some(action) = rule.action_if_matches() {
-                return matches!(action, RuleAction::Allow);
+                result = matches!(action, RuleAction::Allow);
             }
         }
-        false
+        result
     }
 }
 

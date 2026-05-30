@@ -508,6 +508,9 @@ impl Launcher {
                         tokio::spawn(async move {
                             let mut rx = stdout_rx;
                             while let Ok(line) = rx.recv().await {
+                                if line.to_lowercase().contains("token") {
+                                    continue;
+                                }
                                 if app_stdout
                                     .emit(
                                         "instance-console-output",
@@ -528,6 +531,9 @@ impl Launcher {
                         tokio::spawn(async move {
                             let mut rx = stderr_rx;
                             while let Ok(line) = rx.recv().await {
+                                if line.to_lowercase().contains("token") {
+                                    continue;
+                                }
                                 if app_stderr
                                     .emit(
                                         "instance-console-output",

@@ -60,12 +60,13 @@ fn rule_set_applies(rules: &[Rule]) -> bool {
     if rules.is_empty() {
         return true;
     }
+    let mut applies = false;
     for rule in rules {
         if let Some(action) = rule.action_if_matches() {
-            return matches!(action, RuleAction::Allow);
+            applies = matches!(action, RuleAction::Allow);
         }
     }
-    false
+    applies
 }
 
 // ─── Arguments ────────────────────────────────────────────────────────────────

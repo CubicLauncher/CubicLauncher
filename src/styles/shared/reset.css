@@ -59,6 +59,16 @@ body {
 	color: var(--text-primary);
 	overflow: hidden;
 	height: 100vh;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+input,
+textarea,
+[contenteditable],
+.line-text {
+	-webkit-user-select: text;
+	user-select: text;
 }
 
 ::-webkit-scrollbar {
