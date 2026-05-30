@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fly, fade } from "svelte/transition";
+	import { fly } from "svelte/transition";
 	import { onMount } from "svelte";
 
 	interface Option {
@@ -28,7 +28,17 @@
 	let isOpen = $state(false);
 	let container: HTMLDivElement;
 	let triggerEl: HTMLButtonElement;
+	let dropdownEl = $state<HTMLDivElement>();
 	let dropdownStyles = $state("");
+
+	function portal(el: HTMLElement) {
+		document.body.appendChild(el);
+		return {
+			destroy() {
+				el.remove();
+			},
+		};
+	}
 
 	function updateDropdownPosition() {
 		const rect = triggerEl!.getBoundingClientRect();
@@ -54,8 +64,10 @@
 
 	function handleClickOutside(event: MouseEvent) {
 		if (container && !container.contains(event.target as Node)) {
-			isOpen = false;
-			dropdownStyles = "";
+			if (!dropdownEl || !dropdownEl.contains(event.target as Node)) {
+				isOpen = false;
+				dropdownStyles = "";
+			}
 		}
 	}
 
@@ -113,6 +125,8 @@
 
 	{#if isOpen}
 		<div
+			use:portal
+			bind:this={dropdownEl}
 			class="select-dropdown"
 			style={dropdownStyles}
 			transition:fly={{ y: 8, duration: 200 }}
@@ -148,123 +162,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-	.custom-select-container {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		width: 100%;
-	}
-
-	.select-trigger {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		background: rgba(255, 255, 255, 0.03);
-		border: 1px solid var(--border);
-		border-radius: var(--border-radius-sm);
-		padding: 10px 14px;
-		color: var(--text-primary);
-		font-family: inherit;
-		font-size: 0.85rem;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		text-align: left;
-		width: 100%;
-		outline: none;
-	}
-
-	.select-trigger:hover:not(.disabled) {
-		background: rgba(255, 255, 255, 0.06);
-		border-color: rgba(255, 255, 255, 0.2);
-	}
-
-	.select-trigger.open {
-		border-color: rgba(255, 255, 255, 0.3);
-		background: rgba(255, 255, 255, 0.06);
-		box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.02);
-	}
-
-	.select-trigger.disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.selected-value {
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.chevron-icon {
-		color: var(--text-secondary);
-		transition: transform 0.2s ease;
-		flex-shrink: 0;
-		margin-left: 8px;
-	}
-
-	.select-trigger.open .chevron-icon {
-		transform: rotate(180deg);
-	}
-
-	.select-dropdown {
-		position: fixed;
-		background: #121212;
-		border: 1px solid var(--border);
-		border-radius: var(--border-radius-sm);
-		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-		z-index: 9999;
-		max-height: 240px;
-		overflow-y: auto;
-		padding: 6px;
-		backdrop-filter: blur(10px);
-	}
-
-	.select-option {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 10px 12px;
-		border-radius: var(--border-radius-sm);
-		color: var(--text-secondary);
-		font-size: 0.85rem;
-		cursor: pointer;
-		transition: all 0.15s ease;
-		margin-bottom: 2px;
-	}
-
-	.select-option:last-child {
-		margin-bottom: 0;
-	}
-
-	.select-option:hover {
-		background: rgba(255, 255, 255, 0.05);
-		color: var(--text-primary);
-	}
-
-	.select-option.selected {
-		background: rgba(255, 255, 255, 0.03);
-		color: var(--text-primary);
-		font-weight: 600;
-		border: 1px solid rgba(255, 255, 255, 0.05);
-	}
-
-	.check-icon {
-		color: var(--accent);
-	}
-
-	.select-dropdown:global(::-webkit-scrollbar) {
-		width: 4px;
-	}
-
-	.select-dropdown:global(::-webkit-scrollbar-track) {
-		background: transparent;
-	}
-
-	.select-dropdown:global(::-webkit-scrollbar-thumb) {
-		background: var(--border);
-		border-radius: 10px;
-	}
-</style>
