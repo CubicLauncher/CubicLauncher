@@ -28,16 +28,11 @@
 	let isOpen = $state(false);
 	let container: HTMLDivElement;
 	let triggerEl: HTMLButtonElement;
-	let dropdownStyles = $state<Record<string, string>>({});
+	let dropdownStyles = $state("");
 
 	function updateDropdownPosition() {
-		if (!triggerEl) return;
-		const rect = triggerEl.getBoundingClientRect();
-		dropdownStyles = {
-			top: `${rect.bottom + 8}px`,
-			left: `${rect.left}px`,
-			width: `${rect.width}px`,
-		};
+		const rect = triggerEl!.getBoundingClientRect();
+		dropdownStyles = `top:${rect.bottom + 8}px;left:${rect.left}px;width:${rect.width}px`;
 	}
 
 	function toggle() {
@@ -46,21 +41,21 @@
 		if (isOpen) {
 			updateDropdownPosition();
 		} else {
-			dropdownStyles = {};
+			dropdownStyles = "";
 		}
 	}
 
 	function selectOption(option: Option) {
 		value = option.value;
 		isOpen = false;
-		dropdownStyles = {};
+		dropdownStyles = "";
 		onchange?.(value);
 	}
 
 	function handleClickOutside(event: MouseEvent) {
 		if (container && !container.contains(event.target as Node)) {
 			isOpen = false;
-			dropdownStyles = {};
+			dropdownStyles = "";
 		}
 	}
 
@@ -68,7 +63,7 @@
 		if (isOpen) {
 			const onScroll = () => {
 				isOpen = false;
-				dropdownStyles = {};
+				dropdownStyles = "";
 			};
 			window.addEventListener("scroll", onScroll, true);
 			return () => window.removeEventListener("scroll", onScroll, true);

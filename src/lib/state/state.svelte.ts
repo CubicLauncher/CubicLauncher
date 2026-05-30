@@ -7,7 +7,7 @@ import type {
 
 export interface PendingUpdate {
 	version: string;
-	body: string | null;
+	body?: string;
 }
 
 export interface LauncherState {

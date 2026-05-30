@@ -20,7 +20,7 @@ export async function checkForUpdates(silent = false) {
 		cachedUpdate = update;
 		launcherStore.pendingUpdate = {
 			version: update.version,
-			body: update.body ?? null,
+			body: update.body ?? undefined,
 		};
 
 		showInfo(

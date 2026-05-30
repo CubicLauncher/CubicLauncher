@@ -9,6 +9,14 @@
 		refreshAvailableVersions,
 	} from "$lib/api/cubicApi";
 	import type { MinecraftVersion, FabricGameVersion } from "$lib/types/types";
+
+	interface VersionDisplayItem {
+		id: string;
+		version: string;
+		type: string;
+		stable: boolean;
+		releaseTime: string;
+	}
 	import VirtualList from "./VirtualList.svelte";
 	import Select from "./Select.svelte";
 	import { launcherStore } from "$lib/state/state.svelte";
@@ -168,6 +176,17 @@
 				return matchesFilter && matchesSearch;
 			},
 		) || [],
+	);
+
+	const displayVersions = $derived(
+		filteredVersions.map((v) => ({
+			id: (v as MinecraftVersion).id ?? (v as FabricGameVersion).version,
+			version:
+				(v as FabricGameVersion).version ?? (v as MinecraftVersion).id,
+			type: (v as MinecraftVersion).type ?? "",
+			stable: (v as FabricGameVersion).stable ?? false,
+			releaseTime: (v as MinecraftVersion).releaseTime ?? "",
+		})),
 	);
 
 	$effect(() => {
@@ -467,10 +486,10 @@
 	<div class="qm-scroll" style="padding: 0;">
 		{#if loading || isCurrentManifestLoading}
 			<div class="qm-empty-state">{t("versionDownloader.loading")}</div>
-		{:else if filteredVersions.length === 0}
+		{:else if displayVersions.length === 0}
 			<div class="qm-empty-state">{t("versionDownloader.notFound")}</div>
 		{:else}
-			<VirtualList items={filteredVersions} itemHeight={66} padding={20}>
+			<VirtualList items={displayVersions} itemHeight={66} padding={20}>
 				{#snippet children(version, index)}
 					{@const isInstalled = installedVersions.includes(
 						version.id,

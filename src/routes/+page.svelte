@@ -68,11 +68,10 @@
 
 	$effect(() => {
 		const instances = launcherStore.loadedInstances;
-		if (selectedInstance) {
-			const updated = instances.find(
-				(i) => i.uuid === selectedInstance.uuid,
-			);
-			if (updated && updated !== selectedInstance) {
+		const sel = selectedInstance;
+		if (sel) {
+			const updated = instances.find((i) => i.uuid === sel.uuid);
+			if (updated && updated !== sel) {
 				selectedInstance = updated;
 			}
 		}
