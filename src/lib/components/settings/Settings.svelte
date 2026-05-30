@@ -13,6 +13,7 @@
 	import { listThemes } from "$lib/api/themeManager";
 	import type { ThemeEntry } from "$lib/types/types";
 	import UpdateSection from "./UpdateSection.svelte";
+	import CollapsibleSection from "./CollapsibleSection.svelte";
 
 	interface Props {
 		onclose?: () => void;
@@ -138,13 +139,14 @@
 	<!-- Header -->
 	<div class="qm-header">
 		<span class="qm-label">{t("settings.title")}</span>
-		<button class="qm-close-btn" onclick={onclose}>✕</button>
+		<button type="button" class="qm-close-btn" onclick={onclose}>✕</button>
 	</div>
 
 	<!-- Tab Navigation -->
 	<div class="qm-tabs">
-		{#each tabs as tab}
+		{#each tabs as tab (tab)}
 			<button
+				type="button"
 				class="qm-tab-btn"
 				class:active={currentTab === tab.id}
 				onclick={() => (currentTab = tab.id)}
@@ -156,294 +158,329 @@
 
 	<div class="qm-scroll">
 		{#if currentTab === "launcher"}
-			<!-- Running instances -->
-			<section class="qm-section">
-				<span class="qm-section-label"
-					>{t("settings.launcher.activeInstancesTitle")}</span
+			<div class="section-group">
+				<CollapsibleSection
+					title={t("settings.launcher.activeInstancesTitle")}
+					iconSrc="/images/icons/play.svg"
+					storageKey="section_instances"
 				>
-				{#each runningInstances as uuid}
-					{@const inst = launcherStore.loadedInstances.find(
-						(i) => i.uuid === uuid,
-					)}
-					{#if inst}
-						<div class="qm-active-card">
-							<div class="qm-status-dot running"></div>
-							<div class="qm-active-info">
-								<span class="qm-active-name">{inst.name}</span>
-								<span class="qm-active-sub"
-									>{inst.version} - {inst.loader}</span
+					{#each runningInstances as uuid (uuid)}
+						{@const inst = launcherStore.loadedInstances.find(
+							(i) => i.uuid === uuid,
+						)}
+						{#if inst}
+							<div class="qm-active-card">
+								<div class="qm-status-dot running"></div>
+								<div class="qm-active-info">
+									<span class="qm-active-name"
+										>{inst.name}</span
+									>
+									<span class="qm-active-sub"
+										>{inst.version} - {inst.loader}</span
+									>
+								</div>
+								<button
+									type="button"
+									class="qm-kill-btn"
+									onclick={() => killInst(inst.uuid)}
+									>{t(
+										"settings.launcher.killInstance",
+									)}</button
 								>
 							</div>
-							<button
-								class="qm-kill-btn"
-								onclick={() => killInst(inst.uuid)}
-								>{t("settings.launcher.killInstance")}</button
-							>
+						{/if}
+					{:else}
+						<div class="qm-empty-state">
+							{t("settings.launcher.noInstances")}
 						</div>
-					{/if}
-				{:else}
-					<div class="qm-empty-state">
-						{t("settings.launcher.noInstances")}
+					{/each}
+				</CollapsibleSection>
+
+				<CollapsibleSection
+					title={t("settings.launcher.updatesTitle")}
+					iconSrc="/images/icons/download.svg"
+					storageKey="section_updates"
+				>
+					<UpdateSection
+						{currentVersion}
+						pendingUpdate={launcherStore.pendingUpdate}
+						updateProgress={launcherStore.updateProgress}
+						updateDownloaded={launcherStore.updateDownloaded}
+						{checking}
+						{downloading}
+						{installing}
+						onCheck={handleCheckForUpdates}
+						onDownload={handleDownload}
+						onInstall={handleInstall}
+					/>
+				</CollapsibleSection>
+
+				<CollapsibleSection
+					title="Temas"
+					iconSrc="/images/icons/pencil.svg"
+					storageKey="section_themes"
+				>
+					<Select
+						id="theme"
+						label="Tema activo"
+						options={themeOptions}
+						bind:value={launcherStore.settings.theme}
+						onchange={async () => {
+							try {
+								await invoke("set_theme", {
+									id: launcherStore.settings.theme,
+								});
+							} catch (e) {
+								console.error("Error setting theme:", e);
+							}
+						}}
+					/>
+				</CollapsibleSection>
+
+				<CollapsibleSection
+					title={t("settings.launcher.generalTitle")}
+					iconSrc="/images/icons/sliders.svg"
+					storageKey="section_general"
+				>
+					<Select
+						id="language"
+						label={t("settings.launcher.language")}
+						options={languageOptions}
+						bind:value={launcherStore.settings.language}
+						onchange={handleSave}
+					/>
+					<div class="qm-field-checkbox">
+						<input
+							type="checkbox"
+							id="auto-updates"
+							bind:checked={launcherStore.settings.auto_updates}
+							onchange={handleSave}
+						/>
+						<label for="auto-updates"
+							>{t("settings.launcher.autoUpdates")}</label
+						>
 					</div>
-				{/each}
-			</section>
-
-			<!-- Updates section -->
-			<section class="qm-section">
-				<span class="qm-section-label"
-					>{t("settings.launcher.updatesTitle")}</span
-				>
-				<UpdateSection
-					{currentVersion}
-					pendingUpdate={launcherStore.pendingUpdate}
-					updateProgress={launcherStore.updateProgress}
-					updateDownloaded={launcherStore.updateDownloaded}
-					{checking}
-					{downloading}
-					{installing}
-					onCheck={handleCheckForUpdates}
-					onDownload={handleDownload}
-					onInstall={handleInstall}
-				/>
-			</section>
-
-			<!-- Themes -->
-			<section class="qm-section">
-				<span class="qm-section-label">Temas</span>
-				<Select
-					id="theme"
-					label="Tema activo"
-					options={themeOptions}
-					bind:value={launcherStore.settings.theme}
-					onchange={async () => {
-						try {
-							await invoke("set_theme", {
-								id: launcherStore.settings.theme,
-							});
-						} catch (e) {
-							console.error("Error setting theme:", e);
-						}
-					}}
-				/>
-			</section>
-
-			<!-- General Settings -->
-			<section class="qm-section">
-				<span class="qm-section-label"
-					>{t("settings.launcher.generalTitle")}</span
-				>
-				<Select
-					id="language"
-					label={t("settings.launcher.language")}
-					options={languageOptions}
-					bind:value={launcherStore.settings.language}
-					onchange={handleSave}
-				/>
-				<div class="qm-field-checkbox">
-					<input
-						type="checkbox"
-						id="auto-updates"
-						bind:checked={launcherStore.settings.auto_updates}
-						onchange={handleSave}
-					/>
-					<label for="auto-updates"
-						>{t("settings.launcher.autoUpdates")}</label
-					>
-				</div>
-				<div class="qm-field-checkbox">
-					<input
-						type="checkbox"
-						id="close-on-play"
-						bind:checked={
-							launcherStore.settings.close_launcher_on_play
-						}
-						onchange={handleSave}
-					/>
-					<label for="close-on-play"
-						>{t("settings.launcher.closeOnPlay")}</label
-					>
-				</div>
-				<div class="qm-field-checkbox">
-					<input
-						type="checkbox"
-						id="discord-presence"
-						bind:checked={launcherStore.settings.discord_presence}
-						onchange={handleSave}
-					/>
-					<label for="discord-presence"
-						>{t("settings.launcher.discordPresence")}</label
-					>
-				</div>
-			</section>
+					<div class="qm-field-checkbox">
+						<input
+							type="checkbox"
+							id="close-on-play"
+							bind:checked={
+								launcherStore.settings.close_launcher_on_play
+							}
+							onchange={handleSave}
+						/>
+						<label for="close-on-play"
+							>{t("settings.launcher.closeOnPlay")}</label
+						>
+					</div>
+					<div class="qm-field-checkbox">
+						<input
+							type="checkbox"
+							id="discord-presence"
+							bind:checked={
+								launcherStore.settings.discord_presence
+							}
+							onchange={handleSave}
+						/>
+						<label for="discord-presence"
+							>{t("settings.launcher.discordPresence")}</label
+						>
+					</div>
+				</CollapsibleSection>
+			</div>
 		{/if}
 
 		{#if currentTab === "minecraft"}
-			<!-- Performance -->
-			<section class="qm-section">
-				<span class="qm-section-label"
-					>{t("settings.minecraft.perfTitle")}</span
+			<div class="section-group">
+				<CollapsibleSection
+					title={t("settings.minecraft.perfTitle")}
+					iconSrc="/images/icons/database.svg"
+					storageKey="section_performance"
 				>
-				<div class="qm-field-group">
-					<div class="qm-field">
-						<label for="min-mem"
-							>{t("settings.minecraft.minRam")}</label
-						>
-						<input
-							type="number"
-							id="min-mem"
-							bind:value={launcherStore.settings.min_memory}
-						/>
+					<div class="qm-field-group">
+						<div class="qm-field">
+							<label for="min-mem"
+								>{t("settings.minecraft.minRam")}</label
+							>
+							<input
+								type="number"
+								id="min-mem"
+								bind:value={launcherStore.settings.min_memory}
+							/>
+						</div>
+						<div class="qm-field">
+							<label for="max-mem"
+								>{t("settings.minecraft.maxRam")}</label
+							>
+							<input
+								type="number"
+								id="max-mem"
+								bind:value={launcherStore.settings.max_memory}
+							/>
+						</div>
 					</div>
-					<div class="qm-field">
-						<label for="max-mem"
-							>{t("settings.minecraft.maxRam")}</label
-						>
-						<input
-							type="number"
-							id="max-mem"
-							bind:value={launcherStore.settings.max_memory}
-						/>
-					</div>
-				</div>
-			</section>
+				</CollapsibleSection>
 
-			<section class="qm-section">
-				<span class="qm-section-label"
-					>{t("settings.minecraft.optionsTitle")}</span
+				<CollapsibleSection
+					title={t("settings.minecraft.optionsTitle")}
+					iconSrc="/images/icons/check-square.svg"
+					storageKey="section_options"
 				>
-				<div class="qm-field-checkbox">
-					<input
-						type="checkbox"
-						id="show-snapshots"
-						bind:checked={launcherStore.settings.show_snapshots}
-						onchange={handleSave}
-					/>
-					<label for="show-snapshots"
-						>{t("settings.minecraft.showSnapshots")}</label
-					>
-				</div>
-				<div class="qm-field-checkbox">
-					<input
-						type="checkbox"
-						id="show-alpha"
-						bind:checked={launcherStore.settings.show_alpha}
-						onchange={handleSave}
-					/>
-					<label for="show-alpha"
-						>{t("settings.minecraft.showAlpha")}</label
-					>
-				</div>
-			</section>
+					<div class="qm-field-checkbox">
+						<input
+							type="checkbox"
+							id="show-snapshots"
+							bind:checked={launcherStore.settings.show_snapshots}
+							onchange={handleSave}
+						/>
+						<label for="show-snapshots"
+							>{t("settings.minecraft.showSnapshots")}</label
+						>
+					</div>
+					<div class="qm-field-checkbox">
+						<input
+							type="checkbox"
+							id="show-alpha"
+							bind:checked={launcherStore.settings.show_alpha}
+							onchange={handleSave}
+						/>
+						<label for="show-alpha"
+							>{t("settings.minecraft.showAlpha")}</label
+						>
+					</div>
+				</CollapsibleSection>
+			</div>
 		{/if}
 
 		{#if currentTab === "java"}
-			<!-- Java Paths -->
-			<section class="qm-section">
-				<div
-					style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"
+			<div class="section-group">
+				<CollapsibleSection
+					title={t("settings.java.runtimesTitle")}
+					iconSrc="/images/icons/terminal.svg"
+					storageKey="section_runtimes"
 				>
-					<span class="qm-section-label" style="margin: 0;"
-						>{t("settings.java.runtimesTitle")}</span
-					>
-					<button class="detect-btn" onclick={autoDetectJava}
-						>{t("settings.java.detectPathsBtn")}</button
-					>
-				</div>
-				<div class="qm-field">
-					<label for="jre8">{t("settings.java.java8Path")}</label>
-					<input
-						type="text"
-						id="jre8"
-						bind:value={launcherStore.settings.jre8_path}
-						placeholder="Path to javaw.exe"
-					/>
-				</div>
-				<div class="qm-field">
-					<label for="jre17">{t("settings.java.java17Path")}</label>
-					<input
-						type="text"
-						id="jre17"
-						bind:value={launcherStore.settings.jre17_path}
-						placeholder="Path to javaw.exe"
-					/>
-				</div>
-				<div class="qm-field">
-					<label for="jre21">{t("settings.java.java21Path")}</label>
-					<input
-						type="text"
-						id="jre21"
-						bind:value={launcherStore.settings.jre21_path}
-						placeholder="Path to javaw.exe"
-					/>
-				</div>
-				<div class="qm-field">
-					<label for="jre25">{t("settings.java.java25Path")}</label>
-					<input
-						type="text"
-						id="jre25"
-						bind:value={launcherStore.settings.jre25_path}
-						placeholder="Path to javaw.exe"
-					/>
-				</div>
-			</section>
-
-			<section class="qm-section">
-				<span class="qm-section-label">Avanzado</span>
-				<div class="qm-field">
-					<label for="jvm-args">{t("settings.java.jvmArgs")}</label>
-					<textarea
-						id="jvm-args"
-						bind:value={launcherStore.settings.jvm_args}
-						placeholder="-Xmx2G -Xms1G ..."
-						style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 10px; border-radius: var(--border-radius-sm); font-size: 0.85rem; resize: vertical; min-height: 60px; font-family: monospace; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
-					></textarea>
-				</div>
-				<div class="qm-field">
-					<span
-						style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.8rem;"
-						>{t("settings.java.envVars")}</span
-					>
-					{#each envVarList as entry, i}
-						<div
-							style="display: flex; gap: 4px; align-items: center; margin-bottom: 4px;"
+					<div style="margin-bottom: 12px;">
+						<button
+							type="button"
+							class="detect-btn"
+							onclick={autoDetectJava}
+							>{t("settings.java.detectPathsBtn")}</button
 						>
-							<input
-								type="text"
-								bind:value={entry.key}
-								placeholder="KEY"
-								oninput={syncEnvVars}
-								style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 8px; border-radius: var(--border-radius-sm); font-size: 0.8rem; height: 28px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
-							/>
-							<span
-								style="color: var(--text-muted); font-size: 0.8rem; flex-shrink: 0;"
-								>=</span
+					</div>
+					<div class="qm-field">
+						<label for="jre8">{t("settings.java.java8Path")}</label>
+						<input
+							type="text"
+							id="jre8"
+							bind:value={launcherStore.settings.jre8_path}
+							placeholder="Path to javaw.exe"
+						/>
+					</div>
+					<div class="qm-field">
+						<label for="jre17"
+							>{t("settings.java.java17Path")}</label
+						>
+						<input
+							type="text"
+							id="jre17"
+							bind:value={launcherStore.settings.jre17_path}
+							placeholder="Path to javaw.exe"
+						/>
+					</div>
+					<div class="qm-field">
+						<label for="jre21"
+							>{t("settings.java.java21Path")}</label
+						>
+						<input
+							type="text"
+							id="jre21"
+							bind:value={launcherStore.settings.jre21_path}
+							placeholder="Path to javaw.exe"
+						/>
+					</div>
+					<div class="qm-field">
+						<label for="jre25"
+							>{t("settings.java.java25Path")}</label
+						>
+						<input
+							type="text"
+							id="jre25"
+							bind:value={launcherStore.settings.jre25_path}
+							placeholder="Path to javaw.exe"
+						/>
+					</div>
+				</CollapsibleSection>
+
+				<CollapsibleSection
+					title="Avanzado"
+					iconSrc="/images/icons/settings.svg"
+					storageKey="section_advanced"
+				>
+					<div class="qm-field">
+						<label for="jvm-args"
+							>{t("settings.java.jvmArgs")}</label
+						>
+						<textarea
+							id="jvm-args"
+							bind:value={launcherStore.settings.jvm_args}
+							placeholder="-Xmx2G -Xms1G ..."
+							style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 10px; border-radius: var(--border-radius-sm); font-size: 0.85rem; resize: vertical; min-height: 60px; font-family: monospace; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
+						></textarea>
+					</div>
+					<div class="qm-field">
+						<span
+							style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.8rem;"
+							>{t("settings.java.envVars")}</span
+						>
+						{#each envVarList as entry, i (entry)}
+							<div
+								style="display: flex; gap: 4px; align-items: center; margin-bottom: 4px;"
 							>
-							<input
-								type="text"
-								bind:value={entry.value}
-								placeholder="VALUE"
-								oninput={syncEnvVars}
-								style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 8px; border-radius: var(--border-radius-sm); font-size: 0.8rem; height: 28px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
-							/>
-							<button
-								onclick={() => removeEnvVar(i)}
-								style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; font-size: 1rem; line-height: 1; flex-shrink: 0;"
-								>✕</button
-							>
-						</div>
-					{/each}
-					<button
-						onclick={addEnvVar}
-						style="background: none; border: 1px dashed var(--border-color); color: var(--text-secondary); cursor: pointer; padding: 4px 10px; border-radius: var(--border-radius-sm); font-size: 0.8rem; margin-top: 2px;"
-						>+ {t("settings.java.envVarsAdd")}</button
-					>
-				</div>
-			</section>
+								<input
+									type="text"
+									bind:value={entry.key}
+									placeholder="KEY"
+									oninput={syncEnvVars}
+									style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 8px; border-radius: var(--border-radius-sm); font-size: 0.8rem; height: 28px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
+								/>
+								<span
+									style="color: var(--text-muted); font-size: 0.8rem; flex-shrink: 0;"
+									>=</span
+								>
+								<input
+									type="text"
+									bind:value={entry.value}
+									placeholder="VALUE"
+									oninput={syncEnvVars}
+									style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 8px; border-radius: var(--border-radius-sm); font-size: 0.8rem; height: 28px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
+								/>
+								<button
+									type="button"
+									onclick={() => removeEnvVar(i)}
+									style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; font-size: 1rem; line-height: 1; flex-shrink: 0;"
+									>✕</button
+								>
+							</div>
+						{/each}
+						<button
+							type="button"
+							onclick={addEnvVar}
+							style="background: none; border: 1px dashed var(--border-color); color: var(--text-secondary); cursor: pointer; padding: 4px 10px; border-radius: var(--border-radius-sm); font-size: 0.8rem; margin-top: 2px;"
+							>+ {t("settings.java.envVarsAdd")}</button
+						>
+					</div>
+				</CollapsibleSection>
+			</div>
 		{/if}
 	</div>
 
 	<div class="save-footer">
-		<button class="qm-save-btn" onclick={handleSave} disabled={saving}>
+		<button
+			type="button"
+			class="qm-save-btn"
+			onclick={handleSave}
+			disabled={saving}
+		>
 			{saving ? t("settings.java.saving") : t("settings.java.saveBtn")}
 		</button>
 	</div>
@@ -520,7 +557,21 @@
 	.qm-scroll {
 		flex: 1;
 		overflow-y: auto;
-		padding: 0 20px;
+	}
+
+	.section-group {
+		border: 1px solid var(--border-color);
+		overflow: hidden;
+		margin-bottom: 16px;
+	}
+
+	.section-group :global(.cs-root) {
+		border: none;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	.section-group :global(.cs-root:last-child) {
+		border-bottom: none;
 	}
 
 	:global(.qm-scroll::-webkit-scrollbar) {
@@ -534,20 +585,6 @@
 	:global(.qm-scroll::-webkit-scrollbar-thumb) {
 		background: #222;
 		border-radius: 10px;
-	}
-
-	.qm-section {
-		margin-top: 25px;
-	}
-
-	.qm-section-label {
-		display: block;
-		font-size: 0.75rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		color: #555;
-		margin-bottom: 12px;
-		letter-spacing: 0.05em;
 	}
 
 	.qm-active-card {
