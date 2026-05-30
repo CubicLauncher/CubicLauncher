@@ -1,180 +1,184 @@
 .btn-primary {
-    background: var(--accent);
-    color: var(--bg-main);
-    border: none;
-    padding: 8px 16px;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.8rem;
-    font-family: "Cantarell", system-ui, sans-serif;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
+	background: var(--accent);
+	color: var(--bg-main);
+	border: none;
+	padding: 8px 16px;
+	border-radius: var(--border-radius-sm);
+	font-size: 0.8rem;
+	font-family: "Cantarell", system-ui, sans-serif;
+	font-weight: 700;
+	cursor: pointer;
+	transition: opacity 0.2s ease;
 }
 
 .btn-primary:hover {
-    opacity: 0.9;
+	opacity: 0.9;
 }
 
 .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    padding: 8px 16px;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.8rem;
-    font-family: "Cantarell", system-ui, sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
+	background: transparent;
+	border: 1px solid var(--border);
+	color: var(--text-secondary);
+	padding: 8px 16px;
+	border-radius: var(--border-radius-sm);
+	font-size: 0.8rem;
+	font-family: "Cantarell", system-ui, sans-serif;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		background 0.2s ease,
+		color 0.2s ease;
 }
 
 .btn-secondary:hover {
-    background: var(--bg-item-active);
-    color: var(--text-primary);
+	background: var(--bg-item-active);
+	color: var(--text-primary);
 }
 
 .action-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    padding: 4px;
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s ease, color 0.2s ease;
+	background: transparent;
+	border: none;
+	color: var(--text-secondary);
+	padding: 4px;
+	border-radius: var(--border-radius-sm);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition:
+		background 0.2s ease,
+		color 0.2s ease;
 }
 
 .action-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary);
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--text-primary);
 }
 
 .action-btn.delete:hover {
-    background: rgba(255, 68, 68, 0.15);
-    color: #ff4444;
+	background: rgba(255, 68, 68, 0.15);
+	color: #ff4444;
 }
 
 .empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    color: var(--text-secondary);
-    text-align: center;
-    padding: 40px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	color: var(--text-secondary);
+	text-align: center;
+	padding: 40px;
 }
 
 .empty-state h2 {
-    color: var(--text-primary);
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: 0.3px;
+	color: var(--text-primary);
+	font-size: 1.2rem;
+	font-weight: 600;
+	letter-spacing: 0.3px;
 }
 
 .empty-state p {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
+	font-size: 0.8rem;
+	color: var(--text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 600;
 }
 
 .section-title {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 18px;
-    display: block;
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 1.5px;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+	margin-bottom: 18px;
+	display: block;
 }
 
 .mod-icon-placeholder {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 18px;
-    display: block;
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 1.5px;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+	margin-bottom: 18px;
+	display: block;
 }
 
 .mod-icon-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.05);
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.2rem;
+	color: var(--text-secondary);
+	background: rgba(255, 255, 255, 0.05);
 }
 
 .icon-selector {
-    display: flex;
-    gap: 12px;
-    margin-top: 8px;
+	display: flex;
+	gap: 12px;
+	margin-top: 8px;
 }
 
 .icon-option {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--border-radius-sm);
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid transparent;
-    cursor: pointer;
-    padding: 8px;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: var(--border-radius-sm);
+	background: rgba(255, 255, 255, 0.05);
+	border: 2px solid transparent;
+	cursor: pointer;
+	padding: 8px;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .icon-option:hover {
-    background: rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.1);
 }
 
 .icon-option.selected {
-    border-color: var(--accent);
-    background: rgba(255, 255, 255, 0.1);
+	border-color: var(--accent);
+	background: rgba(255, 255, 255, 0.1);
 }
 
 .icon-option img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
 }
 
 .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
 .input-label {
-    font-size: 0.65rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-secondary);
+	font-size: 0.65rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	color: var(--text-secondary);
 }
 
 .text-input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
-    border-radius: var(--border-radius-sm);
-    padding: 10px 12px;
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s ease;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid var(--border);
+	border-radius: var(--border-radius-sm);
+	padding: 10px 12px;
+	color: var(--text-primary);
+	font-family: inherit;
+	font-size: 0.85rem;
+	outline: none;
+	transition: border-color 0.2s ease;
 }
 
 .text-input:focus {
-    border-color: rgba(255, 255, 255, 0.3);
+	border-color: rgba(255, 255, 255, 0.3);
 }

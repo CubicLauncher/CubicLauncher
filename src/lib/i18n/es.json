@@ -1,262 +1,262 @@
 {
-  "id": "es-ES",
-  "settings": {
-    "title": "Ajustes",
-    "tabs": {
-      "launcher": "Launcher",
-      "minecraft": "Minecraft",
-      "java": "Java"
-    },
-    "launcher": {
-      "activeInstancesTitle": "Instancias Activas",
-      "killInstance": "Matar",
-      "noInstances": "No hay instancias corriendo",
-      "generalTitle": "General",
-      "language": "Idioma",
-      "autoUpdates": "Actualizaciones Automáticas",
-      "closeOnPlay": "Cerrar el launcher al abrir el juego",
-      "updatesTitle": "Actualizaciones",
-      "currentVersion": "Versión Actual",
-      "available": "Actualización Disponible",
-      "status": "Estado",
-      "updateOk": "Actualizado",
-      "notes": "Notas de la versión",
-      "checking": "Comprobando...",
-      "checkingBtn": "Comprobando actualizaciones",
-      "searchBtn": "Buscar Actualizaciones",
-      "downloading": "Descargando...",
-      "downloadingBtn": "Descargando actualización",
-      "downloadOnly": "Solo Descargar",
-      "downloadInstallBtn": "Descargar e Instalar",
-      "installing": "Instalando...",
-      "installingBtn": "Instalando actualización",
-      "installUpdateBtn": "Instalar Actualización"
-    },
-    "minecraft": {
-      "perfTitle": "Rendimiento (RAM)",
-      "minRam": "Mínima (GB)",
-      "maxRam": "Máxima (GB)",
-      "optionsTitle": "Opciones de Minecraft",
-      "showSnapshots": "Mostrar versiones Snapshots",
-      "showAlpha": "Mostrar versiones Alpha"
-    },
-    "java": {
-      "configTitle": "Configuración de Java",
-      "runtimesTitle": "Entornos Java (Runtimes)",
-      "detectPathsBtn": "Detectar Rutas",
-      "java8Path": "Ruta de Java 8",
-      "java17Path": "Ruta de Java 17",
-      "java21Path": "Ruta de Java 21",
-      "java25Path": "Ruta de Java 25",
-      "jvmArgs": "Argumentos JVM",
-      "envVars": "Variables de Entorno",
-      "envVarsAdd": "Añadir",
-      "saveBtn": "Guardar Ajustes",
-      "saving": "Guardando..."
-    }
-  },
-  "main": {
-    "noInstanceTitle": "No se ha seleccionado ninguna instancia",
-    "noInstanceDesc": "Elige una instancia de la barra lateral para comenzar"
-  },
-  "sidebar": {
-    "yourInstances": "Tus Instancias",
-    "rename": "Renombrar",
-    "delete": "Eliminar",
-    "noInstances": "Sin instancias",
-    "createInstance": "Crear Instancia",
-    "downloadVersions": "Descargar Versiones",
-    "settings": "Ajustes",
-    "modals": {
-      "editTitle": "Editar Instancia",
-      "nameLabel": "Nombre",
-      "versionLabel": "Versión",
-      "iconLabel": "Logo de la Instancia",
-      "cancel": "Cancelar",
-      "save": "Guardar",
-      "deleteTitle": "Eliminar Instancia",
-      "deleteDesc1": "¿Estás seguro de que deseas eliminar la instancia",
-      "deleteDesc2": "? Esta acción no se puede deshacer.",
-      "deleteBtn": "Eliminar"
-    }
-  },
-  "userMenu": {
-    "title": "Perfil de Usuario",
-    "usernameLabel": "Nombre de Usuario",
-    "usernamePlaceholder": "Usuario",
-    "offline": "Desconectado",
-    "cancel": "Cancelar",
-    "save": "Guardar",
-    "changeNameBtn": "Cambiar Nombre",
-    "loginMicrosoft": "Iniciar sesión con Microsoft",
-    "logout": "Cerrar sesión",
-    "premium": "Cuenta Premium",
-    "authModal": {
-      "title": "Inicio de Sesión Microsoft",
-      "instruction": "Para iniciar sesión con tu cuenta de Microsoft, copia el siguiente enlace e introduce el código que aparece a continuación:",
-      "copyLink": "Copiar enlace",
-      "linkCopied": "¡Enlace copiado!",
-      "loading": "Conectando con Microsoft...",
-      "waiting": "Esperando autenticación...",
-      "success": "¡Sesión iniciada correctamente!",
-      "error": "Error al iniciar sesión: {error}"
-    }
-  },
-  "instanceView": {
-    "neverPlayed": "Nunca jugado",
-    "lastPlayed": "Última vez jugado: {date}",
-    "playBtn": "Jugar",
-    "close": "Forzar cierre",
-    "pickBannerTitle": "Seleccionar Banner",
-    "noScreenshots": "No hay capturas disponibles",
-    "changeBanner": "Cambiar",
-    "changeBannerTitle": "Cambiar Banner",
-    "status": {
-      "starting": "Iniciando",
-      "started": "Version iniciada",
-      "idle": "Inactivo"
-    },
-    "tabs": {
-      "details": "Detalles",
-      "mods": "Mods",
-      "resources": "Recursos",
-      "screenshots": "Capturas",
-      "logs": "Logs",
-      "options": "Opciones",
-      "downloadMods": "Obtener Mods"
-    },
-    "details": {
-      "title": "Detalles",
-      "version": "Versión",
-      "loader": "Cargador",
-      "location": "Ubicación"
-    },
-    "options": {
-      "title": "Opciones rápidas",
-      "folder": "Abrir Carpeta",
-      "resources": "Recursos",
-      "screenshots": "Capturas",
-      "logs": "Registros"
-    },
-    "mods": {
-      "title": "Mods Instalados",
-      "jarFile": "Archivo .JAR",
-      "empty": "No hay mods instalados en esta instancia",
-      "authors": "Autores",
-      "noDescription": "Sin descripción disponible"
-    },
-    "resources": {
-      "title": "Paquetes de Recursos",
-      "addBtn": "Añadir Pack",
-      "empty": "No hay paquetes de recursos instalados"
-    },
-    "logs": {
-      "title": "Registros de la Instancia",
-      "empty": "No hay archivos de registro",
-      "selectLog": "Selecciona un archivo para ver su contenido"
-    },
-    "screenshots": {
-      "title": "Capturas de Pantalla",
-      "empty": "No hay capturas de pantalla"
-    },
-    "console": {
-      "placeholder": "Inicia la instancia para ver la salida de la consola",
-      "waiting": "Esperando salida...",
-      "title": "Consola"
-    },
-    "downloadMods": {
-      "sectionLabel": "Mod Manager",
-      "reviewTitle": "Revisar & Descargar",
-      "back": "← Volver",
-      "resolvingDeps": "Resolviendo dependencias...",
-      "allInstalled": "✓ Todas las dependencias ya están instaladas.",
-      "allInstalledSub": "No hay archivos nuevos que descargar.",
-      "filesToDownload_one": "{count} archivo para descargar:",
-      "filesToDownload_other": "{count} archivos para descargar:",
-      "confirmDownload": "Confirmar descarga",
-      "downloading": "Descargando...",
-      "file_one": "archivo",
-      "file_other": "archivos",
-      "categoriesLabel": "Categorías",
-      "allCategories": "Todas",
-      "sortLabel": "Ordenar por",
-      "sortDownloads": "Más descargados",
-      "sortRelevance": "Relevancia",
-      "sortNewest": "Más nuevos",
-      "sortUpdated": "Actualizados",
-      "selectionLabel": "Selección",
-      "selectionDesc": "Mods listos para instalar",
-      "reviewBtn": "Revisar & Descargar",
-      "searchPlaceholder": "Buscar mods en Modrinth...",
-      "resultsFound": "{count} mods encontrados",
-      "searching": "Buscando mods...",
-      "loadingMore": "Cargando más mods...",
-      "endOfResults": "— Fin de los resultados ({count} mods) —",
-      "noResults": "No se encontraron mods",
-      "clearFilters": "Limpiar filtros",
-      "select": "Seleccionar",
-      "selected": "✓ Seleccionado",
-      "closeDetails": "Cerrar detalles",
-      "downloads": "Descargas",
-      "removeSelection": "Quitar selección",
-      "selectToDownload": "Seleccionar para descargar",
-      "by": "por",
-      "noVersionCompat": "Sin {version}",
-      "versionLabel": "Versión",
-      "anyVersion": "Última",
-      "compatible": "✓ Compatible",
-      "noCompatibleVersions": "Sin versiones para {version}",
-      "noCompatibleDesc": "Este mod no tiene versiones compatibles con tu versión y loader.",
-      "loadingVersions": "Cargando versiones...",
-      "installed": "Instalado"
-    }
-  },
-  "createInstance": {
-    "title": "Crear Nueva Instancia",
-    "emptyNameErr": "El nombre no puede estar vacío",
-    "createErr": "Error al crear la instancia",
-    "nameLabel": "Nombre de la Instancia",
-    "namePlaceholder": "Ej. Mi instancia",
-    "versionLabel": "Versión",
-    "iconLabel": "Logo de la Instancia",
-    "noVersionsErr": "No hay versiones descargadas",
-    "cancel": "Cancelar",
-    "createBtn": "Crear",
-    "creatingBtn": "Creando..."
-  },
-  "versionDownloader": {
-    "title": "Descargar Versiones",
-    "searchPlaceholder": "Buscar versión...",
-    "loading": "Cargando versiones...",
-    "notFound": "No se encontraron versiones",
-    "installedTag": "Instalada",
-    "downloadBtn": "Descargar",
-    "refreshBtn": "Recargar caché",
-    "filters": {
-      "all": "Todos",
-      "installedOnly": "Solo Instalados",
-      "notInstalledOnly": "No Instalados",
-      "stableOnly": "Solo Estables",
-      "unstableOnly": "Solo Inestables",
-      "installStatus": "Estado",
-      "majorVersion": "Versión Mayor",
-      "fabricStability": "Estabilidad"
-    },
-    "tabs": {
-      "releases": "Releases",
-      "snapshots": "Snapshots",
-      "alphas": "Alphas",
-      "fabric": "Fabric"
-    }
-  },
-  "themes": {
-    "warning": {
-      "title": "Fondo del Theme",
-      "largeFile": "El fondo supera los 25MB — no se cargará",
-      "notAnImage": "El fondo no es una imagen válida — no se cargará"
-    }
-  },
-  "downloadProgress": {
-    "items": "objetos"
-  }
+	"id": "es-ES",
+	"settings": {
+		"title": "Ajustes",
+		"tabs": {
+			"launcher": "Launcher",
+			"minecraft": "Minecraft",
+			"java": "Java"
+		},
+		"launcher": {
+			"activeInstancesTitle": "Instancias Activas",
+			"killInstance": "Matar",
+			"noInstances": "No hay instancias corriendo",
+			"generalTitle": "General",
+			"language": "Idioma",
+			"autoUpdates": "Actualizaciones Automáticas",
+			"closeOnPlay": "Cerrar el launcher al abrir el juego",
+			"updatesTitle": "Actualizaciones",
+			"currentVersion": "Versión Actual",
+			"available": "Actualización Disponible",
+			"status": "Estado",
+			"updateOk": "Actualizado",
+			"notes": "Notas de la versión",
+			"checking": "Comprobando...",
+			"checkingBtn": "Comprobando actualizaciones",
+			"searchBtn": "Buscar Actualizaciones",
+			"downloading": "Descargando...",
+			"downloadingBtn": "Descargando actualización",
+			"downloadOnly": "Solo Descargar",
+			"downloadInstallBtn": "Descargar e Instalar",
+			"installing": "Instalando...",
+			"installingBtn": "Instalando actualización",
+			"installUpdateBtn": "Instalar Actualización"
+		},
+		"minecraft": {
+			"perfTitle": "Rendimiento (RAM)",
+			"minRam": "Mínima (GB)",
+			"maxRam": "Máxima (GB)",
+			"optionsTitle": "Opciones de Minecraft",
+			"showSnapshots": "Mostrar versiones Snapshots",
+			"showAlpha": "Mostrar versiones Alpha"
+		},
+		"java": {
+			"configTitle": "Configuración de Java",
+			"runtimesTitle": "Entornos Java (Runtimes)",
+			"detectPathsBtn": "Detectar Rutas",
+			"java8Path": "Ruta de Java 8",
+			"java17Path": "Ruta de Java 17",
+			"java21Path": "Ruta de Java 21",
+			"java25Path": "Ruta de Java 25",
+			"jvmArgs": "Argumentos JVM",
+			"envVars": "Variables de Entorno",
+			"envVarsAdd": "Añadir",
+			"saveBtn": "Guardar Ajustes",
+			"saving": "Guardando..."
+		}
+	},
+	"main": {
+		"noInstanceTitle": "No se ha seleccionado ninguna instancia",
+		"noInstanceDesc": "Elige una instancia de la barra lateral para comenzar"
+	},
+	"sidebar": {
+		"yourInstances": "Tus Instancias",
+		"rename": "Renombrar",
+		"delete": "Eliminar",
+		"noInstances": "Sin instancias",
+		"createInstance": "Crear Instancia",
+		"downloadVersions": "Descargar Versiones",
+		"settings": "Ajustes",
+		"modals": {
+			"editTitle": "Editar Instancia",
+			"nameLabel": "Nombre",
+			"versionLabel": "Versión",
+			"iconLabel": "Logo de la Instancia",
+			"cancel": "Cancelar",
+			"save": "Guardar",
+			"deleteTitle": "Eliminar Instancia",
+			"deleteDesc1": "¿Estás seguro de que deseas eliminar la instancia",
+			"deleteDesc2": "? Esta acción no se puede deshacer.",
+			"deleteBtn": "Eliminar"
+		}
+	},
+	"userMenu": {
+		"title": "Perfil de Usuario",
+		"usernameLabel": "Nombre de Usuario",
+		"usernamePlaceholder": "Usuario",
+		"offline": "Desconectado",
+		"cancel": "Cancelar",
+		"save": "Guardar",
+		"changeNameBtn": "Cambiar Nombre",
+		"loginMicrosoft": "Iniciar sesión con Microsoft",
+		"logout": "Cerrar sesión",
+		"premium": "Cuenta Premium",
+		"authModal": {
+			"title": "Inicio de Sesión Microsoft",
+			"instruction": "Para iniciar sesión con tu cuenta de Microsoft, copia el siguiente enlace e introduce el código que aparece a continuación:",
+			"copyLink": "Copiar enlace",
+			"linkCopied": "¡Enlace copiado!",
+			"loading": "Conectando con Microsoft...",
+			"waiting": "Esperando autenticación...",
+			"success": "¡Sesión iniciada correctamente!",
+			"error": "Error al iniciar sesión: {error}"
+		}
+	},
+	"instanceView": {
+		"neverPlayed": "Nunca jugado",
+		"lastPlayed": "Última vez jugado: {date}",
+		"playBtn": "Jugar",
+		"close": "Forzar cierre",
+		"pickBannerTitle": "Seleccionar Banner",
+		"noScreenshots": "No hay capturas disponibles",
+		"changeBanner": "Cambiar",
+		"changeBannerTitle": "Cambiar Banner",
+		"status": {
+			"starting": "Iniciando",
+			"started": "Version iniciada",
+			"idle": "Inactivo"
+		},
+		"tabs": {
+			"details": "Detalles",
+			"mods": "Mods",
+			"resources": "Recursos",
+			"screenshots": "Capturas",
+			"logs": "Logs",
+			"options": "Opciones",
+			"downloadMods": "Obtener Mods"
+		},
+		"details": {
+			"title": "Detalles",
+			"version": "Versión",
+			"loader": "Cargador",
+			"location": "Ubicación"
+		},
+		"options": {
+			"title": "Opciones rápidas",
+			"folder": "Abrir Carpeta",
+			"resources": "Recursos",
+			"screenshots": "Capturas",
+			"logs": "Registros"
+		},
+		"mods": {
+			"title": "Mods Instalados",
+			"jarFile": "Archivo .JAR",
+			"empty": "No hay mods instalados en esta instancia",
+			"authors": "Autores",
+			"noDescription": "Sin descripción disponible"
+		},
+		"resources": {
+			"title": "Paquetes de Recursos",
+			"addBtn": "Añadir Pack",
+			"empty": "No hay paquetes de recursos instalados"
+		},
+		"logs": {
+			"title": "Registros de la Instancia",
+			"empty": "No hay archivos de registro",
+			"selectLog": "Selecciona un archivo para ver su contenido"
+		},
+		"screenshots": {
+			"title": "Capturas de Pantalla",
+			"empty": "No hay capturas de pantalla"
+		},
+		"console": {
+			"placeholder": "Inicia la instancia para ver la salida de la consola",
+			"waiting": "Esperando salida...",
+			"title": "Consola"
+		},
+		"downloadMods": {
+			"sectionLabel": "Mod Manager",
+			"reviewTitle": "Revisar & Descargar",
+			"back": "← Volver",
+			"resolvingDeps": "Resolviendo dependencias...",
+			"allInstalled": "✓ Todas las dependencias ya están instaladas.",
+			"allInstalledSub": "No hay archivos nuevos que descargar.",
+			"filesToDownload_one": "{count} archivo para descargar:",
+			"filesToDownload_other": "{count} archivos para descargar:",
+			"confirmDownload": "Confirmar descarga",
+			"downloading": "Descargando...",
+			"file_one": "archivo",
+			"file_other": "archivos",
+			"categoriesLabel": "Categorías",
+			"allCategories": "Todas",
+			"sortLabel": "Ordenar por",
+			"sortDownloads": "Más descargados",
+			"sortRelevance": "Relevancia",
+			"sortNewest": "Más nuevos",
+			"sortUpdated": "Actualizados",
+			"selectionLabel": "Selección",
+			"selectionDesc": "Mods listos para instalar",
+			"reviewBtn": "Revisar & Descargar",
+			"searchPlaceholder": "Buscar mods en Modrinth...",
+			"resultsFound": "{count} mods encontrados",
+			"searching": "Buscando mods...",
+			"loadingMore": "Cargando más mods...",
+			"endOfResults": "— Fin de los resultados ({count} mods) —",
+			"noResults": "No se encontraron mods",
+			"clearFilters": "Limpiar filtros",
+			"select": "Seleccionar",
+			"selected": "✓ Seleccionado",
+			"closeDetails": "Cerrar detalles",
+			"downloads": "Descargas",
+			"removeSelection": "Quitar selección",
+			"selectToDownload": "Seleccionar para descargar",
+			"by": "por",
+			"noVersionCompat": "Sin {version}",
+			"versionLabel": "Versión",
+			"anyVersion": "Última",
+			"compatible": "✓ Compatible",
+			"noCompatibleVersions": "Sin versiones para {version}",
+			"noCompatibleDesc": "Este mod no tiene versiones compatibles con tu versión y loader.",
+			"loadingVersions": "Cargando versiones...",
+			"installed": "Instalado"
+		}
+	},
+	"createInstance": {
+		"title": "Crear Nueva Instancia",
+		"emptyNameErr": "El nombre no puede estar vacío",
+		"createErr": "Error al crear la instancia",
+		"nameLabel": "Nombre de la Instancia",
+		"namePlaceholder": "Ej. Mi instancia",
+		"versionLabel": "Versión",
+		"iconLabel": "Logo de la Instancia",
+		"noVersionsErr": "No hay versiones descargadas",
+		"cancel": "Cancelar",
+		"createBtn": "Crear",
+		"creatingBtn": "Creando..."
+	},
+	"versionDownloader": {
+		"title": "Descargar Versiones",
+		"searchPlaceholder": "Buscar versión...",
+		"loading": "Cargando versiones...",
+		"notFound": "No se encontraron versiones",
+		"installedTag": "Instalada",
+		"downloadBtn": "Descargar",
+		"refreshBtn": "Recargar caché",
+		"filters": {
+			"all": "Todos",
+			"installedOnly": "Solo Instalados",
+			"notInstalledOnly": "No Instalados",
+			"stableOnly": "Solo Estables",
+			"unstableOnly": "Solo Inestables",
+			"installStatus": "Estado",
+			"majorVersion": "Versión Mayor",
+			"fabricStability": "Estabilidad"
+		},
+		"tabs": {
+			"releases": "Releases",
+			"snapshots": "Snapshots",
+			"alphas": "Alphas",
+			"fabric": "Fabric"
+		}
+	},
+	"themes": {
+		"warning": {
+			"title": "Fondo del Theme",
+			"largeFile": "El fondo supera los 25MB — no se cargará",
+			"notAnImage": "El fondo no es una imagen válida — no se cargará"
+		}
+	},
+	"downloadProgress": {
+		"items": "objetos"
+	}
 }
