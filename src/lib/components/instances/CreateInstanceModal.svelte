@@ -283,7 +283,7 @@
                                             ? null
                                             : iconPath)}
                                 title={iconName}
-                                style="width: 100%; height: auto; aspect-ratio: 1/1; padding: 6px;"
+                                style="width: 44px; height: 44px; padding: 6px;"
                             >
                                 <img src={iconPath} alt={iconName} />
                             </button>
