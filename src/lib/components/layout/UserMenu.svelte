@@ -101,11 +101,16 @@
 
 	<div class="auth-actions">
 		{#if launcherStore.settings.user}
-			<button class="btn-danger logout-btn" onclick={handleLogout}>
+			<button
+				type="button"
+				class="btn-danger logout-btn"
+				onclick={handleLogout}
+			>
 				{t("userMenu.logout")}
 			</button>
 		{:else}
 			<button
+				type="button"
 				class="btn-primary microsoft-btn"
 				onclick={() => (showAuthModal = true)}
 			>
@@ -117,17 +122,19 @@
 	{#snippet footer()}
 		{#if editing}
 			<button
+				type="button"
 				class="btn-secondary"
 				onclick={() => {
 					editing = false;
 					newUsername = launcherStore.settings.username;
 				}}>Cancelar</button
 			>
-			<button class="btn-primary" onclick={handleSave}
+			<button type="button" class="btn-primary" onclick={handleSave}
 				>{t("userMenu.save")}</button
 			>
 		{:else if !launcherStore.settings.user}
 			<button
+				type="button"
 				class="btn-secondary"
 				style="flex: 1;"
 				onclick={() => (editing = true)}

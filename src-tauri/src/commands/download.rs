@@ -191,42 +191,65 @@ pub async fn get_fabric_versions() -> Result<Vec<FabricGameVersion>, String> {
 }
 
 #[tauri::command]
-pub async fn download_fabric(game_version: String) -> Result<(), String> {
+pub async fn download_fabric(game_version: String, loader_version: Option<String>) -> Result<(), String> {
     info!(
         "Iniciando descarga de Fabric para Minecraft {}",
         game_version
     );
 
-    // 1. Obtener el último loader estable para esa versión
-    info!(
-        "Obteniendo último loader de Fabric para versión {}",
-        game_version
-    );
-    let loader_url = format!(
-        "https://meta.fabricmc.net/v2/versions/loader/{}",
-        game_version
-    );
-    let response = HTTP
-        .get(&loader_url)
-        .send()
-        .await
-        .map_err(|e| format!("Error al obtener loaders: {}", e))?;
+    // 1. Determinar versión del loader
+    let loader_version = if let Some(specific) = loader_version {
+        info!(
+            "Usando loader específico: {} para Minecraft {}",
+            specific, game_version
+        );
+        specific
+    } else {
+        info!(
+            "Obteniendo último loader de Fabric para versión {}",
+            game_version
+        );
+        let loader_url = format!(
+            "https://meta.fabricmc.net/v2/versions/loader/{}",
+            game_version
+        );
+        let response = HTTP
+            .get(&loader_url)
+            .send()
+            .await
+            .map_err(|e| format!("Error al obtener loaders: {}", e))?;
 
-    let loaders = response
-        .json::<Vec<FabricLoaderResponse>>()
-        .await
-        .map_err(|e| format!("Error al parsear loaders: {}", e))?;
+        let loaders = response
+            .json::<Vec<FabricLoaderResponse>>()
+            .await
+            .map_err(|e| format!("Error al parsear loaders: {}", e))?;
 
-    let latest_loader = loaders
-        .first()
-        .ok_or_else(|| "No se encontró ningún loader para esta versión".to_string())?;
+        let latest_loader = loaders
+            .first()
+            .ok_or_else(|| "No se encontró ningún loader para esta versión".to_string())?;
 
-    let loader_version = &latest_loader.loader.version;
+        latest_loader.loader.version.clone()
+    };
+
     let fabric_version_id = format!("fabric-loader-{}-{}", loader_version, game_version);
     info!(
         "Loader seleccionado: {}, ID: {}",
         loader_version, fabric_version_id
     );
+
+    let shared_dir = PathManager::get().get_shared_dir();
+    let version_dir = shared_dir.join("versions").join(&fabric_version_id);
+    let json_path = version_dir.join(format!("{}.json", fabric_version_id));
+
+    if tokio::fs::try_exists(&json_path).await.unwrap_or(false) {
+        info!(
+            "Fabric {} ya está instalado, solo encolando assets",
+            fabric_version_id
+        );
+        let d_queue = crate::services::DownloadQueue::get();
+        d_queue.enqueue(fabric_version_id).await;
+        return Ok(());
+    }
 
     // 2. Descargar el perfil JSON
     info!("Descargando perfil JSON de Fabric");
@@ -255,13 +278,10 @@ pub async fn download_fabric(game_version: String) -> Result<(), String> {
     );
 
     // 3. Guardar el JSON en shared/versions/ID/ID.json
-    let shared_dir = PathManager::get().get_shared_dir();
-    let version_dir = shared_dir.join("versions").join(&fabric_version_id);
     tokio::fs::create_dir_all(&version_dir)
         .await
         .map_err(|e| format!("Error al crear el directorio de la versión: {}", e))?;
 
-    let json_path = version_dir.join(format!("{}.json", fabric_version_id));
     tokio::fs::write(&json_path, &profile_json)
         .await
         .map_err(|e| format!("Error al guardar el JSON: {}", e))?;

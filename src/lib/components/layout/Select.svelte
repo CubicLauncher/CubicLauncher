@@ -133,7 +133,7 @@
 			transition:fly={{ y: 8, duration: 200 }}
 			role="listbox"
 		>
-			{#each options as option}
+			{#each options as option (option.value)}
 				<div
 					class="select-option"
 					class:selected={option.value === value}

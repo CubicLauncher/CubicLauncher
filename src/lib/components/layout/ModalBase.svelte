@@ -43,7 +43,12 @@
 				{#if title}
 					<span class="modal-title">{title}</span>
 				{/if}
-				<button class="action-btn" onclick={close} title="Cerrar">
+				<button
+					type="button"
+					class="action-btn"
+					onclick={close}
+					title="Cerrar"
+				>
 					<svg
 						width="14"
 						height="14"

@@ -102,6 +102,7 @@
 			<div class="modal-header">
 				<span class="modal-title">{t("createInstance.title")}</span>
 				<button
+					type="button"
 					class="action-btn"
 					onclick={close}
 					title="Cerrar"
@@ -247,6 +248,7 @@
 				style="margin-top: 8px; border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: flex-end; gap: 12px;"
 			>
 				<button
+					type="button"
 					class="btn-secondary"
 					onclick={close}
 					disabled={loading}
@@ -254,6 +256,7 @@
 					{t("createInstance.cancel")}
 				</button>
 				<button
+					type="button"
 					class="btn-primary"
 					onclick={handleCreate}
 					disabled={loading}

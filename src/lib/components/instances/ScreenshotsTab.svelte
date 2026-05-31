@@ -55,6 +55,7 @@
 				<img src={convertFileSrc(path)} alt="Screenshot" />
 				<div class="overlay">
 					<button
+						type="button"
 						class="delete-btn"
 						onclick={(e) => {
 							e.stopPropagation();
@@ -113,8 +114,10 @@
 			onkeydown={(e) => e.stopPropagation()}
 		>
 			<img src={convertFileSrc(selectedImage)} alt="Full size" />
-			<button class="close-btn" onclick={() => (selectedImage = null)}
-				>✕</button
+			<button
+				type="button"
+				class="close-btn"
+				onclick={() => (selectedImage = null)}>✕</button
 			>
 		</div>
 	</div>

@@ -133,7 +133,11 @@
 					{t("userMenu.authModal.error")?.replace("{error}", error) ||
 						error}
 				</p>
-				<button class="action-btn retry" onclick={startAuth}>
+				<button
+					type="button"
+					class="action-btn retry"
+					onclick={startAuth}
+				>
 					<span>Reintentar</span>
 				</button>
 			</div>
@@ -174,6 +178,7 @@
 								{deviceCode.verification_uri}
 							</div>
 							<button
+								type="button"
 								class="icon-btn {copiedLink ? 'copied' : ''}"
 								onclick={handleCopyLink}
 								title={copiedLink
@@ -219,7 +224,7 @@
 						<span class="field-label">Código</span>
 						<div class="copy-box code-box">
 							<div class="code-display">
-								{#each deviceCode.user_code.split("") as char}
+								{#each deviceCode.user_code.split("") as char (char)}
 									<span
 										class="code-char {char === '-'
 											? 'dash'
@@ -228,6 +233,7 @@
 								{/each}
 							</div>
 							<button
+								type="button"
 								class="icon-btn {copiedCode ? 'copied' : ''}"
 								onclick={handleCopyCode}
 								title={copiedCode

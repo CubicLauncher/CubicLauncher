@@ -175,6 +175,7 @@
 		<div class="path-row">
 			<span class="path-text" title={instance.path}>{instance.path}</span>
 			<button
+				type="button"
 				class="icon-btn"
 				onclick={() => openDir()}
 				title={t("instanceView.details.location")}
@@ -198,7 +199,7 @@
 	</div>
 
 	<div class="action-bar">
-		<button class="action-chip" onclick={() => openDir()}>
+		<button type="button" class="action-chip" onclick={() => openDir()}>
 			<svg
 				width="14"
 				height="14"
@@ -215,7 +216,11 @@
 			</svg>
 			{t("instanceView.options.folder")}
 		</button>
-		<button class="action-chip" onclick={() => openDir("mods")}>
+		<button
+			type="button"
+			class="action-chip"
+			onclick={() => openDir("mods")}
+		>
 			<svg
 				width="14"
 				height="14"
@@ -240,7 +245,11 @@
 			</svg>
 			{t("instanceView.tabs.mods")}
 		</button>
-		<button class="action-chip" onclick={() => openDir("screenshots")}>
+		<button
+			type="button"
+			class="action-chip"
+			onclick={() => openDir("screenshots")}
+		>
 			<svg
 				width="14"
 				height="14"
@@ -257,7 +266,11 @@
 			</svg>
 			{t("instanceView.tabs.screenshots")}
 		</button>
-		<button class="action-chip" onclick={() => openDir("resourcepacks")}>
+		<button
+			type="button"
+			class="action-chip"
+			onclick={() => openDir("resourcepacks")}
+		>
 			<svg
 				width="14"
 				height="14"
@@ -286,6 +299,7 @@
 			</div>
 			<div class="console-toolbar">
 				<button
+					type="button"
 					class="toolbar-btn"
 					onclick={clearConsole}
 					disabled={lines.length === 0}
@@ -307,6 +321,7 @@
 					</svg>
 				</button>
 				<button
+					type="button"
 					class="toolbar-btn"
 					onclick={copyConsole}
 					disabled={lines.length === 0}
@@ -335,6 +350,7 @@
 					</svg>
 				</button>
 				<button
+					type="button"
 					class="toolbar-btn"
 					class:active={autoScroll}
 					onclick={() => (autoScroll = !autoScroll)}
