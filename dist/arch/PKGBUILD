@@ -49,7 +49,7 @@ package() {
   cd "$srcdir/CubicLauncher"
 
   install -Dm755 \
-    src-tauri/target/release/cubiclauncher \
+    target/release/cubiclauncher \
     "$pkgdir/usr/bin/cubiclauncher"
 
   install -Dm644 \
