@@ -510,9 +510,9 @@
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		background: #0a0a0a;
-		color: #eee;
-		font-family: "Cantarell", sans-serif;
+		background: var(--bg-main);
+		color: var(--text-primary);
+		font-family: var(--font-family);
 	}
 
 	.qm-header {
@@ -520,14 +520,14 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		background: #0f0f0f;
+		background: var(--bg-sidebar);
 	}
 
 	.qm-tabs {
 		display: flex;
 		padding: 0 10px;
-		background: #0f0f0f;
-		border-bottom: 1px solid #222;
+		background: var(--bg-sidebar);
+		border-bottom: 1px solid var(--border-color);
 		gap: 4px;
 	}
 
@@ -535,7 +535,7 @@
 		flex: 1;
 		background: none;
 		border: none;
-		color: #666;
+		color: var(--text-muted);
 		padding: 8px 4px;
 		cursor: pointer;
 		font-size: 0.8rem;
@@ -545,27 +545,27 @@
 	}
 
 	.qm-tab-btn.active {
-		color: #fff;
-		border-bottom-color: #eee;
+		color: var(--text-primary);
+		border-bottom-color: var(--accent);
 	}
 
 	.qm-label {
 		font-size: 1.1rem;
 		font-weight: 600;
-		color: #fff;
+		color: var(--text-primary);
 	}
 
 	.qm-close-btn {
 		background: none;
 		border: none;
-		color: #666;
+		color: var(--text-muted);
 		cursor: pointer;
 		font-size: 1.2rem;
 		transition: color 0.2s;
 	}
 
 	.qm-close-btn:hover {
-		color: #fff;
+		color: var(--text-primary);
 	}
 
 	.qm-scroll {
@@ -597,7 +597,7 @@
 	}
 
 	:global(.qm-scroll::-webkit-scrollbar-thumb) {
-		background: #222;
+		background: var(--scrollbar-thumb);
 		border-radius: 10px;
 	}
 
@@ -622,8 +622,8 @@
 	}
 
 	.qm-status-dot.running {
-		background: #4caf50;
-		box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+		background: var(--color-success);
+		box-shadow: 0 0 10px rgba(var(--color-success-rgb), 0.4);
 	}
 
 	.qm-active-info {
@@ -639,13 +639,13 @@
 
 	.qm-active-sub {
 		font-size: 0.75rem;
-		color: #888;
+		color: var(--text-secondary);
 	}
 
 	.qm-kill-btn {
-		background: rgba(255, 68, 68, 0.1);
-		color: #ff4444;
-		border: 1px solid rgba(255, 68, 68, 0.2);
+		background: rgba(var(--color-error-rgb), 0.1);
+		color: var(--color-error);
+		border: 1px solid rgba(var(--color-error-rgb), 0.2);
 		padding: 4px 10px;
 		border-radius: var(--border-radius-sm);
 		font-size: 0.75rem;
@@ -655,12 +655,12 @@
 	}
 
 	.qm-kill-btn:hover {
-		background: #ff4444;
-		color: #fff;
+		background: var(--color-error);
+		color: var(--accent-text);
 	}
 
 	.qm-empty-state {
-		color: #444;
+		color: var(--text-muted);
 		font-size: 0.85rem;
 		padding: 10px 0;
 	}
@@ -672,7 +672,7 @@
 	.qm-field label {
 		display: block;
 		font-size: 0.8rem;
-		color: #aaa;
+		color: var(--text-secondary);
 		margin-bottom: 6px;
 	}
 
@@ -707,7 +707,7 @@
 		border: 1px solid var(--border-color);
 		padding: 10px 12px;
 		border-radius: var(--border-radius-sm);
-		font-family: "Cantarell", system-ui, sans-serif;
+		font-family: var(--font-family);
 		font-weight: 600;
 		cursor: pointer;
 		transition:
@@ -728,15 +728,15 @@
 
 	.qm-footer {
 		padding: 15px 20px;
-		background: #070707;
-		border-top: 1px solid #111;
+		background: var(--bg-main);
+		border-top: 1px solid var(--border-color);
 		display: flex;
 		justify-content: center;
 	}
 
 	.qm-version {
 		font-size: 0.7rem;
-		color: #333;
+		color: var(--text-muted);
 		font-weight: 500;
 	}
 
@@ -779,8 +779,8 @@
 		-webkit-appearance: none;
 		width: 18px;
 		height: 18px;
-		background: #111;
-		border: 1px solid #333;
+		background: var(--bg-input);
+		border: 1px solid var(--border-color);
 		border-radius: var(--border-radius-sm);
 		cursor: pointer;
 		position: relative;
@@ -788,8 +788,8 @@
 	}
 
 	.qm-field-checkbox input[type="checkbox"]:checked {
-		background: #fff;
-		border-color: #fff;
+		background: var(--accent);
+		border-color: var(--accent);
 	}
 
 	.qm-field-checkbox input[type="checkbox"]:checked::after {
@@ -798,37 +798,37 @@
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		color: #000;
+		color: var(--accent-text);
 		font-size: 11px;
 		font-weight: 800;
 	}
 
 	.qm-field-checkbox label {
 		font-size: 0.85rem;
-		color: #aaa;
+		color: var(--text-secondary);
 		cursor: pointer;
 		transition: color 0.2s;
 	}
 
 	.qm-field-checkbox:hover label {
-		color: #fff;
+		color: var(--text-primary);
 	}
 
 	.qm-field-checkbox input[type="checkbox"]:hover {
-		border-color: #555;
+		border-color: var(--text-muted);
 	}
 
 	.qm-themes-hint {
 		display: block;
 		margin-top: 8px;
 		font-size: 0.75rem;
-		color: #888;
+		color: var(--text-secondary);
 		line-height: 1.4;
 		cursor: pointer;
 		transition: color 0.2s;
 	}
 
 	.qm-themes-hint:hover {
-		color: #fff;
+		color: var(--text-primary);
 	}
 </style>
