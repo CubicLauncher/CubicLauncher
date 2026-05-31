@@ -147,6 +147,29 @@ impl Library {
         }
     }
 
+    pub fn is_correct_arch(&self) -> bool {
+        use std::env::consts::ARCH;
+        let name = self.name.to_lowercase();
+
+        let has_x86 = name.contains("natives-windows-x86") || name.contains("natives-linux-x86");
+        let has_arm64 = name.contains("natives-windows-arm64")
+            || name.contains("natives-macos-arm64")
+            || name.contains("natives-linux-aarch_64")
+            || name.contains("natives-linux-arm64");
+        let has_arm32 = name.contains("natives-linux-arm32");
+
+        if has_x86 {
+            return ARCH == "x86";
+        }
+        if has_arm64 {
+            return ARCH == "aarch64";
+        }
+        if has_arm32 {
+            return ARCH == "arm";
+        }
+        true
+    }
+
     pub fn get_path(&self) -> PathBuf {
         if let Some(path) = self
             .downloads
