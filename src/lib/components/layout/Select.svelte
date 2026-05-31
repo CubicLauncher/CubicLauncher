@@ -73,7 +73,8 @@
 
 	$effect(() => {
 		if (isOpen) {
-			const onScroll = () => {
+			const onScroll = (e: Event) => {
+				if (dropdownEl && dropdownEl.contains(e.target as Node)) return;
 				isOpen = false;
 				dropdownStyles = "";
 			};
