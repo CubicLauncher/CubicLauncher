@@ -1,81 +1,85 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "cubiclauncher",
-  "version": "26.5.3",
-  "identifier": "com.cubiclauncher.launcher",
-  "build": {
-    "beforeDevCommand": "deno run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "deno run build",
-    "frontendDist": "../build"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "cubiclauncher",
-        "width": 800,
-        "height": 600,
-        "minWidth": 800,
-        "minHeight": 600
-      }
-    ],
-    "security": {
-      "csp": {
-        "default-src": [
-          "'self'",
-          "tauri:",
-          "http://localhost:*",
-          "https://tauri.localhost"
-        ],
-        "img-src": [
-          "'self'",
-          "asset:",
-          "https://asset.localhost",
-          "https://minotar.net",
-          "http://localhost:*",
-          "data:"
-        ],
-        "style-src": [
-          "'self'",
-          "'unsafe-inline'",
-          "http://localhost:*",
-          "https://tauri.localhost"
-        ],
-        "font-src": ["'self'", "http://localhost:*"],
-        "script-src": ["'self'", "'unsafe-inline'", "http://localhost:*"],
-        "connect-src": [
-          "'self'",
-          "https://minotar.net",
-          "ipc://localhost",
-          "http://localhost:*",
-          "https://tauri.localhost"
-        ]
-      },
-      "assetProtocol": {
-        "enable": true,
-        "scope": ["$HOME/.cubic/**"]
-      }
-    }
-  },
-  "bundle": {
-    "active": true,
-    "targets": "all",
-    "createUpdaterArtifacts": true,
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ]
-  },
-  "plugins": {
-    "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJGN0YxODA4NUU5QzVENDQKUldSRVhaeGVDQmgvTCtrbitjYmljOGV4dDZDdUV1bXQ5WVpQWWpEcm9ucTk5YU9iTkxYSDJxdnIK",
-      "endpoints": [
-        "https://github.com/CubicLauncher/CubicLauncher/releases/latest/download/latest.json"
-      ],
-      "windows": { "installMode": "passive" }
-    }
-  }
+	"$schema": "https://schema.tauri.app/config/2",
+	"productName": "cubiclauncher",
+	"version": "26.5.3",
+	"identifier": "com.cubiclauncher.launcher",
+	"build": {
+		"beforeDevCommand": "bun run dev",
+		"devUrl": "http://localhost:1420",
+		"beforeBuildCommand": "bun run build",
+		"frontendDist": "../build"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "cubiclauncher",
+				"width": 800,
+				"height": 600,
+				"minWidth": 800,
+				"minHeight": 600
+			}
+		],
+		"security": {
+			"csp": {
+				"default-src": [
+					"'self'",
+					"tauri:",
+					"http://localhost:*",
+					"https://tauri.localhost"
+				],
+				"img-src": [
+					"'self'",
+					"asset:",
+					"https://asset.localhost",
+					"https://minotar.net",
+					"http://localhost:*",
+					"data:"
+				],
+				"style-src": [
+					"'self'",
+					"'unsafe-inline'",
+					"http://localhost:*",
+					"https://tauri.localhost"
+				],
+				"font-src": ["'self'", "http://localhost:*"],
+				"script-src": [
+					"'self'",
+					"'unsafe-inline'",
+					"http://localhost:*"
+				],
+				"connect-src": [
+					"'self'",
+					"https://minotar.net",
+					"ipc://localhost",
+					"http://localhost:*",
+					"https://tauri.localhost"
+				]
+			},
+			"assetProtocol": {
+				"enable": true,
+				"scope": ["$HOME/.cubic/**"]
+			}
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": "all",
+		"createUpdaterArtifacts": true,
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		]
+	},
+	"plugins": {
+		"updater": {
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJGN0YxODA4NUU5QzVENDQKUldSRVhaeGVDQmgvTCtrbitjYmljOGV4dDZDdUV1bXQ5WVpQWWpEcm9ucTk5YU9iTkxYSDJxdnIK",
+			"endpoints": [
+				"https://github.com/CubicLauncher/CubicLauncher/releases/latest/download/latest.json"
+			],
+			"windows": { "installMode": "passive" }
+		}
+	}
 }
