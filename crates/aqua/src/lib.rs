@@ -6,7 +6,7 @@ mod resolvers;
 mod types;
 mod utilities;
 
-pub use downloaders::{DownloadHandle, DownloadManager};
+pub use downloaders::{DownloadBatch, DownloadHandle, DownloadItemSpec, DownloadManager, FabricBatch, GenericBatch, MinecraftBatch};
 pub use errors::ProtonError;
 pub use manifest::resolve_version_data;
 pub use resolvers::{ClasspathResolver, CommandBuilder, LaunchConfig};

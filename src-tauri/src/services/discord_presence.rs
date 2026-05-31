@@ -44,13 +44,10 @@ pub async fn init() -> Result<(), &'static str> {
 
     info!("Initializing Discord RPC client");
     let mut client = DiscordRpcClient::new(CLIENT_ID);
-    client
-        .connect()
-        .await
-        .map_err(|e| {
-            warn!("Failed to connect to Discord: {e}");
-            "Failed to connect to Discord"
-        })?;
+    client.connect().await.map_err(|e| {
+        warn!("Failed to connect to Discord: {e}");
+        "Failed to connect to Discord"
+    })?;
 
     info!("Connected to Discord");
     *presence.client.lock().await = Some(client);
@@ -81,11 +78,10 @@ async fn set_idle() {
         .build();
 
     let guard = presence.client.lock().await;
-    if let Some(ref client) = *guard {
-        if let Err(e) = client.set_activity(activity).await {
+    if let Some(ref client) = *guard
+        && let Err(e) = client.set_activity(activity).await {
             error!("Failed to set idle presence: {e}");
         }
-    }
 }
 
 async fn set_playing(name: String, version: String, loader: String) {
@@ -112,11 +108,10 @@ async fn set_playing(name: String, version: String, loader: String) {
         .build();
 
     let guard = presence.client.lock().await;
-    if let Some(ref client) = *guard {
-        if let Err(e) = client.set_activity(activity).await {
+    if let Some(ref client) = *guard
+        && let Err(e) = client.set_activity(activity).await {
             error!("Failed to set playing presence: {e}");
         }
-    }
 }
 
 pub async fn on_instance_start(name: String, version: String, loader: String) {

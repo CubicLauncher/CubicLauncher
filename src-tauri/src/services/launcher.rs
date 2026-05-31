@@ -1,7 +1,7 @@
 use crate::core::path_manager::PathManager;
 use crate::core::{AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, emit};
-use crate::services::discord_presence;
 use crate::services::SettingsManager;
+use crate::services::discord_presence;
 use crate::services::instance_manager::{
     InstanceHandle, InstanceStatus, register_kill_sender, unregister_kill_sender,
 };

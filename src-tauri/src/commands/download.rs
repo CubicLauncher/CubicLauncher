@@ -1,8 +1,9 @@
 use crate::core::{HTTP, PathManager};
 use crate::services::DownloadQueue;
+use aqua::{DownloadManager, FabricBatch};
 use serde::{Deserialize, Serialize};
 use tokio::fs;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 const MOJANG_MANIFEST_URL: &str = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
@@ -33,29 +34,6 @@ pub struct LatestVersions {
 pub struct FabricGameVersion {
     pub version: String,
     pub stable: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct FabricLoaderVersion {
-    pub version: String,
-    pub stable: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct FabricLoaderResponse {
-    pub loader: FabricLoaderVersion,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct FabricProfile {
-    pub id: String,
-    pub libraries: Vec<FabricLibrary>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct FabricLibrary {
-    pub name: String,
-    pub url: String,
 }
 
 #[tauri::command]
@@ -191,159 +169,58 @@ pub async fn get_fabric_versions() -> Result<Vec<FabricGameVersion>, String> {
 }
 
 #[tauri::command]
-pub async fn download_fabric(game_version: String, loader_version: Option<String>) -> Result<(), String> {
+pub async fn download_fabric(
+    game_version: String,
+    loader_version: Option<String>,
+) -> Result<(), String> {
     info!(
         "Iniciando descarga de Fabric para Minecraft {}",
         game_version
     );
 
-    // 1. Determinar versión del loader
     let loader_version = if let Some(specific) = loader_version {
-        info!(
-            "Usando loader específico: {} para Minecraft {}",
-            specific, game_version
-        );
         specific
     } else {
-        info!(
-            "Obteniendo último loader de Fabric para versión {}",
-            game_version
-        );
-        let loader_url = format!(
-            "https://meta.fabricmc.net/v2/versions/loader/{}",
-            game_version
-        );
-        let response = HTTP
-            .get(&loader_url)
-            .send()
+        FabricBatch::resolve_latest_loader(&game_version)
             .await
-            .map_err(|e| format!("Error al obtener loaders: {}", e))?;
-
-        let loaders = response
-            .json::<Vec<FabricLoaderResponse>>()
-            .await
-            .map_err(|e| format!("Error al parsear loaders: {}", e))?;
-
-        let latest_loader = loaders
-            .first()
-            .ok_or_else(|| "No se encontró ningún loader para esta versión".to_string())?;
-
-        latest_loader.loader.version.clone()
+            .map_err(|e| format!("Error al obtener loaders: {}", e))?
     };
 
     let fabric_version_id = format!("fabric-loader-{}-{}", loader_version, game_version);
-    info!(
-        "Loader seleccionado: {}, ID: {}",
-        loader_version, fabric_version_id
-    );
+    info!("Loader: {}, ID: {}", loader_version, fabric_version_id);
 
     let shared_dir = PathManager::get().get_shared_dir();
-    let version_dir = shared_dir.join("versions").join(&fabric_version_id);
-    let json_path = version_dir.join(format!("{}.json", fabric_version_id));
+    let json_path = shared_dir
+        .join("versions")
+        .join(&fabric_version_id)
+        .join(format!("{}.json", fabric_version_id));
 
     if tokio::fs::try_exists(&json_path).await.unwrap_or(false) {
         info!(
-            "Fabric {} ya está instalado, solo encolando assets",
+            "Fabric {} ya instalado, encolando assets",
             fabric_version_id
         );
-        let d_queue = crate::services::DownloadQueue::get();
-        d_queue.enqueue(fabric_version_id).await;
+        DownloadQueue::get().enqueue(fabric_version_id).await;
         return Ok(());
     }
 
-    // 2. Descargar el perfil JSON
-    info!("Descargando perfil JSON de Fabric");
-    let profile_url = format!(
-        "https://meta.fabricmc.net/v2/versions/loader/{}/{}/profile/json",
-        game_version, loader_version
-    );
-
-    let profile_response = HTTP
-        .get(&profile_url)
-        .send()
+    let batch = FabricBatch::new(shared_dir, &game_version, &loader_version)
         .await
-        .map_err(|e| format!("Error al descargar el perfil de Fabric: {}", e))?;
+        .map_err(|e| format!("Error al crear perfil Fabric: {}", e))?;
 
-    let profile_json: String = profile_response
-        .text()
+    let manager = DownloadManager::new(shared_dir.to_path_buf());
+    let handle = manager
+        .prepare_batch(Box::new(batch))
         .await
-        .map_err(|e| format!("Error al leer el JSON del perfil: {}", e))?;
+        .map_err(|e| format!("Error al preparar descarga Fabric: {}", e))?;
 
-    let profile: FabricProfile = serde_json::from_str(&profile_json)
-        .map_err(|e| format!("Error al parsear el JSON del perfil: {}", e))?;
-
-    info!(
-        "Perfil JSON parseado: {} librerías declaradas",
-        profile.libraries.len()
-    );
-
-    // 3. Guardar el JSON en shared/versions/ID/ID.json
-    tokio::fs::create_dir_all(&version_dir)
+    handle
+        .download_all(None)
         .await
-        .map_err(|e| format!("Error al crear el directorio de la versión: {}", e))?;
+        .map_err(|e| format!("Error al descargar Fabric: {}", e))?;
 
-    tokio::fs::write(&json_path, &profile_json)
-        .await
-        .map_err(|e| format!("Error al guardar el JSON: {}", e))?;
-    info!("Perfil JSON guardado en {:?}", json_path);
-
-    // 4. Descargar librerías de Fabric
-    info!("Descargando librerías de Fabric");
-    let lib_base_dir = shared_dir.join("libraries");
-    let mut downloaded = 0u32;
-    let mut skipped = 0u32;
-    for lib in profile.libraries {
-        let parts: Vec<&str> = lib.name.split(':').collect();
-        if parts.len() != 3 {
-            skipped += 1;
-            continue;
-        }
-
-        let group = parts[0].replace('.', "/");
-        let artifact = parts[1];
-        let version = parts[2];
-
-        let rel_path = format!(
-            "{}/{}/{}/{}-{}.jar",
-            group, artifact, version, artifact, version
-        );
-        let dest_path = lib_base_dir.join(&rel_path);
-
-        let exists = tokio::fs::try_exists(&dest_path).await.unwrap_or_default();
-
-        if !exists {
-            if let Some(parent) = dest_path.parent()
-                && let Err(e) = tokio::fs::create_dir_all(parent).await
-            {
-                warn!("Error creando directorio {:?}: {}", parent, e);
-            }
-
-            let download_url = format!("{}{}", lib.url, rel_path);
-            if let Ok(res) = HTTP.get(&download_url).send().await
-                && let Ok(bytes) = res.bytes().await
-            {
-                if let Err(e) = tokio::fs::write(&dest_path, bytes).await {
-                    warn!("Error escribiendo librería {:?}: {}", dest_path, e);
-                } else {
-                    downloaded += 1;
-                }
-            } else {
-                error!("Error descargando librería: {}", lib.name);
-            }
-        } else {
-            skipped += 1;
-        }
-    }
-    info!(
-        "Librerías de Fabric: {} descargadas, {} ya existentes/saltadas",
-        downloaded, skipped
-    );
-
-    {
-        let d_queue = crate::services::DownloadQueue::get();
-        info!("Encolando {} para descarga completa", fabric_version_id);
-        d_queue.enqueue(fabric_version_id).await;
-    }
+    info!("Fabric {} descargado correctamente", fabric_version_id);
+    DownloadQueue::get().enqueue(fabric_version_id).await;
 
     Ok(())
 }

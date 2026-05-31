@@ -1,0 +1,69 @@
+use std::future::Future;
+use std::path::PathBuf;
+use std::pin::Pin;
+
+use crate::ProtonError;
+
+#[derive(Debug, Clone)]
+pub struct DownloadItemSpec {
+    pub url: String,
+    pub destination: PathBuf,
+    pub expected_hash: String,
+    pub label: String,
+}
+
+impl DownloadItemSpec {
+    pub fn new(url: impl Into<String>, destination: PathBuf, label: impl Into<String>) -> Self {
+        Self {
+            url: url.into(),
+            destination,
+            expected_hash: String::new(),
+            label: label.into(),
+        }
+    }
+
+    pub fn with_hash(mut self, hash: impl Into<String>) -> Self {
+        self.expected_hash = hash.into();
+        self
+    }
+}
+
+pub trait DownloadBatch: Send + Sync {
+    fn name(&self) -> String;
+
+    fn items(&self) -> Vec<DownloadItemSpec>;
+
+    fn prepare(&self) -> Pin<Box<dyn Future<Output = Result<(), ProtonError>> + Send + '_>> {
+        Box::pin(async { Ok(()) })
+    }
+
+    fn finalize(&self) -> Pin<Box<dyn Future<Output = Result<(), ProtonError>> + Send + '_>> {
+        Box::pin(async { Ok(()) })
+    }
+}
+
+// ─── GenericBatch ─────────────────────────────────────────────────────────────
+
+pub struct GenericBatch {
+    name: String,
+    items: Vec<DownloadItemSpec>,
+}
+
+impl GenericBatch {
+    pub fn new(name: impl Into<String>, items: Vec<DownloadItemSpec>) -> Self {
+        Self {
+            name: name.into(),
+            items,
+        }
+    }
+}
+
+impl DownloadBatch for GenericBatch {
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn items(&self) -> Vec<DownloadItemSpec> {
+        self.items.clone()
+    }
+}

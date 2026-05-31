@@ -1,4 +1,4 @@
-use aqua::{DownloadManager, DownloadProgress, DownloadProgressType};
+use aqua::{DownloadManager, DownloadProgress, DownloadProgressType, FabricBatch};
 use std::env;
 use std::path::PathBuf;
 use tokio::sync::mpsc;
@@ -13,6 +13,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parse()
         .unwrap_or(1);
 
+    let download_type = env::var("DOWNLOAD_TYPE").unwrap_or_else(|_| "minecraft".to_string());
+
     let (tx, mut rx) = mpsc::channel::<DownloadProgress>(100);
     let progress_handle = tokio::spawn(async move {
         while let Some(prog) = rx.recv().await {
@@ -22,6 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 DownloadProgressType::Asset => "ASSET",
                 DownloadProgressType::Native => "NATIVE",
                 DownloadProgressType::Verifying => "VERIFY",
+                DownloadProgressType::Generic => "GENERIC",
             };
             println!(
                 "[{}/{}] [{label:6}] {}",
@@ -34,19 +37,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_max_handles(max_handles)
         .with_max_downloads(128);
 
-    let handle = manager.prepare(&version).await?;
-    println!("=== Proton ===");
-    println!("  version:   {}", handle.version().id);
-    println!("  java:      {}", handle.version().java_version);
-    println!("  libraries: {}", handle.version().libraries.len());
-    println!("  natives:   {}", handle.version().natives.len());
-    println!("  base_dir:  {base_dir}");
-    println!();
+    if download_type == "fabric" {
+        let game_version = env::var("GAME_VERSION").unwrap_or_else(|_| "1.21".to_string());
+        let loader_version = if let Ok(lv) = env::var("LOADER_VERSION") {
+            lv
+        } else {
+            FabricBatch::resolve_latest_loader(&game_version).await?
+        };
+        let batch = FabricBatch::new(
+            PathBuf::from(&base_dir).as_path(),
+            &game_version,
+            &loader_version,
+        )
+        .await?;
+        let handle = manager.prepare_batch(Box::new(batch)).await?;
+        println!("=== Fabric ===");
+        println!("  name: {}", handle.name());
+        println!("  base_dir:  {base_dir}");
+        println!();
+        handle.start(Some(tx)).await?;
+        handle.wait().await?;
+        progress_handle.await?;
+        println!("\n✓ Fabric download complete: {}", handle.name());
+    } else {
+        let handle = manager.prepare(&version).await?;
+        println!("=== Proton ===");
+        let v = handle.version().expect("Minecraft version info");
+        println!("  version:   {}", v.id);
+        println!("  java:      {}", v.java_version);
+        println!("  libraries: {}", v.libraries.len());
+        println!("  natives:   {}", v.natives.len());
+        println!("  base_dir:  {base_dir}");
+        println!();
 
-    handle.start(Some(tx)).await?;
-    handle.wait().await?;
-    progress_handle.await?;
+        handle.start(Some(tx)).await?;
+        handle.wait().await?;
+        progress_handle.await?;
 
-    println!("\n✓ Descarga completada: {}", handle.version().id);
+        println!("\n✓ Descarga completada: {}", handle.name());
+    }
+
     Ok(())
 }

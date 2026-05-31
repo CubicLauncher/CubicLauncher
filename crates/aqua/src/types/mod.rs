@@ -117,4 +117,5 @@ pub enum DownloadProgressType {
     Native,
     Client,
     Verifying,
+    Generic,
 }

@@ -1,7 +1,9 @@
-use crate::core::HTTP;
-use crate::services::InstanceManager;
+use aqua::{DownloadItemSpec, DownloadManager, GenericBatch};
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use tracing::info;
+
+use crate::core::PathManager;
+use crate::services::InstanceManager;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModDownloadInfo {
@@ -16,74 +18,39 @@ pub async fn download_mods(instance_id: String, mods: Vec<ModDownloadInfo>) -> R
         .get_handle(&instance_id)
         .await
         .ok_or("Instancia no encontrada")?;
-    let instance_dir = handle.get_instance_dir().await;
-    let mods_dir = instance_dir.join("mods");
+    let mods_dir = handle.get_instance_dir().await.join("mods");
 
-    if !mods_dir.exists() {
-        tokio::fs::create_dir_all(&mods_dir)
-            .await
-            .map_err(|e| e.to_string())?;
-    }
+    tokio::fs::create_dir_all(&mods_dir)
+        .await
+        .map_err(|e| format!("Error creando directorio mods: {}", e))?;
 
-    for mod_info in mods {
-        let file_url = &mod_info.url;
-        let filename = &mod_info.filename;
-        let dest_path = mods_dir.join(filename);
-
-        info!(
-            "Descargando {} desde {} a {:?}",
-            filename, file_url, dest_path
-        );
-
-        let mut response = match HTTP.get(file_url).send().await {
-            Ok(res) => res,
-            Err(e) => {
-                error!("Error al iniciar descarga de {}: {}", filename, e);
-                continue; // Optionally could fail the whole request, but we continue to download the rest
-            }
-        };
-
-        if !response.status().is_success() {
-            error!(
-                "Error HTTP al descargar mod {}: {}",
-                filename,
-                response.status()
+    let count = mods.len();
+    let items: Vec<DownloadItemSpec> = mods
+        .into_iter()
+        .map(|m| {
+            info!(
+                "Encolando mod: {} -> {:?}",
+                m.filename,
+                mods_dir.join(&m.filename)
             );
-            continue;
-        }
+            DownloadItemSpec::new(m.url, mods_dir.join(m.filename), "mod")
+        })
+        .collect();
 
-        let mut dest_file = match tokio::fs::File::create(&dest_path).await {
-            Ok(f) => f,
-            Err(e) => {
-                error!("Error al crear archivo {}: {}", filename, e);
-                continue;
-            }
-        };
+    let batch = GenericBatch::new(format!("mods-{}", instance_id), items);
 
-        use tokio::io::AsyncWriteExt;
-        let mut failed = false;
-        loop {
-            match response.chunk().await {
-                Ok(Some(chunk)) => {
-                    if let Err(e) = dest_file.write_all(&chunk).await {
-                        error!("Error al escribir archivo {}: {}", filename, e);
-                        failed = true;
-                        break;
-                    }
-                }
-                Ok(None) => break,
-                Err(e) => {
-                    error!("Error de red descargando {}: {}", filename, e);
-                    failed = true;
-                    break;
-                }
-            }
-        }
+    let shared_dir = PathManager::get().get_shared_dir().to_path_buf();
+    let dm = DownloadManager::new(shared_dir);
+    let handle = dm
+        .prepare_batch(Box::new(batch))
+        .await
+        .map_err(|e| format!("Error al preparar descarga de mods: {}", e))?;
 
-        if !failed {
-            info!("Mod {} descargado exitosamente", filename);
-        }
-    }
+    handle
+        .download_all(None)
+        .await
+        .map_err(|e| format!("Error al descargar mods: {}", e))?;
 
+    info!("{} mods descargados correctamente en {:?}", count, mods_dir);
     Ok(())
 }
