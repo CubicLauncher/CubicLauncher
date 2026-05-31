@@ -3,6 +3,7 @@
 	import { invoke } from "@tauri-apps/api/core";
 	import { launcherStore } from "$lib/state/state.svelte";
 	import { killInst, saveSettings } from "$lib/api/launcherService";
+	import { openUrl } from "$lib/api/cubicApi";
 	import { t } from "$lib/i18n";
 	import Select from "$lib/components/layout/Select.svelte";
 	import {
@@ -216,13 +217,13 @@
 				</CollapsibleSection>
 
 				<CollapsibleSection
-					title="Temas"
+					title={t("settings.launcher.themes")}
 					iconSrc="/images/icons/pencil.svg"
 					storageKey="section_themes"
 				>
 					<Select
 						id="theme"
-						label="Tema activo"
+						label={t("settings.launcher.themesActive")}
 						options={themeOptions}
 						bind:value={launcherStore.settings.theme}
 						onchange={async () => {
@@ -235,6 +236,19 @@
 							}
 						}}
 					/>
+					<span
+						class="qm-themes-hint"
+						onclick={() =>
+							openUrl("https://github.com/CubicLauncher/Themes")}
+						role="link"
+						tabindex="0"
+						onkeydown={(e) => {
+							if (e.key === "Enter")
+								openUrl(
+									"https://github.com/CubicLauncher/Themes",
+								);
+						}}>{t("settings.launcher.themesSpan")}</span
+					>
 				</CollapsibleSection>
 
 				<CollapsibleSection
@@ -492,73 +506,6 @@
 </div>
 
 <style>
-	.qm-root {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		background: #0a0a0a;
-		color: #eee;
-		font-family: "Cantarell", sans-serif;
-	}
-
-	.qm-header {
-		padding: 20px 20px 10px 20px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		background: #0f0f0f;
-	}
-
-	.qm-tabs {
-		display: flex;
-		padding: 0 10px;
-		background: #0f0f0f;
-		border-bottom: 1px solid #222;
-		gap: 4px;
-	}
-
-	.qm-tab-btn {
-		flex: 1;
-		background: none;
-		border: none;
-		color: #666;
-		padding: 8px 4px;
-		cursor: pointer;
-		font-size: 0.8rem;
-		font-weight: 600;
-		border-bottom: 2px solid transparent;
-		transition: all 0.2s;
-	}
-
-	.qm-tab-btn.active {
-		color: #fff;
-		border-bottom-color: #eee;
-	}
-
-	.qm-label {
-		font-size: 1.1rem;
-		font-weight: 600;
-		color: #fff;
-	}
-
-	.qm-close-btn {
-		background: none;
-		border: none;
-		color: #666;
-		cursor: pointer;
-		font-size: 1.2rem;
-		transition: color 0.2s;
-	}
-
-	.qm-close-btn:hover {
-		color: #fff;
-	}
-
-	.qm-scroll {
-		flex: 1;
-		overflow-y: auto;
-	}
-
 	.section-group {
 		border: 1px solid var(--border-color);
 		overflow: hidden;
@@ -572,19 +519,6 @@
 
 	.section-group :global(.cs-root:last-child) {
 		border-bottom: none;
-	}
-
-	:global(.qm-scroll::-webkit-scrollbar) {
-		width: 4px;
-	}
-
-	:global(.qm-scroll::-webkit-scrollbar-track) {
-		background: transparent;
-	}
-
-	:global(.qm-scroll::-webkit-scrollbar-thumb) {
-		background: #222;
-		border-radius: 10px;
 	}
 
 	.qm-active-card {
@@ -608,8 +542,8 @@
 	}
 
 	.qm-status-dot.running {
-		background: #4caf50;
-		box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+		background: var(--color-success);
+		box-shadow: 0 0 10px rgba(var(--color-success-rgb), 0.4);
 	}
 
 	.qm-active-info {
@@ -625,13 +559,13 @@
 
 	.qm-active-sub {
 		font-size: 0.75rem;
-		color: #888;
+		color: var(--text-secondary);
 	}
 
 	.qm-kill-btn {
-		background: rgba(255, 68, 68, 0.1);
-		color: #ff4444;
-		border: 1px solid rgba(255, 68, 68, 0.2);
+		background: rgba(var(--color-error-rgb), 0.1);
+		color: var(--color-error);
+		border: 1px solid rgba(var(--color-error-rgb), 0.2);
 		padding: 4px 10px;
 		border-radius: var(--border-radius-sm);
 		font-size: 0.75rem;
@@ -641,14 +575,8 @@
 	}
 
 	.qm-kill-btn:hover {
-		background: #ff4444;
-		color: #fff;
-	}
-
-	.qm-empty-state {
-		color: #444;
-		font-size: 0.85rem;
-		padding: 10px 0;
+		background: var(--color-error);
+		color: var(--accent-text);
 	}
 
 	.qm-field {
@@ -658,7 +586,7 @@
 	.qm-field label {
 		display: block;
 		font-size: 0.8rem;
-		color: #aaa;
+		color: var(--text-secondary);
 		margin-bottom: 6px;
 	}
 
@@ -693,7 +621,7 @@
 		border: 1px solid var(--border-color);
 		padding: 10px 12px;
 		border-radius: var(--border-radius-sm);
-		font-family: "Cantarell", system-ui, sans-serif;
+		font-family: var(--font-family);
 		font-weight: 600;
 		cursor: pointer;
 		transition:
@@ -710,20 +638,6 @@
 	.qm-save-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
-	}
-
-	.qm-footer {
-		padding: 15px 20px;
-		background: #070707;
-		border-top: 1px solid #111;
-		display: flex;
-		justify-content: center;
-	}
-
-	.qm-version {
-		font-size: 0.7rem;
-		color: #333;
-		font-weight: 500;
 	}
 
 	.save-footer {
@@ -765,8 +679,8 @@
 		-webkit-appearance: none;
 		width: 18px;
 		height: 18px;
-		background: #111;
-		border: 1px solid #333;
+		background: var(--bg-input);
+		border: 1px solid var(--border-color);
 		border-radius: var(--border-radius-sm);
 		cursor: pointer;
 		position: relative;
@@ -774,8 +688,8 @@
 	}
 
 	.qm-field-checkbox input[type="checkbox"]:checked {
-		background: #fff;
-		border-color: #fff;
+		background: var(--accent);
+		border-color: var(--accent);
 	}
 
 	.qm-field-checkbox input[type="checkbox"]:checked::after {
@@ -784,23 +698,37 @@
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		color: #000;
+		color: var(--accent-text);
 		font-size: 11px;
 		font-weight: 800;
 	}
 
 	.qm-field-checkbox label {
 		font-size: 0.85rem;
-		color: #aaa;
+		color: var(--text-secondary);
 		cursor: pointer;
 		transition: color 0.2s;
 	}
 
 	.qm-field-checkbox:hover label {
-		color: #fff;
+		color: var(--text-primary);
 	}
 
 	.qm-field-checkbox input[type="checkbox"]:hover {
-		border-color: #555;
+		border-color: var(--text-muted);
+	}
+
+	.qm-themes-hint {
+		display: block;
+		margin-top: 8px;
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+		line-height: 1.4;
+		cursor: pointer;
+		transition: color 0.2s;
+	}
+
+	.qm-themes-hint:hover {
+		color: var(--text-primary);
 	}
 </style>
