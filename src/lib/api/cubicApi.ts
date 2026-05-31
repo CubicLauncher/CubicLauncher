@@ -205,9 +205,15 @@ export async function getFabricVersions(): Promise<FabricGameVersion[]> {
 	}
 }
 
-export async function downloadFabric(gameVersion: string): Promise<void> {
+export async function downloadFabric(
+	gameVersion: string,
+	loaderVersion?: string,
+): Promise<void> {
 	try {
-		await invoke("download_fabric", { gameVersion });
+		await invoke("download_fabric", {
+			gameVersion,
+			loaderVersion: loaderVersion ?? null,
+		});
 	} catch (err) {
 		console.error(`Error al descargar Fabric para ${gameVersion}:`, err);
 	}

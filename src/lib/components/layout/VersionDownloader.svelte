@@ -38,7 +38,7 @@
 			new Set(
 				installedVersions
 					.filter((iv) => iv.startsWith("fabric-loader-"))
-					.map((iv) => iv.replace("fabric-loader-", "")),
+					.map((iv) => iv.replace(/^fabric-loader-[\d.]+-/, "")),
 			),
 	);
 	let filter = $state("release");
