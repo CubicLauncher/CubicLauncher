@@ -63,7 +63,7 @@
 		<span class="section-title"
 			>{t("instanceView.resources.title")} ({packs.length})</span
 		>
-		<button class="add-btn" onclick={handleAdd}>
+		<button type="button" class="add-btn" onclick={handleAdd}>
 			{t("instanceView.resources.addBtn")}
 		</button>
 	</div>
@@ -86,6 +86,7 @@
 					</p>
 				</div>
 				<button
+					type="button"
 					class="delete-btn"
 					onclick={() => handleDelete(pack)}
 					title="Eliminar"

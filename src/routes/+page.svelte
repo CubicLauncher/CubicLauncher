@@ -37,10 +37,7 @@
 	onMount(async () => {
 		initEventListeners();
 
-		const [settings, _] = await Promise.all([
-			syncSettings(),
-			getVersions(),
-		]);
+		await Promise.all([syncSettings(), getVersions()]);
 
 		const firstInstance = launcherStore.loadedInstances[0];
 		if (firstInstance && !selectedInstance) {

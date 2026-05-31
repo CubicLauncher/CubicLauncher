@@ -10,13 +10,6 @@
 	} from "$lib/api/cubicApi";
 	import type { MinecraftVersion, FabricGameVersion } from "$lib/types/types";
 
-	interface VersionDisplayItem {
-		id: string;
-		version: string;
-		type: string;
-		stable: boolean;
-		releaseTime: string;
-	}
 	import VirtualList from "./VirtualList.svelte";
 	import Select from "./Select.svelte";
 	import { launcherStore } from "$lib/state/state.svelte";
@@ -362,7 +355,7 @@
 			<div class="qm-empty-state">{t("versionDownloader.notFound")}</div>
 		{:else}
 			<VirtualList items={displayVersions} itemHeight={66} padding={20}>
-				{#snippet children(version, index)}
+				{#snippet children(version, _index)}
 					{@const isInstalled = installedVersions.includes(
 						version.id,
 					)}

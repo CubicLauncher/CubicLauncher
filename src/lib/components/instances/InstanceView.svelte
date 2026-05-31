@@ -66,13 +66,6 @@
 		bannerVersion++;
 	}
 
-	async function resetBanner() {
-		await invoke("reset_instance_cover_image", {
-			instanceId: selectedInstance.uuid,
-		});
-		bannerVersion++;
-	}
-
 	$effect(() => {
 		// Tracking both selectedInstance.uuid and bannerVersion ensures we re-fetch
 		// whenever the instance changes OR when the banner is manually updated/reset.
@@ -118,6 +111,7 @@
 				<div class="picker-header">
 					<h3>{t("instanceView.pickBannerTitle")}</h3>
 					<button
+						type="button"
 						class="close-btn"
 						onclick={() => (showPicker = false)}>✕</button
 					>
@@ -129,8 +123,9 @@
 						</div>
 					{:else}
 						<div class="picker-grid">
-							{#each allScreenshots as path}
+							{#each allScreenshots as path (path)}
 								<button
+									type="button"
 									class="picker-item"
 									onclick={() => selectScreenshot(path)}
 								>
@@ -167,16 +162,18 @@
 			</div>
 			{#if bannerState == "Started"}
 				<button
+					type="button"
 					class="play-btn"
 					onclick={() => killInst(selectedInstance.uuid)}
 					>{t("instanceView.close")}</button
 				>
 			{:else if bannerState == "Starting"}
-				<button class="play-btn" disabled
+				<button type="button" class="play-btn" disabled
 					>{t("instanceView.playBtn")}</button
 				>
 			{:else}
 				<button
+					type="button"
 					class="play-btn"
 					onclick={() => launchInstance(selectedInstance)}
 					>{t("instanceView.playBtn")}</button
@@ -186,6 +183,7 @@
 
 		<div class="banner-controls">
 			<button
+				type="button"
 				class="banner-btn"
 				onclick={pickBanner}
 				title={t("instanceView.changeBannerTitle")}
@@ -228,12 +226,14 @@
 
 	<div class="tabs-nav">
 		<button
+			type="button"
 			class="tab-item {activeTab === 'detalles' ? 'active' : ''}"
 			onclick={() => (activeTab = "detalles")}
 		>
 			{t("instanceView.tabs.details")}
 		</button>
 		<button
+			type="button"
 			class="tab-item {activeTab === 'mods' ? 'active' : ''}"
 			onclick={() => supportsMods && (activeTab = "mods")}
 			disabled={!supportsMods}
@@ -241,6 +241,7 @@
 			{t("instanceView.tabs.mods")}
 		</button>
 		<button
+			type="button"
 			class="tab-item {activeTab === 'download_mods' ? 'active' : ''}"
 			onclick={() => supportsMods && (activeTab = "download_mods")}
 			disabled={!supportsMods}
@@ -248,12 +249,14 @@
 			{t("instanceView.tabs.downloadMods") || "Get Mods"}
 		</button>
 		<button
+			type="button"
 			class="tab-item {activeTab === 'resources' ? 'active' : ''}"
 			onclick={() => (activeTab = "resources")}
 		>
 			{t("instanceView.tabs.resources")}
 		</button>
 		<button
+			type="button"
 			class="tab-item {activeTab === 'screenshots' ? 'active' : ''}"
 			onclick={() => (activeTab = "screenshots")}
 		>

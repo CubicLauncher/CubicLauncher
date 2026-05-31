@@ -24,8 +24,6 @@
 		onDownload: () => void;
 		onInstall: () => void;
 	} = $props();
-
-	let isBusy = $derived(checking || downloading || installing);
 </script>
 
 <div class="card">
@@ -62,6 +60,7 @@
 		<div class="action">
 			{#if checking}
 				<button
+					type="button"
 					class="action-btn"
 					disabled
 					aria-label={t("settings.launcher.checkingBtn")}
@@ -70,6 +69,7 @@
 				</button>
 			{:else if downloading}
 				<button
+					type="button"
 					class="action-btn"
 					disabled
 					aria-label={t("settings.launcher.downloadingBtn")}
@@ -78,6 +78,7 @@
 				</button>
 			{:else if installing}
 				<button
+					type="button"
 					class="action-btn"
 					disabled
 					aria-label={t("settings.launcher.installingBtn")}
@@ -86,6 +87,7 @@
 				</button>
 			{:else if pendingUpdate && !updateDownloaded}
 				<button
+					type="button"
 					class="action-btn"
 					onclick={onDownload}
 					title={t("settings.launcher.downloadInstallBtn")}
@@ -107,6 +109,7 @@
 				</button>
 			{:else if pendingUpdate && updateDownloaded}
 				<button
+					type="button"
 					class="action-btn"
 					onclick={onInstall}
 					title={t("settings.launcher.installUpdateBtn")}
@@ -126,6 +129,7 @@
 				</button>
 			{:else}
 				<button
+					type="button"
 					class="action-btn"
 					onclick={onCheck}
 					title={t("settings.launcher.searchBtn")}
