@@ -506,73 +506,6 @@
 </div>
 
 <style>
-	.qm-root {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		background: var(--bg-main);
-		color: var(--text-primary);
-		font-family: var(--font-family);
-	}
-
-	.qm-header {
-		padding: 20px 20px 10px 20px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		background: var(--bg-sidebar);
-	}
-
-	.qm-tabs {
-		display: flex;
-		padding: 0 10px;
-		background: var(--bg-sidebar);
-		border-bottom: 1px solid var(--border-color);
-		gap: 4px;
-	}
-
-	.qm-tab-btn {
-		flex: 1;
-		background: none;
-		border: none;
-		color: var(--text-muted);
-		padding: 8px 4px;
-		cursor: pointer;
-		font-size: 0.8rem;
-		font-weight: 600;
-		border-bottom: 2px solid transparent;
-		transition: all 0.2s;
-	}
-
-	.qm-tab-btn.active {
-		color: var(--text-primary);
-		border-bottom-color: var(--accent);
-	}
-
-	.qm-label {
-		font-size: 1.1rem;
-		font-weight: 600;
-		color: var(--text-primary);
-	}
-
-	.qm-close-btn {
-		background: none;
-		border: none;
-		color: var(--text-muted);
-		cursor: pointer;
-		font-size: 1.2rem;
-		transition: color 0.2s;
-	}
-
-	.qm-close-btn:hover {
-		color: var(--text-primary);
-	}
-
-	.qm-scroll {
-		flex: 1;
-		overflow-y: auto;
-	}
-
 	.section-group {
 		border: 1px solid var(--border-color);
 		overflow: hidden;
@@ -586,19 +519,6 @@
 
 	.section-group :global(.cs-root:last-child) {
 		border-bottom: none;
-	}
-
-	:global(.qm-scroll::-webkit-scrollbar) {
-		width: 4px;
-	}
-
-	:global(.qm-scroll::-webkit-scrollbar-track) {
-		background: transparent;
-	}
-
-	:global(.qm-scroll::-webkit-scrollbar-thumb) {
-		background: var(--scrollbar-thumb);
-		border-radius: 10px;
 	}
 
 	.qm-active-card {
@@ -657,12 +577,6 @@
 	.qm-kill-btn:hover {
 		background: var(--color-error);
 		color: var(--accent-text);
-	}
-
-	.qm-empty-state {
-		color: var(--text-muted);
-		font-size: 0.85rem;
-		padding: 10px 0;
 	}
 
 	.qm-field {
@@ -724,20 +638,6 @@
 	.qm-save-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
-	}
-
-	.qm-footer {
-		padding: 15px 20px;
-		background: var(--bg-main);
-		border-top: 1px solid var(--border-color);
-		display: flex;
-		justify-content: center;
-	}
-
-	.qm-version {
-		font-size: 0.7rem;
-		color: var(--text-muted);
-		font-weight: 500;
 	}
 
 	.save-footer {
