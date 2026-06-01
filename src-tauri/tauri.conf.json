@@ -47,13 +47,14 @@
 					"'unsafe-inline'",
 					"http://localhost:*"
 				],
-				"connect-src": [
-					"'self'",
-					"https://minotar.net",
-					"ipc://localhost",
-					"http://localhost:*",
-					"https://tauri.localhost"
-				]
+			"connect-src": [
+				"'self'",
+				"https://minotar.net",
+				"https://api.modrinth.com",
+				"ipc://localhost",
+				"http://localhost:*",
+				"https://tauri.localhost"
+			]
 			},
 			"assetProtocol": {
 				"enable": true,
