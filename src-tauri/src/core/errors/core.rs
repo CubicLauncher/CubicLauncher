@@ -16,4 +16,7 @@ pub enum CoreError {
 
     #[error("Ha ocurrido un error en algun WThread: {0}")]
     WThreadErr(String),
+
+    #[error("{0}")]
+    Other(String),
 }

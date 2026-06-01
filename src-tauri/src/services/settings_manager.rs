@@ -50,12 +50,20 @@ pub struct SettingsManager {
     pub max_memory: u32,
     #[serde(default)]
     pub jre8_path: PathBuf,
+    #[serde(default = "default_true")]
+    pub jre8_managed: bool,
     #[serde(default)]
     pub jre17_path: PathBuf,
+    #[serde(default = "default_true")]
+    pub jre17_managed: bool,
     #[serde(default)]
     pub jre21_path: PathBuf,
+    #[serde(default = "default_true")]
+    pub jre21_managed: bool,
     #[serde(default)]
     pub jre25_path: PathBuf,
+    #[serde(default = "default_true")]
+    pub jre25_managed: bool,
     #[serde(default = "default_lang")]
     pub language: String,
     #[serde(default = "default_true")]
@@ -88,9 +96,13 @@ impl Default for SettingsManager {
             min_memory: 1,
             max_memory: 2,
             jre8_path: PathBuf::new(),
+            jre8_managed: true,
             jre17_path: PathBuf::new(),
+            jre17_managed: true,
             jre21_path: PathBuf::new(),
+            jre21_managed: true,
             jre25_path: PathBuf::new(),
+            jre25_managed: true,
             language: String::from("es"),
             auto_updates: true,
             show_error_console: false,

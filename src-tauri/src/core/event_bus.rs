@@ -26,6 +26,9 @@ pub enum AppEvent {
     DFinish {
         version: String,
     },
+    DFinishRuntime {
+        version: String,
+    },
     STChanged,
     ThemeChanged {
         id: String,

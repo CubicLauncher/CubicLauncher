@@ -38,9 +38,13 @@ export interface Settings {
 	min_memory: number;
 	max_memory: number;
 	jre8_path: string;
+	jre8_managed: boolean;
 	jre17_path: string;
+	jre17_managed: boolean;
 	jre21_path: string;
+	jre21_managed: boolean;
 	jre25_path: string;
+	jre25_managed: boolean;
 	language: string;
 	auto_updates: boolean;
 	close_launcher_on_play: boolean;
@@ -50,6 +54,12 @@ export interface Settings {
 	env_vars: Record<string, string>;
 	theme: string;
 	discord_presence: boolean;
+}
+
+export interface JreStatus {
+	version: number;
+	installed: boolean;
+	java_version: string | null;
 }
 
 export type AccountType = "Cracked" | "Microsoft";
@@ -132,6 +142,12 @@ export type AppEvent =
 	  }
 	| {
 			type: "DFinish";
+			data: {
+				version: string;
+			};
+	  }
+	| {
+			type: "DFinishRuntime";
 			data: {
 				version: string;
 			};

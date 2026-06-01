@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-extract-natives = ["dep:zip"]
+extract-natives = []
 default = ["extract-natives"]
 
 [dependencies]
@@ -17,4 +17,6 @@ sha1 = "0.11"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 uuid = { version = "1", features = ["v4"] }
-zip = { version = "8", optional = true }
+zip = "8"
+tar = "0.4"
+flate2 = "1.0"

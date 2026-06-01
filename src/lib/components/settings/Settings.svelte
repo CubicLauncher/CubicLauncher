@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { invoke } from "@tauri-apps/api/core";
+	import { listen } from "@tauri-apps/api/event";
 	import { launcherStore } from "$lib/state/state.svelte";
 	import { killInst, saveSettings } from "$lib/api/launcherService";
 	import { openUrl } from "$lib/api/cubicApi";
@@ -12,9 +13,17 @@
 		installUpdate,
 	} from "$lib/api/updaterServices";
 	import { listThemes } from "$lib/api/themeManager";
-	import type { ThemeEntry } from "$lib/types/types";
+	import {
+		getInstallingJres,
+		getJreVersions,
+		installJre,
+		uninstallJre,
+	} from "$lib/api/cubicApi";
+	import type { AppEvent, JreStatus, ThemeEntry } from "$lib/types/types";
 	import UpdateSection from "./UpdateSection.svelte";
 	import CollapsibleSection from "./CollapsibleSection.svelte";
+	import JreCard from "./JreCard.svelte";
+	import EnvVarEditor from "./EnvVarEditor.svelte";
 
 	interface Props {
 		onclose?: () => void;
@@ -28,36 +37,46 @@
 	let downloading = $state(false);
 	let installing = $state(false);
 
-	let envVarList = $state<Array<{ key: string; value: string }>>([]);
+	const JRE_VERSIONS = [8, 17, 21, 25];
+	let jreStatuses = $state<Record<number, JreStatus>>({});
+	let jreActionStates = $state<Record<number, string | undefined>>({});
 
-	function initEnvVars() {
-		const record = launcherStore.settings.env_vars;
-		const entries = Object.entries(record);
-		envVarList =
-			entries.length > 0
-				? entries.map(([k, v]) => ({ key: k, value: v }))
-				: [{ key: "", value: "" }];
-	}
+	
 
-	function syncEnvVars() {
-		const record: Record<string, string> = {};
-		for (const entry of envVarList) {
-			if (entry.key.trim() !== "") {
-				record[entry.key.trim()] = entry.value;
-			}
+	async function refreshJreStatus() {
+		const statuses = await getJreVersions();
+		const map: Record<number, JreStatus> = {};
+		for (const s of statuses) {
+			map[s.version] = s;
 		}
-		launcherStore.settings.env_vars = record;
+		jreStatuses = map;
 	}
 
-	function addEnvVar() {
-		envVarList = [...envVarList, { key: "", value: "" }];
+	async function handleInstallJre(version: number) {
+		if (jreActionStates[version]) return;
+		jreActionStates[version] = "downloading";
+		try {
+			await installJre(version);
+			await refreshJreStatus();
+		} catch (e) {
+			console.error(`Failed to install JRE ${version}:`, e);
+		} finally {
+			jreActionStates[version] = undefined;
+		}
 	}
 
-	function removeEnvVar(index: number) {
-		envVarList = envVarList.filter((_, i) => i !== index);
-		syncEnvVars();
+	async function handleUninstallJre(version: number) {
+		if (jreActionStates[version]) return;
+		jreActionStates[version] = "uninstalling";
+		try {
+			await uninstallJre(version);
+			await refreshJreStatus();
+		} catch (e) {
+			console.error(`Failed to uninstall JRE ${version}:`, e);
+		} finally {
+			jreActionStates[version] = undefined;
+		}
 	}
-
 	async function handleSave() {
 		saving = true;
 		await saveSettings();
@@ -68,16 +87,12 @@
 
 	async function autoDetectJava() {
 		try {
-			const paths: {
-				jre8: string;
-				jre17: string;
-				jre21: string;
-				jre25: string;
-			} = await invoke("detect_java_paths");
-			if (paths.jre8) launcherStore.settings.jre8_path = paths.jre8;
-			if (paths.jre17) launcherStore.settings.jre17_path = paths.jre17;
-			if (paths.jre21) launcherStore.settings.jre21_path = paths.jre21;
-			if (paths.jre25) launcherStore.settings.jre25_path = paths.jre25;
+			const paths: Record<string, string> =
+				await invoke("detect_java_paths");
+			for (const v of JRE_VERSIONS) {
+				const p = paths[`jre${v}`];
+				if (p) (launcherStore.settings as any)[`jre${v}_path`] = p;
+			}
 		} catch (e) {
 			console.error("Failed to detect java paths", e);
 		}
@@ -125,7 +140,24 @@
 
 	onMount(() => {
 		loadThemes();
-		initEnvVars();
+		refreshJreStatus();
+		getInstallingJres().then((versions) => {
+			for (const v of versions) {
+				jreActionStates[v] = "downloading";
+			}
+		});
+
+		const unlisten = listen<AppEvent>("app-event", (event) => {
+			if (event.payload.type === "DFinishRuntime") {
+				const v = Number(event.payload.data.version);
+				jreActionStates[v] = undefined;
+				refreshJreStatus();
+			}
+		});
+
+		return () => {
+			unlisten.then((fn) => fn());
+		};
 	});
 	let runningInstances = $derived(
 		launcherStore.loadedInstances
@@ -373,7 +405,67 @@
 					iconSrc="/images/icons/terminal.svg"
 					storageKey="section_runtimes"
 				>
-					<div style="margin-bottom: 12px;">
+					<JreCard
+						version={8}
+						status={jreStatuses[8] ?? null}
+						managed={launcherStore.settings.jre8_managed}
+						path={launcherStore.settings.jre8_path}
+						pathLabel={t("settings.java.java8Path")}
+						isInstalling={jreActionStates[8] === "downloading"}
+						isUninstalling={jreActionStates[8] === "uninstalling"}
+						onToggleManaged={(v) =>
+							(launcherStore.settings.jre8_managed = v)}
+						onInstall={handleInstallJre}
+						onUninstall={handleUninstallJre}
+						onPathChange={(v) =>
+							(launcherStore.settings.jre8_path = v)}
+					/>
+					<JreCard
+						version={17}
+						status={jreStatuses[17] ?? null}
+						managed={launcherStore.settings.jre17_managed}
+						path={launcherStore.settings.jre17_path}
+						pathLabel={t("settings.java.java17Path")}
+						isInstalling={jreActionStates[17] === "downloading"}
+						isUninstalling={jreActionStates[17] === "uninstalling"}
+						onToggleManaged={(v) =>
+							(launcherStore.settings.jre17_managed = v)}
+						onInstall={handleInstallJre}
+						onUninstall={handleUninstallJre}
+						onPathChange={(v) =>
+							(launcherStore.settings.jre17_path = v)}
+					/>
+					<JreCard
+						version={21}
+						status={jreStatuses[21] ?? null}
+						managed={launcherStore.settings.jre21_managed}
+						path={launcherStore.settings.jre21_path}
+						pathLabel={t("settings.java.java21Path")}
+						isInstalling={jreActionStates[21] === "downloading"}
+						isUninstalling={jreActionStates[21] === "uninstalling"}
+						onToggleManaged={(v) =>
+							(launcherStore.settings.jre21_managed = v)}
+						onInstall={handleInstallJre}
+						onUninstall={handleUninstallJre}
+						onPathChange={(v) =>
+							(launcherStore.settings.jre21_path = v)}
+					/>
+					<JreCard
+						version={25}
+						status={jreStatuses[25] ?? null}
+						managed={launcherStore.settings.jre25_managed}
+						path={launcherStore.settings.jre25_path}
+						pathLabel={t("settings.java.java25Path")}
+						isInstalling={jreActionStates[25] === "downloading"}
+						isUninstalling={jreActionStates[25] === "uninstalling"}
+						onToggleManaged={(v) =>
+							(launcherStore.settings.jre25_managed = v)}
+						onInstall={handleInstallJre}
+						onUninstall={handleUninstallJre}
+						onPathChange={(v) =>
+							(launcherStore.settings.jre25_path = v)}
+					/>
+					<div style="margin-top: 12px;">
 						<button
 							type="button"
 							class="detect-btn"
@@ -381,48 +473,7 @@
 							>{t("settings.java.detectPathsBtn")}</button
 						>
 					</div>
-					<div class="qm-field">
-						<label for="jre8">{t("settings.java.java8Path")}</label>
-						<input
-							type="text"
-							id="jre8"
-							bind:value={launcherStore.settings.jre8_path}
-							placeholder="Path to javaw.exe"
-						/>
-					</div>
-					<div class="qm-field">
-						<label for="jre17"
-							>{t("settings.java.java17Path")}</label
-						>
-						<input
-							type="text"
-							id="jre17"
-							bind:value={launcherStore.settings.jre17_path}
-							placeholder="Path to javaw.exe"
-						/>
-					</div>
-					<div class="qm-field">
-						<label for="jre21"
-							>{t("settings.java.java21Path")}</label
-						>
-						<input
-							type="text"
-							id="jre21"
-							bind:value={launcherStore.settings.jre21_path}
-							placeholder="Path to javaw.exe"
-						/>
-					</div>
-					<div class="qm-field">
-						<label for="jre25"
-							>{t("settings.java.java25Path")}</label
-						>
-						<input
-							type="text"
-							id="jre25"
-							bind:value={launcherStore.settings.jre25_path}
-							placeholder="Path to javaw.exe"
-						/>
-					</div>
+					<div class="zulu-credit">{t("settings.java.zuluCredit")}</div>
 				</CollapsibleSection>
 
 				<CollapsibleSection
@@ -438,51 +489,14 @@
 							id="jvm-args"
 							bind:value={launcherStore.settings.jvm_args}
 							placeholder="-Xmx2G -Xms1G ..."
-							style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 10px; border-radius: var(--border-radius-sm); font-size: 0.85rem; resize: vertical; min-height: 60px; font-family: monospace; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
+							class="jvm-args-textarea"
 						></textarea>
 					</div>
-					<div class="qm-field">
-						<span
-							style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.8rem;"
-							>{t("settings.java.envVars")}</span
-						>
-						{#each envVarList as entry, i (entry)}
-							<div
-								style="display: flex; gap: 4px; align-items: center; margin-bottom: 4px;"
-							>
-								<input
-									type="text"
-									bind:value={entry.key}
-									placeholder="KEY"
-									oninput={syncEnvVars}
-									style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 8px; border-radius: var(--border-radius-sm); font-size: 0.8rem; height: 28px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
-								/>
-								<span
-									style="color: var(--text-muted); font-size: 0.8rem; flex-shrink: 0;"
-									>=</span
-								>
-								<input
-									type="text"
-									bind:value={entry.value}
-									placeholder="VALUE"
-									oninput={syncEnvVars}
-									style="flex: 1; min-width: 0; width: 0; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 8px; border-radius: var(--border-radius-sm); font-size: 0.8rem; height: 28px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); box-sizing: border-box;"
-								/>
-								<button
-									type="button"
-									onclick={() => removeEnvVar(i)}
-									style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; font-size: 1rem; line-height: 1; flex-shrink: 0;"
-									>✕</button
-								>
-							</div>
-						{/each}
-						<button
-							type="button"
-							onclick={addEnvVar}
-							style="background: none; border: 1px dashed var(--border-color); color: var(--text-secondary); cursor: pointer; padding: 4px 10px; border-radius: var(--border-radius-sm); font-size: 0.8rem; margin-top: 2px;"
-							>+ {t("settings.java.envVarsAdd")}</button
-						>
-					</div>
+					<EnvVarEditor
+						initial={launcherStore.settings.env_vars}
+						onchange={(vars) =>
+							(launcherStore.settings.env_vars = vars)}
+					/>
 				</CollapsibleSection>
 			</div>
 		{/if}
@@ -712,6 +726,34 @@
 
 	.qm-field-checkbox:hover label {
 		color: var(--text-primary);
+	}
+
+	.jvm-args-textarea {
+		width: 100%;
+		background: var(--bg-input);
+		border: 1px solid var(--border-color);
+		color: var(--text-primary);
+		padding: 8px 10px;
+		border-radius: var(--border-radius-sm);
+		font-size: 0.85rem;
+		resize: vertical;
+		min-height: 60px;
+		font-family: monospace;
+		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+		box-sizing: border-box;
+	}
+
+	.jvm-args-textarea:focus {
+		outline: none;
+		border-color: var(--text-muted);
+	}
+
+	.zulu-credit {
+		margin-top: 12px;
+		font-size: 0.7rem;
+		color: var(--text-muted);
+		text-align: center;
+		opacity: 0.7;
 	}
 
 	.qm-field-checkbox input[type="checkbox"]:hover {

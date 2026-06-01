@@ -6,6 +6,7 @@ import {
 	getSettings,
 	updateSettings,
 	initDiscordPresence,
+	getJreVersions,
 } from "./cubicApi";
 import { applyTheme } from "./themeManager";
 
@@ -37,6 +38,9 @@ export function initEventListeners(): void {
 					launcherStore.loadedInstances.filter(
 						(i) => i.uuid !== payload.data.id,
 					);
+				break;
+			case "DFinishRuntime":
+				getJreVersions();
 				break;
 			case "STChanged":
 				syncSettings();

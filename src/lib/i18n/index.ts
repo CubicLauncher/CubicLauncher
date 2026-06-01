@@ -5,7 +5,10 @@ import en from "./en.json";
 type DictValue = string | { [key: string]: DictValue };
 const dicts: Record<string, DictValue> = { es, en };
 
-export function t(key: string): string {
+export function t(
+	key: string,
+	params?: Record<string, string | number>,
+): string {
 	const lang = launcherStore.settings?.language || "es";
 	const dict = dicts[lang] || dicts["es"];
 	if (!dict || typeof dict === "string") return key;
@@ -15,5 +18,9 @@ export function t(key: string): string {
 		value = value[k];
 		if (value === undefined) return key;
 	}
-	return typeof value === "string" ? value : key;
+	const result = typeof value === "string" ? value : key;
+	if (!params) return result;
+	return result.replace(/\{(\w+)\}/g, (_, name) =>
+		String(params[name] ?? `{${name}}`),
+	);
 }

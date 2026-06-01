@@ -8,6 +8,7 @@ import {
 	type FabricGameVersion,
 	type ModrinthSearchResult,
 	type ModrinthVersion,
+	type JreStatus,
 } from "../types/types";
 import { invoke } from "@tauri-apps/api/core";
 import { showError } from "../state/state.svelte";
@@ -456,6 +457,51 @@ export async function downloadMods(
 			err,
 		);
 		showError("Download Error", `Could not download mods: ${err}`);
+		throw err;
+	}
+}
+
+export async function getJreStatus(version: number): Promise<JreStatus | null> {
+	try {
+		return await invoke<JreStatus>("get_jre_status", { version });
+	} catch (err) {
+		console.error(`Error getting JRE ${version} status:`, err);
+		return null;
+	}
+}
+
+export async function getJreVersions(): Promise<JreStatus[]> {
+	try {
+		return await invoke<JreStatus[]>("get_jre_versions");
+	} catch (err) {
+		console.error("Error getting JRE versions:", err);
+		return [];
+	}
+}
+
+export async function getInstallingJres(): Promise<number[]> {
+	try {
+		return await invoke<number[]>("get_installing_jres");
+	} catch (err) {
+		console.error("Error getting installing JREs:", err);
+		return [];
+	}
+}
+
+export async function installJre(version: number): Promise<void> {
+	try {
+		await invoke("install_jre", { version });
+	} catch (err) {
+		console.error(`Error installing JRE ${version}:`, err);
+		throw err;
+	}
+}
+
+export async function uninstallJre(version: number): Promise<void> {
+	try {
+		await invoke("uninstall_jre", { version });
+	} catch (err) {
+		console.error(`Error uninstalling JRE ${version}:`, err);
 		throw err;
 	}
 }

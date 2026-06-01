@@ -51,6 +51,11 @@ pub fn run() {
             commands::themes::get_themes_dir_path,
             commands::modrinth::download_mods,
             commands::discord::init_discord_presence,
+            commands::java::get_jre_status,
+            commands::java::install_jre,
+            commands::java::uninstall_jre,
+            commands::java::get_jre_versions,
+            commands::java::get_installing_jres,
         ])
         .plugin(tauri_plugin_process::init())
         .setup(|app| {

@@ -52,11 +52,21 @@
 			"java17Path": "Java 17 Path",
 			"java21Path": "Java 21 Path",
 			"java25Path": "Java 25 Path",
+			"managed": "Managed",
+			"external": "External",
+			"install": "Install",
+			"uninstall": "Uninstall",
+			"installing": "Installing...",
+			"uninstalling": "Uninstalling...",
+			"installedVersion": "Installed version: {version}",
+			"notInstalled": "Not installed",
+			"installError": "Error installing JRE {version}: {error}",
 			"jvmArgs": "JVM Arguments",
 			"envVars": "Environment Variables",
 			"envVarsAdd": "Add",
 			"saveBtn": "Save Settings",
-			"saving": "Saving..."
+			"saving": "Saving...",
+			"zuluCredit": "Java runtimes provided by Azul Zulu (Zulu.org)"
 		}
 	},
 	"main": {

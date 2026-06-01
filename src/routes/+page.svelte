@@ -17,6 +17,7 @@
 	import { t } from "$lib/i18n";
 	import { applyTheme } from "$lib/api/themeManager";
 	import { checkForUpdates } from "$lib/api/updaterServices";
+	import CreateInstanceModal from "$lib/components/instances/CreateInstanceModal.svelte";
 
 	let selectedInstance = $state<InstanceDto | null>(null);
 	let quickMenuOpen = $state(false);
@@ -26,9 +27,6 @@
 	let SettingsComponent = $state<Component<{ onclose: () => void }> | null>(
 		null,
 	);
-	let CreateInstanceModalComponent = $state<Component<{
-		open: boolean;
-	}> | null>(null);
 	let VersionDownloaderComponent = $state<Component<{
 		onclose?: () => void;
 	}> | null>(null);
@@ -55,12 +53,10 @@
 		// Lazy load non-critical components after first paint
 		Promise.all([
 			import("$lib/components/settings/Settings.svelte"),
-			import("$lib/components/instances/CreateInstanceModal.svelte"),
 			import("$lib/components/layout/VersionDownloader.svelte"),
 			import("$lib/components/ui/DownloadProgressBar.svelte"),
-		]).then(([s, c, v, d]) => {
+		]).then(([s, v, d]) => {
 			SettingsComponent = s.default;
-			CreateInstanceModalComponent = c.default;
 			VersionDownloaderComponent = v.default;
 			DownloadProgressBarComponent = d.default;
 		});
@@ -115,7 +111,7 @@
 	/>
 </Drawer>
 
-<CreateInstanceModalComponent bind:open={openCreateModal} />
+<CreateInstanceModal bind:open={openCreateModal} />
 
 <NotificationContainer />
 

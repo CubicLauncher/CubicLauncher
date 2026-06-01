@@ -1,5 +1,6 @@
 use crate::core::path_manager::PathManager;
 use crate::core::{AppError, AppEvent, AuthError, DownloadError, FsError, InstanceError, emit};
+use crate::services::java_manager::JavaManager;
 use crate::services::SettingsManager;
 use crate::services::discord_presence;
 use crate::services::instance_manager::{
@@ -408,16 +409,7 @@ impl Launcher {
             .map_err(|e| DownloadError::ParseJson(e.to_string()))?;
         let mut user = SettingsManager::read().get_minecraft_user();
 
-        let java_path = match manifest.java_version {
-            Some(ref v) => match v.major_version {
-                25 => settings_m.get_jre25_path(),
-                21 => settings_m.get_jre21_path(),
-                17 => settings_m.get_jre17_path(),
-                8 => settings_m.get_jre8_path(),
-                _ => settings_m.get_jre21_path(),
-            },
-            None => settings_m.get_jre25_path(),
-        };
+        let java_path = resolve_java_path(&settings_m, manifest.java_version.as_ref());
 
         // Auto-refresh del token Microsoft — el lock de settings se toma y suelta rápido
         if user.user_type == AccountType::Microsoft
@@ -584,6 +576,39 @@ impl Launcher {
             }
         }
         Ok(())
+    }
+}
+
+fn resolve_java_path(settings: &SettingsManager, java_version: Option<&launchwerk::models::JavaVersion>) -> std::path::PathBuf {
+    let version = match java_version {
+        Some(ref v) => v.major_version,
+        None => 25,
+    };
+
+    match version {
+        8 if settings.jre8_managed && JavaManager::is_installed(8) => {
+            JavaManager::get_java_binary(8)
+        }
+        17 if settings.jre17_managed && JavaManager::is_installed(17) => {
+            JavaManager::get_java_binary(17)
+        }
+        21 if settings.jre21_managed && JavaManager::is_installed(21) => {
+            JavaManager::get_java_binary(21)
+        }
+        25 if settings.jre25_managed && JavaManager::is_installed(25) => {
+            JavaManager::get_java_binary(25)
+        }
+        8 => settings.get_jre8_path().to_path_buf(),
+        17 => settings.get_jre17_path().to_path_buf(),
+        21 => settings.get_jre21_path().to_path_buf(),
+        25 => settings.get_jre25_path().to_path_buf(),
+        _ => {
+            if settings.jre21_managed && JavaManager::is_installed(21) {
+                JavaManager::get_java_binary(21)
+            } else {
+                settings.get_jre21_path().to_path_buf()
+            }
+        }
     }
 }
 

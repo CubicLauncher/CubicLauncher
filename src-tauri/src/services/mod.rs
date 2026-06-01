@@ -1,6 +1,7 @@
 mod addon_manager;
 pub(crate) mod discord_presence;
 mod instance_manager;
+pub(crate) mod java_manager;
 mod launcher;
 pub(crate) mod settings_manager;
 
